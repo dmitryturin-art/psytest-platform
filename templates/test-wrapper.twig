@@ -37,10 +37,12 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="session_id" value="{{ session.id }}">
 
-        <!-- Demographics Section -->
+        <!-- Demographics Section (only if required by module) -->
+        {% set demoReq = module.getDemographicsRequirements()|default({}) %}
+        {% if demoReq.gender is defined and demoReq.gender %}
         <div class="demographics-section" id="demographicsSection">
             <h3 class="demographics-title">📋 Информация о респонденте</h3>
-            <p class="demographics-subtitle">Пожалуйста, укажите ваш пол перед началом тестирования</p>
+            <p class="demographics-subtitle">Пожалуйста, укажите данные перед началом тестирования</p>
 
             <div class="demographics-options">
                 <label class="demographic-option">
@@ -55,8 +57,20 @@
                 </label>
             </div>
 
+            {% if demoReq.age is defined and demoReq.age %}
+            <div class="age-input-group">
+                <label for="demographicsAge">Ваш возраст:</label>
+                <input type="number" id="demographicsAge" name="demographics[age]"
+                       min="{{ demoReq.min_age|default(14) }}"
+                       max="{{ demoReq.max_age|default(100) }}"
+                       placeholder="{{ demoReq.min_age|default(14) }}-{{ demoReq.max_age|default(100) }}" required>
+                <small>Минимальный возраст: {{ demoReq.min_age|default(14) }} лет</small>
+            </div>
+            {% endif %}
+
             <button type="button" class="btn btn-primary btn-lg" id="startTestBtn">Начать тестирование →</button>
         </div>
+        {% endif %}
 
         <!-- Questions Container (hidden until demographics completed) -->
         <div class="questions-container" id="questionsContainer" style="display: none;">
@@ -131,4 +145,7 @@ const TEST_CONFIG = {
 };
 </script>
 <script src="{{ basePath }}/js/test-taking.js?v={{ "now"|date("U") }}"></script>
+{% if module.getCustomJavaScript() %}
+<script src="{{ module.getCustomJavaScript() }}?v={{ "now"|date("U") }}"></script>
+{% endif %}
 {% endblock %}

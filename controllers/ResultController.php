@@ -61,10 +61,13 @@ class ResultController
             echo $this->view->render('error-page');
             return;
         }
-        
+
         // Get results
         $results = $session['calculated_results'];
-        
+
+        // Get template (custom or default)
+        $template = $module->getResultTemplate() ?? 'result-page';
+
         // Render results HTML
         $resultsHtml = $module->renderResults($results);
         

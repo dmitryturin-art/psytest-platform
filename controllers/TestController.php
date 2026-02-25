@@ -62,14 +62,15 @@ class TestController
         
         // Get questions
         $questions = $module->getQuestions();
-        
-        // Shuffle questions if needed (for some tests)
-        // shuffle($questions);
-        
-        echo $this->view->render('test-wrapper', [
+
+        // Get template (custom or default)
+        $template = $module->getTestTemplate() ?? 'test-wrapper';
+
+        echo $this->view->render($template, [
             'test' => array_merge($test, $metadata),
             'session' => $session,
             'questions' => $questions,
+            'module' => $module, // Pass module for custom JS/demographics
         ]);
     }
     

@@ -12,6 +12,12 @@
     {"level": "moderate", "min": 22, "max": 35, "name": "Средняя тревога", "description": "Значение от 22 до 35 баллов означает среднюю выраженность тревоги"},
     {"level": "high", "min": 36, "max": 63, "name": "Высокая тревога", "description": "Значение выше 36 баллов (при максимуме в 63 балла) свидетельствует об очень высокой тревоге"}
   ],
+  "requires_demographics": {
+    "gender": true,
+    "age": true,
+    "min_age": 14,
+    "max_age": 100
+  },
   "version": "1.0",
   "author": "Aaron T. Beck",
   "adaptation": "Русская адаптация",

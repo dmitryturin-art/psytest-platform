@@ -194,13 +194,50 @@ abstract class BaseTestModule implements TestModuleInterface
     protected function validateAnswers(array $answers, array $questions): bool
     {
         $questionIds = array_column($questions, 'id');
-        
+
         foreach ($answers as $questionId => $answer) {
             if (!in_array($questionId, $questionIds)) {
                 return false;
             }
         }
-        
+
         return true;
+    }
+
+    /**
+     * Get custom test template (default: null = use default)
+     */
+    public function getTestTemplate(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Get custom result template (default: null = use default)
+     */
+    public function getResultTemplate(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Get custom JavaScript for test (default: null = use default)
+     */
+    public function getCustomJavaScript(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Get demographics requirements (default: no demographics)
+     */
+    public function getDemographicsRequirements(): array
+    {
+        return [
+            'gender' => false,
+            'age' => false,
+            'min_age' => 14,
+            'max_age' => 100,
+        ];
     }
 }

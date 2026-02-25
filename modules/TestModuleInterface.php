@@ -13,7 +13,7 @@ interface TestModuleInterface
 {
     /**
      * Get test metadata
-     * 
+     *
      * @return array {
      *     @type string $slug URL-friendly identifier
      *     @type string $name Display name
@@ -21,6 +21,14 @@ interface TestModuleInterface
      *     @type int $question_count Number of questions
      *     @type int $estimated_time Estimated completion time in minutes
      *     @type array $scales List of scales measured
+     *     @type array $requires_demographics {
+     *         @type bool $gender Require gender selection (default: false)
+     *         @type bool $age Require age input (default: false)
+     *         @type int $min_age Minimum age (default: 14)
+     *         @type int $max_age Maximum age (default: 100)
+     *     }
+     *     @type string $result_template Custom result template (default: null)
+     *     @type string $test_template Custom test template (default: null)
      * }
      */
     public function getMetadata(): array;
@@ -73,10 +81,31 @@ interface TestModuleInterface
     
     /**
      * Compare two session results (for pair mode)
-     * 
+     *
      * @param array $results1 First session results
      * @param array $results2 Second session results
      * @return array Comparison data
      */
     public function comparePairResults(array $results1, array $results2): array;
+
+    /**
+     * Get custom test template (optional)
+     *
+     * @return string|null Template name or null for default
+     */
+    public function getTestTemplate(): ?string;
+
+    /**
+     * Get custom result template (optional)
+     *
+     * @return string|null Template name or null for default
+     */
+    public function getResultTemplate(): ?string;
+
+    /**
+     * Get custom JavaScript for test (optional)
+     *
+     * @return string|null JavaScript code or file path
+     */
+    public function getCustomJavaScript(): ?string;
 }
