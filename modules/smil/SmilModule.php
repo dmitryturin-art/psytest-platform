@@ -888,4 +888,12 @@ HTML;
     {
         return false; // SMIL is typically individual
     }
+
+    /**
+     * Get demographics requirements (gender required for T-score tables)
+     */
+    public function getDemographicsRequirements(): array
+    {
+        return array_merge(parent::getDemographicsRequirements(), $this->metadata['requires_demographics'] ?? []);
+    }
 }

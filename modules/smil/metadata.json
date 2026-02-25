@@ -18,6 +18,10 @@
     {"code": "8", "name": "Гипомания (Ma)", "description": "Оценка энергичности и импульсивности"},
     {"code": "9", "name": "Интроверсия (Si)", "description": "Оценка направленности личности"}
   ],
+  "requires_demographics": {
+    "gender": true,
+    "age": false
+  },
   "version": "1.0",
   "author": "Ф.Б. Собчик"
 }
