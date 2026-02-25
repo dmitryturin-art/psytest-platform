@@ -33,7 +33,7 @@ try {
     $session = $sessionManager->createSession($test['id'], [
         'email' => 'test@example.com',
         'name' => 'Тестовый пользователь',
-        'demographics' => ['gender' => 'male'],
+        'demographics' => json_encode(['gender' => 'male']),
     ]);
 
     echo "Сессия создана: {$session['id']}\n";
