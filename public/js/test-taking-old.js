@@ -1,5 +1,5 @@
 /**
- * Test Taking Interface - Fixed Version
+ * Test Taking Interface
  * Handles question navigation, progress tracking, and answer saving
  */
 
@@ -11,6 +11,7 @@
     let answers = {};
     let questions = [];
     let demographics = {};
+    let questionsPerPage = 1; // Can be increased for batch viewing
     let testStarted = false;
 
     // Initialize on DOM ready
@@ -31,42 +32,28 @@
         
         if (demographicsSection && startTestBtn) {
             // Handle demographics submission
-            startTestBtn.addEventListener('click', handleDemographicsSubmit);
+            startTestBtn.addEventListener('click', function() {
+                if (validateDemographics()) {
+                    startTest();
+                }
+            });
             
             // Allow Enter key to start test
             demographicsSection.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleDemographicsSubmit();
+                    if (validateDemographics()) {
+                        startTest();
+                    }
                 }
             });
             
             return; // Don't initialize test taking until demographics are done
         }
 
-        // Initialize test questions
-        initializeTestQuestions();
-    }
-
-    /**
-     * Handle demographics form submission
-     */
-    function handleDemographicsSubmit() {
-        if (validateDemographics()) {
-            startTest();
-        }
-    }
-
-    /**
-     * Initialize test questions
-     */
-    function initializeTestQuestions() {
         // Get all question cards
         questions = Array.from(document.querySelectorAll('.question-card'));
-        if (questions.length === 0) {
-            console.error('No questions found!');
-            return;
-        }
+        if (questions.length === 0) return;
 
         // Setup navigation buttons
         const prevBtn = document.getElementById('prevBtn');
@@ -87,17 +74,24 @@
 
         // Show first question
         showQuestion(currentQuestionIndex);
-
+        
         // Auto-save on answer change
-        const form = document.getElementById('testForm');
-        if (form) {
-            form.addEventListener('change', function(e) {
-                if (e.target.name && e.target.name.startsWith('answers[')) {
-                    saveAnswer(e.target);
-                }
-            });
-        }
-
+        form.addEventListener('change', function(e) {
+            if (e.target.name && e.target.name.startsWith('answers[')) {
+                saveAnswer(e.target);
+            }
+        });
+        
+        // Warn before leaving with unsaved answers
+        window.addEventListener('beforeunload', function(e) {
+            const answeredCount = Object.keys(answers).length;
+            if (answeredCount < questions.length && answeredCount > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+        
         // Keyboard navigation
         document.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowRight' || e.key === 'Enter') {
@@ -108,114 +102,55 @@
                 goToPreviousQuestion();
             }
         });
-
-        // Form submission
-        form?.addEventListener('submit', handleFormSubmit);
     }
-
-    /**
-     * Validate demographics form
-     */
-    function validateDemographics() {
-        const genderOptions = document.querySelectorAll('input[name="demographics[gender]"]');
-        const ageInput = document.getElementById('demographicsAge');
-        
-        let genderSelected = false;
-        genderOptions.forEach(option => {
-            if (option.checked) genderSelected = true;
-        });
-        
-        const age = parseInt(ageInput?.value || 0);
-        const isValidAge = age >= 14 && age <= 100;
-        
-        if (!genderSelected) {
-            alert('Пожалуйста, выберите ваш пол');
-            return false;
-        }
-        
-        if (!isValidAge) {
-            if (age < 14) {
-                alert('К сожалению, тестирование доступно только с 14 лет');
-                return false;
-            } else {
-                alert('Пожалуйста, укажите корректный возраст (14-100)');
-                return false;
-            }
-        }
-        
-        // Save demographics
-        const selectedGender = document.querySelector('input[name="demographics[gender]"]:checked');
-        demographics = {
-            gender: selectedGender ? selectedGender.value : '',
-            age: age,
-        };
-        
-        return true;
-    }
-
-    /**
-     * Start the test (hide demographics, show questions)
-     */
-    function startTest() {
-        testStarted = true;
-        
-        // Hide demographics section
-        const demographicsSection = document.getElementById('demographicsSection');
-        if (demographicsSection) {
-            demographicsSection.style.display = 'none';
-        }
-        
-        // Show questions container
-        const questionsContainer = document.getElementById('questionsContainer');
-        if (questionsContainer) {
-            questionsContainer.style.display = 'block';
-        }
-        
-        // Initialize questions
-        initializeTestQuestions();
-        
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
+    
     /**
      * Show a specific question
      */
     function showQuestion(index) {
-        if (!questions || questions.length === 0) return;
-        
         questions.forEach((card, i) => {
             card.style.display = i === index ? 'block' : 'none';
         });
-
+        
         updateNavigation();
         updateProgress();
-
+        
         // Scroll to top of question
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
+    
     /**
      * Go to previous question
      */
     function goToPreviousQuestion() {
-        if (currentQuestionIndex > 0 && questions.length > 0) {
+        if (currentQuestionIndex > 0) {
             currentQuestionIndex--;
             showQuestion(currentQuestionIndex);
         }
     }
-
+    
     /**
      * Go to next question
      */
     function goToNextQuestion() {
-        if (!questions || questions.length === 0) return;
+        console.log('goToNextQuestion called, index:', currentQuestionIndex, 'total:', questions.length);
+        
+        // Check if questions are initialized
+        if (questions.length === 0) {
+            console.error('Questions not initialized');
+            return;
+        }
         
         // Validate current question has an answer
         const currentCard = questions[currentQuestionIndex];
-        if (!currentCard) return;
+        if (!currentCard) {
+            console.error('Current card not found:', currentQuestionIndex);
+            return;
+        }
         
         const questionId = currentCard.getAttribute('data-question-id');
+        console.log('Question ID:', questionId);
+        
         const selectedAnswer = document.querySelector(
             `input[name="answers[${questionId}]"]:checked`
         );
@@ -224,21 +159,22 @@
             // Highlight that an answer is required
             currentCard.classList.add('error');
             setTimeout(() => currentCard.classList.remove('error'), 2000);
+            console.log('No answer selected for question:', questionId);
             return;
         }
+        
+        console.log('Answer selected:', selectedAnswer.value);
 
         if (currentQuestionIndex < questions.length - 1) {
             currentQuestionIndex++;
             showQuestion(currentQuestionIndex);
         }
     }
-
+    
     /**
      * Update navigation buttons visibility
      */
     function updateNavigation() {
-        if (!questions || questions.length === 0) return;
-        
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
@@ -248,7 +184,10 @@
         }
 
         if (nextBtn) {
-            if (currentQuestionIndex >= questions.length - 1) {
+            if (questions.length === 0) {
+                // Questions not initialized yet
+                nextBtn.style.display = 'none';
+            } else if (currentQuestionIndex >= questions.length - 1) {
                 nextBtn.style.display = 'none';
                 if (submitBtn) {
                     submitBtn.style.display = 'inline-flex';
@@ -261,7 +200,7 @@
             }
         }
     }
-
+    
     /**
      * Update progress bar
      */
@@ -272,22 +211,21 @@
         if (!progressFill || !progressText) return;
         
         const answeredCount = Object.keys(answers).length;
-        const totalQuestions = typeof TEST_CONFIG !== 'undefined' ? TEST_CONFIG.totalQuestions : questions.length;
-        const percentage = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
+        const totalQuestions = TEST_CONFIG.totalQuestions;
+        const percentage = (answeredCount / totalQuestions) * 100;
         
         progressFill.style.width = percentage + '%';
         progressText.textContent = `${answeredCount} / ${totalQuestions}`;
     }
-
+    
     /**
      * Save an answer
      */
     function saveAnswer(input) {
-        const questionId = input.name.match(/answers\[(\d+)\]/);
-        if (!questionId) return;
-        
+        const questionId = input.name.match(/answers\[(\d+)\]/)[1];
         const value = input.value === 'true';
-        answers[questionId[1]] = value;
+        
+        answers[questionId] = value;
         
         // Visual feedback
         const card = input.closest('.question-card');
@@ -298,7 +236,7 @@
         // Auto-save to server (debounced)
         debounceSave();
     }
-
+    
     /**
      * Debounced auto-save
      */
@@ -312,15 +250,13 @@
             saveAnswersToServer();
         }, 1000);
     }
-
+    
     /**
      * Save answers to server
      */
     async function saveAnswersToServer() {
         const answeredCount = Object.keys(answers).length;
         if (answeredCount === 0) return;
-        
-        if (typeof TEST_CONFIG === 'undefined') return;
         
         try {
             const response = await fetch(`${TEST_CONFIG.basePath}/test/${TEST_CONFIG.slug}/save`, {
@@ -345,15 +281,89 @@
     }
 
     /**
-     * Handle form submission
+     * Validate demographics form
      */
-    async function handleFormSubmit(e) {
+    function validateDemographics() {
+        const genderOptions = document.querySelectorAll('input[name="demographics[gender]"]');
+        const ageInput = document.getElementById('demographicsAge');
+        
+        let genderSelected = false;
+        genderOptions.forEach(option => {
+            if (option.checked) genderSelected = true;
+        });
+        
+        const age = parseInt(ageInput.value);
+        const isValidAge = age >= 14 && age <= 100;
+        
+        if (!genderSelected) {
+            alert('Пожалуйста, выберите ваш пол');
+            return false;
+        }
+        
+        if (!isValidAge) {
+            if (age < 14) {
+                alert('К сожалению, тестирование доступно только с 14 лет');
+                return false;
+            } else {
+                alert('Пожалуйста, укажите корректный возраст (14-100)');
+                return false;
+            }
+        }
+        
+        // Save demographics
+        demographics = {
+            gender: document.querySelector('input[name="demographics[gender]"]:checked').value,
+            age: age,
+        };
+        
+        return true;
+    }
+
+    /**
+     * Start the test (hide demographics, show questions)
+     */
+    function startTest() {
+        testStarted = true;
+        
+        // Hide demographics section
+        const demographicsSection = document.getElementById('demographicsSection');
+        if (demographicsSection) {
+            demographicsSection.style.display = 'none';
+        }
+        
+        // Show questions container
+        const questionsContainer = document.getElementById('questionsContainer');
+        if (questionsContainer) {
+            questionsContainer.style.display = 'block';
+        }
+        
+        // Initialize questions - find all question cards
+        questions = Array.from(document.querySelectorAll('.question-card'));
+        console.log('Questions initialized:', questions.length);
+        
+        if (questions.length === 0) {
+            console.error('No questions found!');
+            return;
+        }
+        
+        // Show first question
+        showQuestion(currentQuestionIndex);
+        
+        // Update progress
+        updateProgress();
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * Submit test for scoring
+     */
+    document.getElementById('testForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        if (!questions || questions.length === 0) return;
-        
-        const totalQuestions = questions.length;
         const answeredCount = Object.keys(answers).length;
+        const totalQuestions = TEST_CONFIG.totalQuestions;
 
         if (answeredCount < totalQuestions) {
             const confirmed = confirm(
@@ -375,7 +385,7 @@
         await saveAnswersToServer();
 
         // Submit form normally
-        e.target.submit();
-    }
+        this.submit();
+    });
     
 })();

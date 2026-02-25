@@ -273,7 +273,7 @@ class BeckAnxietyModule extends BaseTestModule
         // Интерпретация
         $html .= '<div class="interpretation-card">';
         $html .= '<h3>📋 Интерпретация результата</h3>';
-        $html .= sprintf('<p class="interpretation-text">%s</p>', $interpretation);
+        $html .= sprintf('<p class="interpretation-text">%s</p>', is_string($interpretation) ? $interpretation : ($interpretation['text'] ?? ''));
         $html .= '</div>';
         
         // Топ симптомов (если есть детализация)
@@ -299,12 +299,12 @@ class BeckAnxietyModule extends BaseTestModule
         }
         
         // Рекомендации
-        if (!empty($recommendations)) {
+        if (!empty($recommendations) && is_array($recommendations)) {
             $html .= '<div class="recommendations-card">';
             $html .= '<h3>💡 Рекомендации</h3>';
             $html .= '<ul class="recommendations-list">';
             foreach ($recommendations as $rec) {
-                $html .= sprintf('<li>%s</li>', $rec);
+                $html .= sprintf('<li>%s</li>', is_string($rec) ? $rec : '');
             }
             $html .= '</ul>';
             $html .= '</div>';
