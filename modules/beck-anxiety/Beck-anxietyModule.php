@@ -104,6 +104,7 @@ class BeckAnxietyModule extends BaseTestModule
         $totalScore = 0;
         $answeredCount = 0;
         $symptomScores = [];
+        $debugInfo = [];
 
         // Подсчёт общего балла
         foreach ($answers as $questionId => $answer) {
@@ -112,6 +113,8 @@ class BeckAnxietyModule extends BaseTestModule
                 $points = $this->getPointsForAnswer($question, $answer);
                 $totalScore += $points;
                 $answeredCount++;
+                
+                $debugInfo[] = "Q{$questionId}: answer={$answer}, points={$points}";
 
                 // Сохраняем баллы по симптомам
                 $symptomScores[$questionId] = [
@@ -120,6 +123,12 @@ class BeckAnxietyModule extends BaseTestModule
                     'max_score' => 3,
                 ];
             }
+        }
+        
+        // Log debug info (for development)
+        if (!empty($debugInfo)) {
+            error_log("BAI Calculation: " . implode(', ', $debugInfo));
+            error_log("BAI Total Score: {$totalScore}, Answered: {$answeredCount}");
         }
 
         // Определение уровня тревоги

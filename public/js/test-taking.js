@@ -146,22 +146,28 @@
      */
     function startTest() {
         testStarted = true;
-        
+
         // Hide demographics section
         const demographicsSection = document.getElementById('demographicsSection');
         if (demographicsSection) {
             demographicsSection.style.display = 'none';
         }
-        
+
         // Show questions container
         const questionsContainer = document.getElementById('questionsContainer');
         if (questionsContainer) {
             questionsContainer.style.display = 'block';
         }
-        
+
+        // Show navigation buttons
+        const testNavigation = document.getElementById('testNavigation');
+        if (testNavigation) {
+            testNavigation.style.display = 'flex';
+        }
+
         // Initialize questions
         initializeTestQuestions();
-        
+
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
