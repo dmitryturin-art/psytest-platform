@@ -1269,3 +1269,216 @@ body {
     margin: 0;
     line-height: 1.6;
 }
+
+/* ============================================
+   SMIL Results Styles
+   ============================================ */
+.smil-results {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.smil-results .validity-section {
+    background: var(--color-bg-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.smil-results .validity-section h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+}
+
+.smil-results .validity-indicators {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.smil-results .indicator {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.smil-results .indicator .label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+.smil-results .indicator .value {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.smil-results .validity-status {
+    font-weight: 600;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    display: inline-block;
+    margin-bottom: var(--spacing-md);
+}
+
+.status-valid .validity-status {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-invalid .validity-status {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.smil-results .validity-warnings {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
+
+.smil-results .validity-warnings ul {
+    margin: 0;
+    padding-left: var(--spacing-md);
+}
+
+.smil-results .validity-warnings li {
+    color: #856404;
+    margin-bottom: var(--spacing-xs);
+}
+
+.smil-results .indices-section {
+    background: var(--color-bg-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.smil-results .indices-section h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.smil-results .indices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.smil-results .index-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.smil-results .index-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+}
+
+.smil-results .index-value {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.smil-results .profile-chart-container {
+    background: var(--color-bg-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.smil-results .profile-chart-container h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.smil-results .scores-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--spacing-xl);
+    background: var(--color-bg-white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.smil-results .scores-table th,
+.smil-results .scores-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.smil-results .scores-table th {
+    background: var(--color-bg);
+    font-weight: 600;
+    color: var(--color-text);
+    position: sticky;
+    top: 0;
+}
+
+.smil-results .scores-table .score {
+    font-weight: 700;
+    font-size: var(--font-size-lg);
+    text-align: center;
+}
+
+.smil-results .scores-table tr.level-low { background: #e3f2fd; }
+.smil-results .scores-table tr.level-normal { background: #e8f5e9; }
+.smil-results .scores-table tr.level-elevated { background: #fff3e0; }
+.smil-results .scores-table tr.level-high { background: #ffebee; }
+.smil-results .scores-table tr.level-very_high { background: #fce4ec; }
+
+.smil-results .interpretation-section {
+    background: var(--color-bg-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.smil-results .interpretation-section h3,
+.smil-results .interpretation-section h4 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+}
+
+.smil-results .interpretation-section p {
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.smil-results .interpretation-section ul {
+    margin-left: var(--spacing-lg);
+}
+
+.smil-results .interpretation-section li {
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-text);
+}
+
+.smil-results .smil-invalid .alert {
+    padding: var(--spacing-lg);
+    background: #fef3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--radius-md);
+}
+
+.smil-results .smil-invalid h3 {
+    margin-top: 0;
+    color: #856404;
+}
+
+.smil-results .smil-invalid p {
+    color: #856404;
+}
