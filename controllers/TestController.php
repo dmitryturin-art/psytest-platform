@@ -124,10 +124,6 @@ class TestController
             return;
         }
 
-        // Debug logging
-        error_log("BAI Submit - Session ID: {$sessionId}");
-        error_log("BAI Submit - POST answers: " . print_r($_POST['answers'] ?? [], true));
-
         $session = $this->sessionManager->getSessionById($sessionId);
         if (!$session || $session['test_id'] !== $this->getTestIdBySlug($slug)) {
             http_response_code(404);

@@ -130,5 +130,5 @@ const TEST_CONFIG = {
     basePath: '{{ basePath }}',
 };
 </script>
-<script src="{{ basePath }}/js/test-taking.js"></script>
+<script src="{{ basePath }}/js/test-taking.js?v={{ "now"|date("U") }}"></script>
 {% endblock %}

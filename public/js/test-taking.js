@@ -1,5 +1,5 @@
 /**
- * Test Taking Interface - Fixed Version
+ * Test Taking Interface
  * Handles question navigation, progress tracking, and answer saving
  */
 
@@ -12,7 +12,7 @@
     let questions = [];
     let demographics = {};
     let testStarted = false;
-    let formInitialized = false; // Flag to prevent double initialization
+    let formInitialized = false;
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -284,16 +284,16 @@
     function saveAnswer(input) {
         const questionId = input.name.match(/answers\[(\d+)\]/);
         if (!questionId) return;
-        
-        const value = input.value === 'true';
+
+        const value = input.value; // Keep as string (0,1,2,3)
         answers[questionId[1]] = value;
-        
+
         // Visual feedback
         const card = input.closest('.question-card');
         if (card) {
             card.classList.add('answered');
         }
-        
+
         // Auto-save to server (debounced)
         debounceSave();
     }
@@ -354,9 +354,6 @@
         const totalQuestions = questions.length;
         const answeredCount = Object.keys(answers).length;
 
-        console.log('Form submit - answered:', answeredCount, 'total:', totalQuestions);
-        console.log('Form submit - answers:', answers);
-
         if (answeredCount < totalQuestions) {
             const confirmed = confirm(
                 `Вы ответили на ${answeredCount} из ${totalQuestions} вопросов. ` +
@@ -373,11 +370,13 @@
             submitBtn.textContent = 'Обработка...';
         }
 
-        // Save final answers to server (auto-save)
+        // Save final answers to server
         await saveAnswersToServer();
 
-        // Submit form normally (without preventDefault)
-        // Remove the event listener first to prevent recursion
+        // Small delay to ensure save completes
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Submit form
         e.target.removeEventListener('submit', handleFormSubmit);
         e.target.submit();
     }
