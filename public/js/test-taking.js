@@ -12,6 +12,7 @@
     let questions = [];
     let demographics = {};
     let testStarted = false;
+    let formInitialized = false; // Flag to prevent double initialization
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -44,7 +45,7 @@
             return; // Don't initialize test taking until demographics are done
         }
 
-        // Initialize test questions
+        // Initialize test questions (only if no demographics)
         initializeTestQuestions();
     }
 
@@ -61,6 +62,10 @@
      * Initialize test questions
      */
     function initializeTestQuestions() {
+        // Prevent double initialization
+        if (formInitialized) return;
+        formInitialized = true;
+        
         // Get all question cards
         questions = Array.from(document.querySelectorAll('.question-card'));
         if (questions.length === 0) {
@@ -165,7 +170,7 @@
             testNavigation.style.display = 'flex';
         }
 
-        // Initialize questions
+        // Initialize questions (this will set up event listeners)
         initializeTestQuestions();
 
         // Scroll to top
@@ -345,9 +350,12 @@
         e.preventDefault();
 
         if (!questions || questions.length === 0) return;
-        
+
         const totalQuestions = questions.length;
         const answeredCount = Object.keys(answers).length;
+
+        console.log('Form submit - answered:', answeredCount, 'total:', totalQuestions);
+        console.log('Form submit - answers:', answers);
 
         if (answeredCount < totalQuestions) {
             const confirmed = confirm(
@@ -365,10 +373,12 @@
             submitBtn.textContent = 'Обработка...';
         }
 
-        // Save final answers
+        // Save final answers to server (auto-save)
         await saveAnswersToServer();
 
-        // Submit form normally
+        // Submit form normally (without preventDefault)
+        // Remove the event listener first to prevent recursion
+        e.target.removeEventListener('submit', handleFormSubmit);
         e.target.submit();
     }
     
