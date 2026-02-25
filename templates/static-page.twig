@@ -1,0 +1,57 @@
+{% extends "layout.twig" %}
+
+{% block title %}{{ title }} - {{ appName }}{% endblock %}
+
+{% block body_class %}static-page{% endblock %}
+
+{% block content %}
+<div class="static-page-wrapper">
+    <div class="page-header">
+        <h1 class="page-title">{{ title }}</h1>
+    </div>
+    
+    <div class="static-content">
+        {{ content|raw }}
+    </div>
+</div>
+
+<style>
+.static-page-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.static-content {
+    background: var(--color-bg-white);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    line-height: 1.8;
+}
+
+.static-content h2 {
+    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+}
+
+.static-content h3 {
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+}
+
+.static-content p {
+    margin-bottom: var(--spacing-md);
+}
+
+.static-content ul, .static-content ol {
+    margin-bottom: var(--spacing-md);
+    padding-left: var(--spacing-lg);
+}
+
+.static-content li {
+    margin-bottom: var(--spacing-sm);
+}
+</style>
+{% endblock %}

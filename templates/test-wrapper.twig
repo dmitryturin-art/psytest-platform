@@ -1,0 +1,104 @@
+{% extends "layout.twig" %}
+
+{% block title %}{{ test.name }} - {{ appName }}{% endblock %}
+
+{% block body_class %}test-page test-{{ test.slug }}{% endblock %}
+
+{% block content %}
+<div class="test-wrapper">
+    <!-- Test Header -->
+    <div class="test-header">
+        <h1 class="test-title">{{ test.name }}</h1>
+        <p class="test-description">{{ test.description }}</p>
+        
+        <div class="test-meta">
+            <span class="meta-item">
+                <span class="meta-icon">📝</span>
+                {{ test.question_count }} вопросов
+            </span>
+            <span class="meta-item">
+                <span class="meta-icon">⏱️</span>
+                ~{{ test.estimated_time }} минут
+            </span>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <span class="progress-text" id="progressText">0 / {{ test.question_count }}</span>
+    </div>
+
+    <!-- Test Form -->
+    <form id="testForm" class="test-form" method="POST" action="{{ basePath }}/test/{{ test.slug }}/submit">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="session_id" value="{{ session.id }}">
+        
+        <!-- Questions Container -->
+        <div class="questions-container" id="questionsContainer">
+            {% for question in questions %}
+            <div class="question-card" data-question-id="{{ question.id }}">
+                <p class="question-text">{{ question.id }}. {{ question.text }}</p>
+                <div class="answer-options">
+                    <label class="answer-option">
+                        <input type="radio" name="answers[{{ question.id }}]" value="true" required>
+                        <span class="option-text">Да</span>
+                    </label>
+                    <label class="answer-option">
+                        <input type="radio" name="answers[{{ question.id }}]" value="false" required>
+                        <span class="option-text">Нет</span>
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="test-navigation">
+            <button type="button" class="btn btn-secondary" id="prevBtn" style="visibility: hidden">
+                ← Назад
+            </button>
+            <button type="button" class="btn btn-primary" id="nextBtn">
+                Далее →
+            </button>
+            <button type="submit" class="btn btn-success" id="submitBtn" style="display: none">
+                ✓ Завершить тестирование
+            </button>
+        </div>
+    </form>
+
+    <!-- Completion Notice -->
+    <div class="completion-notice" id="completionNotice" style="display: none">
+        <div class="notice-icon">🎉</div>
+        <h2>Тестирование завершено!</h2>
+        <p>Ваши результаты обрабатываются...</p>
+    </div>
+</div>
+
+<!-- Delete Data Modal -->
+<div class="modal" id="deleteModal" style="display: none">
+    <div class="modal-content">
+        <h3>Удалить мои данные?</h3>
+        <p>Это действие необратимо удалит все результаты тестирования.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Отмена</button>
+            <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const TEST_CONFIG = {
+    slug: '{{ test.slug }}',
+    totalQuestions: {{ test.question_count }},
+    sessionToken: '{{ session.session_token }}',
+    basePath: '{{ basePath }}',
+};
+</script>
+<script src="{{ basePath }}/js/test-taking.js"></script>
+{% endblock %}

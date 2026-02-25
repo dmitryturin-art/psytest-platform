@@ -1,0 +1,136 @@
+{% extends "layout.twig" %}
+
+{% block title %}Интерпретация готова - {{ appName }}{% endblock %}
+
+{% block body_class %}interpretation-ready-page{% endblock %}
+
+{% block content %}
+<div class="interpretation-ready-wrapper">
+    <div class="success-icon">✓</div>
+    
+    <h1>Ваша AI-интерпретация готова!</h1>
+    
+    <p class="lead">Развёрнутый анализ результатов тестирования успешно сгенерирован.</p>
+    
+    <div class="interpretation-preview">
+        <h2>Что включено:</h2>
+        <ul>
+            <li>✅ Профессиональный анализ профиля личности</li>
+            <li>✅ Подробное описание выявленных особенностей</li>
+            <li>✅ Рекомендации для дальнейшей работы</li>
+            <li>✅ PDF-отчёт для сохранения</li>
+        </ul>
+    </div>
+    
+    <div class="interpretation-actions">
+        <a href="{{ basePath }}/result/{{ session.session_token }}" class="btn btn-primary btn-lg">
+            📄 Открыть интерпретацию
+        </a>
+        <a href="{{ basePath }}{{ interpretation.pdf_path }}" class="btn btn-secondary btn-lg" target="_blank">
+            💾 Скачать PDF
+        </a>
+    </div>
+    
+    <div class="email-notice">
+        {% if session.user_email %}
+        <p>📧 Копия отправлена на <strong>{{ session.user_email }}</strong></p>
+        {% else %}
+        <p>ℹ️ Укажите email в результатах, чтобы получить копию по почте</p>
+        {% endif %}
+    </div>
+    
+    <div class="disclaimer">
+        <p><strong>Важно:</strong> Данная интерпретация носит исключительно ознакомительный характер 
+        и не является диагнозом или заменой профессиональной консультации.</p>
+    </div>
+</div>
+
+<style>
+.interpretation-ready-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    padding: var(--spacing-xxl);
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto var(--spacing-lg);
+    background: #27ae60;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+h1 {
+    margin-bottom: var(--spacing-md);
+}
+
+.lead {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-light);
+    margin-bottom: var(--spacing-xl);
+}
+
+.interpretation-preview {
+    background: var(--color-bg-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+    text-align: left;
+}
+
+.interpretation-preview h2 {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-lg);
+}
+
+.interpretation-preview ul {
+    list-style: none;
+    padding: 0;
+}
+
+.interpretation-preview li {
+    padding: var(--spacing-sm) 0;
+    font-size: var(--font-size-base);
+}
+
+.interpretation-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.email-notice {
+    padding: var(--spacing-md);
+    background: #e8f4fd;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.disclaimer {
+    padding: var(--spacing-md);
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 600px) {
+    .interpretation-actions {
+        flex-direction: column;
+    }
+    
+    .interpretation-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

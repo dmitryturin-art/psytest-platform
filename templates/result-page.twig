@@ -1,0 +1,165 @@
+{% extends "layout.twig" %}
+
+{% block title %}Результаты: {{ test.name }} - {{ appName }}{% endblock %}
+
+{% block body_class %}results-page test-{{ test.slug }}{% endblock %}
+
+{% block content %}
+<div class="results-wrapper">
+    <!-- Results Header -->
+    <div class="results-header">
+        <h1 class="results-title">{{ test.name }}</h1>
+        <p class="results-subtitle">Результаты тестирования</p>
+        
+        <div class="results-meta">
+            <span class="meta-item">
+                <span class="meta-icon">📅</span>
+                {{ session.created_at|date("d.m.Y H:i") }}
+            </span>
+            <span class="meta-item">
+                <span class="meta-icon">🔗</span>
+                ID: {{ session.id|slice(0, 8) }}...
+            </span>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="results-actions">
+        <a href="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/pdf"
+           class="btn btn-secondary" target="_blank">
+            📄 Скачать PDF
+        </a>
+        {% if ai_interpretation_available %}
+        <a href="{{ basePath }}/interpretation/{{ session.session_token }}"
+           class="btn btn-primary">
+            ✨ Получить AI-интерпретацию
+        </a>
+        {% endif %}
+        <button class="btn btn-outline" onclick="copyResultLink()">
+            🔗 Копировать ссылку
+        </button>
+        <button class="btn btn-outline" onclick="openDeleteModal()">
+            🗑️ Удалить данные
+        </button>
+    </div>
+
+    <!-- Results Content -->
+    <div class="results-content">
+        {{ results_html|raw }}
+    </div>
+
+    <!-- Interpretation Section -->
+    {% if interpretation %}
+    <div class="interpretation-block">
+        <h2>Интерпретация</h2>
+        <div class="interpretation-text">
+            <p><strong>{{ interpretation.summary }}</strong></p>
+            {% if interpretation.recommendations %}
+            <h3>Рекомендации:</h3>
+            <ul>
+                {% for rec in interpretation.recommendations %}
+                <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Disclaimer -->
+    <div class="results-disclaimer">
+        <p>
+            <strong>Важно:</strong> Результаты данного тестирования носят ознакомительный характер 
+            и не являются диагнозом. Для профессиональной интерпретации и рекомендаций 
+            обратитесь к квалифицированному специалисту.
+        </p>
+    </div>
+
+    <!-- Pair Comparison (if available) -->
+    {% if pair_comparison %}
+    <div class="pair-comparison">
+        <h2>Сравнение с партнёром</h2>
+        <div class="comparison-content">
+            {{ pair_comparison_html|raw }}
+        </div>
+        <a href="{{ basePath }}/pair/{{ pair_comparison.id }}/pdf" 
+           class="btn btn-secondary" target="_blank">
+            📄 Скачать сравнение в PDF
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal" style="display: none">
+    <div class="modal-content modal-danger">
+        <h3>🗑️ Удалить мои данные?</h3>
+        <p>Это действие необратимо удалит все результаты тестирования. Страница с результатами станет недоступна.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Отмена</button>
+            <button class="btn btn-danger" onclick="confirmDelete()">Да, удалить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Link Copy Notification -->
+<div class="toast" id="copyToast" style="display: none">
+    ✓ Ссылка скопирована в буфер обмена
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const RESULT_CONFIG = {
+    sessionId: '{{ session.id }}',
+    sessionToken: '{{ session.session_token }}',
+    testSlug: '{{ test.slug }}',
+    basePath: '{{ basePath }}',
+};
+
+function copyResultLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        const toast = document.getElementById('copyToast');
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    });
+}
+
+function openDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+function confirmDelete() {
+    fetch(`${RESULT_CONFIG.basePath}/result/${RESULT_CONFIG.sessionToken}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `${RESULT_CONFIG.basePath}/deleted`;
+        } else {
+            alert('Ошибка при удалении: ' + (data.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(err => {
+        alert('Ошибка при удалении: ' + err.message);
+    });
+}
+
+// Close modal on outside click
+document.getElementById('deleteModal').addEventListener('click', (e) => {
+    if (e.target.id === 'deleteModal') {
+        closeDeleteModal();
+    }
+});
+</script>
+<script src="{{ basePath }}/js/results.js"></script>
+{% endblock %}

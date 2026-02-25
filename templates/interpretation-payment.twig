@@ -1,0 +1,183 @@
+{% extends "layout.twig" %}
+
+{% block title %}AI-интерпретация - {{ appName }}{% endblock %}
+
+{% block body_class %}interpretation-page{% endblock %}
+
+{% block content %}
+<div class="interpretation-wrapper">
+    <div class="interpretation-header">
+        <h1>Развёрнутая AI-интерпретация</h1>
+        <p class="subtitle">{{ test.name }}</p>
+    </div>
+    
+    {% if interpretation.payment_status == 'completed' %}
+    <!-- Interpretation ready -->
+    <div class="interpretation-content">
+        <div class="interpretation-text">
+            {{ interpretation.interpretation_text|raw }}
+        </div>
+        
+        <div class="interpretation-actions">
+            <a href="{{ basePath }}{{ interpretation.pdf_path }}" 
+               class="btn btn-primary" target="_blank">
+                📄 Скачать PDF
+            </a>
+            <button class="btn btn-secondary" onclick="window.print()">
+                🖨️ Печать
+            </button>
+        </div>
+    </div>
+    
+    {% else %}
+    <!-- Payment required -->
+    <div class="payment-required">
+        <div class="payment-info">
+            <h2>Получить развёрнутую интерпретацию</h2>
+            <p>Профессиональная AI-интерпретация включает:</p>
+            <ul>
+                <li>Подробный анализ профиля личности</li>
+                <li>Описание выявленных особенностей</li>
+                <li>Рекомендации для дальнейшей работы</li>
+                <li>PDF-отчёт для сохранения</li>
+            </ul>
+            
+            <div class="price-block">
+                <span class="price">{{ price }} ₽</span>
+            </div>
+            
+            <form method="POST" action="{{ basePath }}/interpretation/{{ session.session_token }}/pay" 
+                  class="payment-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <div class="form-group">
+                    <label for="email">Ваш Email (для получения отчёта):</label>
+                    <input type="email" id="email" name="email" required 
+                           value="{{ session.user_email }}"
+                           placeholder="example@mail.ru">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg btn-block">
+                    💳 Оплатить и получить интерпретацию
+                </button>
+                
+                <p class="payment-note">
+                    🔒 Безопасная оплата через ЮMoney
+                </p>
+            </form>
+        </div>
+        
+        <div class="disclaimer-box">
+            <p><strong>Важно:</strong> AI-интерпретация носит ознакомительный характер 
+            и не заменяет очную консультацию специалиста.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.interpretation-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.interpretation-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.interpretation-content {
+    background: var(--color-bg-white);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.interpretation-text {
+    line-height: 1.8;
+    margin-bottom: var(--spacing-xl);
+}
+
+.interpretation-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.payment-required {
+    background: var(--color-bg-white);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.payment-info h2 {
+    margin-bottom: var(--spacing-md);
+}
+
+.payment-info ul {
+    margin: var(--spacing-lg) 0;
+    padding-left: var(--spacing-lg);
+}
+
+.payment-info li {
+    margin-bottom: var(--spacing-sm);
+}
+
+.price-block {
+    text-align: center;
+    margin: var(--spacing-xl) 0;
+}
+
+.price {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.payment-form {
+    margin-top: var(--spacing-xl);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+}
+
+.btn-lg {
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--font-size-lg);
+}
+
+.payment-note {
+    text-align: center;
+    margin-top: var(--spacing-md);
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+.disclaimer-box {
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-md);
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+}
+</style>
+{% endblock %}

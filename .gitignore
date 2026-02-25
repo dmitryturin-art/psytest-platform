@@ -1,0 +1,48 @@
+# PsyTest Platform - Git Ignore
+
+# Dependencies
+/vendor/
+composer.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Storage (keep structure, ignore contents)
+/storage/*.pdf
+/storage/*.log
+/storage/cache/*
+!storage/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Uploads (keep structure)
+/public/uploads/*
+!public/uploads/.gitkeep
+
+# Database backups
+*.sql
+database/backups/
+
+# Node (if using build tools)
+node_modules/
+package-lock.json

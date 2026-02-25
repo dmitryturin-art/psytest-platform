@@ -1,0 +1,57 @@
+{% extends "layout.twig" %}
+
+{% block title %}Все тесты - {{ appName }}{% endblock %}
+
+{% block body_class %}tests-list-page{% endblock %}
+
+{% block content %}
+<div class="tests-list-wrapper">
+    <div class="page-header">
+        <h1 class="page-title">Психологические тесты</h1>
+        <p class="page-description">
+            Выберите тест для прохождения. Все тесты анонимны, результаты сохраняются по уникальной ссылке.
+        </p>
+    </div>
+
+    <div class="tests-grid">
+        {% for test in tests %}
+        <div class="test-card">
+            <div class="test-card-header">
+                <h2 class="test-card-title">{{ test.name }}</h2>
+            </div>
+            <div class="test-card-body">
+                <p class="test-card-description">{{ test.description|slice(0, 150) }}{% if test.description|length > 150 %}...{% endif %}</p>
+                
+                <div class="test-card-meta">
+                    <span class="meta-badge">
+                        📝 {{ test.question_count }} вопросов
+                    </span>
+                    <span class="meta-badge">
+                        ⏱️ ~{{ test.estimated_time }} мин
+                    </span>
+                </div>
+                
+                {% if test.scales %}
+                <div class="test-card-scales">
+                    <small>Шкалы: {{ test.scales|join(', ') }}</small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="test-card-footer">
+                <a href="{{ basePath }}/test/{{ test.slug }}" class="btn btn-primary btn-block">
+                    Пройти тест
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if tests is empty %}
+    <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>Тесты пока не доступны</h3>
+        <p>Попробуйте зайти позже</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
