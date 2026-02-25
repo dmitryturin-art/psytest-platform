@@ -1,7 +1,7 @@
 <?php
 /**
- * Script to create fake SMIL test session with results
- * Run once to create test data for viewing results page
+ * Script to create fake SMIL test session with ELEVATED results
+ * Run to create test data with high Depression and Anxiety for demo
  */
 
 declare(strict_types=1);
@@ -14,6 +14,7 @@ use PsyTest\Modules\Smil\SmilModule;
 
 echo "===========================================\n";
 echo "Создание тестовой сессии СМИЛ\n";
+echo "с ПОВЫШЕННЫМИ шкалами Депрессии и Тревоги\n";
 echo "===========================================\n\n";
 
 try {
@@ -39,27 +40,36 @@ try {
     echo "Сессия создана: {$session['id']}\n";
     echo "Токен: {$session['session_token']}\n\n";
 
-    // Generate fake answers (50 questions for demo)
+    // Generate fake answers with pattern for elevated scales
     $questions = $module->getQuestions();
     $answers = [];
 
-    echo "Генерация ответов (50 вопросов)...\n";
+    echo "Генерация ответов с паттерном для повышенных шкал...\n";
 
-    // Create pattern: mix of true/false to get interesting results
     foreach ($questions as $question) {
         $id = $question['id'];
+        $scale = $question['scale'] ?? null;
+        $direction = $question['direction'] ?? 1;
         
-        // Pattern: mostly false (0) with some true (1) for elevated scales
         if ($id <= 50) {
-            // First 10: mostly true (for elevated L scale - fake good)
-            if ($id <= 10) {
-                $answers[$id] = ($id % 3 === 0) ? false : true;
+            // Pattern for elevated scale 2 (Depression) and 7 (Psychastenia/Anxiety)
+            if ($scale === '2' || $scale === '7') {
+                // Answer in direction that increases score
+                $answers[$id] = ($direction === 1) ? true : false;
             }
-            // Next 20: mix for elevated F scale
-            elseif ($id <= 30) {
-                $answers[$id] = ($id % 4 === 0) ? true : false;
+            // Scale L (Lie) - moderate
+            elseif ($scale === 'L') {
+                $answers[$id] = ($id % 2 === 0) ? true : false;
             }
-            // Last 20: pattern for clinical scales
+            // Scale F (Validity) - low to normal
+            elseif ($scale === 'F') {
+                $answers[$id] = false;
+            }
+            // Scale K (Correction) - moderate
+            elseif ($scale === 'K') {
+                $answers[$id] = ($id % 3 === 0) ? true : false;
+            }
+            // Other scales - mixed
             else {
                 $answers[$id] = ($id % 2 === 0) ? true : false;
             }
