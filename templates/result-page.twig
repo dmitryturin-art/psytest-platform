@@ -48,24 +48,6 @@
         {{ results_html|raw }}
     </div>
 
-    <!-- Interpretation Section -->
-    {% if interpretation %}
-    <div class="interpretation-block">
-        <h2>Интерпретация</h2>
-        <div class="interpretation-text">
-            <p><strong>{{ interpretation.summary }}</strong></p>
-            {% if interpretation.recommendations %}
-            <h3>Рекомендации:</h3>
-            <ul>
-                {% for rec in interpretation.recommendations %}
-                <li>{{ rec }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-
     <!-- Disclaimer -->
     <div class="results-disclaimer">
         <p>
