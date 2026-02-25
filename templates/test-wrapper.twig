@@ -36,9 +36,36 @@
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="session_id" value="{{ session.id }}">
-        
-        <!-- Questions Container -->
-        <div class="questions-container" id="questionsContainer">
+
+        <!-- Demographics Section -->
+        <div class="demographics-section" id="demographicsSection">
+            <h3 class="demographics-title">📋 Информация о респонденте</h3>
+            <p class="demographics-subtitle">Пожалуйста, укажите ваш пол перед началом тестирования</p>
+            
+            <div class="demographics-options">
+                <label class="demographic-option">
+                    <input type="radio" name="demographics[gender]" value="male" required>
+                    <span class="option-icon">👨</span>
+                    <span class="option-label">Мужской</span>
+                </label>
+                <label class="demographic-option">
+                    <input type="radio" name="demographics[gender]" value="female" required>
+                    <span class="option-icon">👩</span>
+                    <span class="option-label">Женский</span>
+                </label>
+            </div>
+            
+            <div class="age-input-group">
+                <label for="demographicsAge">Ваш возраст:</label>
+                <input type="number" id="demographicsAge" name="demographics[age]" min="14" max="100" placeholder="14-100" required>
+                <small>Минимальный возраст для прохождения: 14 лет</small>
+            </div>
+            
+            <button type="button" class="btn btn-primary btn-lg" id="startTestBtn">Начать тестирование →</button>
+        </div>
+
+        <!-- Questions Container (hidden until demographics completed) -->
+        <div class="questions-container" id="questionsContainer" style="display: none;">
             {% for question in questions %}
             <div class="question-card" data-question-id="{{ question.id }}">
                 <p class="question-text">{{ question.id }}. {{ question.text }}</p>

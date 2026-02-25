@@ -16,7 +16,8 @@
       "PsyTest\\Services\\": "services/",
       "PsyTest\\Modules\\": "modules/",
       "PsyTest\\Controllers\\": "controllers/",
-      "PsyTest\\Modules\\Smil\\": "modules/smil/"
+      "PsyTest\\Modules\\Smil\\": "modules/smil/",
+      "PsyTest\\Modules\\BeckAnxiety\\": "modules/beck-anxiety/"
     }
   },
   "config": {
