@@ -118,36 +118,24 @@
      */
     function validateDemographics() {
         const genderOptions = document.querySelectorAll('input[name="demographics[gender]"]');
-        const ageInput = document.getElementById('demographicsAge');
         
         let genderSelected = false;
+        let selectedGender = '';
         genderOptions.forEach(option => {
-            if (option.checked) genderSelected = true;
+            if (option.checked) {
+                genderSelected = true;
+                selectedGender = option.value;
+            }
         });
-        
-        const age = parseInt(ageInput?.value || 0);
-        const isValidAge = age >= 14 && age <= 100;
         
         if (!genderSelected) {
             alert('Пожалуйста, выберите ваш пол');
             return false;
         }
         
-        if (!isValidAge) {
-            if (age < 14) {
-                alert('К сожалению, тестирование доступно только с 14 лет');
-                return false;
-            } else {
-                alert('Пожалуйста, укажите корректный возраст (14-100)');
-                return false;
-            }
-        }
-        
         // Save demographics
-        const selectedGender = document.querySelector('input[name="demographics[gender]"]:checked');
         demographics = {
-            gender: selectedGender ? selectedGender.value : '',
-            age: age,
+            gender: selectedGender,
         };
         
         return true;

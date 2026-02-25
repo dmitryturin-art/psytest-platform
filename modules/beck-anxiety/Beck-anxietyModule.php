@@ -104,7 +104,7 @@ class BeckAnxietyModule extends BaseTestModule
         $totalScore = 0;
         $answeredCount = 0;
         $symptomScores = [];
-        
+
         // Подсчёт общего балла
         foreach ($answers as $questionId => $answer) {
             $question = $this->findQuestionById((int) $questionId);
@@ -112,7 +112,7 @@ class BeckAnxietyModule extends BaseTestModule
                 $points = $this->getPointsForAnswer($question, $answer);
                 $totalScore += $points;
                 $answeredCount++;
-                
+
                 // Сохраняем баллы по симптомам
                 $symptomScores[$questionId] = [
                     'text' => $question['text'],
@@ -121,16 +121,16 @@ class BeckAnxietyModule extends BaseTestModule
                 ];
             }
         }
-        
+
         // Определение уровня тревоги
         $level = $this->getLevel($totalScore);
         $levelName = self::LEVEL_NAMES[$level] ?? $level;
         $interpretation = self::INTERPRETATIONS[$level] ?? '';
-        
+
         // Расчёт процента от максимума
         $maxScore = 63; // 21 вопрос × 3 балла
-        $percentage = round(($totalScore / $maxScore) * 100);
-        
+        $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100) : 0;
+
         return [
             'total_score' => $totalScore,
             'max_score' => $maxScore,

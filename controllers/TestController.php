@@ -134,12 +134,23 @@ class TestController
         // Collect all answers from POST
         $answers = $_POST['answers'] ?? [];
         
+        // Normalize answers - convert string values to proper types
+        $normalizedAnswers = [];
+        foreach ($answers as $questionId => $answer) {
+            // Convert to integer if it's a numeric string (for BAI: 0,1,2,3)
+            if (is_numeric($answer)) {
+                $normalizedAnswers[$questionId] = (int) $answer;
+            } else {
+                $normalizedAnswers[$questionId] = $answer === 'true' || $answer === true;
+            }
+        }
+
         // Merge with previously saved answers
-        $allAnswers = array_merge($session['answers'], $answers);
-        
+        $allAnswers = array_merge($session['answers'], $normalizedAnswers);
+
         // Save final answers
         $this->sessionManager->saveAnswers($sessionId, $allAnswers);
-        
+
         // Calculate results
         $rawResults = $module->calculateResults($allAnswers);
         
