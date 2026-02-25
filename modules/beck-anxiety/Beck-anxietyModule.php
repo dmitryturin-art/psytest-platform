@@ -279,10 +279,11 @@ class BeckAnxietyModule extends BaseTestModule
         // Топ симптомов (если есть детализация)
         if (!empty($results['symptom_scores'])) {
             $topSymptoms = $this->getTopSymptoms($results['symptom_scores'], 5);
-            
+
             if (!empty($topSymptoms)) {
                 $html .= '<div class="symptoms-card">';
                 $html .= '<h3>⚠️ Наиболее выраженные симптомы</h3>';
+                $html .= '<p class="symptoms-note"><small>Показаны топ-5 симптомов с наибольшими баллами. Остальные симптомы имеют меньшую выраженность.</small></p>';
                 $html .= '<ul class="symptoms-list">';
                 foreach ($topSymptoms as $symptom) {
                     $intensity = $this->getSymptomIntensity($symptom['score']);

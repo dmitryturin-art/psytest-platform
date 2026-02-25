@@ -1178,6 +1178,12 @@ body {
     color: var(--color-text);
 }
 
+.bai-results .symptoms-note {
+    margin-top: -0.5em;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text-light);
+}
+
 .bai-results .interpretation-text {
     font-size: var(--font-size-lg);
     line-height: 1.6;
