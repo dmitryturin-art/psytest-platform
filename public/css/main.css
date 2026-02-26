@@ -436,7 +436,8 @@ body {
 
 .answer-options {
     display: flex;
-    gap: var(--spacing-lg);
+    flex-direction: column;
+    gap: var(--spacing-sm);
 }
 
 .answer-option {
@@ -461,6 +462,7 @@ body {
 
 .option-text {
     font-size: var(--font-size-base);
+    color: var(--color-text);
 }
 
 /* Test Navigation */
