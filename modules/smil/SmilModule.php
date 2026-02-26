@@ -186,6 +186,7 @@ class SmilModule extends BaseTestModule
             'clinical_scales' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
             'full_version' => true,
             'total_questions' => 566,
+            'additional_scales_count' => 200,
         ]);
     }
 
@@ -209,24 +210,55 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Calculate SMIL results
+     * Load additional scales from JSON
+     */
+    protected function loadAdditionalScales(): array
+    {
+        $filepath = $this->modulePath . '/additional-scales.json';
+        if (!file_exists($filepath)) {
+            return [];
+        }
+        $content = file_get_contents($filepath);
+        $data = json_decode($content, true) ?? [];
+        return $data['scales'] ?? [];
+    }
+
+    /**
+     * Load interpretations from JSON
+     */
+    protected function loadInterpretations(): array
+    {
+        $filepath = $this->modulePath . '/interpretations.json';
+        if (!file_exists($filepath)) {
+            return [];
+        }
+        $content = file_get_contents($filepath);
+        return json_decode($content, true) ?? [];
+    }
+
+    /**
+     * Calculate SMIL results - Full version with all scales
      */
     public function calculateResults(array $answers): array
     {
-        // Calculate raw scores for each scale
+        // Calculate raw scores for basic scales
         $rawScores = $this->calculateRawScores($answers);
+        
+        // Calculate additional scales
+        $additionalRawScores = $this->calculateAdditionalScales($answers);
+        $rawScores = array_merge($rawScores, $additionalRawScores);
 
-        // Get gender from demographics (default to male if not specified)
-        $gender = $this->detectGenderFromAnswers($answers) ?? 'male';
+        // Get gender from demographics
+        $gender = $answers['gender'] ?? 'male';
 
         // Convert to T-scores using gender-specific norms
         $tScores = $this->convertToTScores($rawScores, $gender);
 
-        // Calculate validity indicators
-        $validity = $this->assessValidity($tScores);
-
         // Apply K-correction to clinical scales
         $correctedScores = $this->applyKCorrection($tScores, $rawScores);
+
+        // Calculate validity indicators
+        $validity = $this->assessValidity($tScores);
 
         // Calculate additional indices
         $indices = $this->calculateIndices($rawScores, $tScores);
@@ -246,6 +278,47 @@ class SmilModule extends BaseTestModule
             'total_questions' => 566,
             'completion_rate' => round(count($answers) / 566 * 100, 1),
         ];
+    }
+
+    /**
+     * Calculate additional scales raw scores
+     */
+    protected function calculateAdditionalScales(array $answers): array
+    {
+        $scales = $this->loadAdditionalScales();
+        $questions = $this->getQuestions();
+        $rawScores = [];
+        
+        // Build question map for quick lookup
+        $questionMap = [];
+        foreach ($questions as $question) {
+            $questionMap[$question['id']] = $question;
+        }
+        
+        // Calculate each additional scale
+        foreach ($scales as $category => $scaleList) {
+            foreach ($scaleList as $code => $info) {
+                if (!isset($info['questions']) || !is_array($info['questions'])) {
+                    continue;
+                }
+                
+                $score = 0;
+                foreach ($info['questions'] as $questionId => $direction) {
+                    if (isset($answers[$questionId]) && isset($questionMap[$questionId])) {
+                        $answer = $answers[$questionId];
+                        if ($direction === 1) {
+                            $score += $answer ? 1 : 0;
+                        } else {
+                            $score += $answer ? 0 : 1;
+                        }
+                    }
+                }
+                
+                $rawScores[$code] = $score;
+            }
+        }
+        
+        return $rawScores;
     }
 
     /**
@@ -449,27 +522,29 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Apply K-correction to clinical scales
+     * Apply K-correction to clinical scales with formulas
      */
     protected function applyKCorrection(array $tScores, array $rawScores): array
     {
         $corrected = $tScores;
         $K = $rawScores['K'] ?? 0;
 
-        $corrections = [
-            '1' => 0.5,
-            '3' => 0.3,
-            '4' => 0.4,
-            '6' => 0.3,
-            '7' => 0.5,
-            '8' => 0.2,
-            '9' => 0.3,
-            '0' => 0.3,
+        // Formulas from additional-scales.json
+        $formulas = [
+            '1' => 0.5,  // +0.5K
+            '3' => 0.3,  // +0.3K
+            '4' => 0.4,  // +0.4K
+            '6' => 0.3,  // +0.3K
+            '7' => 1.0,  // +1.0K
+            '8' => 0.2,  // +0.2K
+            '9' => 0.2,  // +0.2K
+            '0' => 0.0,  // No correction
         ];
 
-        foreach ($corrections as $scale => $fraction) {
-            if (isset($corrected[$scale])) {
-                $corrected[$scale] = round($tScores[$scale] + ($K * $fraction), 1);
+        foreach ($formulas as $scale => $fraction) {
+            if (isset($corrected[$scale]) && $fraction > 0) {
+                $kCorrection = round($K * $fraction);
+                $corrected[$scale] = round($tScores[$scale] + $kCorrection, 1);
             }
         }
 
@@ -740,19 +815,22 @@ class SmilModule extends BaseTestModule
         // Section 3: T-Scores Table
         $html .= $this->renderTScoresTable($tScores, $correctedScores);
 
-        // Section 4: Additional Indices
+        // Section 4: Additional Scales
+        $html .= $this->renderAdditionalScalesTable($rawScores, $tScores);
+
+        // Section 5: Additional Indices
         $html .= $this->renderIndicesSection($indices);
 
-        // Section 5: Profile Chart
+        // Section 6: Profile Chart
         $html .= $this->renderProfileChart($correctedScores);
 
-        // Section 6: Clinical Scales Detailed
+        // Section 7: Clinical Scales Detailed
         $html .= $this->renderClinicalScalesDetail($profile);
 
-        // Section 7: Profile Type & Code Type
+        // Section 8: Profile Type & Code Type
         $html .= $this->renderProfileTypeSection($profile, $interpretation);
 
-        // Section 8: Recommendations
+        // Section 9: Recommendations
         $html .= $this->renderRecommendationsSection($interpretation);
 
         $html .= '</div>';
@@ -842,13 +920,7 @@ class SmilModule extends BaseTestModule
             $tScore = $tScores[$scale] ?? 50;
             $corrected = $correctedScores[$scale] ?? $tScore;
             $level = $this->getScoreLevel($corrected);
-            $levelText = [
-                'low' => 'Низкий',
-                'normal' => 'Норма',
-                'elevated' => 'Повышенный',
-                'high' => 'Высокий',
-                'very_high' => 'Очень высокий',
-            ][$level] ?? $level;
+            $levelText = $this->getLevelName($level);
 
             $html .= '<tr class="level-' . $level . '">';
             $html .= '<td><strong>' . $scale . '</strong></td>';
@@ -864,6 +936,47 @@ class SmilModule extends BaseTestModule
         $html .= '<div class="k-correction-note">';
         $html .= '<p><strong>Примечание:</strong> K-коррекция применяется к клиническим шкалам для учёта защитной позиции респондента.</p>';
         $html .= '</div>';
+        
+        $html .= '</div>';
+        return $html;
+    }
+
+    /**
+     * Render additional scales table
+     */
+    protected function renderAdditionalScalesTable(array $rawScores, array $tScores): string
+    {
+        $scales = $this->loadAdditionalScales();
+        $html = '<div class="scores-section additional-scales">';
+        $html .= '<h3>📊 Дополнительные шкалы</h3>';
+        
+        foreach ($scales as $category => $scaleList) {
+            if (empty($scaleList)) continue;
+            
+            $categoryNames = [
+                'basic' => 'Базовые шкалы',
+                'additional' => 'Дополнительные шкалы',
+                'content' => 'Контент-шкалы',
+                'supplementary' => 'Дополнительные исследовательские шкалы',
+            ];
+            
+            $html .= '<h4>' . ($categoryNames[$category] ?? $category) . '</h4>';
+            $html .= '<table class="scores-table additional-scores">';
+            $html .= '<thead><tr><th>Код</th><th>Название</th><th>Сырой балл</th><th>Описание</th></tr></thead>';
+            $html .= '<tbody>';
+            
+            foreach ($scaleList as $code => $info) {
+                $rawScore = $rawScores[$code] ?? 0;
+                $html .= '<tr>';
+                $html .= '<td><strong>' . $code . '</strong></td>';
+                $html .= '<td>' . ($info['name'] ?? $code) . '</td>';
+                $html .= '<td class="score">' . $rawScore . '</td>';
+                $html .= '<td class="description">' . ($info['description'] ?? '') . '</td>';
+                $html .= '</tr>';
+            }
+            
+            $html .= '</tbody></table>';
+        }
         
         $html .= '</div>';
         return $html;
