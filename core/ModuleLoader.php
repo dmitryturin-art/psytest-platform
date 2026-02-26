@@ -51,40 +51,42 @@ class ModuleLoader
     private function loadModule(string $dir): void
     {
         $moduleName = basename($dir);
-        $moduleFile = $dir . '/' . ucfirst($moduleName) . 'Module.php';
-        
+        // Convert kebab-case to PascalCase: beck-anxiety → BeckAnxiety
+        $className = str_replace(' ', '', ucwords(str_replace('-', ' ', $moduleName)));
+        $moduleFile = $dir . '/' . $className . 'Module.php';
+
         if (!file_exists($moduleFile)) {
             error_log("Module file not found: $moduleFile");
             return;
         }
-        
+
         require_once $moduleFile;
-        
+
         // Get the class name from the module file
-        $className = $this->getModuleClassName($dir);
-        
-        if (!class_exists($className)) {
-            error_log("Module class not found: $className");
+        $actualClassName = $this->getModuleClassName($dir);
+
+        if (!class_exists($actualClassName)) {
+            error_log("Module class not found: $actualClassName");
             return;
         }
-        
+
         try {
-            $instance = new $className();
-            
+            $instance = new $actualClassName();
+
             if (!$instance instanceof TestModuleInterface) {
-                error_log("Module $className does not implement TestModuleInterface");
+                error_log("Module $actualClassName does not implement TestModuleInterface");
                 return;
             }
-            
+
             $metadata = $instance->getMetadata();
-            
+
             $this->modules[$metadata['slug']] = [
                 'instance' => $instance,
                 'metadata' => $metadata,
                 'path' => $dir,
-                'class' => $className,
+                'class' => $actualClassName,
             ];
-            
+
         } catch (\Exception $e) {
             error_log("Failed to load module $moduleName: " . $e->getMessage());
         }
