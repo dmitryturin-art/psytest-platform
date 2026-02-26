@@ -237,6 +237,19 @@ class SmilModule extends BaseTestModule
     }
 
     /**
+     * Load T-score tables from JSON
+     */
+    protected function loadTScoreTables(): array
+    {
+        $filepath = $this->modulePath . '/t-score-tables.json';
+        if (!file_exists($filepath)) {
+            return [];
+        }
+        $content = file_get_contents($filepath);
+        return json_decode($content, true) ?? [];
+    }
+
+    /**
      * Calculate SMIL results - Full version with all scales
      */
     public function calculateResults(array $answers): array
@@ -380,17 +393,19 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Convert raw scores to T-scores using gender-specific norms
+     * Convert raw scores to T-scores using gender-specific norms from JSON tables
      */
     protected function convertToTScores(array $rawScores, string $gender): array
     {
+        $tables = $this->loadTScoreTables();
+        $genderTables = $gender === 'female' ? ($tables['female'] ?? []) : ($tables['male'] ?? []);
+        
         $tScores = [];
-        $tables = $gender === 'female' ? $this->getTScoresFemale() : $this->getTScoresMale();
-
+        
         foreach ($rawScores as $scale => $rawScore) {
-            $tScores[$scale] = $this->lookupTScore($scale, $rawScore, $tables);
+            $tScores[$scale] = $this->lookupTScore($scale, (int) $rawScore, $genderTables);
         }
-
+        
         return $tScores;
     }
 
