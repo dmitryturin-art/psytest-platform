@@ -972,30 +972,56 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Render additional scales table
+     * Render additional scales table - Grouped in accordion
      */
     protected function renderAdditionalScalesTable(array $rawScores, array $tScores): string
     {
         $scales = $this->loadAdditionalScales();
         $html = '<div class="scores-section additional-scales">';
         $html .= '<h3>📊 Дополнительные шкалы</h3>';
+        $html .= '<p class="section-note">Дополнительные шкалы сгруппированы по категориям. Нажмите на заголовок, чтобы раскрыть.</p>';
+        
+        $categoryNames = [
+            'basic' => '🔹 Базовые шкалы',
+            'factor' => '🔸 Факторные шкалы',
+            'special' => '🔶 Специальные шкалы',
+            'content' => '🔷 Контент-шкалы',
+        ];
+        
+        $categoryIcons = [
+            'basic' => '🔹',
+            'factor' => '🔸',
+            'special' => '🔶',
+            'content' => '🔷',
+        ];
         
         foreach ($scales as $category => $scaleList) {
             if (empty($scaleList)) continue;
             
-            $categoryNames = [
-                'basic' => 'Базовые шкалы',
-                'additional' => 'Дополнительные шкалы',
-                'content' => 'Контент-шкалы',
-                'supplementary' => 'Дополнительные исследовательские шкалы',
-            ];
+            // Filter scales with actual scores
+            $scalesWithScores = [];
+            foreach ($scaleList as $code => $info) {
+                if (isset($rawScores[$code]) && $rawScores[$code] > 0) {
+                    $scalesWithScores[$code] = $info;
+                }
+            }
             
-            $html .= '<h4>' . ($categoryNames[$category] ?? $category) . '</h4>';
+            if (empty($scalesWithScores)) continue;
+            
+            $isOpen = ($category === 'factor' || $category === 'special') ? 'false' : 'true';
+            
+            $html .= '<details class="scale-accordion" ' . ($isOpen === 'true' ? 'open' : '') . '>';
+            $html .= '<summary class="scale-accordion-header">';
+            $html .= '<span class="category-icon">' . ($categoryIcons[$category] ?? '📊') . '</span>';
+            $html .= '<span class="category-title">' . ($categoryNames[$category] ?? $category) . '</span>';
+            $html .= '<span class="category-count">' . count($scalesWithScores) . ' шкал</span>';
+            $html .= '</summary>';
+            $html .= '<div class="scale-accordion-content">';
             $html .= '<table class="scores-table additional-scores">';
             $html .= '<thead><tr><th>Код</th><th>Название</th><th>Сырой балл</th><th>Описание</th></tr></thead>';
             $html .= '<tbody>';
             
-            foreach ($scaleList as $code => $info) {
+            foreach ($scalesWithScores as $code => $info) {
                 $rawScore = $rawScores[$code] ?? 0;
                 $html .= '<tr>';
                 $html .= '<td><strong>' . $code . '</strong></td>';
@@ -1006,6 +1032,8 @@ class SmilModule extends BaseTestModule
             }
             
             $html .= '</tbody></table>';
+            $html .= '</div>';
+            $html .= '</details>';
         }
         
         $html .= '</div>';
