@@ -273,12 +273,11 @@ class SmilModule extends BaseTestModule
         // Convert to T-scores using gender-specific norms
         $tScores = $this->convertToTScores($rawScores, $gender);
 
-        // Apply K-correction to clinical scales
-        $correctedScores = $this->applyKCorrection($tScores, $rawScores);
+        // Apply K-correction to clinical scales (already applied in convertToTScores)
+        $correctedScores = $tScores;
 
         // Calculate additional scales
-        $additionalRawScores = $this->calculateAdditionalScales($answers);
-        $rawScores = array_merge($rawScores, $additionalRawScores);
+        $additionalScores = $this->calculateAdditionalScales($answers, $gender);
 
         // Calculate validity indicators
         $validity = $this->assessValidity($tScores);
@@ -304,40 +303,74 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Calculate additional scales raw scores
+     * Load additional scales norms from JSON
      */
-    protected function calculateAdditionalScales(array $answers): array
+    protected function loadAdditionalScalesNorms(): array
     {
-        $scales = $this->loadAdditionalScales();
-        $rawScores = [];
+        $filepath = $this->modulePath . '/additional-scales-norms.json';
+        if (!file_exists($filepath)) {
+            return [];
+        }
+        $content = file_get_contents($filepath);
+        return json_decode($content, true) ?? [];
+    }
 
-        // Calculate each additional scale
-        foreach ($scales as $category => $scaleList) {
-            foreach ($scaleList as $code => $info) {
-                if (!isset($info['questions']) || !is_array($info['questions'])) {
+    /**
+     * Calculate additional scales raw scores and T-scores
+     */
+    protected function calculateAdditionalScales(array $answers, string $gender): array
+    {
+        $normsData = $this->loadAdditionalScalesNorms();
+        $results = [];
+        
+        foreach ($normsData as $category => $scales) {
+            foreach ($scales as $code => $info) {
+                if (!isset($info['key']) || !isset($info['norms'])) {
                     continue;
                 }
                 
-                $score = 0;
-                foreach ($info['questions'] as $questionId => $direction) {
-                    if (isset($answers[$questionId])) {
-                        $answer = $answers[$questionId];
-                        if ($direction === 1) {
-                            $score += $answer ? 1 : 0;
-                        } else {
-                            $score += $answer ? 0 : 1;
-                        }
+                // Calculate raw score
+                $rawScore = 0;
+                $key = $info['key'];
+                
+                foreach ($key['true'] ?? [] as $questionId) {
+                    if (isset($answers[$questionId]) && $answers[$questionId] === true) {
+                        $rawScore++;
                     }
                 }
                 
-                // Only include if score > 0
-                if ($score > 0) {
-                    $rawScores[$code] = $score;
+                foreach ($key['false'] ?? [] as $questionId) {
+                    if (isset($answers[$questionId]) && $answers[$questionId] === false) {
+                        $rawScore++;
+                    }
                 }
+                
+                // Get norms for gender
+                $norms = $info['norms'][$gender] ?? $info['norms']['male'] ?? [];
+                $M = $norms['M'] ?? 0;
+                $delta = $norms['delta'] ?? 1;
+                
+                // Calculate T-score: T = 50 + 10 × (X - M) / δ
+                if ($delta == 0) {
+                    $tScore = 50;
+                } else {
+                    $tScore = round(50 + 10 * ($rawScore - $M) / $delta);
+                }
+                
+                // Clamp to valid range
+                $tScore = max(0, min(120, $tScore));
+                
+                $results[$code] = [
+                    'name' => $info['name'] ?? $code,
+                    'raw' => $rawScore,
+                    't' => $tScore,
+                    'M' => $M,
+                    'delta' => $delta,
+                ];
             }
         }
         
-        return $rawScores;
+        return $results;
     }
 
     /**
@@ -399,17 +432,54 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Convert raw scores to T-scores using gender-specific norms from JSON tables
+     * Load basic scales norms from JSON
+     */
+    protected function loadBasicScalesNorms(): array
+    {
+        $filepath = $this->modulePath . '/basic_scales_norms.json';
+        if (!file_exists($filepath)) {
+            return [];
+        }
+        $content = file_get_contents($filepath);
+        $data = json_decode($content, true) ?? [];
+        return $data['scales'] ?? [];
+    }
+
+    /**
+     * Convert raw scores to T-scores using Sobchik formula
+     * T = 50 + 10 × (X - M) / δ
      */
     protected function convertToTScores(array $rawScores, string $gender): array
     {
-        $tables = $this->loadTScoreTables();
-        $genderTables = $gender === 'female' ? ($tables['female'] ?? []) : ($tables['male'] ?? []);
-        
+        $norms = $this->loadBasicScalesNorms();
         $tScores = [];
         
         foreach ($rawScores as $scale => $rawScore) {
-            $tScores[$scale] = $this->lookupTScore($scale, (int) $rawScore, $genderTables);
+            if (!isset($norms[$scale])) {
+                $tScores[$scale] = 50.0;
+                continue;
+            }
+            
+            $scaleNorms = $norms[$scale][$gender] ?? $norms[$scale]['male'];
+            $M = $scaleNorms['M'];
+            $delta = $scaleNorms['delta'];
+            
+            // Apply K-correction if needed
+            $kFactor = $norms[$scale]['kCorrectionFactor'] ?? null;
+            $correctedRaw = $rawScore;
+            
+            if ($kFactor !== null && isset($rawScores['K'])) {
+                $kCorrection = round($rawScores['K'] * $kFactor);
+                $correctedRaw = $rawScore + $kCorrection;
+            }
+            
+            // Calculate T-score using formula: T = 50 + 10 × (X - M) / δ
+            if ($delta == 0) {
+                $tScores[$scale] = 50.0;
+            } else {
+                $tScore = 50 + 10 * ($correctedRaw - $M) / $delta;
+                $tScores[$scale] = round($tScore);
+            }
         }
         
         return $tScores;
@@ -840,7 +910,7 @@ class SmilModule extends BaseTestModule
         $html .= $this->renderCalculationsTable($rawScores, $correctedScores);
 
         // Section 4: Additional Scales (T-scores with visual indicators)
-        $html .= $this->renderAdditionalScalesTable($rawScores, $tScores);
+        $html .= $this->renderAdditionalScalesTable($additionalScores);
 
         // Section 5: Additional Indices
         $html .= $this->renderIndicesSection($indices);
@@ -1102,9 +1172,13 @@ class SmilModule extends BaseTestModule
         $html .= '</div>';
         return $html;
     }
-    protected function renderAdditionalScalesTable(array $rawScores, array $tScores): string
+    protected function renderAdditionalScalesTable(array $additionalScores): string
     {
-        $scales = $this->loadAdditionalScales();
+        if (empty($additionalScores)) {
+            return '<div class="scores-section additional-scales"><p>Дополнительные шкалы не рассчитаны</p></div>';
+        }
+        
+        $normsData = $this->loadAdditionalScalesNorms();
         $html = '<div class="scores-section additional-scales" id="additional-scales">';
         $html .= '<h3>📊 Дополнительные шкалы</h3>';
         
@@ -1114,28 +1188,14 @@ class SmilModule extends BaseTestModule
             'content' => 'Контент-шкалы',
         ];
         
-        foreach ($scales as $category => $scaleList) {
-            if (empty($scaleList)) continue;
-            if ($category === 'basic') continue; // Skip basic, already shown
+        foreach ($normsData as $category => $scales) {
+            if (empty($scales)) continue;
             
             // Filter scales with scores
             $scalesWithScores = [];
-            foreach ($scaleList as $code => $info) {
-                $rawScore = $rawScores[$code] ?? 0;
-                if ($rawScore > 0) {
-                    // Calculate T-score from raw score (percentage-based)
-                    $maxScore = $info['max'] ?? 100;
-                    $tScore = round(($rawScore / $maxScore) * 100);
-                    
-                    // Clamp to 20-120 range
-                    $tScore = max(20, min(120, $tScore));
-                    
-                    $scalesWithScores[$code] = [
-                        'name' => $info['name'] ?? $code,
-                        'description' => $info['description'] ?? '',
-                        'raw' => $rawScore,
-                        't_score' => $tScore,
-                    ];
+            foreach ($scales as $code => $info) {
+                if (isset($additionalScores[$code])) {
+                    $scalesWithScores[$code] = array_merge($info, $additionalScores[$code]);
                 }
             }
             
@@ -1152,6 +1212,7 @@ class SmilModule extends BaseTestModule
             $html .= '<tr>';
             $html .= '<th>№</th>';
             $html .= '<th>Название</th>';
+            $html .= '<th>Сырый</th>';
             $html .= '<th>Индикатор</th>';
             $html .= '<th>T-балл</th>';
             $html .= '</tr>';
@@ -1159,18 +1220,24 @@ class SmilModule extends BaseTestModule
             $html .= '<tbody>';
             
             foreach ($scalesWithScores as $code => $info) {
-                $tScore = $info['t_score'];
+                $tScore = $info['t'] ?? 50;
+                $rawScore = $info['raw'] ?? 0;
                 $level = $this->getScoreLevel($tScore);
-                $description = $info['description'];
-                $name = $info['name'];
+                $description = $info['description'] ?? '';
+                $name = $info['name'] ?? $code;
                 
                 $html .= '<tr class="level-' . $level . '">';
                 $html .= '<td><strong>' . $code . '</strong></td>';
                 $html .= '<td>';
-                $html .= '<span class="scale-name-tooltip" data-tooltip="' . htmlspecialchars($description, ENT_QUOTES, 'UTF-8') . '">';
-                $html .= htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-                $html .= '</span>';
+                if (!empty($description)) {
+                    $html .= '<span class="scale-name-tooltip" data-tooltip="' . htmlspecialchars($description, ENT_QUOTES, 'UTF-8') . '">';
+                    $html .= htmlspecialchars($name);
+                    $html .= '</span>';
+                } else {
+                    $html .= htmlspecialchars($name);
+                }
                 $html .= '</td>';
+                $html .= '<td>' . $rawScore . '</td>';
                 $html .= '<td>';
                 $html .= '<div class="mini-visual-scale" style="--marker-pos: ' . $this->calculateMarkerPosition($tScore) . '%"></div>';
                 $html .= '</td>';
@@ -1375,7 +1442,7 @@ class SmilModule extends BaseTestModule
         $statusText = $validity['is_valid'] ? '✓ Достоверно' : '⚠️ Недостоверно';
 
         $html = '<div class="validity-section status-' . $statusClass . '">';
-        $html .= '<h3>Оценка достоверности</h3>';
+        $html .= '<h3>Оценка достоверн��сти</h3>';
         $html .= '<div class="validity-indicators">';
         $html .= '<div class="indicator"><span class="label">L (Ложь):</span><span class="value">' . $validity['L_score'] . '</span></div>';
         $html .= '<div class="indicator"><span class="label">F (Достоверность):</span><span class="value">' . $validity['F_score'] . '</span></div>';
