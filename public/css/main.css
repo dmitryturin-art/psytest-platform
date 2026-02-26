@@ -1808,3 +1808,54 @@ body {
     font-size: var(--font-size-xs);
     color: var(--color-text-light);
 }
+
+/* Profile Chart Styles */
+.smil-results .profile-chart-container {
+    background: var(--color-bg-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.smil-results .profile-chart-container h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+}
+
+.smil-results .chart-wrapper {
+    position: relative;
+    height: 300px;
+    margin-bottom: var(--spacing-md);
+}
+
+.smil-results .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    justify-content: center;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.smil-results .legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+}
+
+.smil-results .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+}
+
+.smil-results .legend-color.low { background: #3498db; }
+.smil-results .legend-color.normal { background: #27ae60; }
+.smil-results .legend-color.elevated { background: #f39c12; }
+.smil-results .legend-color.high { background: #e67e22; }
+.smil-results .legend-color.very-high { background: #e74c3c; }

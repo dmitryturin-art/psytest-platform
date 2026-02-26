@@ -1247,8 +1247,17 @@ class SmilModule extends BaseTestModule
         $labelsJson = json_encode(array_values($scaleNames));
 
         $html = '<div class="profile-chart-container">';
-        $html .= '<h3>Профиль личности</h3>';
+        $html .= '<h3>📊 Профиль личности</h3>';
+        $html .= '<div class="chart-wrapper">';
         $html .= '<canvas id="smilProfileChart" data-scores=\'' . $dataJson . '\' data-labels=\'' . $labelsJson . '\'></canvas>';
+        $html .= '</div>';
+        $html .= '<div class="chart-legend">';
+        $html .= '<div class="legend-item"><span class="legend-color low"></span> Низкий (0-44T)</div>';
+        $html .= '<div class="legend-item"><span class="legend-color normal"></span> Норма (45-54T)</div>';
+        $html .= '<div class="legend-item"><span class="legend-color elevated"></span> Повышенный (55-64T)</div>';
+        $html .= '<div class="legend-item"><span class="legend-color high"></span> Высокий (65-74T)</div>';
+        $html .= '<div class="legend-item"><span class="legend-color very-high"></span> Очень высокий (75T+)</div>';
+        $html .= '</div>';
         $html .= '</div>';
 
         return $html;
