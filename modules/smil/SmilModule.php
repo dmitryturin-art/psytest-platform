@@ -270,6 +270,10 @@ class SmilModule extends BaseTestModule
         // Apply K-correction to clinical scales
         $correctedScores = $this->applyKCorrection($tScores, $rawScores);
 
+        // Calculate additional scales
+        $additionalRawScores = $this->calculateAdditionalScales($answers);
+        $rawScores = array_merge($rawScores, $additionalRawScores);
+
         // Calculate validity indicators
         $validity = $this->assessValidity($tScores);
 
@@ -1112,11 +1116,24 @@ class SmilModule extends BaseTestModule
             if (empty($scaleList)) continue;
             if ($category === 'basic') continue; // Skip basic, already shown
             
-            // Filter scales with T-scores
+            // Filter scales with scores
             $scalesWithScores = [];
             foreach ($scaleList as $code => $info) {
-                if (isset($tScores[$code]) && $tScores[$code] > 0) {
-                    $scalesWithScores[$code] = $info;
+                $rawScore = $rawScores[$code] ?? 0;
+                if ($rawScore > 0) {
+                    // Calculate T-score from raw score (percentage-based)
+                    $maxScore = $info['max'] ?? 100;
+                    $tScore = round(($rawScore / $maxScore) * 100);
+                    
+                    // Clamp to 20-120 range
+                    $tScore = max(20, min(120, $tScore));
+                    
+                    $scalesWithScores[$code] = [
+                        'name' => $info['name'] ?? $code,
+                        'description' => $info['description'] ?? '',
+                        'raw' => $rawScore,
+                        't_score' => $tScore,
+                    ];
                 }
             }
             
@@ -1140,16 +1157,21 @@ class SmilModule extends BaseTestModule
             $html .= '<tbody>';
             
             foreach ($scalesWithScores as $code => $info) {
-                $tScore = $tScores[$code] ?? 50;
+                $tScore = $info['t_score'];
                 $level = $this->getScoreLevel($tScore);
-                $description = $info['description'] ?? '';
+                $description = $info['description'];
+                $name = $info['name'];
                 
                 $html .= '<tr class="level-' . $level . '">';
                 $html .= '<td><strong>' . $code . '</strong></td>';
                 $html .= '<td>';
-                $html .= '<span class="scale-name-tooltip" title="' . htmlspecialchars($description) . '">';
-                $html .= htmlspecialchars($info['name'] ?? $code);
-                $html .= '</span>';
+                if (!empty($description)) {
+                    $html .= '<span class="scale-name-tooltip" title="' . htmlspecialchars($description) . '">';
+                    $html .= htmlspecialchars($name);
+                    $html .= '</span>';
+                } else {
+                    $html .= htmlspecialchars($name);
+                }
                 $html .= '</td>';
                 $html .= '<td>';
                 $html .= '<div class="mini-visual-scale" style="--marker-pos: ' . $this->calculateMarkerPosition($tScore) . '%"></div>';

@@ -2205,12 +2205,12 @@ body {
     content: '';
     position: absolute;
     left: var(--marker-pos, 50%);
-    top: 2px;
-    width: 4px;
-    height: 20px;
+    top: 0;
+    width: 3px;
+    height: 100%;
     background: #2c3e50;
     transform: translateX(-50%);
-    border-radius: var(--radius-sm);
+    z-index: 10;
 }
 
 /* Calculations Table */
