@@ -875,12 +875,17 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Render raw scores table
+     * Render raw scores table - Collapsible
      */
     protected function renderRawScoresTable(array $rawScores): string
     {
-        $html = '<div class="scores-section">';
-        $html .= '<h3>📊 Сырые баллы (Raw Scores)</h3>';
+        $html = '<details class="scores-section raw-scores-accordion" open>';
+        $html .= '<summary class="scores-accordion-header">';
+        $html .= '<span class="category-icon">📊</span>';
+        $html .= '<span class="category-title">Сырые баллы (Raw Scores)</span>';
+        $html .= '<span class="category-count">' . count($rawScores) . ' шкал</span>';
+        $html .= '</summary>';
+        $html .= '<div class="scores-accordion-content">';
         $html .= '<table class="scores-table raw-scores">';
         $html .= '<thead><tr><th>Шкала</th><th>Название</th><th>Сырой балл</th><th>Описание</th></tr></thead>';
         $html .= '<tbody>';
@@ -912,7 +917,9 @@ class SmilModule extends BaseTestModule
             $html .= '</tr>';
         }
 
-        $html .= '</tbody></table></div>';
+        $html .= '</tbody></table>';
+        $html .= '</div>';
+        $html .= '</details>';
         return $html;
     }
 

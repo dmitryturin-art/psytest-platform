@@ -1916,3 +1916,40 @@ body {
 .smil-results details[open] .category-count {
     color: rgba(255, 255, 255, 0.8);
 }
+
+/* Raw Scores Accordion */
+.smil-results .raw-scores-accordion {
+    margin-bottom: var(--spacing-xl);
+}
+
+.smil-results .scores-accordion-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-bg);
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-text);
+    transition: background 0.2s;
+    list-style: none;
+}
+
+.smil-results .scores-accordion-header:hover {
+    background: #f0f0f0;
+}
+
+.smil-results .scores-accordion-content {
+    padding: 0;
+    background: var(--color-bg-white);
+}
+
+.smil-results .scores-accordion-content table {
+    margin: 0;
+    border-radius: 0;
+}
+
+.smil-results details[open] .scores-accordion-header {
+    background: var(--color-primary);
+    color: white;
+}
