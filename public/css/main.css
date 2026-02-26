@@ -1774,3 +1774,37 @@ body {
     line-height: 1.6;
     font-size: var(--font-size-sm);
 }
+
+/* Additional Scales Styles */
+.smil-results .additional-scales {
+    margin-top: var(--spacing-xl);
+}
+
+.smil-results .additional-scales h4 {
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary);
+    font-size: var(--font-size-lg);
+}
+
+.smil-results .scores-table.additional-scores {
+    font-size: var(--font-size-sm);
+}
+
+.smil-results .scores-table.additional-scores th {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.smil-results .scores-table.additional-scores td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.smil-results .scores-table.additional-scores .score {
+    font-size: var(--font-size-base);
+}
+
+.smil-results .scores-table.additional-scores .description {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-light);
+}
