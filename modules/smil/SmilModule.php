@@ -309,7 +309,10 @@ class SmilModule extends BaseTestModule
             return [];
         }
         $content = file_get_contents($filepath);
-        return json_decode($content, true) ?? [];
+        $data = json_decode($content, true) ?? [];
+        
+        // Extract scales from the data structure
+        return $data['scales'] ?? [];
     }
 
     /**
@@ -1440,7 +1443,7 @@ class SmilModule extends BaseTestModule
         $statusText = $validity['is_valid'] ? '✓ Достоверно' : '⚠️ Недостоверно';
 
         $html = '<div class="validity-section status-' . $statusClass . '">';
-        $html .= '<h3>Оценка достоверн��сти</h3>';
+        $html .= '<h3>Оц��нка достоверн��сти</h3>';
         $html .= '<div class="validity-indicators">';
         $html .= '<div class="indicator"><span class="label">L (Ложь):</span><span class="value">' . $validity['L_score'] . '</span></div>';
         $html .= '<div class="indicator"><span class="label">F (Достоверность):</span><span class="value">' . $validity['F_score'] . '</span></div>';
