@@ -68,4 +68,22 @@
     // Export to window
     window.createScaleIndicator = createScaleIndicator;
 
+    /**
+     * Initialize mini visual scales in tables
+     */
+    function initMiniVisualScales() {
+        document.querySelectorAll('.mini-visual-scale').forEach(function(el) {
+            const score = parseInt(el.getAttribute('data-score'), 10);
+            const position = calculateMarkerPosition(score);
+            el.style.setProperty('--marker-pos', position + '%');
+        });
+    }
+
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMiniVisualScales);
+    } else {
+        initMiniVisualScales();
+    }
+
 })();

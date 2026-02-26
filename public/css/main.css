@@ -2146,3 +2146,110 @@ body {
 .smil-results .visual-scale-container {
     min-height: 100px;
 }
+
+/* Compact T-Scores Table */
+.smil-results .t-scores-compact {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-bg-white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.smil-results .t-scores-compact th {
+    background: var(--color-bg);
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.smil-results .t-scores-compact td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.smil-results .t-scores-compact .score-value {
+    font-weight: 700;
+    font-size: var(--font-size-lg);
+    color: var(--color-primary);
+}
+
+.smil-results .t-scores-compact tr.level-low { background: #e3f2fd; }
+.smil-results .t-scores-compact tr.level-normal { background: #e8f5e9; }
+.smil-results .t-scores-compact tr.level-elevated { background: #fff3e0; }
+.smil-results .t-scores-compact tr.level-high { background: #ffebee; }
+.smil-results .t-scores-compact tr.level-very_high { background: #fce4ec; }
+
+/* Mini Visual Scale */
+.smil-results .mini-visual-scale {
+    width: 100%;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+    background: linear-gradient(90deg, 
+        #3498db 0%, 
+        #27ae60 30%, 
+        #27ae60 60%, 
+        #f39c12 60%, 
+        #e67e22 80%, 
+        #e74c3c 80%, 
+        #e74c3c 100%
+    );
+}
+
+.smil-results .mini-visual-scale::after {
+    content: '';
+    position: absolute;
+    left: var(--marker-pos, 50%);
+    top: 2px;
+    width: 4px;
+    height: 20px;
+    background: #2c3e50;
+    transform: translateX(-50%);
+    border-radius: var(--radius-sm);
+}
+
+/* Calculations Table */
+.smil-results .calculations-table {
+    width: 100%;
+    font-size: var(--font-size-sm);
+    background: var(--color-bg-white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.smil-results .calculations-table th {
+    background: var(--color-bg);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-border);
+    white-space: nowrap;
+}
+
+.smil-results .calculations-table td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.smil-results .calculations-table .score,
+.smil-results .calculations-table .t-score {
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.smil-results .calculations-table .formula {
+    font-family: monospace;
+    color: var(--color-text-light);
+}
+
+.smil-results .calculations-table .correction {
+    color: var(--color-success);
+    font-weight: 600;
+}

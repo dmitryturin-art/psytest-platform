@@ -830,10 +830,13 @@ class SmilModule extends BaseTestModule
         // Section 2: Raw Scores Table
         $html .= $this->renderRawScoresTable($rawScores);
 
-        // Section 3: T-Scores Table with Visual Scale
+        // Section 3: T-Scores Table
         $html .= $this->renderTScoresTable($tScores, $correctedScores);
 
-        // Section 4: Additional Scales
+        // Section 4: Full Calculations Table
+        $html .= $this->renderCalculationsTable($rawScores, $correctedScores);
+
+        // Section 5: Additional Scales
         $html .= $this->renderAdditionalScalesTable($rawScores, $tScores);
 
         // Section 5: Additional Indices
@@ -943,28 +946,39 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Render T-scores table with visual scale indicator
+     * Render T-scores table - Compact with visual indicators
      */
     protected function renderTScoresTable(array $tScores, array $correctedScores): string
     {
         $html = '<div class="scores-section" id="t-scores">';
         $html .= '<h3>📈 Стандартизированные баллы (T-баллы)</h3>';
-        $html .= '<p class="section-note">T-баллы позволяют сравнивать результаты с нормативной выборкой. Среднее значение = 50, стандартное отклонение = 10.</p>';
         
-        // Visual scale for each clinical scale
+        $html .= '<table class="scores-table t-scores-compact">';
+        $html .= '<thead>';
+        $html .= '<tr>';
+        $html .= '<th>Шкала</th>';
+        $html .= '<th>Название</th>';
+        $html .= '<th>T-балл</th>';
+        $html .= '<th>Визуализация</th>';
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+
         $clinicalScales = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-        
+
         foreach ($clinicalScales as $scale) {
             $corrected = $correctedScores[$scale] ?? 50;
-            $html .= '<div class="scale-indicator-wrapper">';
-            $html .= '<div class="scale-indicator-header">';
-            $html .= '<span class="scale-code">' . $scale . '</span>';
-            $html .= '<span class="scale-name">' . self::SCALE_NAMES[$scale] . '</span>';
-            $html .= '<span class="scale-value">' . $corrected . 'T</span>';
-            $html .= '</div>';
-            $html .= '<div id="scale-viz-' . $scale . '" class="visual-scale-container"></div>';
-            $html .= '</div>';
+            $level = $this->getScoreLevel($corrected);
+            
+            $html .= '<tr class="level-' . $level . '">';
+            $html .= '<td><strong>' . $scale . '</strong></td>';
+            $html .= '<td>' . self::SCALE_NAMES[$scale] . '</td>';
+            $html .= '<td class="score-value">' . $corrected . 'T</td>';
+            $html .= '<td><div class="mini-visual-scale" data-score="' . $corrected . '"></div></td>';
+            $html .= '</tr>';
         }
+
+        $html .= '</tbody></table>';
         
         $html .= '<div class="k-correction-note">';
         $html .= '<p><strong>Примечание:</strong> K-коррекция применяется к клиническим шкалам для учёта защитной позиции респондента.</p>';
@@ -990,8 +1004,101 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Render additional scales table - Grouped in accordion
+     * Render full calculations table
      */
+    protected function renderCalculationsTable(array $rawScores, array $correctedScores): string
+    {
+        $html = '<div class="scores-section" id="calculations">';
+        $html .= '<h3>📊 Расчёты (детальная таблица)</h3>';
+        
+        $html .= '<table class="scores-table calculations-table">';
+        $html .= '<thead>';
+        $html .= '<tr>';
+        $html .= '<th>Код</th>';
+        $html .= '<th>Название</th>';
+        $html .= '<th>Сырой балл</th>';
+        $html .= '<th>Формула</th>';
+        $html .= '<th>Корр.</th>';
+        $html .= '<th>Балл</th>';
+        $html .= '<th>max</th>';
+        $html .= '<th>M</th>';
+        $html .= '<th>SD</th>';
+        $html .= '<th>T-Балл</th>';
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+
+        // Control scales
+        $controlScales = [
+            'L' => ['Шкала лжи', 16, 4.20, 2.90],
+            'F' => ['Шкала достоверности', 65, 4.67, 2.78],
+            'K' => ['Шкала коррекции', 30, 12.10, 5.40],
+        ];
+
+        foreach ($controlScales as $code => $info) {
+            $raw = $rawScores[$code] ?? 0;
+            $html .= '<tr>';
+            $html .= '<td><strong>' . $code . '</strong></td>';
+            $html .= '<td>' . $info[0] . '</td>';
+            $html .= '<td class="score">' . $raw . '</td>';
+            $html .= '<td>-</td>';
+            $html .= '<td>-</td>';
+            $html .= '<td class="score">' . $raw . '</td>';
+            $html .= '<td>' . $info[1] . '</td>';
+            $html .= '<td>' . $info[2] . '</td>';
+            $html .= '<td>' . $info[3] . '</td>';
+            $html .= '<td>' . ($correctedScores[$code] ?? '-') . '</td>';
+            $html .= '</tr>';
+        }
+
+        // Clinical scales with formulas
+        $clinicalScales = [
+            '1' => ['1. Ипохондрия (Hs)', 48, 12.90, 4.83, '+0.5K'],
+            '2' => ['2. Депрессия (D)', 60, 18.90, 5.00, '-'],
+            '3' => ['3. Истерия (Hy)', 59, 18.65, 5.38, '+0.3K'],
+            '4' => ['4. Психопатия (Pd)', 62, 18.68, 4.11, '+0.4K'],
+            '5' => ['5. Маскулинность-фемининность (Mf)', 60, 36.70, -4.67, '-'],
+            '6' => ['6. Паранойя (Pa)', 40, 7.90, 3.40, '+0.3K'],
+            '7' => ['7. Психастения (Pt)', 77, 25.70, 6.10, '+1.0K'],
+            '8' => ['8. Шизофрения (Sc)', 108, 22.73, 6.36, '+0.2K'],
+            '9' => ['9. Гипомания (Ma)', 52, 17.00, 4.06, '+0.2K'],
+            '0' => ['0. Интроверсия (Si)', 70, 25.00, 10.00, '-'],
+        ];
+
+        foreach ($clinicalScales as $code => $info) {
+            $raw = $rawScores[$code] ?? 0;
+            $corrected = $correctedScores[$code] ?? 50;
+            $formula = $info[4];
+            
+            // Calculate correction
+            $correction = 0;
+            $K = $rawScores['K'] ?? 0;
+            if ($formula === '+0.5K') $correction = round($K * 0.5);
+            elseif ($formula === '+0.3K') $correction = round($K * 0.3);
+            elseif ($formula === '+0.4K') $correction = round($K * 0.4);
+            elseif ($formula === '+1.0K') $correction = $K;
+            elseif ($formula === '+0.2K') $correction = round($K * 0.2);
+            
+            $totalScore = $raw + $correction;
+
+            $html .= '<tr>';
+            $html .= '<td><strong>' . $code . '</strong></td>';
+            $html .= '<td>' . $info[0] . '</td>';
+            $html .= '<td class="score">' . $raw . '</td>';
+            $html .= '<td class="formula">' . $formula . '</td>';
+            $html .= '<td class="correction">' . ($correction > 0 ? '+' . $correction : '-') . '</td>';
+            $html .= '<td class="score">' . $totalScore . '</td>';
+            $html .= '<td>' . $info[1] . '</td>';
+            $html .= '<td>' . $info[2] . '</td>';
+            $html .= '<td>' . $info[3] . '</td>';
+            $html .= '<td class="t-score">' . $corrected . '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody></table>';
+        $html .= '</div>';
+        return $html;
+    }
     protected function renderAdditionalScalesTable(array $rawScores, array $tScores): string
     {
         $scales = $this->loadAdditionalScales();
