@@ -387,4 +387,18 @@ class BeckAnxietyModule extends BaseTestModule
         if ($score >= 1) return 'low';
         return 'none';
     }
+
+    /**
+     * Get demographics requirements
+     */
+    public function getDemographicsRequirements(): array
+    {
+        return $this->metadata['requires_demographics'] ?? [
+            'gender' => false,
+            'age' => false,
+            'min_age' => 14,
+            'max_age' => 100,
+        ];
+    }
+
 }
