@@ -50,13 +50,20 @@ abstract class BaseTestModule implements TestModuleInterface
     protected function loadQuestionsFromJson(string $filename = 'questions.json'): array
     {
         $filepath = $this->modulePath . '/' . $filename;
-        
+
         if (!file_exists($filepath)) {
             return [];
         }
-        
+
         $content = file_get_contents($filepath);
-        return json_decode($content, true) ?? [];
+        $data = json_decode($content, true) ?? [];
+        
+        // Handle both formats: array of questions or object with "questions" key
+        if (isset($data['questions']) && is_array($data['questions'])) {
+            return $data['questions'];
+        }
+        
+        return is_array($data) ? $data : [];
     }
     
     /**
