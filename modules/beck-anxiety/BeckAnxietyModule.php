@@ -18,7 +18,6 @@ class BeckAnxietyModule extends BaseTestModule
 {
     /**
      * Пороговые значения для интерпретации
-     * Официальные cutoff scores BAI
      */
     protected const THRESHOLDS = [
         'minimal' => ['min' => 0, 'max' => 21],
@@ -66,7 +65,6 @@ class BeckAnxietyModule extends BaseTestModule
             'Рекомендуется обратиться к специалисту (психологу, психотерапевту)',
             'Высокая тревога может влиять на повседневное функционирование',
             'Специалист поможет подобрать эффективные стратегии управления тревогой',
-            'Не откладывайте визит к специалисту, особенно если тревога мешает повседневной жизни',
         ],
     ];
 
@@ -78,8 +76,6 @@ class BeckAnxietyModule extends BaseTestModule
         return array_merge(parent::getMetadata(), [
             'scoring_type' => 'sum',
             'max_score' => 63,
-            'min_score' => 0,
-            'clinical_cutoff' => 22,
             'gender_specific_norms' => false,
         ]);
     }
@@ -104,15 +100,15 @@ class BeckAnxietyModule extends BaseTestModule
         $totalScore = 0;
         $answeredCount = 0;
         $symptomScores = [];
-
-        // Подсчёт общего балла
+        
+        // Подсчёт суммы баллов
         foreach ($answers as $questionId => $answer) {
             $question = $this->findQuestionById((int) $questionId);
             if ($question) {
                 $points = $this->getPointsForAnswer($question, $answer);
                 $totalScore += $points;
                 $answeredCount++;
-
+                
                 // Сохраняем баллы по симптомам
                 $symptomScores[$questionId] = [
                     'text' => $question['text'],
@@ -121,16 +117,16 @@ class BeckAnxietyModule extends BaseTestModule
                 ];
             }
         }
-
+        
         // Определение уровня тревоги
         $level = $this->getLevel($totalScore);
         $levelName = self::LEVEL_NAMES[$level] ?? $level;
         $interpretation = self::INTERPRETATIONS[$level] ?? '';
-
+        
         // Расчёт процента от максимума
         $maxScore = 63; // 21 вопрос × 3 балла
         $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100) : 0;
-
+        
         return [
             'total_score' => $totalScore,
             'max_score' => $maxScore,
@@ -171,8 +167,7 @@ class BeckAnxietyModule extends BaseTestModule
             'level_name' => $levelName,
             'interpretation_text' => $interpretation,
             'recommendations' => $recommendations,
-            'disclaimer' => 'Результат носит ознакомительный характер и не является диагнозом. ' .
-                           'Для профессиональной оценки обратитесь к специалисту.',
+            'disclaimer' => 'Результат носит ознакомительный характер и не заменяет очную консультацию специалиста.',
         ];
     }
 
@@ -206,17 +201,13 @@ class BeckAnxietyModule extends BaseTestModule
         $html .= '</div>';
         
         // Основной балл
-        $html .= '<div class="score-card">';
+        $html .= '<div class="score-card" style="border-left: 4px solid ' . $levelColor . ';">';
         $html .= '<div class="score-main">';
-        $html .= sprintf('<span class="score-value">%d</span>', $totalScore);
-        $html .= sprintf('<span class="score-max">из %d</span>', $maxScore);
+        $html .= '<span class="score-value">' . $totalScore . '</span>';
+        $html .= '<span class="score-max">из ' . $maxScore . '</span>';
         $html .= '</div>';
-        $html .= sprintf('<div class="score-percentage">%d%% от максимума</div>', $percentage);
-        $html .= sprintf(
-            '<div class="score-level" style="color: %s"><strong>%s</strong></div>',
-            $levelColor,
-            $levelName
-        );
+        $html .= '<div class="score-percentage">' . $percentage . '% от максимума</div>';
+        $html .= '<div class="score-level" style="color: ' . $levelColor . '"><strong>' . $levelName . '</strong></div>';
         $html .= '</div>';
         
         // Визуальная шкала
@@ -226,33 +217,21 @@ class BeckAnxietyModule extends BaseTestModule
         
         // Минимальная (0-21)
         $minimalWidth = (21 / 63) * 100;
-        $html .= sprintf(
-            '<div class="scale-segment minimal" style="width: %d%%" title="0-21: Неглубокая тревога"></div>',
-            $minimalWidth
-        );
+        $html .= '<div class="scale-segment minimal" style="width: ' . $minimalWidth . '%" title="0-21: Неглубокая тревога"></div>';
         
         // Средняя (22-35)
         $moderateWidth = ((35 - 22 + 1) / 63) * 100;
-        $html .= sprintf(
-            '<div class="scale-segment moderate" style="width: %d%%" title="22-35: Средняя тревога"></div>',
-            $moderateWidth
-        );
+        $html .= '<div class="scale-segment moderate" style="width: ' . $moderateWidth . '%" title="22-35: Средняя тревога"></div>';
         
         // Высокая (36-63)
         $highWidth = ((63 - 36 + 1) / 63) * 100;
-        $html .= sprintf(
-            '<div class="scale-segment high" style="width: %d%%" title="36-63: Высокая тревога"></div>',
-            $highWidth
-        );
+        $html .= '<div class="scale-segment high" style="width: ' . $highWidth . '%" title="36-63: Высокая тревога"></div>';
+        
+        $html .= '</div>';
         
         // Маркер результата
         $markerPosition = ($totalScore / 63) * 100;
-        $html .= sprintf(
-            '<div class="scale-marker" style="left: %d%%"></div>',
-            $markerPosition
-        );
-        
-        $html .= '</div>';
+        $html .= '<div class="scale-marker" style="left: ' . $markerPosition . '%"></div>';
         
         // Подписи к шкале
         $html .= '<div class="scale-labels">';
@@ -272,27 +251,21 @@ class BeckAnxietyModule extends BaseTestModule
         
         // Интерпретация
         $html .= '<div class="interpretation-card">';
-        $html .= '<h3>📋 Интерпретация результата</h3>';
-        $html .= sprintf('<p class="interpretation-text">%s</p>', is_string($interpretation) ? $interpretation : ($interpretation['text'] ?? ''));
+        $html .= '<h3>Интерпретация результата</h3>';
+        $html .= '<p class="interpretation-text">' . $interpretation . '</p>';
         $html .= '</div>';
         
         // Топ симптомов (если есть детализация)
         if (!empty($results['symptom_scores'])) {
             $topSymptoms = $this->getTopSymptoms($results['symptom_scores'], 5);
-
+            
             if (!empty($topSymptoms)) {
                 $html .= '<div class="symptoms-card">';
-                $html .= '<h3>⚠️ Наиболее выраженные симптомы</h3>';
-                $html .= '<p class="symptoms-note"><small>Показаны топ-5 симптомов с наибольшими баллами. Остальные симптомы имеют меньшую выраженность.</small></p>';
+                $html .= '<h3>Наиболее выраженные симптомы</h3>';
                 $html .= '<ul class="symptoms-list">';
                 foreach ($topSymptoms as $symptom) {
                     $intensity = $this->getSymptomIntensity($symptom['score']);
-                    $html .= sprintf(
-                        '<li><span class="symptom-name">%s</span> <span class="symptom-score %s">%d/3</span></li>',
-                        $symptom['text'],
-                        $intensity,
-                        $symptom['score']
-                    );
+                    $html .= '<li><span class="symptom-name">' . htmlspecialchars($symptom['text']) . '</span> <span class="symptom-score ' . $intensity . '">' . $symptom['score'] . '/3</span></li>';
                 }
                 $html .= '</ul>';
                 $html .= '</div>';
@@ -300,17 +273,22 @@ class BeckAnxietyModule extends BaseTestModule
         }
         
         // Рекомендации
-        if (!empty($recommendations) && is_array($recommendations)) {
+        if (!empty($recommendations)) {
             $html .= '<div class="recommendations-card">';
-            $html .= '<h3>💡 Рекомендации</h3>';
+            $html .= '<h3>Рекомендации</h3>';
             $html .= '<ul class="recommendations-list">';
             foreach ($recommendations as $rec) {
-                $html .= sprintf('<li>%s</li>', is_string($rec) ? $rec : '');
+                $html .= '<li>' . htmlspecialchars($rec) . '</li>';
             }
             $html .= '</ul>';
             $html .= '</div>';
         }
-
+        
+        // Дисклеймер
+        $html .= '<div class="disclaimer-card">';
+        $html .= '<p><strong>Важно:</strong> Данный результат носит ознакомительный характер и не является клиническим диагнозом. Шкала тревоги Бека — это скрининговый инструмент. Для постановки диагноза и назначения лечения обратитесь к квалифицированному специалисту (психологу, психотерапевту, психиатру).</p>';
+        $html .= '</div>';
+        
         $html .= '</div>';
         
         return $html;
@@ -322,6 +300,18 @@ class BeckAnxietyModule extends BaseTestModule
     public function supportsPairMode(): bool
     {
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function comparePairResults(array $results1, array $results2): array
+    {
+        return [
+            'results_1' => $results1,
+            'results_2' => $results2,
+            'differences' => [],
+        ];
     }
     
     // ============================================
@@ -396,13 +386,5 @@ class BeckAnxietyModule extends BaseTestModule
         if ($score >= 2) return 'moderate';
         if ($score >= 1) return 'low';
         return 'none';
-    }
-
-    /**
-     * Get demographics requirements from metadata
-     */
-    public function getDemographicsRequirements(): array
-    {
-        return array_merge(parent::getDemographicsRequirements(), $this->metadata['requires_demographics'] ?? []);
     }
 }
