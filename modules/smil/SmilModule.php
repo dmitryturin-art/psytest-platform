@@ -827,14 +827,14 @@ class SmilModule extends BaseTestModule
         // Section 1: Validity
         $html .= $this->renderValiditySection($validity);
 
-        // Section 2: Raw Scores Table
-        $html .= $this->renderRawScoresTable($rawScores);
-
-        // Section 3: T-Scores Table
+        // Section 2: T-Scores Table (moved up)
         $html .= $this->renderTScoresTable($tScores, $correctedScores);
 
-        // Section 4: Full Calculations Table
+        // Section 3: Full Calculations Table
         $html .= $this->renderCalculationsTable($rawScores, $correctedScores);
+
+        // Section 4: Raw Scores Table (moved down, collapsed by default)
+        $html .= $this->renderRawScoresTable($rawScores);
 
         // Section 5: Additional Scales
         $html .= $this->renderAdditionalScalesTable($rawScores, $tScores);
@@ -866,8 +866,9 @@ class SmilModule extends BaseTestModule
     {
         $html = '<nav class="results-navigation">';
         $html .= '<a href="#validity" class="nav-link">✓ Валидность</a>';
-        $html .= '<a href="#raw-scores" class="nav-link">📊 Сырые баллы</a>';
         $html .= '<a href="#t-scores" class="nav-link">📈 T-баллы</a>';
+        $html .= '<a href="#calculations" class="nav-link">📊 Расчёты</a>';
+        $html .= '<a href="#raw-scores" class="nav-link">📊 Сырые баллы</a>';
         $html .= '<a href="#additional-scales" class="nav-link">📊 Доп. шкалы</a>';
         $html .= '<a href="#profile" class="nav-link">📊 Профиль</a>';
         $html .= '<a href="#interpretation" class="nav-link">📋 Интерпретация</a>';
@@ -897,11 +898,11 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Render raw scores table - Collapsible
+     * Render raw scores table - Collapsible (closed by default)
      */
     protected function renderRawScoresTable(array $rawScores): string
     {
-        $html = '<details class="scores-section raw-scores-accordion" open>';
+        $html = '<details class="scores-section raw-scores-accordion" id="raw-scores">';
         $html .= '<summary class="scores-accordion-header">';
         $html .= '<span class="category-icon">📊</span>';
         $html .= '<span class="category-title">Сырые баллы (Raw Scores)</span>';
