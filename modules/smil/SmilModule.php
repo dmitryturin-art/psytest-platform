@@ -262,10 +262,6 @@ class SmilModule extends BaseTestModule
     {
         // Calculate raw scores for basic scales
         $rawScores = $this->calculateRawScores($answers);
-        
-        // Calculate additional scales
-        $additionalRawScores = $this->calculateAdditionalScales($answers);
-        $rawScores = array_merge($rawScores, $additionalRawScores);
 
         // Get gender from demographics
         $gender = $answers['gender'] ?? 'male';
