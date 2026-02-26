@@ -303,15 +303,8 @@ class SmilModule extends BaseTestModule
     protected function calculateAdditionalScales(array $answers): array
     {
         $scales = $this->loadAdditionalScales();
-        $questions = $this->getQuestions();
         $rawScores = [];
-        
-        // Build question map for quick lookup
-        $questionMap = [];
-        foreach ($questions as $question) {
-            $questionMap[$question['id']] = $question;
-        }
-        
+
         // Calculate each additional scale
         foreach ($scales as $category => $scaleList) {
             foreach ($scaleList as $code => $info) {
@@ -321,7 +314,7 @@ class SmilModule extends BaseTestModule
                 
                 $score = 0;
                 foreach ($info['questions'] as $questionId => $direction) {
-                    if (isset($answers[$questionId]) && isset($questionMap[$questionId])) {
+                    if (isset($answers[$questionId])) {
                         $answer = $answers[$questionId];
                         if ($direction === 1) {
                             $score += $answer ? 1 : 0;
@@ -331,7 +324,10 @@ class SmilModule extends BaseTestModule
                     }
                 }
                 
-                $rawScores[$code] = $score;
+                // Only include if score > 0
+                if ($score > 0) {
+                    $rawScores[$code] = $score;
+                }
             }
         }
         
@@ -1165,13 +1161,9 @@ class SmilModule extends BaseTestModule
                 $html .= '<tr class="level-' . $level . '">';
                 $html .= '<td><strong>' . $code . '</strong></td>';
                 $html .= '<td>';
-                if (!empty($description)) {
-                    $html .= '<span class="scale-name-tooltip" title="' . htmlspecialchars($description) . '">';
-                    $html .= htmlspecialchars($name);
-                    $html .= '</span>';
-                } else {
-                    $html .= htmlspecialchars($name);
-                }
+                $html .= '<span class="scale-name-tooltip" data-tooltip="' . htmlspecialchars($description, ENT_QUOTES, 'UTF-8') . '">';
+                $html .= htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+                $html .= '</span>';
                 $html .= '</td>';
                 $html .= '<td>';
                 $html .= '<div class="mini-visual-scale" style="--marker-pos: ' . $this->calculateMarkerPosition($tScore) . '%"></div>';
