@@ -204,7 +204,13 @@ class SmilModule extends BaseTestModule
     public function getQuestions(): array
     {
         if ($this->questions === null) {
-            $this->questions = $this->loadQuestionsFromJson('questions.json');
+            // Try to load full version first
+            $this->questions = $this->loadQuestionsFromJson('questions-full.json');
+            
+            // Fallback to demo version if full not available
+            if (empty($this->questions)) {
+                $this->questions = $this->loadQuestionsFromJson('questions.json');
+            }
         }
         return $this->questions;
     }
