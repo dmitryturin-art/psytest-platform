@@ -1182,21 +1182,6 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Get level name in Russian
-     */
-    protected function getLevelName(string $level): string
-    {
-        $names = [
-            'low' => 'Низкий',
-            'normal' => 'Норма',
-            'elevated' => 'Повышенный',
-            'high' => 'Высокий',
-            'very_high' => 'Очень высокий',
-        ];
-        return $Names[$level] ?? $level;
-    }
-
-    /**
      * Render validity indicators section
      */
     protected function renderValiditySection(array $validity): string
