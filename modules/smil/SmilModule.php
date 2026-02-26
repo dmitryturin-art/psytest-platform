@@ -1101,24 +1101,16 @@ class SmilModule extends BaseTestModule
         $scales = $this->loadAdditionalScales();
         $html = '<div class="scores-section additional-scales" id="additional-scales">';
         $html .= '<h3>📊 Дополнительные шкалы</h3>';
-        $html .= '<p class="section-note">Дополнительные шкалы сгруппированы по категориям. Показаны T-баллы с визуальной индикацией.</p>';
         
         $categoryNames = [
-            'basic' => '🔹 Базовые шкалы',
-            'factor' => '🔸 Факторные шкалы',
-            'special' => '🔶 Специальные шкалы',
-            'content' => '🔷 Контент-шкалы',
-        ];
-        
-        $categoryIcons = [
-            'basic' => '🔹',
-            'factor' => '🔸',
-            'special' => '🔶',
-            'content' => '🔷',
+            'factor' => 'Факторные шкалы',
+            'special' => 'Специальные шкалы',
+            'content' => 'Контент-шкалы',
         ];
         
         foreach ($scales as $category => $scaleList) {
             if (empty($scaleList)) continue;
+            if ($category === 'basic') continue; // Skip basic, already shown
             
             // Filter scales with T-scores
             $scalesWithScores = [];
@@ -1130,33 +1122,43 @@ class SmilModule extends BaseTestModule
             
             if (empty($scalesWithScores)) continue;
             
-            $isOpen = ($category === 'factor' || $category === 'special') ? 'false' : 'true';
-            
-            $html .= '<details class="scale-accordion" ' . ($isOpen === 'true' ? 'open' : '') . '>';
+            $html .= '<details class="scale-accordion" open>';
             $html .= '<summary class="scale-accordion-header">';
-            $html .= '<span class="category-icon">' . ($categoryIcons[$category] ?? '📊') . '</span>';
             $html .= '<span class="category-title">' . ($categoryNames[$category] ?? $category) . '</span>';
             $html .= '<span class="category-count">' . count($scalesWithScores) . ' шкал</span>';
             $html .= '</summary>';
             $html .= '<div class="scale-accordion-content">';
-            $html .= '<div class="additional-scales-grid">';
+            $html .= '<table class="scores-table additional-scores-table">';
+            $html .= '<thead>';
+            $html .= '<tr>';
+            $html .= '<th>№</th>';
+            $html .= '<th>Название</th>';
+            $html .= '<th>Индикатор</th>';
+            $html .= '<th>T-балл</th>';
+            $html .= '</tr>';
+            $html .= '</thead>';
+            $html .= '<tbody>';
             
             foreach ($scalesWithScores as $code => $info) {
                 $tScore = $tScores[$code] ?? 50;
                 $level = $this->getScoreLevel($tScore);
+                $description = $info['description'] ?? '';
                 
-                $html .= '<div class="additional-scale-item level-' . $level . '">';
-                $html .= '<div class="scale-header">';
-                $html .= '<span class="scale-code">' . $code . '</span>';
-                $html .= '<span class="scale-name">' . ($info['name'] ?? $code) . '</span>';
-                $html .= '<span class="scale-value">' . $tScore . 'T</span>';
-                $html .= '</div>';
+                $html .= '<tr class="level-' . $level . '">';
+                $html .= '<td><strong>' . $code . '</strong></td>';
+                $html .= '<td>';
+                $html .= '<span class="scale-name-tooltip" title="' . htmlspecialchars($description) . '">';
+                $html .= htmlspecialchars($info['name'] ?? $code);
+                $html .= '</span>';
+                $html .= '</td>';
+                $html .= '<td>';
                 $html .= '<div class="mini-visual-scale" style="--marker-pos: ' . $this->calculateMarkerPosition($tScore) . '%"></div>';
-                $html .= '<div class="scale-description">' . ($info['description'] ?? '') . '</div>';
-                $html .= '</div>';
+                $html .= '</td>';
+                $html .= '<td class="score-value">' . $tScore . '</td>';
+                $html .= '</tr>';
             }
             
-            $html .= '</div>';
+            $html .= '</tbody></table>';
             $html .= '</div>';
             $html .= '</details>';
         }
