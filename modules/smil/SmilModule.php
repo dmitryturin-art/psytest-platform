@@ -334,13 +334,15 @@ class SmilModule extends BaseTestModule
                 $key = $info['key'];
                 
                 foreach ($key['true'] ?? [] as $questionId) {
-                    if (isset($answers[$questionId]) && $answers[$questionId] === true) {
+                    // Check if answer is truthy (1, true, 'true', '1')
+                    if (isset($answers[$questionId]) && $answers[$questionId]) {
                         $rawScore++;
                     }
                 }
                 
                 foreach ($key['false'] ?? [] as $questionId) {
-                    if (isset($answers[$questionId]) && $answers[$questionId] === false) {
+                    // Check if answer is falsy (0, false, '', null)
+                    if (isset($answers[$questionId]) && !$answers[$questionId]) {
                         $rawScore++;
                     }
                 }
@@ -1440,7 +1442,7 @@ class SmilModule extends BaseTestModule
     protected function renderValiditySection(array $validity): string
     {
         $statusClass = $validity['is_valid'] ? 'valid' : 'invalid';
-        $statusText = $validity['is_valid'] ? '✓ Достоверно' : '⚠️ Недостоверно';
+        $statusText = $validity['is_valid'] ? '✓ Достоверно' : '⚠️ Недост��верно';
 
         $html = '<div class="validity-section status-' . $statusClass . '">';
         $html .= '<h3>Оц��нка достоверн��сти</h3>';
