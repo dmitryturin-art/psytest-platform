@@ -291,6 +291,7 @@ class SmilModule extends BaseTestModule
             'validity' => $validity,
             'profile' => $profile,
             'indices' => $indices,
+            'additional_scores' => $additionalScores,
             'gender' => $gender,
             'answered_count' => count($answers),
             'total_questions' => 566,
@@ -883,6 +884,7 @@ class SmilModule extends BaseTestModule
         $rawScores = $results['raw_scores'] ?? [];
         $indices = $results['indices'] ?? [];
         $interpretation = $results['interpretation'] ?? [];
+        $additionalScores = $results['additional_scores'] ?? [];
 
         if (!$validity['is_valid']) {
             return $this->renderInvalidResults($validity);
