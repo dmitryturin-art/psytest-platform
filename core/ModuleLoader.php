@@ -98,21 +98,25 @@ class ModuleLoader
     private function getModuleClassName(string $dir): string
     {
         $moduleName = basename($dir);
-        $className = ucfirst($moduleName) . 'Module';
-        
+        // Convert kebab-case to PascalCase: beck-anxiety → BeckAnxiety
+        $className = str_replace(' ', '', ucwords(str_replace('-', ' ', $moduleName)));
+        $moduleFile = $dir . '/' . $className . 'Module.php';
+
         // Try to find the actual class in the file
-        $content = file_get_contents($dir . '/' . ucfirst($moduleName) . 'Module.php');
-        
-        // Extract namespace and class from PHP file
-        if (preg_match('/namespace\s+([^;]+);/', $content, $nsMatches)) {
-            $namespace = trim($nsMatches[1]);
-            if (preg_match('/class\s+(\w+)/', $content, $classMatches)) {
-                return $namespace . '\\' . $classMatches[1];
+        if (file_exists($moduleFile)) {
+            $content = file_get_contents($moduleFile);
+            
+            // Extract namespace and class from PHP file
+            if (preg_match('/namespace\s+([^;]+);/', $content, $nsMatches)) {
+                $namespace = trim($nsMatches[1]);
+                if (preg_match('/class\s+(\w+)/', $content, $classMatches)) {
+                    return $namespace . '\\' . $classMatches[1];
+                }
             }
         }
-        
+
         // Fallback to PSR-4 convention
-        return 'PsyTest\\Modules\\' . ucfirst($moduleName) . '\\' . $className;
+        return 'PsyTest\\Modules\\' . ucfirst($moduleName) . '\\' . $className . 'Module';
     }
     
     /**
