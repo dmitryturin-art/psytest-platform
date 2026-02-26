@@ -833,10 +833,7 @@ class SmilModule extends BaseTestModule
         // Section 3: Full Calculations Table
         $html .= $this->renderCalculationsTable($rawScores, $correctedScores);
 
-        // Section 4: Raw Scores Table (moved down, collapsed by default)
-        $html .= $this->renderRawScoresTable($rawScores);
-
-        // Section 5: Additional Scales
+        // Section 4: Additional Scales (T-scores with visual indicators)
         $html .= $this->renderAdditionalScalesTable($rawScores, $tScores);
 
         // Section 5: Additional Indices
@@ -868,7 +865,6 @@ class SmilModule extends BaseTestModule
         $html .= '<a href="#validity" class="nav-link">✓ Валидность</a>';
         $html .= '<a href="#t-scores" class="nav-link">📈 T-баллы</a>';
         $html .= '<a href="#calculations" class="nav-link">📊 Расчёты</a>';
-        $html .= '<a href="#raw-scores" class="nav-link">📊 Сырые баллы</a>';
         $html .= '<a href="#additional-scales" class="nav-link">📊 Доп. шкалы</a>';
         $html .= '<a href="#profile" class="nav-link">📊 Профиль</a>';
         $html .= '<a href="#interpretation" class="nav-link">📋 Интерпретация</a>';
@@ -1103,9 +1099,9 @@ class SmilModule extends BaseTestModule
     protected function renderAdditionalScalesTable(array $rawScores, array $tScores): string
     {
         $scales = $this->loadAdditionalScales();
-        $html = '<div class="scores-section additional-scales">';
+        $html = '<div class="scores-section additional-scales" id="additional-scales">';
         $html .= '<h3>📊 Дополнительные шкалы</h3>';
-        $html .= '<p class="section-note">Дополнительные шкалы сгруппированы по категориям. Нажмите на заголовок, чтобы раскрыть.</p>';
+        $html .= '<p class="section-note">Дополнительные шкалы сгруппированы по категориям. Показаны T-баллы с визуальной индикацией.</p>';
         
         $categoryNames = [
             'basic' => '🔹 Базовые шкалы',
@@ -1124,10 +1120,10 @@ class SmilModule extends BaseTestModule
         foreach ($scales as $category => $scaleList) {
             if (empty($scaleList)) continue;
             
-            // Filter scales with actual scores
+            // Filter scales with T-scores
             $scalesWithScores = [];
             foreach ($scaleList as $code => $info) {
-                if (isset($rawScores[$code]) && $rawScores[$code] > 0) {
+                if (isset($tScores[$code]) && $tScores[$code] > 0) {
                     $scalesWithScores[$code] = $info;
                 }
             }
@@ -1143,27 +1139,40 @@ class SmilModule extends BaseTestModule
             $html .= '<span class="category-count">' . count($scalesWithScores) . ' шкал</span>';
             $html .= '</summary>';
             $html .= '<div class="scale-accordion-content">';
-            $html .= '<table class="scores-table additional-scores">';
-            $html .= '<thead><tr><th>Код</th><th>Название</th><th>Сырой балл</th><th>Описание</th></tr></thead>';
-            $html .= '<tbody>';
+            $html .= '<div class="additional-scales-grid">';
             
             foreach ($scalesWithScores as $code => $info) {
-                $rawScore = $rawScores[$code] ?? 0;
-                $html .= '<tr>';
-                $html .= '<td><strong>' . $code . '</strong></td>';
-                $html .= '<td>' . ($info['name'] ?? $code) . '</td>';
-                $html .= '<td class="score">' . $rawScore . '</td>';
-                $html .= '<td class="description">' . ($info['description'] ?? '') . '</td>';
-                $html .= '</tr>';
+                $tScore = $tScores[$code] ?? 50;
+                $level = $this->getScoreLevel($tScore);
+                
+                $html .= '<div class="additional-scale-item level-' . $level . '">';
+                $html .= '<div class="scale-header">';
+                $html .= '<span class="scale-code">' . $code . '</span>';
+                $html .= '<span class="scale-name">' . ($info['name'] ?? $code) . '</span>';
+                $html .= '<span class="scale-value">' . $tScore . 'T</span>';
+                $html .= '</div>';
+                $html .= '<div class="mini-visual-scale" style="--marker-pos: ' . $this->calculateMarkerPosition($tScore) . '%"></div>';
+                $html .= '<div class="scale-description">' . ($info['description'] ?? '') . '</div>';
+                $html .= '</div>';
             }
             
-            $html .= '</tbody></table>';
+            $html .= '</div>';
             $html .= '</div>';
             $html .= '</details>';
         }
         
         $html .= '</div>';
         return $html;
+    }
+
+    /**
+     * Calculate marker position for visual scale (0-100%)
+     */
+    protected function calculateMarkerPosition(float $value): float
+    {
+        if ($value <= 29) return 5;
+        if ($value >= 120) return 95;
+        return 15 + (($value - 30) / 90) * 70;
     }
 
     /**
