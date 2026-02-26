@@ -2186,7 +2186,7 @@ body {
 /* Mini Visual Scale */
 .smil-results .mini-visual-scale {
     width: 100%;
-    height: 24px;
+    height: 20px;
     border-radius: var(--radius-sm);
     overflow: hidden;
     position: relative;
@@ -2204,13 +2204,14 @@ body {
 .smil-results .mini-visual-scale::after {
     content: '';
     position: absolute;
-    left: var(--marker-pos, 50%);
+    left: calc(var(--marker-pos));
     top: 0;
-    width: 3px;
+    width: 2px;
     height: 100%;
     background: #2c3e50;
     transform: translateX(-50%);
     z-index: 10;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Calculations Table */

@@ -1084,9 +1084,11 @@ class SmilModule extends BaseTestModule
      */
     protected function renderCalculationsTable(array $rawScores, array $correctedScores): string
     {
-        $html = '<div class="scores-section" id="calculations">';
-        $html .= '<h3>📊 Расчёты (детальная таблица)</h3>';
-        
+        $html = '<details class="scale-accordion" style="margin-bottom: var(--spacing-xl);">';
+        $html .= '<summary class="scale-accordion-header">';
+        $html .= '<span class="category-title">📊 Расчёты (детальная таблица)</span>';
+        $html .= '</summary>';
+        $html .= '<div class="scale-accordion-content">';
         $html .= '<table class="scores-table calculations-table">';
         $html .= '<thead>';
         $html .= '<tr>';
@@ -1173,8 +1175,10 @@ class SmilModule extends BaseTestModule
 
         $html .= '</tbody></table>';
         $html .= '</div>';
+        $html .= '</details>';
         return $html;
     }
+
     protected function renderAdditionalScalesTable(array $additionalScores): string
     {
         if (empty($additionalScores)) {
@@ -1215,7 +1219,6 @@ class SmilModule extends BaseTestModule
             $html .= '<tr>';
             $html .= '<th>№</th>';
             $html .= '<th>Название</th>';
-            $html .= '<th>Сырый</th>';
             $html .= '<th>Индикатор</th>';
             $html .= '<th>T-балл</th>';
             $html .= '</tr>';
@@ -1224,10 +1227,10 @@ class SmilModule extends BaseTestModule
             
             foreach ($scalesWithScores as $code => $info) {
                 $tScore = $info['t'] ?? 50;
-                $rawScore = $info['raw'] ?? 0;
                 $level = $this->getScoreLevel($tScore);
                 $description = $info['description'] ?? '';
                 $name = $info['name'] ?? $code;
+                $markerPos = $this->calculateMarkerPosition($tScore);
                 
                 $html .= '<tr class="level-' . $level . '">';
                 $html .= '<td><strong>' . $code . '</strong></td>';
@@ -1240,10 +1243,7 @@ class SmilModule extends BaseTestModule
                     $html .= htmlspecialchars($name);
                 }
                 $html .= '</td>';
-                $html .= '<td>' . $rawScore . '</td>';
-                $html .= '<td>';
-                $html .= '<div class="mini-visual-scale" style="--marker-pos: ' . $this->calculateMarkerPosition($tScore) . '%"></div>';
-                $html .= '</td>';
+                $html .= '<td><div class="mini-visual-scale" style="--marker-pos: ' . number_format($markerPos, 2) . '%"></div></td>';
                 $html .= '<td class="score-value">' . $tScore . '</td>';
                 $html .= '</tr>';
             }
