@@ -818,6 +818,9 @@ class SmilModule extends BaseTestModule
 
         $html = '<div class="smil-results">';
 
+        // Navigation
+        $html .= $this->renderNavigation();
+
         // Header
         $html .= $this->renderReportHeader($results);
 
@@ -827,7 +830,7 @@ class SmilModule extends BaseTestModule
         // Section 2: Raw Scores Table
         $html .= $this->renderRawScoresTable($rawScores);
 
-        // Section 3: T-Scores Table
+        // Section 3: T-Scores Table with Visual Scale
         $html .= $this->renderTScoresTable($tScores, $correctedScores);
 
         // Section 4: Additional Scales
@@ -850,6 +853,22 @@ class SmilModule extends BaseTestModule
 
         $html .= '</div>';
 
+        return $html;
+    }
+
+    /**
+     * Render page navigation
+     */
+    protected function renderNavigation(): string
+    {
+        $html = '<nav class="results-navigation">';
+        $html .= '<a href="#validity" class="nav-link">✓ Валидность</a>';
+        $html .= '<a href="#raw-scores" class="nav-link">📊 Сырые баллы</a>';
+        $html .= '<a href="#t-scores" class="nav-link">📈 T-баллы</a>';
+        $html .= '<a href="#additional-scales" class="nav-link">📊 Доп. шкалы</a>';
+        $html .= '<a href="#profile" class="nav-link">📊 Профиль</a>';
+        $html .= '<a href="#interpretation" class="nav-link">📋 Интерпретация</a>';
+        $html .= '</nav>';
         return $html;
     }
 
@@ -924,36 +943,28 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Render T-scores table
+     * Render T-scores table with visual scale indicator
      */
     protected function renderTScoresTable(array $tScores, array $correctedScores): string
     {
-        $html = '<div class="scores-section">';
+        $html = '<div class="scores-section" id="t-scores">';
         $html .= '<h3>📈 Стандартизированные баллы (T-баллы)</h3>';
         $html .= '<p class="section-note">T-баллы позволяют сравнивать результаты с нормативной выборкой. Среднее значение = 50, стандартное отклонение = 10.</p>';
         
-        $html .= '<table class="scores-table t-scores">';
-        $html .= '<thead><tr><th>Шкала</th><th>Название</th><th>T-балл (исходный)</th><th>T-балл (с K-коррекцией)</th><th>Уровень</th></tr></thead>';
-        $html .= '<tbody>';
-
+        // Visual scale for each clinical scale
         $clinicalScales = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-
+        
         foreach ($clinicalScales as $scale) {
-            $tScore = $tScores[$scale] ?? 50;
-            $corrected = $correctedScores[$scale] ?? $tScore;
-            $level = $this->getScoreLevel($corrected);
-            $levelText = $this->getLevelName($level);
-
-            $html .= '<tr class="level-' . $level . '">';
-            $html .= '<td><strong>' . $scale . '</strong></td>';
-            $html .= '<td>' . self::SCALE_NAMES[$scale] . '</td>';
-            $html .= '<td>' . $tScore . '</td>';
-            $html .= '<td class="corrected"><strong>' . $corrected . '</strong></td>';
-            $html .= '<td>' . $levelText . '</td>';
-            $html .= '</tr>';
+            $corrected = $correctedScores[$scale] ?? 50;
+            $html .= '<div class="scale-indicator-wrapper">';
+            $html .= '<div class="scale-indicator-header">';
+            $html .= '<span class="scale-code">' . $scale . '</span>';
+            $html .= '<span class="scale-name">' . self::SCALE_NAMES[$scale] . '</span>';
+            $html .= '<span class="scale-value">' . $corrected . 'T</span>';
+            $html .= '</div>';
+            $html .= '<div id="scale-viz-' . $scale . '" class="visual-scale-container"></div>';
+            $html .= '</div>';
         }
-
-        $html .= '</tbody></table>';
         
         $html .= '<div class="k-correction-note">';
         $html .= '<p><strong>Примечание:</strong> K-коррекция применяется к клиническим шкалам для учёта защитной позиции респондента.</p>';

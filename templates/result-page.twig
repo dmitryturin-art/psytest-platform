@@ -92,6 +92,28 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="{{ basePath }}/js/smil-profile.js?v={{ "now"|date("U") }}"></script>
+<script src="{{ basePath }}/js/smil-scale-indicator.js?v={{ "now"|date("U") }}"></script>
+<script>
+// Initialize scale indicators after page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Get T-scores from chart data if available
+    const chartCanvas = document.getElementById('smilProfileChart');
+    if (chartCanvas) {
+        const scores = JSON.parse(chartCanvas.getAttribute('data-scores') || '[]');
+        const labels = JSON.parse(chartCanvas.getAttribute('data-labels') || []);
+        
+        // Create visual indicators for each scale
+        scores.forEach((score, index) => {
+            const scaleCode = labels[index] || index;
+            const containerId = 'scale-viz-' + scaleCode;
+            const container = document.getElementById(containerId);
+            if (container && window.createScaleIndicator) {
+                window.createScaleIndicator(score, containerId);
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
 
 {% block extra_js %}
