@@ -85,6 +85,32 @@ function generateAnswers(array $questions, string $mode): array
     $answers = [];
     
     switch ($mode) {
+        case 'valid':
+            // Valid protocol with varied answers and all control questions correct
+            $controlQuestions = [14, 33, 48, 63, 66, 69, 121, 123, 133, 151,
+                                168, 182, 184, 197, 200, 205, 266, 275, 293,
+                                334, 349, 350, 462, 464, 474, 542, 551];
+            
+            foreach ($questions as $question) {
+                $id = $question['id'];
+                
+                // Control questions: always "Да" (1)
+                if (in_array($id, $controlQuestions)) {
+                    $answers[$id] = 1;
+                } else {
+                    // Varied answers for realistic profile
+                    $rand = mt_rand(0, 100);
+                    if ($rand < 5) {
+                        $answers[$id] = 2;  // 5% "Не знаю"
+                    } elseif ($rand < 55) {
+                        $answers[$id] = 1;  // 50% "Да"
+                    } else {
+                        $answers[$id] = 0;  // 45% "Нет"
+                    }
+                }
+            }
+            break;
+        
         case 'all-true':
             foreach ($questions as $question) {
                 $answers[$question['id']] = 1;
@@ -495,11 +521,12 @@ function getLevelClass(string $level): string
                     <div class="form-group">
                         <label for="mode">Режим заполнения:</label>
                         <select id="mode" name="mode">
+                            <option value="valid" selected>✅ Валидный протокол (рекомендуется)</option>
                             <option value="random">Случайные ответы</option>
+                            <option value="pattern">Паттерн (шкалы 2↑, 7↑)</option>
                             <option value="all-true">Все "Верно"</option>
                             <option value="all-false">Все "Неверно"</option>
                             <option value="all-unknown">Все "Не знаю"</option>
-                            <option value="pattern">Паттерн (шкалы 2↑, 7↑)</option>
                         </select>
                     </div>
                     
