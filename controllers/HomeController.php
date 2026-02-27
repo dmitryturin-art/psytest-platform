@@ -7,23 +7,8 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
-use PsyTest\Core\Database;
-use PsyTest\Core\View;
-use PsyTest\Core\ModuleLoader;
-
-class HomeController
+class HomeController extends BaseController
 {
-    private Database $db;
-    private View $view;
-    private ModuleLoader $moduleLoader;
-    
-    public function __construct()
-    {
-        $this->db = Database::getInstance();
-        $this->view = View::getInstance();
-        $this->moduleLoader = (new ModuleLoader(null, $this->db))->discover();
-    }
-    
     /**
      * Home page - redirect to tests list
      */

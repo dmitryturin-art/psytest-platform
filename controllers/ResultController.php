@@ -9,26 +9,15 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
-use PsyTest\Core\Database;
-use PsyTest\Core\SessionManager;
-use PsyTest\Core\ModuleLoader;
-use PsyTest\Core\View;
 use PsyTest\Core\PDFGenerator;
 
-class ResultController
+class ResultController extends BaseController
 {
-    private Database $db;
-    private View $view;
-    private ModuleLoader $moduleLoader;
-    private SessionManager $sessionManager;
     private PDFGenerator $pdfGenerator;
     
     public function __construct()
     {
-        $this->db = Database::getInstance();
-        $this->view = View::getInstance();
-        $this->moduleLoader = (new ModuleLoader(null, $this->db))->discover();
-        $this->sessionManager = new SessionManager($this->db);
+        parent::__construct();
         $this->pdfGenerator = new PDFGenerator();
     }
     
@@ -55,12 +44,7 @@ class ResultController
         }
         
         // Get module
-        $module = $this->moduleLoader->getModule($slug);
-        if (!$module) {
-            http_response_code(404);
-            echo $this->view->render('error-page');
-            return;
-        }
+        $module = $this->getModuleOrFail($slug);
 
         // Get results
         $results = $session['calculated_results'];
@@ -125,12 +109,7 @@ class ResultController
         }
         
         // Get module
-        $module = $this->moduleLoader->getModule($slug);
-        if (!$module) {
-            http_response_code(404);
-            echo 'Module not found';
-            return;
-        }
+        $module = $this->getModuleOrFail($slug);
         
         // Get results
         $results = $session['calculated_results'];
@@ -195,12 +174,7 @@ class ResultController
         }
         
         // Get module
-        $module = $this->moduleLoader->getModule($test['slug']);
-        if (!$module) {
-            http_response_code(404);
-            echo $this->view->render('error-page');
-            return;
-        }
+        $module = $this->getModuleOrFail($test['slug']);
         
         // Get sessions
         $session1 = $this->sessionManager->getSessionById($comparison['session_1_id']);

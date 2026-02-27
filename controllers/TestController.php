@@ -9,28 +9,11 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
-use PsyTest\Core\Database;
-use PsyTest\Core\SessionManager;
-use PsyTest\Core\ModuleLoader;
-use PsyTest\Core\View;
 use PsyTest\Modules\TestModuleInterface;
 use Ramsey\Uuid\Uuid;
 
-class TestController
+class TestController extends BaseController
 {
-    private Database $db;
-    private View $view;
-    private ModuleLoader $moduleLoader;
-    private SessionManager $sessionManager;
-    
-    public function __construct()
-    {
-        $this->db = Database::getInstance();
-        $this->view = View::getInstance();
-        $this->moduleLoader = (new ModuleLoader(null, $this->db))->discover();
-        $this->sessionManager = new SessionManager($this->db);
-    }
-    
     /**
      * Start a test
      * GET /test/{slug}
@@ -38,22 +21,11 @@ class TestController
     public function start(string $slug): void
     {
         // Get module
-        $module = $this->moduleLoader->getModule($slug);
-        if (!$module) {
-            http_response_code(404);
-            echo $this->view->render('error-page');
-            return;
-        }
-        
+        $module = $this->getModuleOrFail($slug);
         $metadata = $module->getMetadata();
         
         // Check if test is active in database
-        $test = $this->db->selectOne('SELECT * FROM tests WHERE slug = ? AND is_active = 1', [$slug]);
-        if (!$test) {
-            http_response_code(404);
-            echo $this->view->render('error-page');
-            return;
-        }
+        $test = $this->getTestOrFail($slug);
         
         // Create new session
         $session = $this->sessionManager->createSession($test['id'], [
@@ -111,19 +83,12 @@ class TestController
     public function submit(string $slug): void
     {
         // Get module
-        $module = $this->moduleLoader->getModule($slug);
-        if (!$module) {
-            http_response_code(404);
-            echo $this->view->render('error-page');
-            return;
-        }
+        $module = $this->getModuleOrFail($slug);
         
         // Get session from POST data
         $sessionId = $_POST['session_id'] ?? null;
         if (!$sessionId || !Uuid::isValid($sessionId)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid session ID format']);
-            return;
+            $this->errorResponse('Invalid session ID format', 400);
         }
 
         $session = $this->sessionManager->getSessionById($sessionId);
@@ -191,8 +156,8 @@ class TestController
         }
         
         // Get module
-        $module = $this->moduleLoader->getModule($slug);
-        if (!$module || !$module->supportsPairMode()) {
+        $module = $this->getModuleOrFail($slug);
+        if (!$module->supportsPairMode()) {
             http_response_code(400);
             echo 'This test does not support pair mode';
             return;
@@ -201,12 +166,7 @@ class TestController
         $metadata = $module->getMetadata();
         
         // Get test from DB
-        $test = $this->db->selectOne('SELECT * FROM tests WHERE slug = ? AND is_active = 1', [$slug]);
-        if (!$test) {
-            http_response_code(404);
-            echo $this->view->render('error-page');
-            return;
-        }
+        $test = $this->getTestOrFail($slug);
         
         // Create new session with partner token
         $session = $this->sessionManager->createSession($test['id'], [
@@ -231,8 +191,8 @@ class TestController
     public function pairSubmit(string $slug): void
     {
         // Similar to submit, but creates pair comparison
-        $module = $this->moduleLoader->getModule($slug);
-        if (!$module || !$module->supportsPairMode()) {
+        $module = $this->getModuleOrFail($slug);
+        if (!$module->supportsPairMode()) {
             http_response_code(400);
             echo 'This test does not support pair mode';
             return;
