@@ -8,64 +8,128 @@
       "name": "Шкала лжи",
       "type": "control",
       "kCorrectionFactor": null,
-      "male": { "M": 4.20, "delta": 2.90, "maxRaw": 15 },
-      "female": { "M": 4.20, "delta": 2.90, "maxRaw": 15 }
+      "male": {
+        "M": 4.20,
+        "delta": 2.90,
+        "maxRaw": 15
+      },
+      "female": {
+        "M": 4.20,
+        "delta": 2.90,
+        "maxRaw": 15
+      }
     },
     "F": {
       "code": "F",
       "name": "Шкала достоверности",
       "type": "control",
       "kCorrectionFactor": null,
-      "male": { "M": 4.67, "delta": 2.78, "maxRaw": 65 },
-      "female": { "M": 4.67, "delta": 2.78, "maxRaw": 65 }
+      "male": {
+        "M": 2.76,
+        "delta": 4.67,
+        "maxRaw": 65
+      },
+      "female": {
+        "M": 2.76,
+        "delta": 4.67,
+        "maxRaw": 65
+      }
     },
     "K": {
       "code": "K",
       "name": "Коррекционная шкала",
       "type": "control",
       "kCorrectionFactor": null,
-      "male": { "M": 12.10, "delta": 5.40, "maxRaw": 30 },
-      "female": { "M": 12.10, "delta": 5.40, "maxRaw": 30 }
+      "male": {
+        "M": 12.10,
+        "delta": 5.40,
+        "maxRaw": 30
+      },
+      "female": {
+        "M": 12.10,
+        "delta": 5.40,
+        "maxRaw": 30
+      }
     },
     "1": {
       "code": "B1",
       "name": "Сверхконтроль (Ипохондрия)",
       "type": "basic",
       "kCorrectionFactor": 0.5,
-      "male": { "M": 11.10, "delta": 3.90, "maxRaw": 48 },
-      "female": { "M": 12.90, "delta": 4.83, "maxRaw": 48 }
+      "male": {
+        "M": 11.10,
+        "delta": 3.90,
+        "maxRaw": 48
+      },
+      "female": {
+        "M": 12.90,
+        "delta": 4.83,
+        "maxRaw": 48
+      }
     },
     "2": {
       "code": "B2",
       "name": "Пессимистичность (Депрессия)",
       "type": "basic",
       "kCorrectionFactor": null,
-      "male": { "M": 16.60, "delta": 4.11, "maxRaw": 60 },
-      "female": { "M": 18.90, "delta": 5.00, "maxRaw": 60 }
+      "male": {
+        "M": 16.60,
+        "delta": 4.11,
+        "maxRaw": 60
+      },
+      "female": {
+        "M": 18.90,
+        "delta": 5.00,
+        "maxRaw": 60
+      }
     },
     "3": {
       "code": "B3",
       "name": "Эмоциональная лабильность (Истерия)",
       "type": "basic",
       "kCorrectionFactor": 0.3,
-      "male": { "M": 16.46, "delta": 5.40, "maxRaw": 60 },
-      "female": { "M": 18.66, "delta": 5.38, "maxRaw": 60 }
+      "male": {
+        "M": 16.46,
+        "delta": 5.40,
+        "maxRaw": 60
+      },
+      "female": {
+        "M": 18.66,
+        "delta": 5.38,
+        "maxRaw": 60
+      }
     },
     "4": {
       "code": "B4",
       "name": "Импульсивность (Психопатия)",
       "type": "basic",
       "kCorrectionFactor": 0.4,
-      "male": { "M": 18.68, "delta": 4.11, "maxRaw": 62 },
-      "female": { "M": 18.68, "delta": 4.11, "maxRaw": 62 }
+      "male": {
+        "M": 18.68,
+        "delta": 4.11,
+        "maxRaw": 62
+      },
+      "female": {
+        "M": 18.68,
+        "delta": 4.11,
+        "maxRaw": 62
+      }
     },
     "5": {
       "code": "B5",
       "name": "Мужественность-Женственность (Mf)",
       "type": "basic",
       "kCorrectionFactor": null,
-      "male": { "M": 20.46, "delta": 5.00, "maxRaw": 60 },
-      "female": { "M": 36.70, "delta": 4.67, "maxRaw": 60 },
+      "male": {
+        "M": 20.46,
+        "delta": 5.03,
+        "maxRaw": 60
+      },
+      "female": {
+        "M": 36.70,
+        "delta": 4.67,
+        "maxRaw": 60
+      },
       "note": "Разные нормы для мужчин и женщин. Разные ключи вопросов."
     },
     "6": {
@@ -73,40 +137,80 @@
       "name": "Ригидность (Паранойя)",
       "type": "basic",
       "kCorrectionFactor": 0.3,
-      "male": { "M": 7.90, "delta": 3.40, "maxRaw": 40 },
-      "female": { "M": 7.90, "delta": 3.40, "maxRaw": 40 }
+      "male": {
+        "M": 7.90,
+        "delta": 3.40,
+        "maxRaw": 40
+      },
+      "female": {
+        "M": 7.90,
+        "delta": 3.40,
+        "maxRaw": 40
+      }
     },
     "7": {
       "code": "B7",
       "name": "Тревожность (Психастения)",
       "type": "basic",
       "kCorrectionFactor": 1.0,
-      "male": { "M": 23.06, "delta": 5.00, "maxRaw": 77 },
-      "female": { "M": 25.07, "delta": 6.10, "maxRaw": 77 }
+      "male": {
+        "M": 23.06,
+        "delta": 5.02,
+        "maxRaw": 77
+      },
+      "female": {
+        "M": 25.07,
+        "delta": 6.10,
+        "maxRaw": 77
+      }
     },
     "8": {
       "code": "B8",
       "name": "Индивидуалистичность (Шизофрения)",
       "type": "basic",
       "kCorrectionFactor": 1.0,
-      "male": { "M": 21.96, "delta": 5.00, "maxRaw": 108 },
-      "female": { "M": 22.73, "delta": 6.36, "maxRaw": 108 }
+      "male": {
+        "M": 21.96,
+        "delta": 5.00,
+        "maxRaw": 108
+      },
+      "female": {
+        "M": 22.73,
+        "delta": 6.36,
+        "maxRaw": 108
+      }
     },
     "9": {
       "code": "B9",
       "name": "Оптимистичность (Гипомания)",
       "type": "basic",
       "kCorrectionFactor": 0.2,
-      "male": { "M": 17.00, "delta": 4.06, "maxRaw": 52 },
-      "female": { "M": 17.00, "delta": 4.06, "maxRaw": 52 }
+      "male": {
+        "M": 17.00,
+        "delta": 4.06,
+        "maxRaw": 52
+      },
+      "female": {
+        "M": 17.00,
+        "delta": 4.06,
+        "maxRaw": 52
+      }
     },
     "0": {
       "code": "B0",
       "name": "Интроверсия (Si)",
       "type": "basic",
       "kCorrectionFactor": null,
-      "male": { "M": 25.00, "delta": 10.00, "maxRaw": 70 },
-      "female": { "M": 25.00, "delta": 10.00, "maxRaw": 70 }
+      "male": {
+        "M": 25.00,
+        "delta": 10.00,
+        "maxRaw": 70
+      },
+      "female": {
+        "M": 25.00,
+        "delta": 10.00,
+        "maxRaw": 70
+      }
     }
   }
 }
