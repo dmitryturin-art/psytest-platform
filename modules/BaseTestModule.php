@@ -56,14 +56,24 @@ abstract class BaseTestModule implements TestModuleInterface
         }
 
         $content = file_get_contents($filepath);
-        $data = json_decode($content, true) ?? [];
+        if ($content === false) {
+            throw new \RuntimeException("Failed to read file: {$filepath}");
+        }
+
+        $data = json_decode($content, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException(
+                "Failed to parse JSON in {$filepath}: " . json_last_error_msg()
+            );
+        }
         
         // Handle both formats: array of questions or object with "questions" key
         if (isset($data['questions']) && is_array($data['questions'])) {
             return $data['questions'];
         }
         
-        return is_array($data) ? $data : [];
+        return $data ?? [];
     }
     
     /**

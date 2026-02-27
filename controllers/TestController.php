@@ -14,6 +14,7 @@ use PsyTest\Core\SessionManager;
 use PsyTest\Core\ModuleLoader;
 use PsyTest\Core\View;
 use PsyTest\Modules\TestModuleInterface;
+use Ramsey\Uuid\Uuid;
 
 class TestController
 {
@@ -119,9 +120,9 @@ class TestController
         
         // Get session from POST data
         $sessionId = $_POST['session_id'] ?? null;
-        if (!$sessionId) {
+        if (!$sessionId || !Uuid::isValid($sessionId)) {
             http_response_code(400);
-            echo 'Invalid session';
+            echo json_encode(['error' => 'Invalid session ID format']);
             return;
         }
 
