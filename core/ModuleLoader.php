@@ -13,6 +13,9 @@ use PsyTest\Modules\TestModuleInterface;
 
 class ModuleLoader
 {
+    private const CACHE_KEY = 'psytest_modules_registry';
+    private const CACHE_TTL = 3600; // 1 час
+    
     private array $modules = [];
     private string $modulesPath;
     private ?Database $db = null;
@@ -28,6 +31,15 @@ class ModuleLoader
      */
     public function discover(): self
     {
+        // Попытка загрузить из кэша APCu
+        if (function_exists('apcu_fetch')) {
+            $cached = apcu_fetch(self::CACHE_KEY);
+            if ($cached !== false) {
+                $this->modules = $cached;
+                return $this;
+            }
+        }
+        
         if (!is_dir($this->modulesPath)) {
             throw new \RuntimeException("Modules directory not found: {$this->modulesPath}");
         }
@@ -40,6 +52,11 @@ class ModuleLoader
         
         foreach ($directories as $dir) {
             $this->loadModule($dir);
+        }
+        
+        // Сохранение в кэш APCu
+        if (function_exists('apcu_store')) {
+            apcu_store(self::CACHE_KEY, $this->modules, self::CACHE_TTL);
         }
         
         return $this;
@@ -194,5 +211,15 @@ class ModuleLoader
         }
         
         return $this->modules[$slug]['path'];
+    }
+    
+    /**
+     * Очистить кэш модулей (для разработки)
+     */
+    public function clearCache(): void
+    {
+        if (function_exists('apcu_delete')) {
+            apcu_delete(self::CACHE_KEY);
+        }
     }
 }

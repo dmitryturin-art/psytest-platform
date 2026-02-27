@@ -14,6 +14,7 @@ abstract class BaseTestModule implements TestModuleInterface
     protected string $modulePath;
     protected array $metadata;
     protected ?array $questions = null;
+    private static array $questionsCache = []; // Статический кэш
     
     public function __construct()
     {
@@ -50,6 +51,11 @@ abstract class BaseTestModule implements TestModuleInterface
     protected function loadQuestionsFromJson(string $filename = 'questions.json'): array
     {
         $filepath = $this->modulePath . '/' . $filename;
+        
+        // Проверка статического кэша
+        if (isset(self::$questionsCache[$filepath])) {
+            return self::$questionsCache[$filepath];
+        }
 
         if (!file_exists($filepath)) {
             return [];
@@ -69,11 +75,12 @@ abstract class BaseTestModule implements TestModuleInterface
         }
         
         // Handle both formats: array of questions or object with "questions" key
-        if (isset($data['questions']) && is_array($data['questions'])) {
-            return $data['questions'];
-        }
+        $questions = $data['questions'] ?? $data ?? [];
         
-        return $data ?? [];
+        // Сохранение в статический кэш
+        self::$questionsCache[$filepath] = $questions;
+        
+        return $questions;
     }
     
     /**
@@ -256,5 +263,13 @@ abstract class BaseTestModule implements TestModuleInterface
             'min_age' => 14,
             'max_age' => 100,
         ];
+    }
+    
+    /**
+     * Очистить кэш вопросов (для тестов)
+     */
+    public static function clearQuestionsCache(): void
+    {
+        self::$questionsCache = [];
     }
 }
