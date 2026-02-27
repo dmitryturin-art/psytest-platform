@@ -1696,12 +1696,16 @@ class SmilModule extends BaseTestModule
      */
     protected function renderProfileChart(array $tScores): string
     {
-        $clinicalScales = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-        $scaleNames = ['1' => 'Hs', '2' => 'D', '3' => 'Hy', '4' => 'Pd', '5' => 'Mf',
-                      '6' => 'Pa', '7' => 'Pt', '8' => 'Sc', '9' => 'Ma', '0' => 'Si'];
+        // Include validity scales (L, F, K) + clinical scales (1-9, 0)
+        $allScales = ['L', 'F', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+        $scaleNames = [
+            'L' => 'L', 'F' => 'F', 'K' => 'K',
+            '1' => 'Hs', '2' => 'D', '3' => 'Hy', '4' => 'Pd', '5' => 'Mf',
+            '6' => 'Pa', '7' => 'Pt', '8' => 'Sc', '9' => 'Ma', '0' => 'Si'
+        ];
 
         $data = [];
-        foreach ($clinicalScales as $scale) {
+        foreach ($allScales as $scale) {
             $data[] = $tScores[$scale] ?? 50;
         }
 
@@ -1709,16 +1713,19 @@ class SmilModule extends BaseTestModule
         $labelsJson = json_encode(array_values($scaleNames));
 
         $html = '<div class="profile-chart-container">';
-        $html .= '<h3>📊 Профиль личности</h3>';
-        $html .= '<div class="chart-wrapper">';
+        $html .= '<h3>📊 Профильный лист</h3>';
+        
+        // Classic MMPI-style profile with SVG overlay
+        $html .= '<div id="smilClassicProfile" data-scores=\'' . $dataJson . '\' data-labels=\'' . $labelsJson . '\'></div>';
+        
+        // Fallback: Chart.js version
+        $html .= '<div class="chart-wrapper" style="display: none;">';
         $html .= '<canvas id="smilProfileChart" data-scores=\'' . $dataJson . '\' data-labels=\'' . $labelsJson . '\'></canvas>';
         $html .= '</div>';
+        
         $html .= '<div class="chart-legend">';
-        $html .= '<div class="legend-item"><span class="legend-color low"></span> Низкий (0-44T)</div>';
-        $html .= '<div class="legend-item"><span class="legend-color normal"></span> Норма (45-54T)</div>';
-        $html .= '<div class="legend-item"><span class="legend-color elevated"></span> Повышенный (55-64T)</div>';
-        $html .= '<div class="legend-item"><span class="legend-color high"></span> Высокий (65-74T)</div>';
-        $html .= '<div class="legend-item"><span class="legend-color very-high"></span> Очень высокий (75T+)</div>';
+        $html .= '<div class="legend-item"><span class="legend-color" style="background: darkgreen;"></span> Норма (30-70T)</div>';
+        $html .= '<div class="legend-item"><span class="legend-color" style="background: crimson;"></span> Отклонение (&lt;30T или &gt;70T)</div>';
         $html .= '</div>';
         $html .= '</div>';
 

@@ -2474,3 +2474,38 @@ body {
     margin-bottom: -6px;
     z-index: 1000;
 }
+/* ============================================
+   Classic SMIL Profile Chart (MMPI-style)
+   ============================================ */
+
+.classic-profile-container {
+    max-width: 560px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.classic-profile-holder {
+    position: relative;
+    width: 100%;
+}
+
+.profile-background {
+    width: 100%;
+    display: block;
+}
+
+.profile-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .classic-profile-container {
+        max-width: 100%;
+        padding: 0 0.5rem;
+    }
+}
