@@ -204,8 +204,8 @@ class SmilModule extends BaseTestModule
     public function getQuestions(): array
     {
         if ($this->questions === null) {
-            // Try to load full version first
-            $this->questions = $this->loadQuestionsFromJson('questions-full.json');
+            // Load corrected 566 questions version
+            $this->questions = $this->loadQuestionsFromJson('questions-566-correct.json');
             
             // Fallback to demo version if full not available
             if (empty($this->questions)) {
@@ -368,11 +368,37 @@ class SmilModule extends BaseTestModule
                     't' => $tScore,
                     'M' => $M,
                     'delta' => $delta,
+                    'interpretation' => $this->getAdditionalScaleInterpretation($code, $tScore, $category),
                 ];
             }
         }
         
         return $results;
+    }
+
+    /**
+     * Get interpretation for additional scale
+     */
+    protected function getAdditionalScaleInterpretation(string $code, float $tScore, string $category = ''): string
+    {
+        $interpretations = $this->loadInterpretations();
+        $level = $this->getScoreLevel($tScore);
+        
+        // Try to find interpretation in additional_scales section
+        if (isset($interpretations['additional_scales'][$category][$code]['levels'][$level])) {
+            return $interpretations['additional_scales'][$category][$code]['levels'][$level];
+        }
+        
+        // Fallback: try to find in any category
+        if (isset($interpretations['additional_scales'])) {
+            foreach ($interpretations['additional_scales'] as $cat => $scales) {
+                if (isset($scales[$code]['levels'][$level])) {
+                    return $scales[$code]['levels'][$level];
+                }
+            }
+        }
+        
+        return 'Интерпретация отсутствует';
     }
 
     /**
@@ -1221,6 +1247,7 @@ class SmilModule extends BaseTestModule
             $html .= '<th>Название</th>';
             $html .= '<th>Индикатор</th>';
             $html .= '<th>T-балл</th>';
+            $html .= '<th>Интерпретация</th>';
             $html .= '</tr>';
             $html .= '</thead>';
             $html .= '<tbody>';
@@ -1231,6 +1258,7 @@ class SmilModule extends BaseTestModule
                 $description = $info['description'] ?? '';
                 $name = $info['name'] ?? $code;
                 $markerPos = $this->calculateMarkerPosition($tScore);
+                $interpretation = $info['interpretation'] ?? $this->getAdditionalScaleInterpretation($code, $tScore, $category);
                 
                 $html .= '<tr class="level-' . $level . '">';
                 $html .= '<td><strong>' . $code . '</strong></td>';
@@ -1245,6 +1273,7 @@ class SmilModule extends BaseTestModule
                 $html .= '</td>';
                 $html .= '<td><div class="mini-visual-scale" style="--marker-pos: ' . number_format($markerPos, 2) . '%"></div></td>';
                 $html .= '<td class="score-value">' . $tScore . '</td>';
+                $html .= '<td class="interpretation-text">' . htmlspecialchars($interpretation, ENT_QUOTES, 'UTF-8') . '</td>';
                 $html .= '</tr>';
             }
             
