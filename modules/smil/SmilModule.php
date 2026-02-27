@@ -317,6 +317,11 @@ class SmilModule extends BaseTestModule
 
     /**
      * Calculate additional scales raw scores and T-scores
+     *
+     * Answer values:
+     * - 1 = "Верно" (true)
+     * - 0 = "Неверно" (false)
+     * - 2 = "Не знаю" (unknown) - not counted for scale calculations
      */
     protected function calculateAdditionalScales(array $answers, string $gender): array
     {
@@ -335,15 +340,23 @@ class SmilModule extends BaseTestModule
                 
                 foreach ($key['true'] ?? [] as $questionId) {
                     // Check if answer is truthy (1, true, 'true', '1')
-                    if (isset($answers[$questionId]) && $answers[$questionId]) {
-                        $rawScore++;
+                    // Skip "не знаю" answers (value 2)
+                    if (isset($answers[$questionId])) {
+                        $answer = $answers[$questionId];
+                        if ($answer === 1 || $answer === '1' || $answer === true || $answer === 'true') {
+                            $rawScore++;
+                        }
                     }
                 }
                 
                 foreach ($key['false'] ?? [] as $questionId) {
                     // Check if answer is falsy (0, false, '', null)
-                    if (isset($answers[$questionId]) && !$answers[$questionId]) {
-                        $rawScore++;
+                    // Skip "не знаю" answers (value 2)
+                    if (isset($answers[$questionId])) {
+                        $answer = $answers[$questionId];
+                        if ($answer === 0 || $answer === '0' || $answer === false || $answer === 'false') {
+                            $rawScore++;
+                        }
                     }
                 }
                 
@@ -359,8 +372,8 @@ class SmilModule extends BaseTestModule
                     $tScore = round(50 + 10 * ($rawScore - $M) / $delta);
                 }
                 
-                // Clamp to valid range
-                $tScore = max(0, min(120, $tScore));
+                // Clamp to valid range (20-120 for MMPI/SMIL)
+                $tScore = max(20, min(120, $tScore));
                 
                 $results[$code] = [
                     'name' => $info['name'] ?? $code,
@@ -403,6 +416,11 @@ class SmilModule extends BaseTestModule
 
     /**
      * Calculate raw scores for each scale
+     *
+     * Answer values:
+     * - 1 = "Верно" (true)
+     * - 0 = "Неверно" (false)
+     * - 2 = "Не знаю" (unknown) - not counted for most scales, but affects validity
      */
     protected function calculateRawScores(array $answers): array
     {
@@ -415,6 +433,15 @@ class SmilModule extends BaseTestModule
         $questions = $this->getQuestions();
 
         foreach ($answers as $questionId => $answer) {
+            // Skip "не знаю" answers (value 2) for scale calculations
+            // They are tracked separately for validity assessment
+            if ($answer === 2 || $answer === '2') {
+                continue;
+            }
+            
+            // Convert answer to boolean for backward compatibility
+            $answerBool = ($answer === 1 || $answer === '1' || $answer === true || $answer === 'true');
+            
             // Find question in questions array
             foreach ($questions as $question) {
                 if ($question['id'] == $questionId) {
@@ -423,9 +450,9 @@ class SmilModule extends BaseTestModule
 
                     if ($scale && isset($rawScores[$scale])) {
                         if ($direction === 1) {
-                            $rawScores[$scale] += $answer ? 1 : 0;
+                            $rawScores[$scale] += $answerBool ? 1 : 0;
                         } else {
-                            $rawScores[$scale] += $answer ? 0 : 1;
+                            $rawScores[$scale] += $answerBool ? 0 : 1;
                         }
                     }
                     break;
@@ -506,7 +533,8 @@ class SmilModule extends BaseTestModule
                 $tScores[$scale] = 50.0;
             } else {
                 $tScore = 50 + 10 * ($correctedRaw - $M) / $delta;
-                $tScores[$scale] = round($tScore);
+                // Clamp T-score to valid range (20-120 for MMPI/SMIL)
+                $tScores[$scale] = round(max(20, min(120, $tScore)));
             }
         }
         
@@ -723,13 +751,19 @@ class SmilModule extends BaseTestModule
      */
     protected function getScoreLevel(float $score): string
     {
+        // Handle very high scores (above 100)
+        if ($score >= 75) {
+            return 'very_high';
+        }
+        
         foreach (self::THRESHOLDS as $level => $range) {
             if ($score >= $range['min'] && $score <= $range['max']) {
                 return $level;
             }
         }
 
-        return 'normal';
+        // Handle very low scores (below 0)
+        return 'low';
     }
 
     /**
@@ -1271,7 +1305,7 @@ class SmilModule extends BaseTestModule
                     $html .= htmlspecialchars($name);
                 }
                 $html .= '</td>';
-                $html .= '<td><div class="mini-visual-scale" style="--marker-pos: ' . number_format($markerPos, 2) . '%"></div></td>';
+                $html .= '<td><div class="mini-visual-scale" data-score="' . $tScore . '" style="--marker-pos: ' . number_format($markerPos, 2) . '%"></div></td>';
                 $html .= '<td class="score-value">' . $tScore . '</td>';
                 $html .= '<td class="interpretation-text">' . htmlspecialchars($interpretation, ENT_QUOTES, 'UTF-8') . '</td>';
                 $html .= '</tr>';
@@ -1471,10 +1505,10 @@ class SmilModule extends BaseTestModule
     protected function renderValiditySection(array $validity): string
     {
         $statusClass = $validity['is_valid'] ? 'valid' : 'invalid';
-        $statusText = $validity['is_valid'] ? '✓ Достоверно' : '⚠️ Недост��верно';
+        $statusText = $validity['is_valid'] ? '✓ Достоверно' : '⚠️ Недостоверно';
 
         $html = '<div class="validity-section status-' . $statusClass . '">';
-        $html .= '<h3>Оц��нка достоверн��сти</h3>';
+        $html .= '<h3>Оценка достоверности</h3>';
         $html .= '<div class="validity-indicators">';
         $html .= '<div class="indicator"><span class="label">L (Ложь):</span><span class="value">' . $validity['L_score'] . '</span></div>';
         $html .= '<div class="indicator"><span class="label">F (Достоверность):</span><span class="value">' . $validity['F_score'] . '</span></div>';
