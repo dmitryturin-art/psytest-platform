@@ -42,7 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sessionToken = $session['session_token'];
 
         // Get all questions
-        $questions = $module->getQuestions();
+        // For pattern mode, load questions with scale keys
+        if ($mode === 'pattern') {
+            $questionsFile = __DIR__ . '/../modules/smil/questions-566-correct.json';
+            $questionsData = json_decode(file_get_contents($questionsFile), true);
+            $questions = $questionsData['questions'] ?? [];
+        } else {
+            $questions = $module->getQuestions();
+        }
         
         // Generate answers based on mode
         $answers = generateAnswers($questions, $mode);
