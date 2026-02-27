@@ -108,7 +108,8 @@
 
      // Save answers
      $sessionManager->saveAnswers($session['id'], $answers);
-     echo "✓ Ответы сохранены: " . count($answers) . " вопросов\n\n";
+     $answerCount = count(array_filter($answers, fn($k) => is_numeric($k), ARRAY_FILTER_USE_KEY));
+     echo "✓ Ответы сохранены: {$answerCount} вопросов\n\n";
 
      // Calculate results
      echo "Расчёт результатов...\n";

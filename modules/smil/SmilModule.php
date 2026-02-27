@@ -293,9 +293,9 @@ class SmilModule extends BaseTestModule
             'indices' => $indices,
             'additional_scores' => $additionalScores,
             'gender' => $gender,
-            'answered_count' => count($answers),
+            'answered_count' => count(array_filter($answers, fn($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)),
             'total_questions' => 566,
-            'completion_rate' => round(count($answers) / 566 * 100, 1),
+            'completion_rate' => round(count(array_filter($answers, fn($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)) / 566 * 100, 1),
         ];
     }
 
