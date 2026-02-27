@@ -86,26 +86,41 @@ function generateAnswers(array $questions, string $mode): array
     
     switch ($mode) {
         case 'valid':
-            // Valid protocol with varied answers and all control questions correct
+            // Valid protocol with realistic answers
             $controlQuestions = [14, 33, 48, 63, 66, 69, 121, 123, 133, 151,
                                 168, 182, 184, 197, 200, 205, 266, 275, 293,
                                 334, 349, 350, 462, 464, 474, 542, 551];
             
             foreach ($questions as $question) {
                 $id = $question['id'];
+                $scale = $question['scale'] ?? null;
+                $direction = $question['direction'] ?? 1;
                 
                 // Control questions: always "Да" (1)
                 if (in_array($id, $controlQuestions)) {
                     $answers[$id] = 1;
-                } else {
-                    // Varied answers for realistic profile
+                }
+                // L scale: keep low (answer opposite to direction)
+                elseif ($scale === 'L') {
+                    $answers[$id] = ($direction === 1) ? 0 : 1;
+                }
+                // F scale: keep low (answer opposite to direction)
+                elseif ($scale === 'F') {
+                    $answers[$id] = ($direction === 1) ? 0 : 1;
+                }
+                // K scale: moderate (50% yes, 50% no)
+                elseif ($scale === 'K') {
+                    $answers[$id] = ($id % 2 === 0) ? 1 : 0;
+                }
+                // Other scales: varied answers
+                else {
                     $rand = mt_rand(0, 100);
-                    if ($rand < 5) {
-                        $answers[$id] = 2;  // 5% "Не знаю"
-                    } elseif ($rand < 55) {
-                        $answers[$id] = 1;  // 50% "Да"
+                    if ($rand < 3) {
+                        $answers[$id] = 2;  // 3% "Не знаю"
+                    } elseif ($rand < 52) {
+                        $answers[$id] = 1;  // 49% "Да"
                     } else {
-                        $answers[$id] = 0;  // 45% "Нет"
+                        $answers[$id] = 0;  // 48% "Нет"
                     }
                 }
             }
