@@ -40,7 +40,7 @@ class SessionManager
     public function createSession(int $testId, array $options = []): array
     {
         $sessionId = Uuid::uuid4()->toString();
-        $sessionToken = $this->generateSecureToken();
+        $sessionToken = $this->generateUniqueToken();
         $partnerToken = $options['partner_token'] ?? null;
         
         $expiresAt = new DateTimeImmutable("+{$this->sessionTtlDays} days");
@@ -297,6 +297,27 @@ class SessionManager
     public function generateSecureToken(int $length = 64): string
     {
         return bin2hex(random_bytes($length / 2));
+    }
+    
+    /**
+     * Generate unique session token with collision check
+     */
+    private function generateUniqueToken(int $maxAttempts = 3): string
+    {
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $token = $this->generateSecureToken();
+            
+            $exists = $this->db->selectOne(
+                'SELECT id FROM test_sessions WHERE session_token = ?',
+                [$token]
+            );
+            
+            if (!$exists) {
+                return $token;
+            }
+        }
+        
+        throw new \RuntimeException('Failed to generate unique session token');
     }
     
     /**
