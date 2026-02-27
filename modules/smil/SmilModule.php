@@ -42,6 +42,13 @@ class SmilModule extends BaseTestModule
     ];
 
     /**
+     * Answer values
+     */
+    protected const ANSWER_YES = 1;
+    protected const ANSWER_UNKNOWN = 2;  // "Не знаю" / "?"
+    protected const ANSWER_NO = 0;
+
+    /**
      * T-score thresholds for interpretation
      */
     protected const THRESHOLDS = [
@@ -204,15 +211,59 @@ class SmilModule extends BaseTestModule
     public function getQuestions(): array
     {
         if ($this->questions === null) {
-            // Load corrected 566 questions version
-            $this->questions = $this->loadQuestionsFromJson('questions-566-correct.json');
+            // Load 566 questions with gender variants (Sobchik methodology)
+            $this->questions = $this->loadQuestionsFromJson('questions-566-gender.json');
             
-            // Fallback to demo version if full not available
+            // Fallback to corrected version if gender version not available
+            if (empty($this->questions)) {
+                $this->questions = $this->loadQuestionsFromJson('questions-566-correct.json');
+            }
+            
+            // Final fallback to demo version
             if (empty($this->questions)) {
                 $this->questions = $this->loadQuestionsFromJson('questions.json');
             }
         }
         return $this->questions;
+    }
+
+    /**
+     * Get questions with gender-specific text
+     *
+     * @param string|null $gender Gender ('male' or 'female'), if null returns raw questions
+     * @return array Questions with appropriate text for gender
+     */
+    public function getQuestionsForGender(?string $gender = null): array
+    {
+        $questions = $this->getQuestions();
+        
+        // If no gender specified or questions don't have gender variants, return as is
+        if ($gender === null) {
+            return $questions;
+        }
+        
+        // Map questions to use gender-specific text
+        $genderedQuestions = [];
+        foreach ($questions as $question) {
+            $genderedQuestion = $question;
+            
+            // Check if question has gender variants
+            if (isset($question['text_male']) && isset($question['text_female'])) {
+                // Use gender-specific text
+                if ($gender === 'male') {
+                    $genderedQuestion['text'] = $question['text_male'];
+                } else {
+                    $genderedQuestion['text'] = $question['text_female'];
+                }
+            } elseif (!isset($question['text'])) {
+                // Fallback: if no 'text' field, use text_male as default
+                $genderedQuestion['text'] = $question['text_male'] ?? $question['text_female'] ?? '';
+            }
+            
+            $genderedQuestions[] = $genderedQuestion;
+        }
+        
+        return $genderedQuestions;
     }
 
     /**
@@ -275,8 +326,8 @@ class SmilModule extends BaseTestModule
         // Calculate additional scales
         $additionalScores = $this->calculateAdditionalScales($answers, $gender);
 
-        // Calculate validity indicators
-        $validity = $this->assessValidity($tScores);
+        // Calculate validity indicators (including "?" scale)
+        $validity = $this->assessValidity($tScores, $answers);
 
         // Calculate additional indices
         $indices = $this->calculateIndices($rawScores, $tScores);
@@ -464,6 +515,71 @@ class SmilModule extends BaseTestModule
     }
 
     /**
+     * Calculate "?" scale (unknown/unanswered questions)
+     *
+     * According to Sobchik methodology:
+     * - ≤ 40: acceptable
+     * - 41-60: caution, guardedness
+     * - 61-70: questionable validity
+     * - > 70: protocol invalid
+     *
+     * @param array $answers User answers
+     * @return int Count of "не знаю" answers
+     */
+    protected function calculateUnknownScale(array $answers): int
+    {
+        $unknownCount = 0;
+        
+        // Count answers with value 2 ("не знаю")
+        foreach ($answers as $questionId => $answer) {
+            // Skip non-numeric keys (like 'gender', 'age', etc.)
+            if (!is_numeric($questionId)) {
+                continue;
+            }
+            
+            // Check if answer is "не знаю"
+            if ($answer === self::ANSWER_UNKNOWN || $answer === (string)self::ANSWER_UNKNOWN) {
+                $unknownCount++;
+            }
+        }
+        
+        return $unknownCount;
+    }
+
+    /**
+     * Calculate control questions scale (QC)
+     *
+     * 27 control questions with instruction "Обведите номер данного утверждения кружочком"
+     * Correct answer: "Да" (1)
+     *
+     * According to Sobchik methodology:
+     * - < 20: protocol invalid (low attention)
+     * - ≥ 20: acceptable
+     *
+     * @param array $answers User answers
+     * @return int Count of correct answers (0-27)
+     */
+    protected function calculateControlScale(array $answers): int
+    {
+        // 27 control questions
+        $controlQuestions = [
+            14, 33, 48, 63, 66, 69, 121, 123, 133, 151,
+            168, 182, 184, 197, 200, 205, 266, 275, 293,
+            334, 349, 350, 462, 464, 474, 542, 551
+        ];
+        
+        $correctCount = 0;
+        foreach ($controlQuestions as $qNum) {
+            // Правильный ответ на контрольный вопрос - "Да" (1)
+            if (isset($answers[$qNum]) && ($answers[$qNum] == self::ANSWER_YES || $answers[$qNum] === 1 || $answers[$qNum] === '1')) {
+                $correctCount++;
+            }
+        }
+        
+        return $correctCount;
+    }
+
+    /**
      * Get scale items from questions
      */
     protected function getScaleItems(): array
@@ -623,8 +739,12 @@ class SmilModule extends BaseTestModule
 
     /**
      * Assess validity of results
+     *
+     * @param array $tScores T-scores for validity scales
+     * @param array $answers User answers (to calculate unknown count)
+     * @return array Validity assessment
      */
-    protected function assessValidity(array $tScores): array
+    protected function assessValidity(array $tScores, array $answers): array
     {
         $L = $tScores['L'] ?? 50;
         $F = $tScores['F'] ?? 50;
@@ -632,6 +752,28 @@ class SmilModule extends BaseTestModule
 
         $valid = true;
         $warnings = [];
+
+        // Calculate "?" scale (unknown answers)
+        $unknownCount = $this->calculateUnknownScale($answers);
+
+        // Calculate control scale (QC)
+        $controlScore = $this->calculateControlScale($answers);
+
+        // Check control scale (QC) - Sobchik methodology
+        if ($controlScore < 20) {
+            $valid = false;
+            $warnings[] = "Протокол недостоверен: низкая внимательность (QC = {$controlScore} < 20)";
+        }
+
+        // Check "?" scale (unknown answers) - Sobchik methodology
+        if ($unknownCount > 70) {
+            $valid = false;
+            $warnings[] = "Протокол недостоверен: слишком много ответов \"Не знаю\" ({$unknownCount} > 70)";
+        } elseif ($unknownCount > 60) {
+            $warnings[] = "Сомнительная достоверность: много ответов \"Не знаю\" ({$unknownCount})";
+        } elseif ($unknownCount > 40) {
+            $warnings[] = "Настороженность: повышенное количество ответов \"Не знаю\" ({$unknownCount})";
+        }
 
         if ($L >= 65) {
             $valid = false;
@@ -665,6 +807,8 @@ class SmilModule extends BaseTestModule
             'F_score' => $F,
             'K_score' => $K,
             'FK_index' => $fkIndex,
+            'unknown_count' => $unknownCount,
+            'control_score' => $controlScore,
         ];
     }
 

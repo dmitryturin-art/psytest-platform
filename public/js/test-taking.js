@@ -3,7 +3,7 @@
  * Handles question navigation, progress tracking, and answer saving
  */
 
-(function() {
+(function () {
     'use strict';
 
     // State
@@ -15,7 +15,7 @@
     let formInitialized = false;
 
     // Initialize on DOM ready
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         initTestTaking();
     });
 
@@ -29,19 +29,19 @@
         // Check if demographics section exists
         const demographicsSection = document.getElementById('demographicsSection');
         const startTestBtn = document.getElementById('startTestBtn');
-        
+
         if (demographicsSection && startTestBtn) {
             // Handle demographics submission
             startTestBtn.addEventListener('click', handleDemographicsSubmit);
-            
+
             // Allow Enter key to start test
-            demographicsSection.addEventListener('keydown', function(e) {
+            demographicsSection.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     handleDemographicsSubmit();
                 }
             });
-            
+
             return; // Don't initialize test taking until demographics are done
         }
 
@@ -65,7 +65,7 @@
         // Prevent double initialization
         if (formInitialized) return;
         formInitialized = true;
-        
+
         // Get all question cards
         questions = Array.from(document.querySelectorAll('.question-card'));
         if (questions.length === 0) {
@@ -96,7 +96,7 @@
         // Auto-save on answer change
         const form = document.getElementById('testForm');
         if (form) {
-            form.addEventListener('change', function(e) {
+            form.addEventListener('change', function (e) {
                 if (e.target.name && e.target.name.startsWith('answers[')) {
                     saveAnswer(e.target);
                 }
@@ -104,7 +104,7 @@
         }
 
         // Keyboard navigation
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'ArrowRight' || e.key === 'Enter') {
                 e.preventDefault();
                 goToNextQuestion();
@@ -123,7 +123,7 @@
      */
     function validateDemographics() {
         const genderOptions = document.querySelectorAll('input[name="demographics[gender]"]');
-        
+
         let genderSelected = false;
         let selectedGender = '';
         genderOptions.forEach(option => {
@@ -132,17 +132,17 @@
                 selectedGender = option.value;
             }
         });
-        
+
         if (!genderSelected) {
             alert('Пожалуйста, выберите ваш пол');
             return false;
         }
-        
+
         // Save demographics
         demographics = {
             gender: selectedGender,
         };
-        
+
         return true;
     }
 
@@ -156,6 +156,11 @@
         const demographicsSection = document.getElementById('demographicsSection');
         if (demographicsSection) {
             demographicsSection.style.display = 'none';
+        }
+
+        // Update question texts based on gender (if gender variants available)
+        if (demographics.gender) {
+            updateQuestionTextsForGender(demographics.gender);
         }
 
         // Show questions container
@@ -178,11 +183,34 @@
     }
 
     /**
+     * Update question texts based on selected gender
+     */
+    function updateQuestionTextsForGender(gender) {
+        const questionCards = document.querySelectorAll('.question-card');
+
+        questionCards.forEach(card => {
+            const textElement = card.querySelector('.question-text');
+            const questionId = card.dataset.questionId;
+
+            // Get gender-specific text from data attributes
+            const maleText = card.dataset.textMale;
+            const femaleText = card.dataset.textFemale;
+
+            if (maleText && femaleText) {
+                const selectedText = gender === 'male' ? maleText : femaleText;
+                textElement.textContent = `${questionId}. ${selectedText}`;
+            }
+        });
+
+        console.log(`Updated question texts for gender: ${gender}`);
+    }
+
+    /**
      * Show a specific question
      */
     function showQuestion(index) {
         if (!questions || questions.length === 0) return;
-        
+
         questions.forEach((card, i) => {
             card.style.display = i === index ? 'block' : 'none';
         });
@@ -209,11 +237,11 @@
      */
     function goToNextQuestion() {
         if (!questions || questions.length === 0) return;
-        
+
         // Validate current question has an answer
         const currentCard = questions[currentQuestionIndex];
         if (!currentCard) return;
-        
+
         const questionId = currentCard.getAttribute('data-question-id');
         const selectedAnswer = document.querySelector(
             `input[name="answers[${questionId}]"]:checked`
@@ -237,7 +265,7 @@
      */
     function updateNavigation() {
         if (!questions || questions.length === 0) return;
-        
+
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
@@ -267,13 +295,13 @@
     function updateProgress() {
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
-        
+
         if (!progressFill || !progressText) return;
-        
+
         const answeredCount = Object.keys(answers).length;
         const totalQuestions = typeof TEST_CONFIG !== 'undefined' ? TEST_CONFIG.totalQuestions : questions.length;
         const percentage = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
-        
+
         progressFill.style.width = percentage + '%';
         progressText.textContent = `${answeredCount} / ${totalQuestions}`;
     }
@@ -306,8 +334,8 @@
         if (saveTimeout) {
             clearTimeout(saveTimeout);
         }
-        
-        saveTimeout = setTimeout(function() {
+
+        saveTimeout = setTimeout(function () {
             saveAnswersToServer();
         }, 1000);
     }
@@ -318,9 +346,9 @@
     async function saveAnswersToServer() {
         const answeredCount = Object.keys(answers).length;
         if (answeredCount === 0) return;
-        
+
         if (typeof TEST_CONFIG === 'undefined') return;
-        
+
         try {
             const response = await fetch(`${TEST_CONFIG.basePath}/test/${TEST_CONFIG.slug}/save`, {
                 method: 'POST',
@@ -332,9 +360,9 @@
                     answers: answers,
                 }),
             });
-            
+
             const result = await response.json();
-            
+
             if (!result.success) {
                 console.warn('Auto-save failed:', result.error);
             }
@@ -380,5 +408,5 @@
         e.target.removeEventListener('submit', handleFormSubmit);
         e.target.submit();
     }
-    
+
 })();

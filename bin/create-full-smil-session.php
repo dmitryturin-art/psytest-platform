@@ -235,7 +235,16 @@
      echo "  F (Достоверность): {$rawResults['validity']['F_score']} T\n";
      echo "  K (Коррекция): {$rawResults['validity']['K_score']} T\n";
      echo "  F-K индекс: {$rawResults['validity']['FK_index']}\n";
-     echo "  Достоверно: " . ($rawResults['validity']['is_valid'] ? 'Да ✓' : 'Нет ✗') . "\n\n";
+     echo "  ? (Не знаю): {$rawResults['validity']['unknown_count']}\n";
+     echo "  QC (Контрольные): {$rawResults['validity']['control_score']} / 27\n";
+     echo "  Достоверно: " . ($rawResults['validity']['is_valid'] ? 'Да ✓' : 'Нет ✗') . "\n";
+     if (!empty($rawResults['validity']['warnings'])) {
+         echo "  Предупреждения:\n";
+         foreach ($rawResults['validity']['warnings'] as $warning) {
+             echo "    - $warning\n";
+         }
+     }
+     echo "\n";
 
      echo "Сырые баллы:\n";
      foreach ($rawResults['raw_scores'] as $scale => $score) {
