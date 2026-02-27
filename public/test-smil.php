@@ -102,8 +102,12 @@ function generateAnswers(array $questions, string $mode): array
                 $id = $question['id'];
                 $scale = $question['scale'] ?? null;
                 $direction = $question['direction'] ?? 1;
+                $isControl = $question['is_control'] ?? false;
                 
-                if ($scale === '2' || $scale === '7') {
+                // Control questions: always answer "Да" (1) for validity
+                if ($isControl) {
+                    $answers[$id] = 1;
+                } elseif ($scale === '2' || $scale === '7') {
                     $answers[$id] = ($direction === 1) ? 1 : 0;
                 } elseif ($scale === 'L' || $scale === 'F') {
                     $answers[$id] = ($direction === 1) ? 0 : 1;
@@ -122,13 +126,21 @@ function generateAnswers(array $questions, string $mode): array
         case 'random':
         default:
             foreach ($questions as $question) {
-                $rand = mt_rand(0, 100);
-                if ($rand < 10) {
-                    $answers[$question['id']] = 2;
-                } elseif ($rand < 55) {
-                    $answers[$question['id']] = 1;
+                $id = $question['id'];
+                $isControl = $question['is_control'] ?? false;
+                
+                // Control questions: always answer "Да" (1) for validity
+                if ($isControl) {
+                    $answers[$id] = 1;
                 } else {
-                    $answers[$question['id']] = 0;
+                    $rand = mt_rand(0, 100);
+                    if ($rand < 10) {
+                        $answers[$id] = 2;  // Не знаю
+                    } elseif ($rand < 55) {
+                        $answers[$id] = 1;  // Да
+                    } else {
+                        $answers[$id] = 0;  // Нет
+                    }
                 }
             }
             break;
