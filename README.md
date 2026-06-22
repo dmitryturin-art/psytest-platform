@@ -179,7 +179,7 @@ class BeckDepressionModule extends BaseTestModule
 | [QUICKSTART.md](QUICKSTART.md) | Быстрый старт |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Разработка с ИИ |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Развёртывание |
-| [VSCODE.md](VSCODE.md) | Настройка VS Code |
+| [VSCODE.md](docs/archive/VSCODE.md) | Настройка VS Code (архив) |
 
 ## 🔧 Доступные тесты
 

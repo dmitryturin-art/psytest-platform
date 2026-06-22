@@ -46,3 +46,7 @@ database/backups/
 # Node (if using build tools)
 node_modules/
 package-lock.json
+
+# Kilo local install (Superpowers skills, plugins, etc.)
+.kilo/
+.superpowers/
