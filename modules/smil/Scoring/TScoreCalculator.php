@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PsyTest\Modules\Smil\Scoring;
@@ -6,7 +7,7 @@ namespace PsyTest\Modules\Smil\Scoring;
 final class TScoreCalculator
 {
     private const T_MIN = 20;
-    private const T_MAX = 120;
+    private const T_MAX = 100;
 
     /** @var array<string, array> */
     private array $norms;
