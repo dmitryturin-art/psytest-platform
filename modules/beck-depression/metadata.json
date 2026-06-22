@@ -1,0 +1,24 @@
+{
+  "slug": "bdi",
+  "name": "Шкала депрессии Бека (BDI)",
+  "description": "Шкала депрессии Бека (Beck Depression Inventory) — опросник для оценки выраженности депрессии у взрослых и подростков. Состоит из 21 группы утверждений, описывающих симптомы депрессии. Реальное время прохождения: 5-10 минут.",
+  "question_count": 21,
+  "estimated_time": 5,
+  "scales": [
+    {"code": "BDI", "name": "Общий балл депрессии", "description": "Суммарный показатель выраженности депрессии"}
+  ],
+  "score_ranges": [
+    {"level": "minimal", "min": 0, "max": 13, "name": "Минимальная депрессия", "description": "Уровень депрессии в пределах нормы"},
+    {"level": "mild", "min": 14, "max": 19, "name": "Лёгкая депрессия", "description": "Лёгкая степень депрессии"},
+    {"level": "moderate", "min": 20, "max": 28, "name": "Умеренная депрессия", "description": "Умеренная степень депрессии"},
+    {"level": "severe", "min": 29, "max": 63, "name": "Тяжёлая депрессия", "description": "Тяжёлая степень депрессии"}
+  ],
+  "requires_demographics": {
+    "gender": true,
+    "age": false
+  },
+  "version": "1.0",
+  "author": "Aaron T. Beck",
+  "adaptation": "Н.В. Тарабрина, 2001",
+  "target_audience": "Взрослые и подростки от 13 лет"
+}
