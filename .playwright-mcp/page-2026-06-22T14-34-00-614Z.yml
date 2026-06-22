@@ -1,0 +1,44 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "🧠 PsyTest" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: 🧠
+        - generic [ref=e7]: PsyTest
+      - navigation [ref=e8]:
+        - link "Все тесты" [ref=e9] [cursor=pointer]:
+          - /url: /tests
+  - main [ref=e10]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - heading "Шкала тревоги Бека (BAI)" [level=1] [ref=e14]
+        - paragraph [ref=e15]: "Шкала тревоги Бека (Beck Anxiety Inventory) — опросник для оценки выраженности тревоги у взрослых и подростков. Состоит из 21 вопроса, описывающих различные симптомы тревоги. Реальное время прохождения: 5-10 минут."
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]: 📝
+            - text: 21 вопросов
+          - generic [ref=e19]:
+            - generic [ref=e20]: ⏱️
+            - text: ~5 минут
+      - generic [ref=e23]: 0 / 21
+      - generic [ref=e25]:
+        - heading "📋 Информация о респонденте" [level=3] [ref=e26]
+        - paragraph [ref=e27]: Пожалуйста, укажите данные перед началом тестирования
+        - generic [ref=e28]:
+          - generic [ref=e29] [cursor=pointer]:
+            - generic [ref=e30]: 👨
+            - generic [ref=e31]: Мужской
+          - generic [ref=e32] [cursor=pointer]:
+            - generic [ref=e33]: 👩
+            - generic [ref=e34]: Женский
+        - button "Начать тестирование →" [ref=e35] [cursor=pointer]
+  - contentinfo [ref=e36]:
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - paragraph [ref=e40]: © 2026 PsyTest. Все права защищены.
+        - paragraph [ref=e41]: Результаты тестирования носят ознакомительный характер и не заменяют очную консультацию специалиста.
+      - generic [ref=e42]:
+        - link "Конфиденциальность" [ref=e43] [cursor=pointer]:
+          - /url: /privacy
+        - link "Условия использования" [ref=e44] [cursor=pointer]:
+          - /url: /terms

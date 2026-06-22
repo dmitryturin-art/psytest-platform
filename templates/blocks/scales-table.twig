@@ -10,14 +10,14 @@
         </tr>
     </thead>
     <tbody>
-        {% for s in scales %}
+        {% for s in scales|default([]) %}
         <tr class="level--{{ s.level }}">
             <td><strong>{{ s.code }}</strong></td>
             <td>{{ s.name }}</td>
             <td>{{ s.raw }}</td>
             <td>{{ s.t_score }}</td>
-            <td>{{ s.level_label }}</td>
-            {% if show_viz %}<td class="viz-cell"><div class="scale-bar" style="width: {{ s.t_score }}%"></div></td>{% endif %}
+            <td>{{ s.level_name|default(s.level_label|default('—')) }}</td>
+            {% if show_viz|default(false) %}<td class="viz-cell"><div class="scale-bar" style="width: {{ s.t_score }}%"></div></td>{% endif %}
         </tr>
         {% endfor %}
     </tbody>

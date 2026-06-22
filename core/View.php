@@ -39,7 +39,7 @@ class View
             'cache' => $isDebug ? false : $cachePath,
             'debug' => $isDebug,
             'auto_reload' => $isDebug,
-            'strict_variables' => $isDebug,
+            'strict_variables' => false,
         ]);
 
         // Add debug extension

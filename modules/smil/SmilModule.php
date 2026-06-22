@@ -1043,12 +1043,21 @@ class SmilModule extends BaseTestModule
 
     private function buildIndicesData(array $indices): array
     {
-        return [
-            'FK_index' => $indices['FK_index'] ?? 0,
-            'FK_ratio' => $indices['FK_ratio'] ?? 0,
-            'anxiety_index' => $indices['anxiety_index'] ?? 0,
-            'depression_index' => $indices['depression_index'] ?? 0,
+        $items = [];
+        $labels = [
+            'FK_index' => ['F-K индекс', 'Разность F и K — при положительных значениях возможна аггравация'],
+            'FK_ratio' => ['F-K соотношение', 'Отношение F к K'],
+            'anxiety_index' => ['Индекс тревоги', 'Композитный показатель тревожности'],
+            'depression_index' => ['Индекс депрессии', 'Композитный показатель депрессии'],
         ];
+        foreach (['FK_index', 'FK_ratio', 'anxiety_index', 'depression_index'] as $key) {
+            $items[] = [
+                'name' => $labels[$key][0],
+                'value' => $indices[$key] ?? 0,
+                'description' => $labels[$key][1],
+            ];
+        }
+        return ['indices' => $items];
     }
 
     /**

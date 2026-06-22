@@ -1,0 +1,104 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link [ref=e6] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e7]:
+          - generic [ref=e8]: ПСИХОЛОГИЧЕСКИЕ
+          - generic [ref=e9]: ТЕСТЫ
+          - generic [ref=e10]: ОНЛАЙН
+      - searchbox [ref=e13]
+      - navigation [ref=e15]:
+        - generic [ref=e16]:
+          - link "тесты" [ref=e17] [cursor=pointer]:
+            - /url: /guide/guide-ru.html
+          - link "теги" [ref=e18] [cursor=pointer]:
+            - /url: /tags.html
+          - link "топ" [ref=e19] [cursor=pointer]:
+            - /url: /map.html
+          - link "новые" [ref=e20] [cursor=pointer]:
+            - /url: /newtop.html
+        - link [ref=e24] [cursor=pointer]:
+          - /url: /logon.html
+  - heading "Тест СМИЛ / MMPI" [level=1] [ref=e30]: Тест СМИЛ / MMPI
+  - generic [ref=e33]:
+    - main [ref=e34]:
+      - generic [ref=e35]:
+        - paragraph [ref=e36]:
+          - text: Стандартизированный метод исследования личности (СМИЛ) – адаптация
+          - link "теста MMPI" [ref=e37] [cursor=pointer]:
+            - /url: /mmpi/mmpi.html
+          - text: ", сделанная Людмилой Николаевной Собчик. В отличие от оригинальной версии, СМИЛ не имеет клинической направленности и основывается на индивидуально-типологическом подходе автора."
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - generic [ref=e41]: 566 вопросов
+              - generic [ref=e42]: 104 минуты
+            - generic [ref=e43]:
+              - link "Тест СМИЛ / MMPI" [ref=e45] [cursor=pointer]:
+                - /url: /mmpi/smilF-run.html
+              - generic [ref=e48]:
+                - link "бланк" [ref=e49] [cursor=pointer]:
+                  - /url: /mmpi/smilF-bl.html
+                - text: "|"
+                - link "пример" [ref=e50] [cursor=pointer]:
+                  - /url: /result?v=mmsF8UbQSfuyixFME2WrG7YXlqnbkOFspEou-FGQ4n9UhIdchkZSO9CIYIvPk1RpEfeShtKnaqmd57jYCxesHtZRsixLbGyzMYPVfLSL-m6QdGDyD1PxjC4NFGb-TV172in7OwaeXVhMtoerqj4vvlER9k&pp=1
+            - link "ПРОЙТИ" [ref=e51] [cursor=pointer]:
+              - /url: /mmpi/smilF-run.html
+          - generic [ref=e52]:
+            - paragraph [ref=e53]: "Авторы: S. Hathaway, J. McKinley (1943)"
+            - paragraph [ref=e54]:
+              - text: "Адаптация: Л. Н."
+              - link "Собчик" [ref=e55] [cursor=pointer]:
+                - /url: /authors.html?sobqikln
+              - text: (1970, 2000)
+        - paragraph [ref=e56]: Данная онлайн-версия сделана для помощи психологу в обработке данных. Основывается на книжном издании 2003 года. Рассчитываются все основные и 110 дополнительных шкал, строится графический профиль, приводится весь ход расчетов от сырых баллов к Т-баллам. Для интерпретации полученных результатов читайте книги Л. Н. Собчик, или обратитесь к специалисту. Тест интерпретаций не выдает, приводится только сокращенное описание базовых шкал. Посмотрите пример результата, прежде чем тратить немалое время.
+      - generic [ref=e57]:
+        - generic [ref=e59]:
+          - paragraph [ref=e60]: ✓пройти бесплатно и анонимно
+          - paragraph [ref=e61]: ✓сделано по первоисточнику
+        - generic [ref=e63]:
+          - link "психопатология" [ref=e64] [cursor=pointer]:
+            - /url: /guide/clinical-general-ru.html
+          - link "клинические черты" [ref=e65] [cursor=pointer]:
+            - /url: /tags.html?kliniqeskieqerty
+          - link "основа MMPI" [ref=e66] [cursor=pointer]:
+            - /url: /tags.html?osnovammpi
+      - generic [ref=e68]:
+        - generic [ref=e69]: "Смотрите также:"
+        - generic [ref=e70]:
+          - link "Опросники MMPI" [ref=e72] [cursor=pointer]:
+            - /url: /mmpi/mmpi.html
+          - link "Тест ММИЛ / MMPI" [ref=e74] [cursor=pointer]:
+            - /url: /mmpi/mmilM.html
+          - link "Калифорнийский психологический опросник, CPI" [ref=e76] [cursor=pointer]:
+            - /url: /multi/cpi.html
+      - generic [ref=e78]:
+        - link "Курс Мышление Шерлока. Узнайте всё о логическом мышлении, научитесь грамотно выстраивать аргументы и принимать верные решения." [ref=e79] [cursor=pointer]:
+          - /url: /eurl?p=nawu3&erid=25H8d7vbP8SRTvG4sCP46A
+          - generic [ref=e80]: Курс Мышление Шерлока. Узнайте всё о логическом мышлении, научитесь грамотно выстраивать аргументы и принимать верные решения.
+        - generic [ref=e81]: Реклама. ООО «Викиум» ИНН 7725805647
+      - generic [ref=e84]: Литература
+      - list [ref=e87]:
+        - listitem [ref=e88]: "Л. Н. Собчик. СМИЛ (MMPI). Стандартизированный многофакторный метод исследования личности. СПб.: Речь, 2003"
+        - listitem [ref=e89]: "Л. Н. Собчик. Психодиагностика в медицине. М.: Боргес, 2007"
+    - contentinfo [ref=e90]:
+      - generic [ref=e91]:
+        - link "условия" [ref=e92] [cursor=pointer]:
+          - /url: /agreement.html
+        - text: "|"
+        - link "политика ПДн" [ref=e93] [cursor=pointer]:
+          - /url: /privacy.html
+        - text: "|"
+        - link "ошибка?" [ref=e94] [cursor=pointer]:
+          - /url: "#"
+      - generic [ref=e95]:
+        - link "рок" [ref=e96] [cursor=pointer]:
+          - /url: https://rockgig.net
+        - text: /
+        - link "рэп" [ref=e97] [cursor=pointer]:
+          - /url: https://rap.moscow
+        - text: "-"
+        - link "афиша" [ref=e98] [cursor=pointer]:
+          - /url: https://rockgig.net

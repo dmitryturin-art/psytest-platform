@@ -32,7 +32,7 @@
             <h2 class="section-title">{{ section.title }}</h2>
             {% endif %}
             <div class="section-body">
-                {{ include(section.block, section.data, ignore_missing = true) }}
+                {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
             </div>
         </div>
         {% endfor %}
