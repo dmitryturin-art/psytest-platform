@@ -41,4 +41,46 @@ final class SmilModuleSectionsTest extends TestCase
         sort($sorted);
         $this->assertSame($sorted, $orders, 'Sections should be sorted by order');
     }
+
+    public function testAdditionalScalesSectionHasCategoriesStructure(): void
+    {
+        $module = new SmilModule();
+        $questions = $module->getQuestions();
+        $answers = [];
+        foreach ($questions as $q) {
+            $answers[$q['id']] = 1;
+        }
+        $results = $module->calculateResults($answers);
+        $sections = $module->buildSections($results);
+
+        // Find additional scales section
+        $additionalScalesSection = null;
+        foreach ($sections as $section) {
+            if ($section->title === 'Дополнительные шкалы') {
+                $additionalScalesSection = $section;
+                break;
+            }
+        }
+
+        $this->assertNotNull($additionalScalesSection, 'Additional scales section should exist');
+        $this->assertArrayHasKey('categories', $additionalScalesSection->data);
+        $this->assertIsArray($additionalScalesSection->data['categories']);
+
+        if (!empty($additionalScalesSection->data['categories'])) {
+            $firstCategory = $additionalScalesSection->data['categories'][0];
+            $this->assertArrayHasKey('name', $firstCategory);
+            $this->assertArrayHasKey('items', $firstCategory);
+            $this->assertIsArray($firstCategory['items']);
+
+            if (!empty($firstCategory['items'])) {
+                $firstItem = $firstCategory['items'][0];
+                $this->assertArrayHasKey('code', $firstItem);
+                $this->assertArrayHasKey('name', $firstItem);
+                $this->assertArrayHasKey('raw', $firstItem);
+                $this->assertArrayHasKey('t_score', $firstItem);
+                $this->assertArrayHasKey('level', $firstItem);
+                $this->assertArrayHasKey('level_name', $firstItem);
+            }
+        }
+    }
 }
