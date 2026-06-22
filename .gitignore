@@ -38,6 +38,9 @@ tmp/
 temp/
 .cache/
 
+# PHPUnit
+.phpunit.cache/
+
 # Uploads (keep structure)
 /public/uploads/*
 !public/uploads/.gitkeep
