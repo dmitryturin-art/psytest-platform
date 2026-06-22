@@ -1,0 +1,16 @@
+<div class="profile-chart-container">
+    <canvas id="{{ chart_id|default('smil-profile') }}"
+            data-scores="{{ scores|json_encode }}"
+            data-labels="{{ labels|json_encode }}"
+            width="800" height="400">
+    </canvas>
+    <div class="chart-legend">
+        <span class="legend-low">&#60;45 — низкий</span>
+        <span class="legend-norm">45–54 — норма</span>
+        <span class="legend-elevated">55–64 — повышенный</span>
+        <span class="legend-high">65–74 — высокий</span>
+        <span class="legend-very-high">75+ — очень высокий</span>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ basePath }}/js/smil-profile-classic.js"></script>

@@ -1,0 +1,12 @@
+<div class="indices-block">
+    <h3>Дополнительные индексы</h3>
+    <dl class="indices-list">
+        {% for idx in indices %}
+        <div class="indices-list__item">
+            <dt class="indices-list__name">{{ idx.name }}</dt>
+            <dd class="indices-list__value">{{ idx.value }}</dd>
+            <dd class="indices-list__description">{{ idx.description }}</dd>
+        </div>
+        {% endfor %}
+    </dl>
+</div>

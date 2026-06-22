@@ -1,0 +1,37 @@
+<div class="validity-block">
+    <h3>Контрольные шкалы</h3>
+    <div class="validity-grid">
+        <div class="validity-item {{ validity.is_valid ? 'valid' : 'invalid' }}">
+            <span class="validity-label">L (ложь)</span>
+            <span class="validity-value">{{ validity.L_score }}</span>
+        </div>
+        <div class="validity-item">
+            <span class="validity-label">F (достоверность)</span>
+            <span class="validity-value">{{ validity.F_score }}</span>
+        </div>
+        <div class="validity-item">
+            <span class="validity-label">K (коррекция)</span>
+            <span class="validity-value">{{ validity.K_score }}</span>
+        </div>
+        <div class="validity-item">
+            <span class="validity-label">? (не знаю)</span>
+            <span class="validity-value">{{ validity.unknown_count }}</span>
+        </div>
+        <div class="validity-item">
+            <span class="validity-label">QC (контроль)</span>
+            <span class="validity-value">{{ validity.control_score }}/27</span>
+        </div>
+        <div class="validity-item">
+            <span class="validity-label">F-K индекс</span>
+            <span class="validity-value">{{ validity.FK_index }}</span>
+        </div>
+    </div>
+    {% if validity.warnings is not empty %}
+    <div class="validity-warnings">
+        {% for w in validity.warnings %}<p class="warning">{{ w }}</p>{% endfor %}
+    </div>
+    {% endif %}
+    <p class="validity-status {{ validity.is_valid ? 'valid' : 'invalid' }}">
+        {{ validity.is_valid ? '✓ Протокол достоверен' : '⚠ Протокол недостоверен' }}
+    </p>
+</div>
