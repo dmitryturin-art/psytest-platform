@@ -1,0 +1,59 @@
+{% extends "layout.twig" %}
+
+{% block title %}Результаты: {{ test.name }} — {{ appName }}{% endblock %}
+{% block body_class %}results-page test-{{ test.slug }}{% endblock %}
+
+{% block content %}
+<div class="results-wrapper">
+    <div class="results-header">
+        <h1 class="results-title">{{ test.name }}</h1>
+        <p class="results-subtitle">Результаты тестирования</p>
+        <div class="results-meta">
+            <span class="meta-item">📅 {{ session.created_at|date("d.m.Y H:i") }}</span>
+            <span class="meta-item">🔗 ID: {{ session.id|slice(0, 8) }}...</span>
+        </div>
+    </div>
+
+    <div class="results-actions">
+        <a href="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/pdf"
+           class="btn btn-secondary" target="_blank">📄 Скачать PDF</a>
+        {% if ai_interpretation_available %}
+        <a href="{{ basePath }}/interpretation/{{ session.session_token }}"
+           class="btn btn-primary">✨ AI-интерпретация</a>
+        {% endif %}
+        <button class="btn btn-outline" onclick="copyResultLink()">🔗 Копировать ссылку</button>
+        <button class="btn btn-outline" onclick="openDeleteModal()">🗑️ Удалить данные</button>
+    </div>
+
+    <div class="results-content">
+        {% for section in sections %}
+        <div class="results-section results-section--{{ section.type }}">
+            {% if section.title %}
+            <h2 class="section-title">{{ section.title }}</h2>
+            {% endif %}
+            <div class="section-body">
+                {{ include(section.block, section.data, ignore_missing = true) }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="results-disclaimer">
+        <p><strong>Важно:</strong> Результаты носят ознакомительный характер и не являются диагнозом. Для профессиональной интерпретации обратитесь к квалифицированному специалисту.</p>
+    </div>
+</div>
+
+{{ include('blocks/_delete-modal.twig') }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const RESULT_CONFIG = {
+    sessionId: '{{ session.id }}',
+    sessionToken: '{{ session.session_token }}',
+    testSlug: '{{ test.slug }}',
+    basePath: '{{ basePath }}',
+};
+</script>
+<script src="{{ basePath }}/js/results.js"></script>
+{% endblock %}
