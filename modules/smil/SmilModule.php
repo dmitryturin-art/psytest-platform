@@ -906,8 +906,10 @@ class SmilModule extends BaseTestModule
                     'code' => $code,
                     'name' => $info['name'] ?? $code,
                     'description' => $info['description'] ?? '',
+                    'raw' => $score['raw'] ?? 0,
                     't_score' => $tScore,
                     'level' => $level,
+                    'level_name' => $this->getLevelName($level),
                     'marker_position' => round($markerPos, 2),
                     'interpretation' => $score['interpretation'] ?? $this->getAdditionalScaleInterpretation($code, $tScore, $category),
                 ];
