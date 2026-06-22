@@ -20,7 +20,7 @@ final class TScoreCalculator
     /**
      * Convert raw scores to T-scores with K-correction.
      *
-     * Formula: T = 50 + 10 * (X - M) / σ, clamped to [20, 120]
+     * Formula: T = 50 + 10 * (X - M) / σ, clamped to [20, 100]
      * K-correction: X' = X + round(K * factor)
      */
     public function calculate(array $rawScores, string $gender): array
