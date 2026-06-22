@@ -121,6 +121,15 @@ abstract class BaseTestModule implements TestModuleInterface
     abstract public function generateInterpretation(array $scores): array;
     
     /**
+     * Default: return empty sections array.
+     * Override in each test module to provide its result structure.
+     */
+    public function buildSections(array $results): array
+    {
+        return [];
+    }
+
+    /**
      * Render results (must be implemented)
      */
     abstract public function renderResults(array $results): string;

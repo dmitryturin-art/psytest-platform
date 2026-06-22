@@ -51,6 +51,17 @@ interface TestModuleInterface
      * @return array Calculated scores and raw results
      */
     public function calculateResults(array $answers): array;
+
+    /**
+     * Build result sections for structured rendering.
+     *
+     * Each section is a ResultSection with type, title, data, and optional twig block.
+     * Sections are rendered by result-layout.twig using reusable block components.
+     *
+     * @param array $results Calculated results from calculateResults()
+     * @return ResultSection[] Ordered list of result sections
+     */
+    public function buildSections(array $results): array;
     
     /**
      * Generate interpretation from scores
@@ -64,12 +75,7 @@ interface TestModuleInterface
      */
     public function generateInterpretation(array $scores): array;
     
-    /**
-     * Render results as HTML
-     * 
-     * @param array $results Calculated results
-     * @return string HTML output for results page
-     */
+    /** @deprecated Use buildSections() + Twig blocks. Kept for backward compat; will be removed in Plan 3. */
     public function renderResults(array $results): string;
     
     /**
