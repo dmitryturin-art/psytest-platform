@@ -47,6 +47,9 @@
         const validityScores = scores.slice(0, 3);   // L, F, K
         const clinicalScores = scores.slice(3);      // 1-9, 0
 
+        const validityLabels = labels.slice(0, 3);
+        const clinicalLabels = labels.slice(3);
+
         // X positions from reference (psytest.org)
         const validityPositions = [102, 138, 168];
         const clinicalPositions = [208, 238, 270, 304, 338, 373, 412, 444, 478, 513];
@@ -57,8 +60,8 @@
                 <div class="classic-profile-holder">
                     <img src="/images/smil-profile-bg.png" alt="СМИЛ профиль" class="profile-background">
                     <svg class="profile-overlay" viewBox="0 0 ${viewBox.width} ${viewBox.height}">
-                        ${renderCurve(validityScores, validityPositions)}
-                        ${renderCurve(clinicalScores, clinicalPositions)}
+                        ${renderCurve(validityScores, validityLabels, validityPositions)}
+                        ${renderCurve(clinicalScores, clinicalLabels, clinicalPositions)}
                     </svg>
                 </div>
                 <div class="profile-legend">
@@ -85,12 +88,20 @@
         `;
 
         container.innerHTML = html;
+
+        // Add tooltip element
+        if (!document.getElementById('smil-tooltip')) {
+            const tooltip = document.createElement('div');
+            tooltip.id = 'smil-tooltip';
+            tooltip.style.cssText = 'position: absolute; display: none; background: white; border: 1px solid #333; padding: 6px 10px; font-size: 12px; pointer-events: none; z-index: 1000;';
+            document.body.appendChild(tooltip);
+        }
     }
 
     /**
      * Render a single curve (validity or clinical)
      */
-    function renderCurve(scores, xPositions) {
+    function renderCurve(scores, labels, xPositions) {
         let svg = '';
 
         // Render connecting lines
@@ -103,13 +114,16 @@
             svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="darkblue" stroke-width="4"/>`;
         }
 
-        // Render points
+        // Render points with tooltip support
         for (let i = 0; i < scores.length; i++) {
             const x = xPositions[i];
             const y = tScoreToY(scores[i]);
             const color = getPointColor(scores[i]);
+            const tooltipText = `${labels[i]}: T=${scores[i]} (${getLevel(scores[i])})`;
 
-            svg += `<circle cx="${x}" cy="${y}" fill="${color}" r="5" stroke="white" stroke-width="1"/>`;
+            svg += `<circle cx="${x}" cy="${y}" fill="${color}" r="5" stroke="white" stroke-width="1"
+                onmouseover="showTooltip(event, '${tooltipText}')"
+                onmouseout="hideTooltip()"/>`;
         }
 
         return svg;
@@ -151,5 +165,38 @@
             return 'crimson';    // Elevated or lowered
         }
     }
+
+    /**
+     * Get T-score level label
+     */
+    function getLevel(tScore) {
+        if (tScore < 30) return 'Низкий';
+        if (tScore <= 70) return 'Норма';
+        if (tScore <= 80) return 'Повышенный';
+        return 'Высокий';
+    }
+
+    /**
+     * Show tooltip
+     */
+    window.showTooltip = function(evt, text) {
+        const tt = document.getElementById('smil-tooltip');
+        if (tt) {
+            tt.textContent = text;
+            tt.style.left = (evt.pageX + 10) + 'px';
+            tt.style.top = (evt.pageY - 20) + 'px';
+            tt.style.display = 'block';
+        }
+    };
+
+    /**
+     * Hide tooltip
+     */
+    window.hideTooltip = function() {
+        const tt = document.getElementById('smil-tooltip');
+        if (tt) {
+            tt.style.display = 'none';
+        }
+    };
 
 })();

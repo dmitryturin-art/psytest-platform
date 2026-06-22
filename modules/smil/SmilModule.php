@@ -785,7 +785,7 @@ class SmilModule extends BaseTestModule
         return [
             'scores' => $scores,
             'labels' => $labels,
-            'chart_id' => 'smil-profile',
+            'chart_id' => 'smilClassicProfile',
         ];
     }
 
