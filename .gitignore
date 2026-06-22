@@ -37,6 +37,7 @@ logs/
 tmp/
 temp/
 .cache/
+.phpstan/
 
 # PHPUnit
 .phpunit.cache/

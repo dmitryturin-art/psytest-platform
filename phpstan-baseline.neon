@@ -1,0 +1,1031 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Method PsyTest\\\\Controllers\\\\ApiController\\:\\:health\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/ApiController.php
+
+		-
+			message: "#^Method PsyTest\\\\Controllers\\\\ApiController\\:\\:processInterpretation\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/ApiController.php
+
+		-
+			message: "#^Method PsyTest\\\\Controllers\\\\ApiController\\:\\:sendInterpretationEmail\\(\\) has parameter \\$aiResult with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/ApiController.php
+
+		-
+			message: "#^Method PsyTest\\\\Controllers\\\\ApiController\\:\\:sendInterpretationEmail\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/ApiController.php
+
+		-
+			message: "#^Method PsyTest\\\\Controllers\\\\BaseController\\:\\:getTestOrFail\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/BaseController.php
+
+		-
+			message: "#^Method PsyTest\\\\Controllers\\\\BaseController\\:\\:jsonResponse\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/BaseController.php
+
+		-
+			message: "#^Method PsyTest\\\\Controllers\\\\ResultController\\:\\:getPartnerResults\\(\\) has parameter \\$comparison with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/ResultController.php
+
+		-
+			message: "#^Method PsyTest\\\\Controllers\\\\ResultController\\:\\:getPartnerResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/ResultController.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:__construct\\(\\) has parameter \\$config with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:delete\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:execute\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:getInstance\\(\\) has parameter \\$config with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:insert\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:select\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:select\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:selectOne\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:selectOne\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:update\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:update\\(\\) has parameter \\$whereParams with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^PHPDoc tag @return with type int is incompatible with native type PDOStatement\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Property PsyTest\\\\Core\\\\Database\\:\\:\\$config type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Database.php
+
+		-
+			message: "#^Property PsyTest\\\\Core\\\\LoggerFactory\\:\\:\\$loggers type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/LoggerFactory.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\ModuleLoader\\:\\:getActiveModules\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/ModuleLoader.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\ModuleLoader\\:\\:getAllModules\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/ModuleLoader.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\ModuleLoader\\:\\:getModuleMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/ModuleLoader.php
+
+		-
+			message: "#^Property PsyTest\\\\Core\\\\ModuleLoader\\:\\:\\$modules type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/ModuleLoader.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:generateAIInterpretation\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:generateAIInterpretation\\(\\) has parameter \\$test with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:generatePairComparison\\(\\) has parameter \\$comparison with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:generatePairComparison\\(\\) has parameter \\$test with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:generateTestResult\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:generateTestResult\\(\\) has parameter \\$test with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:renderInterpretationTemplate\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:renderInterpretationTemplate\\(\\) has parameter \\$test with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:renderPairTemplate\\(\\) has parameter \\$comparison with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:renderPairTemplate\\(\\) has parameter \\$test with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:renderTestResultTemplate\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:renderTestResultTemplate\\(\\) has parameter \\$test with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\PDFGenerator\\:\\:renderUserInfo\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/PDFGenerator.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:addRoute\\(\\) has parameter \\$handler with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:callHandler\\(\\) has parameter \\$handler with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:callHandler\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:delete\\(\\) has parameter \\$handler with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:get\\(\\) has parameter \\$handler with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:getRoutes\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:match\\(\\) has parameter \\$handler with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:match\\(\\) has parameter \\$methods with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:post\\(\\) has parameter \\$handler with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:put\\(\\) has parameter \\$handler with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Router\\:\\:route\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Property PsyTest\\\\Core\\\\Router\\:\\:\\$middleware type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Property PsyTest\\\\Core\\\\Router\\:\\:\\$routes type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Router.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Security\\:\\:sanitizeArray\\(\\) has parameter \\$array with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Security.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Security\\:\\:sanitizeArray\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Security.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Security\\:\\:validateUpload\\(\\) has parameter \\$allowedTypes with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Security.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Security\\:\\:validateUpload\\(\\) has parameter \\$file with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Security.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\Security\\:\\:validateUpload\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/Security.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:completeSession\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:createPairComparison\\(\\) has parameter \\$comparisonData with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:createPairComparison\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:createSession\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:createSession\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:getPairComparisonBySession\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:getSessionById\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:getSessionByToken\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:logActivity\\(\\) has parameter \\$details with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:saveAnswers\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/SessionManager.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\View\\:\\:display\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/View.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\View\\:\\:render\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/View.php
+
+		-
+			message: "#^Method PsyTest\\\\Core\\\\View\\:\\:shareArray\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/View.php
+
+		-
+			message: "#^Property PsyTest\\\\Core\\\\View\\:\\:\\$sharedData type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: core/View.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:calculateResults\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:calculateResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:comparePairResults\\(\\) has parameter \\$results1 with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:comparePairResults\\(\\) has parameter \\$results2 with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:comparePairResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:generateInterpretation\\(\\) has parameter \\$scores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:generateInterpretation\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:getDemographicsRequirements\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:getInterpretationLevel\\(\\) has parameter \\$thresholds with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:getMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:getQuestions\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:loadQuestionsFromJson\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:renderResults\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:validateAnswers\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:validateAnswers\\(\\) has parameter \\$questions with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Property PsyTest\\\\Modules\\\\BaseTestModule\\:\\:\\$metadata type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Property PsyTest\\\\Modules\\\\BaseTestModule\\:\\:\\$questions type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Property PsyTest\\\\Modules\\\\BaseTestModule\\:\\:\\$questionsCache type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:calculateResults\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:calculateResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:comparePairResults\\(\\) has parameter \\$results1 with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:comparePairResults\\(\\) has parameter \\$results2 with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:comparePairResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:generateInterpretation\\(\\) has parameter \\$scores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:generateInterpretation\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:getMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:getQuestions\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:renderResults\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between 63 and 0 is always true\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Else branch is unreachable because ternary operator condition is always true\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:calculateResults\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:calculateResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:comparePairResults\\(\\) has parameter \\$results1 with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:comparePairResults\\(\\) has parameter \\$results2 with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:comparePairResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:findQuestionById\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:generateInterpretation\\(\\) has parameter \\$scores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:generateInterpretation\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:getDemographicsRequirements\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:getMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:getPointsForAnswer\\(\\) has parameter \\$question with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:getQuestions\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:getTopSymptoms\\(\\) has parameter \\$symptomScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:getTopSymptoms\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:renderResults\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:applyKCorrection\\(\\) has parameter \\$rawScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:applyKCorrection\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:applyKCorrection\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:assessValidity\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:assessValidity\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:assessValidity\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildProfile\\(\\) has parameter \\$scores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildProfile\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateAdditionalScales\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateAdditionalScales\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateControlScale\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateIndices\\(\\) has parameter \\$rawScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateIndices\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateIndices\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateRawScores\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateRawScores\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateResults\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:calculateUnknownScale\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:comparePairResults\\(\\) has parameter \\$results1 with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:comparePairResults\\(\\) has parameter \\$results2 with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:comparePairResults\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:convertToTScores\\(\\) has parameter \\$rawScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:convertToTScores\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:detectGenderFromAnswers\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:determineProfileType\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:generateDetailedInterpretation\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:generateDetailedInterpretation\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:generateInterpretation\\(\\) has parameter \\$scores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:generateInterpretation\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:generateRecommendations\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:generateRecommendations\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:generateSummary\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:getCodeType\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:getDemographicsRequirements\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:getMetadata\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:getQuestions\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:getQuestionsForGender\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:getScaleItems\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:loadAdditionalScales\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:loadAdditionalScalesNorms\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:loadBasicScalesNorms\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:loadInterpretations\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:loadTScoreTables\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderAdditionalScalesTable\\(\\) has parameter \\$additionalScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderCalculationsTable\\(\\) has parameter \\$correctedScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderCalculationsTable\\(\\) has parameter \\$rawScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderClinicalScalesDetail\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderIndicesSection\\(\\) has parameter \\$indices with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderInterpretationSection\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderInvalidResults\\(\\) has parameter \\$validity with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderProfileChart\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderProfileTypeSection\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderProfileTypeSection\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderRawScoresTable\\(\\) has parameter \\$rawScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderRecommendationsSection\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderReportHeader\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderResults\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderScoresTable\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderTScoresTable\\(\\) has parameter \\$correctedScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderTScoresTable\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderValiditySection\\(\\) has parameter \\$validity with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Offset '0'\\|'1'\\|'2'\\|'3'\\|'4'\\|'5'\\|'6'\\|'7'\\|'8'\\|'9' on array\\{L\\: 'Шкала лжи', F\\: 'Шкала достоверности', K\\: 'Коррекционная шкала', 1\\: 'Ипохондрия \\(Hs\\)', 2\\: 'Депрессия \\(D\\)', 3\\: 'Истерия \\(Hy\\)', 4\\: 'Психопатия \\(Pd\\)', 5\\: 'Маскулинность…', \\.\\.\\.\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:buildPrompt\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:buildPrompt\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:buildPrompt\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:buildPrompt\\(\\) has parameter \\$test with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:generateInterpretation\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:generateInterpretation\\(\\) has parameter \\$test with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:generateInterpretation\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:getInterpretation\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\AIInterpretationService\\:\\:regenerateInterpretation\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/AIInterpretationService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\EmailService\\:\\:getInterpretationReadyTemplate\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/EmailService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\EmailService\\:\\:getPairInvitationTemplate\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/EmailService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\EmailService\\:\\:renderEmailTemplate\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/EmailService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\EmailService\\:\\:sendInterpretationReady\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/EmailService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\EmailService\\:\\:sendInterpretationReady\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/EmailService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\EmailService\\:\\:sendPairInvitation\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/EmailService.php
+
+		-
+			message: "#^Property PsyTest\\\\Services\\\\EmailService\\:\\:\\$db is never read, only written\\.$#"
+			count: 1
+			path: services/EmailService.php
+
+		-
+			message: "#^Property PsyTest\\\\Services\\\\EmailService\\:\\:\\$mailConfig type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/EmailService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:checkPaymentStatus\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:createInterpretationRecord\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:createPayment\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:createPayment\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:createPaymentApi\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:createPaymentApi\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:getPaymentUrl\\(\\) has parameter \\$session with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:refund\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
+
+		-
+			message: "#^Method PsyTest\\\\Services\\\\PaymentService\\:\\:verifyWebhook\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: services/PaymentService.php
