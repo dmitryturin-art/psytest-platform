@@ -1,0 +1,8 @@
+<div class="score-badge score-badge--{{ level }}">
+    <div class="score-badge__value">{{ score }}</div>
+    <div class="score-badge__max">из {{ max }}</div>
+    <div class="score-badge__level">{{ level_label }}</div>
+</div>
+{% if description %}
+<p class="score-badge__description">{{ description }}</p>
+{% endif %}

@@ -1,0 +1,24 @@
+<table class="scores-table {{ class|default('') }}">
+    <thead>
+        <tr>
+            <th>Шкала</th>
+            <th>Название</th>
+            <th>Сырой балл</th>
+            <th>T-балл</th>
+            <th>Уровень</th>
+            {% if show_viz|default(false) %}<th>Визуализация</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in scales %}
+        <tr class="level--{{ s.level }}">
+            <td><strong>{{ s.code }}</strong></td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.raw }}</td>
+            <td>{{ s.t_score }}</td>
+            <td>{{ s.level_label }}</td>
+            {% if show_viz %}<td class="viz-cell"><div class="scale-bar" style="width: {{ s.t_score }}%"></div></td>{% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
