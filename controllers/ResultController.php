@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace PsyTest\Controllers;
 
 use PsyTest\Core\PDFGenerator;
+use PsyTest\Modules\ResultSection;
 
 class ResultController extends BaseController
 {
@@ -49,15 +50,6 @@ class ResultController extends BaseController
         // Get results
         $results = $session['calculated_results'];
 
-        // Get template (custom or default)
-        $template = $module->getResultTemplate() ?? 'result-page';
-
-        // Render results HTML
-        $resultsHtml = $module->renderResults($results);
-        
-        // Get interpretation
-        $interpretation = $results['interpretation'] ?? null;
-        
         // Check for AI interpretation
         $aiInterpretation = $this->db->selectOne(
             'SELECT * FROM ai_interpretations WHERE session_id = ? AND payment_status = "completed"',
@@ -73,17 +65,32 @@ class ResultController extends BaseController
                 $this->getPartnerResults($pairComparison, $session['id'])
             );
         }
-        
-        echo $this->view->render('result-page', [
-            'test' => $test,
-            'session' => $session,
-            'results' => $results,
-            'results_html' => $resultsHtml,
-            'interpretation' => $interpretation,
-            'ai_interpretation_available' => !$aiInterpretation,
-            'pair_comparison' => $pairComparison,
-            'pair_comparison_html' => $pairComparisonHtml,
-        ]);
+
+        $sections = $module->buildSections($results);
+        if (!empty($sections)) {
+            echo $this->view->render('result-layout', [
+                'test' => $test,
+                'session' => $session,
+                'sections' => $sections,
+                'results' => $results,
+                'ai_interpretation_available' => !$aiInterpretation,
+                'pair_comparison' => $pairComparison,
+            ]);
+        } else {
+            $resultsHtml = $module->renderResults($results);
+            $interpretation = $results['interpretation'] ?? null;
+            $template = $module->getResultTemplate() ?? 'result-page';
+            echo $this->view->render('result-page', [
+                'test' => $test,
+                'session' => $session,
+                'results' => $results,
+                'results_html' => $resultsHtml,
+                'interpretation' => $interpretation,
+                'ai_interpretation_available' => !$aiInterpretation,
+                'pair_comparison' => $pairComparison,
+                'pair_comparison_html' => $pairComparisonHtml,
+            ]);
+        }
     }
     
     /**
@@ -113,7 +120,13 @@ class ResultController extends BaseController
         
         // Get results
         $results = $session['calculated_results'];
-        $resultsHtml = $module->renderResults($results);
+
+        $sections = $module->buildSections($results);
+        if (!empty($sections)) {
+            $resultsHtml = $this->renderSectionsToHtml($sections);
+        } else {
+            $resultsHtml = $module->renderResults($results);
+        }
         
         // Generate PDF
         $pdfPath = $this->pdfGenerator->generateTestResult($session, $test, $resultsHtml);
@@ -277,6 +290,22 @@ class ResultController extends BaseController
         ]);
     }
     
+    /**
+     * Render sections array to concatenated HTML blocks for PDF.
+     */
+    private function renderSectionsToHtml(array $sections): string
+    {
+        $html = '';
+        foreach ($sections as $section) {
+            if ($section->block) {
+                $html .= $this->view->render($section->block, $section->data);
+            } elseif ($section->type === ResultSection::TYPE_RAW_HTML) {
+                $html .= $section->data['html'] ?? '';
+            }
+        }
+        return $html;
+    }
+
     /**
      * Get partner results for comparison
      */

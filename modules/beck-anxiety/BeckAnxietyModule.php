@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace PsyTest\Modules\BeckAnxiety;
 
 use PsyTest\Modules\BaseTestModule;
+use PsyTest\Modules\ResultSection;
 
 class BeckAnxietyModule extends BaseTestModule
 {
@@ -292,6 +293,41 @@ class BeckAnxietyModule extends BaseTestModule
         $html .= '</div>';
         
         return $html;
+    }
+
+    public function buildSections(array $results): array
+    {
+        $total = $results['total_score'] ?? 0;
+        $maxScore = $results['max_score'] ?? 63;
+        $level = $results['level'] ?? 'minimal';
+        $levelName = $results['level_name'] ?? self::LEVEL_NAMES[$level] ?? '';
+        $interpretation = $results['interpretation'] ?? '';
+        $recommendations = $results['recommendations'] ?? [];
+
+        return [
+            new ResultSection(
+                type: ResultSection::TYPE_SCORE_BADGE,
+                title: 'Уровень тревоги',
+                data: [
+                    'score' => $total,
+                    'max' => $maxScore,
+                    'level' => $level,
+                    'level_label' => $levelName,
+                    'description' => $interpretation,
+                ],
+                block: 'blocks/score-badge.twig',
+                order: 10,
+            ),
+            new ResultSection(
+                type: ResultSection::TYPE_RECOMMENDATIONS,
+                title: 'Рекомендации',
+                data: [
+                    'items' => $recommendations,
+                ],
+                block: 'blocks/recommendations.twig',
+                order: 20,
+            ),
+        ];
     }
 
     /**
