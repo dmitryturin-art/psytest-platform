@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace PsyTest\Modules\Smil;
 
 use PsyTest\Modules\BaseTestModule;
+use PsyTest\Modules\ResultSection;
 
 class SmilModule extends BaseTestModule
 {
@@ -1720,6 +1721,374 @@ class SmilModule extends BaseTestModule
         $html .= '</div>';
 
         return $html;
+    }
+
+    public function buildSections(array $results): array
+    {
+        $validity = $results['validity'] ?? [];
+        $profile = $results['profile'] ?? [];
+        $interpretation = $results['interpretation'] ?? [];
+        $rawScores = $results['raw_scores'] ?? [];
+        $tScores = $results['t_scores'] ?? [];
+        $correctedScores = $results['corrected_scores'] ?? [];
+        $indices = $results['indices'] ?? [];
+        $additionalScores = $results['additional_scores'] ?? [];
+
+        $sections = [];
+
+        if (!$validity['is_valid']) {
+            $sections[] = new ResultSection(
+                type: ResultSection::TYPE_VALIDITY,
+                title: '⚠️ Протокол недостоверен',
+                data: $this->buildValidityData($validity),
+                block: 'blocks/validity.twig',
+                order: 0,
+            );
+        }
+
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_VALIDITY,
+            title: 'Контрольные шкалы',
+            data: $this->buildValidityData($validity),
+            block: 'blocks/validity.twig',
+            order: 10,
+        );
+
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_PROFILE_CHART,
+            title: 'Профиль личности',
+            data: $this->buildProfileChartData($correctedScores),
+            block: 'blocks/profile-chart.twig',
+            order: 20,
+        );
+
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_SCALES_TABLE,
+            title: 'Основные шкалы',
+            data: $this->buildScalesTableData($rawScores, $tScores, $correctedScores),
+            block: 'blocks/scales-table.twig',
+            order: 30,
+        );
+
+        if (!empty($additionalScores)) {
+            $sections[] = new ResultSection(
+                type: ResultSection::TYPE_SCALES_TABLE,
+                title: 'Дополнительные шкалы',
+                data: $this->buildAdditionalScalesData($additionalScores),
+                block: 'blocks/scales-table.twig',
+                order: 40,
+            );
+        }
+
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_INDICES,
+            title: 'Дополнительные индексы',
+            data: $this->buildIndicesData($indices),
+            block: 'blocks/indices.twig',
+            order: 50,
+        );
+
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_INTERPRETATION,
+            title: 'Интерпретация',
+            data: $this->buildInterpretationData($profile, $interpretation),
+            block: 'blocks/interpretation.twig',
+            order: 60,
+        );
+
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_RECOMMENDATIONS,
+            title: 'Рекомендации',
+            data: $this->buildRecommendationsData($interpretation),
+            block: 'blocks/recommendations.twig',
+            order: 70,
+        );
+
+        usort($sections, fn($a, $b) => $a->order <=> $b->order);
+        return $sections;
+    }
+
+    private function buildValidityData(array $validity): array
+    {
+        return [
+            'is_valid' => $validity['is_valid'] ?? false,
+            'L_score' => $validity['L_score'] ?? 50,
+            'F_score' => $validity['F_score'] ?? 50,
+            'K_score' => $validity['K_score'] ?? 50,
+            'FK_index' => $validity['FK_index'] ?? 0,
+            'unknown_count' => $validity['unknown_count'] ?? 0,
+            'control_score' => $validity['control_score'] ?? 0,
+            'warnings' => $validity['warnings'] ?? [],
+        ];
+    }
+
+    private function buildProfileChartData(array $tScores): array
+    {
+        $scaleOrder = ['L', 'F', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+        $scaleLabels = ['L' => 'L', 'F' => 'F', 'K' => 'K', '1' => '1 Hs', '2' => '2 D', '3' => '3 Hy', '4' => '4 Pd', '5' => '5 Mf', '6' => '6 Pa', '7' => '7 Pt', '8' => '8 Sc', '9' => '9 Ma', '0' => '0 Si'];
+        $scores = [];
+        $labels = [];
+        foreach ($scaleOrder as $s) {
+            $scores[] = $tScores[$s] ?? 50;
+            $labels[] = $scaleLabels[$s] ?? $s;
+        }
+        return [
+            'scores' => $scores,
+            'labels' => $labels,
+            'chart_id' => 'smil-profile',
+        ];
+    }
+
+    private function buildScalesTableData(array $rawScores, array $tScores, array $correctedScores): array
+    {
+        $controlScales = [
+            'L' => ['name' => 'Шкала лжи', 'max' => 16, 'M' => 4.20, 'SD' => 2.90, 'formula' => '-'],
+            'F' => ['name' => 'Шкала достоверности', 'max' => 65, 'M' => 4.67, 'SD' => 2.78, 'formula' => '-'],
+            'K' => ['name' => 'Коррекционная шкала', 'max' => 30, 'M' => 12.10, 'SD' => 5.40, 'formula' => '-'],
+        ];
+
+        $clinicalScales = [
+            '1' => ['name' => 'Ипохондрия (Hs)', 'max' => 48, 'M' => 12.90, 'SD' => 4.83, 'formula' => '+0.5K'],
+            '2' => ['name' => 'Депрессия (D)', 'max' => 60, 'M' => 18.90, 'SD' => 5.00, 'formula' => '-'],
+            '3' => ['name' => 'Истерия (Hy)', 'max' => 59, 'M' => 18.65, 'SD' => 5.38, 'formula' => '+0.3K'],
+            '4' => ['name' => 'Психопатия (Pd)', 'max' => 62, 'M' => 18.68, 'SD' => 4.11, 'formula' => '+0.4K'],
+            '5' => ['name' => 'Маскулинность-фемининность (Mf)', 'max' => 60, 'M' => 36.70, 'SD' => -4.67, 'formula' => '-'],
+            '6' => ['name' => 'Паранойя (Pa)', 'max' => 40, 'M' => 7.90, 'SD' => 3.40, 'formula' => '+0.3K'],
+            '7' => ['name' => 'Психастения (Pt)', 'max' => 77, 'M' => 25.70, 'SD' => 6.10, 'formula' => '+1.0K'],
+            '8' => ['name' => 'Шизофрения (Sc)', 'max' => 108, 'M' => 22.73, 'SD' => 6.36, 'formula' => '+0.2K'],
+            '9' => ['name' => 'Гипомания (Ma)', 'max' => 52, 'M' => 17.00, 'SD' => 4.06, 'formula' => '+0.2K'],
+            '0' => ['name' => 'Интроверсия (Si)', 'max' => 70, 'M' => 25.00, 'SD' => 10.00, 'formula' => '-'],
+        ];
+
+        $scales = [];
+        $K = $rawScores['K'] ?? 0;
+
+        foreach ($controlScales as $code => $info) {
+            $raw = $rawScores[$code] ?? 0;
+            $corrected = $correctedScores[$code] ?? $tScores[$code] ?? 50;
+            $level = $this->getScoreLevel($corrected);
+
+            $scales[] = [
+                'code' => $code,
+                'name' => $info['name'],
+                'raw' => $raw,
+                'formula' => $info['formula'],
+                'correction' => 0,
+                'corrected_raw' => $raw,
+                'max' => $info['max'],
+                'M' => $info['M'],
+                'SD' => $info['SD'],
+                't_score' => $corrected,
+                'level' => $level,
+                'level_name' => $this->getLevelName($level),
+            ];
+        }
+
+        foreach ($clinicalScales as $code => $info) {
+            $raw = $rawScores[$code] ?? 0;
+            $corrected = $correctedScores[$code] ?? $tScores[$code] ?? 50;
+            $level = $this->getScoreLevel($corrected);
+
+            $formula = $info['formula'];
+            $correction = 0;
+            if ($formula === '+0.5K') $correction = round($K * 0.5);
+            elseif ($formula === '+0.3K') $correction = round($K * 0.3);
+            elseif ($formula === '+0.4K') $correction = round($K * 0.4);
+            elseif ($formula === '+1.0K') $correction = $K;
+            elseif ($formula === '+0.2K') $correction = round($K * 0.2);
+
+            $scales[] = [
+                'code' => $code,
+                'name' => $info['name'],
+                'raw' => $raw,
+                'formula' => $formula,
+                'correction' => $correction,
+                'corrected_raw' => $raw + $correction,
+                'max' => $info['max'],
+                'M' => $info['M'],
+                'SD' => $info['SD'],
+                't_score' => $corrected,
+                'level' => $level,
+                'level_name' => $this->getLevelName($level),
+            ];
+        }
+
+        return ['scales' => $scales];
+    }
+
+    private function buildAdditionalScalesData(array $additionalScores): array
+    {
+        if (empty($additionalScores)) {
+            return ['categories' => []];
+        }
+
+        $normsData = $this->loadAdditionalScalesNorms();
+        $categoryNames = [
+            'factor' => 'Факторные шкалы',
+            'special' => 'Специальные шкалы',
+            'content' => 'Контент-шкалы',
+        ];
+
+        $categories = [];
+        foreach ($normsData as $category => $scales) {
+            if (empty($scales)) continue;
+
+            $items = [];
+            foreach ($scales as $code => $info) {
+                if (!isset($additionalScores[$code])) continue;
+
+                $score = $additionalScores[$code];
+                $tScore = $score['t'] ?? 50;
+                $level = $this->getScoreLevel($tScore);
+                $markerPos = $this->calculateMarkerPosition($tScore);
+
+                $items[] = [
+                    'code' => $code,
+                    'name' => $info['name'] ?? $code,
+                    'description' => $info['description'] ?? '',
+                    't_score' => $tScore,
+                    'level' => $level,
+                    'marker_position' => round($markerPos, 2),
+                    'interpretation' => $score['interpretation'] ?? $this->getAdditionalScaleInterpretation($code, $tScore, $category),
+                ];
+            }
+
+            if (!empty($items)) {
+                $categories[] = [
+                    'name' => $categoryNames[$category] ?? $category,
+                    'count' => count($items),
+                    'items' => $items,
+                ];
+            }
+        }
+
+        return ['categories' => $categories];
+    }
+
+    private function buildInterpretationData(array $profile, array $interpretation): array
+    {
+        $profileType = $profile['profile_type'] ?? 'unknown';
+        $codeType = $profile['code_type'] ?? '';
+        $typeInfo = self::PROFILE_TYPES[$profileType] ?? ['name' => 'Не определён', 'description' => 'Требуется профессиональная интерпретация'];
+
+        $detailedInterpretations = [
+            '1' => [
+                'low' => 'Оптимизм, отсутствие ипохондрических тенденций. Человек редко жалуется на здоровье, активен.',
+                'normal' => 'Нормальный уровень заботы о здоровье. Адекватное внимание к физическому состоянию.',
+                'elevated' => 'Повышенное внимание к здоровью, возможны соматические жалобы. Склонность фиксироваться на телесных ощущениях.',
+                'high' => 'Выраженные ипохондрические тенденции. Множественные жалобы на здоровье, поиск болезней.',
+                'very_high' => 'Сильная фиксация на здоровье. Возможна ипохондрия, множественные неспецифические жалобы.',
+            ],
+            '2' => [
+                'low' => 'Приподнятое настроение, оптимизм. Высокая энергия, позитивный взгляд на жизнь.',
+                'normal' => 'Нормальное эмоциональное состояние. Адекватные реакции на события.',
+                'elevated' => 'Сниженное настроение, пессимизм. Возможны периоды подавленности.',
+                'high' => 'Выраженная депрессия, чувство вины. Снижение активности, интереса к жизни.',
+                'very_high' => 'Глубокая депрессия. Возможны суицидальные мысли, требуется помощь специалиста.',
+            ],
+            '3' => [
+                'low' => 'Критичность к себе, реализм. Трезвая оценка ситуации, сдержанность в эмоциях.',
+                'normal' => 'Умеренная эмоциональность. Баланс между контролем и выражением эмоций.',
+                'elevated' => 'Демонстративность, стремление к вниманию. Желание нравиться, быть в центре.',
+                'high' => 'Выраженная истероидность, конверсионные реакции. Эмоциональная нестабильность.',
+                'very_high' => 'Сильная истероидная акцентуация. Возможны психосоматические реакции.',
+            ],
+            '4' => [
+                'low' => 'Высокий самоконтроль, конформность. Следование правилам, осторожность.',
+                'normal' => 'Умеренная импульсивность. Баланс между спонтанностью и контролем.',
+                'elevated' => 'Импульсивность, склонность к риску. Возможны конфликты с нормами.',
+                'high' => 'Выраженная антисоциальность, конфликтность. Трудности с контролем поведения.',
+                'very_high' => 'Сильная тенденция к нарушению норм. Возможны проблемы с законом.',
+            ],
+            '5' => [
+                'low' => 'Традиционные гендерные роли. Соответствие стереотипам пола.',
+                'normal' => 'Умеренные интересы. Гибкость в проявлении качеств.',
+                'elevated' => 'Нетрадиционные интересы для пола. Широкий спектр увлечений.',
+                'high' => 'Выраженная фемининность (у мужчин) / маскулинность (у женщин).',
+                'very_high' => 'Очень выраженные противоположные полу черты. Нестандартность.',
+            ],
+            '6' => [
+                'low' => 'Доверчивость, наивность. Открытость людям, склонность верить.',
+                'normal' => 'Умеренная критичность. Здоровый скептицизм без подозрительности.',
+                'elevated' => 'Подозрительность, чувствительность к критике. Ожидание подвоха.',
+                'high' => 'Выраженная паранойяльность, ригидность. Обидчивость, злопамятность.',
+                'very_high' => 'Сильная подозрительность. Возможны бредовые идеи, проекции.',
+            ],
+            '7' => [
+                'low' => 'Спокойствие, уверенность. Низкая тревожность, решительность.',
+                'normal' => 'Умеренная тревожность. Адекватная реакция на стресс.',
+                'elevated' => 'Повышенная тревожность, неуверенность. Частые беспокойства.',
+                'high' => 'Выраженная тревога, навязчивости. Возможны фобии, ритуалы.',
+                'very_high' => 'Сильная тревожность. Тревожное расстройство, панические атаки.',
+            ],
+            '8' => [
+                'low' => 'Конкретность мышления, практичность. Реалистичный взгляд на мир.',
+                'normal' => 'Умеренная рефлексия. Баланс между практичностью и творчеством.',
+                'elevated' => 'Своеобразие мышления, богатое воображение. Нестандартность.',
+                'high' => 'Выраженные шизоидные черты, аутизация. Замкнутость, оторванность.',
+                'very_high' => 'Сильное своеобразие мышления. Возможна дезорганизация, странности.',
+            ],
+            '9' => [
+                'low' => 'Спокойствие, низкая активность. Размеренный темп жизни.',
+                'normal' => 'Умеренная энергичность. Адекватный уровень активности.',
+                'elevated' => 'Повышенная активность, импульсивность. Высокая энергия.',
+                'high' => 'Выраженная гипомания, расторможенность. Скачка идей, суетливость.',
+                'very_high' => 'Сильное возбуждение. Возможна агрессия, мания.',
+            ],
+            '0' => [
+                'low' => 'Экстраверсия, общительность. Легкость в контактах, открытость.',
+                'normal' => 'Умеренная интроверсия/экстраверсия. Гибкость в общении.',
+                'elevated' => 'Выраженная интроверсия, замкнутость. Предпочтение одиночества.',
+                'high' => 'Сильная интроверсия, социальная изоляция. Трудности в общении.',
+                'very_high' => 'Очень сильная интроверсия, аутизация. Избегание контактов.',
+            ],
+        ];
+
+        $scalesData = [];
+        foreach ($profile['scales'] ?? [] as $scale => $data) {
+            $level = $data['level'] ?? 'normal';
+            $scalesData[] = [
+                'code' => $scale,
+                'name' => $data['name'] ?? $scale,
+                'score' => $data['score'] ?? 0,
+                'level' => $level,
+                'level_name' => $this->getLevelName($level),
+                'interpretation' => $data['interpretation'] ?? '',
+                'detail' => $detailedInterpretations[$scale][$level] ?? '',
+            ];
+        }
+
+        $dominant = [];
+        foreach ($profile['dominant'] ?? [] as $d) {
+            $dominant[] = ['name' => $d['name'], 'score' => $d['score']];
+        }
+
+        return [
+            'profile_type' => $profileType,
+            'profile_type_name' => $typeInfo['name'],
+            'profile_type_description' => $typeInfo['description'],
+            'code_type' => $codeType,
+            'summary' => $interpretation['summary'] ?? '',
+            'scales' => $scalesData,
+            'dominant' => $dominant,
+        ];
+    }
+
+    private function buildRecommendationsData(array $interpretation): array
+    {
+        return [
+            'items' => $interpretation['recommendations'] ?? [],
+        ];
+    }
+
+    private function buildIndicesData(array $indices): array
+    {
+        return [
+            'FK_index' => $indices['FK_index'] ?? 0,
+            'FK_ratio' => $indices['FK_ratio'] ?? 0,
+            'anxiety_index' => $indices['anxiety_index'] ?? 0,
+            'depression_index' => $indices['depression_index'] ?? 0,
+        ];
     }
 
     /**
