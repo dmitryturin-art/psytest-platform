@@ -42,8 +42,9 @@ temp/
 /public/uploads/*
 !public/uploads/.gitkeep
 
-# Database backups
+# Database backups (keep schema, ignore dumps)
 *.sql
+!database/schema.sql
 database/backups/
 
 # Node (if using build tools)
