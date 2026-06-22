@@ -27,6 +27,9 @@ $requiredFiles = [
     'modules/TestModuleInterface.php',
     'modules/BaseTestModule.php',
     'modules/smil/SmilModule.php',
+    'modules/beck-anxiety/BeckAnxietyModule.php',
+    'modules/beck-depression/BeckDepressionModule.php',
+    'modules/hads/HadsModule.php',
     'controllers/HomeController.php',
     'controllers/TestController.php',
     'controllers/ResultController.php',
@@ -157,8 +160,131 @@ if (file_exists(__DIR__ . '/modules/smil/SmilModule.php')) {
     }
 }
 
-// 5. Проверка шаблонов
-echo "\n5. Проверка Twig шаблонов...\n";
+// 5. Проверка модуля BAI
+echo "\n5. Проверка модуля BAI...\n";
+
+if (file_exists(__DIR__ . '/modules/beck-anxiety/BeckAnxietyModule.php')) {
+    require_once __DIR__ . '/modules/TestModuleInterface.php';
+    require_once __DIR__ . '/modules/BaseTestModule.php';
+    require_once __DIR__ . '/modules/ResultSection.php';
+    require_once __DIR__ . '/modules/beck-anxiety/BeckAnxietyModule.php';
+    
+    try {
+        $module = new \PsyTest\Modules\BeckAnxiety\BeckAnxietyModule();
+        $metadata = $module->getMetadata();
+        
+        echo "   ✓ Модуль загружается\n";
+        echo "   - Название: " . $metadata['name'] . "\n";
+        echo "   - Вопросов: " . $metadata['question_count'] . "\n";
+        echo "   - Шкал: " . count($metadata['scales']) . "\n";
+        echo "   - Время: ~" . $metadata['estimated_time'] . " мин\n";
+        
+        $questions = $module->getQuestions();
+        echo "   - Загружено вопросов: " . count($questions) . "\n";
+        
+        $testAnswers = [];
+        foreach ($questions as $q) {
+            $testAnswers[$q['id']] = 2; // Средний балл
+        }
+        
+        $results = $module->calculateResults($testAnswers);
+        echo "   ✓ Расчёт результатов работает\n";
+        
+        $interpretation = $module->generateInterpretation($results);
+        echo "   ✓ Интерпретация работает\n";
+        
+        $sections = $module->buildSections($results);
+        echo "   ✓ Секции рендеринга работают (количество: " . count($sections) . ")\n";
+        
+    } catch (\Exception $e) {
+        echo "   ✗ Ошибка: " . $e->getMessage() . "\n";
+    }
+}
+
+// 6. Проверка модуля BDI
+echo "\n6. Проверка модуля BDI...\n";
+
+if (file_exists(__DIR__ . '/modules/beck-depression/BeckDepressionModule.php')) {
+    require_once __DIR__ . '/modules/TestModuleInterface.php';
+    require_once __DIR__ . '/modules/BaseTestModule.php';
+    require_once __DIR__ . '/modules/ResultSection.php';
+    require_once __DIR__ . '/modules/beck-depression/BeckDepressionModule.php';
+    
+    try {
+        $module = new \PsyTest\Modules\BeckDepression\BeckDepressionModule();
+        $metadata = $module->getMetadata();
+        
+        echo "   ✓ Модуль загружается\n";
+        echo "   - Название: " . $metadata['name'] . "\n";
+        echo "   - Вопросов: " . $metadata['question_count'] . "\n";
+        echo "   - Шкал: " . count($metadata['scales']) . "\n";
+        echo "   - Время: ~" . $metadata['estimated_time'] . " мин\n";
+        
+        $questions = $module->getQuestions();
+        echo "   - Загружено вопросов: " . count($questions) . "\n";
+        
+        $testAnswers = [];
+        foreach ($questions as $q) {
+            $testAnswers[$q['id']] = 2; // Средний балл
+        }
+        
+        $results = $module->calculateResults($testAnswers);
+        echo "   ✓ Расчёт результатов работает\n";
+        
+        $interpretation = $module->generateInterpretation($results);
+        echo "   ✓ Интерпретация работает\n";
+        
+        $sections = $module->buildSections($results);
+        echo "   ✓ Секции рендеринга работают (количество: " . count($sections) . ")\n";
+        
+    } catch (\Exception $e) {
+        echo "   ✗ Ошибка: " . $e->getMessage() . "\n";
+    }
+}
+
+// 7. Проверка модуля HADS
+echo "\n7. Проверка модуля HADS...\n";
+
+if (file_exists(__DIR__ . '/modules/hads/HadsModule.php')) {
+    require_once __DIR__ . '/modules/TestModuleInterface.php';
+    require_once __DIR__ . '/modules/BaseTestModule.php';
+    require_once __DIR__ . '/modules/ResultSection.php';
+    require_once __DIR__ . '/modules/hads/HadsModule.php';
+    
+    try {
+        $module = new \PsyTest\Modules\Hads\HadsModule();
+        $metadata = $module->getMetadata();
+        
+        echo "   ✓ Модуль загружается\n";
+        echo "   - Название: " . $metadata['name'] . "\n";
+        echo "   - Вопросов: " . $metadata['question_count'] . "\n";
+        echo "   - Шкал: " . count($metadata['scales']) . "\n";
+        echo "   - Время: ~" . $metadata['estimated_time'] . " мин\n";
+        
+        $questions = $module->getQuestions();
+        echo "   - Загружено вопросов: " . count($questions) . "\n";
+        
+        $testAnswers = [];
+        foreach ($questions as $q) {
+            $testAnswers[$q['id']] = 2; // Средний балл
+        }
+        
+        $results = $module->calculateResults($testAnswers);
+        echo "   ✓ Расчёт результатов работает\n";
+        
+        $interpretation = $module->generateInterpretation($results);
+        echo "   ✓ Интерпретация работает\n";
+        
+        $sections = $module->buildSections($results);
+        echo "   ✓ Секции рендеринга работают (количество: " . count($sections) . ")\n";
+        
+    } catch (\Exception $e) {
+        echo "   ✗ Ошибка: " . $e->getMessage() . "\n";
+    }
+}
+
+// 8. Проверка шаблонов
+echo "\n8. Проверка Twig шаблонов...\n";
 
 $templateFiles = [
     'templates/layout.twig',
@@ -176,8 +302,8 @@ foreach ($templateFiles as $file) {
     }
 }
 
-// 6. Проверка CSS/JS
-echo "\n6. Проверка статики...\n";
+// 9. Проверка CSS/JS
+echo "\n9. Проверка статики...\n";
 
 $staticFiles = [
     'public/css/main.css' => 'CSS стили',
@@ -195,8 +321,8 @@ foreach ($staticFiles as $file => $desc) {
     }
 }
 
-// 7. Проверка прав доступа
-echo "\n7. Проверка прав доступа...\n";
+// 10. Проверка прав доступа
+echo "\n10. Проверка прав доступа...\n";
 
 $dirs = ['storage', 'storage/pdfs', 'storage/logs', 'storage/cache'];
 foreach ($dirs as $dir) {

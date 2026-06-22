@@ -144,6 +144,26 @@ VALUES (
   1
 );
 
+INSERT INTO `tests` (`name`, `slug`, `module_class`, `description`, `is_active`, `sort_order`) 
+VALUES (
+  'Шкала депрессии Бека (BDI)',
+  'bdi',
+  'PsyTest\\Modules\\BeckDepression\\BeckDepressionModule',
+  'Методика диагностики депрессивных состояний Аарона Бека. 21 вопрос.',
+  1,
+  3
+);
+
+INSERT INTO `tests` (`name`, `slug`, `module_class`, `description`, `is_active`, `sort_order`) 
+VALUES (
+  'Госпитальная шкала тревоги и депрессии (HADS)',
+  'hads',
+  'PsyTest\\Modules\\Hads\\HadsModule',
+  'Шкала для выявления и оценки тяжести депрессии и тревоги. 14 вопросов.',
+  1,
+  4
+);
+
 -- ============================================
 -- CLEANUP: Expired sessions (for cron job)
 -- ============================================
