@@ -79,7 +79,7 @@
                  {% if question.text_male is defined %}data-text-male="{{ question.text_male }}"{% endif %}
                  {% if question.text_female is defined %}data-text-female="{{ question.text_female }}"{% endif %}>
                 <p class="question-text">{{ question.id }}. {{ question.text ?? question.text_male ?? question.text_female }}</p>
-                <div class="answer-options{% if test.answer_type == 'ternary' %} has-ternary{% endif %}">
+                <div class="answer-options{% if test.answer_type|default('ternary') == 'ternary' %} has-ternary{% endif %}">
                     {% if question.options is defined and question.options is not empty %}
                         {% for option in question.options %}
                         <label class="answer-option">
@@ -87,7 +87,7 @@
                             <span class="option-text">{{ option.text }}</span>
                         </label>
                         {% endfor %}
-                    {% elseif test.answer_type == 'ternary' %}
+                    {% elseif test.answer_type|default('ternary') == 'ternary' %}
                         <label class="answer-option answer-true">
                             <input type="radio" name="answers[{{ question.id }}]" value="1" required>
                             <span class="option-text">Верно</span>
