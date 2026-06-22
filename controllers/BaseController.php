@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Base Controller
- * 
+ *
  * Provides common functionality for all controllers
  */
 
@@ -10,9 +11,9 @@ declare(strict_types=1);
 namespace PsyTest\Controllers;
 
 use PsyTest\Core\Database;
-use PsyTest\Core\View;
 use PsyTest\Core\ModuleLoader;
 use PsyTest\Core\SessionManager;
+use PsyTest\Core\View;
 use PsyTest\Modules\TestModuleInterface;
 
 abstract class BaseController
@@ -21,7 +22,7 @@ abstract class BaseController
     protected View $view;
     protected ModuleLoader $moduleLoader;
     protected SessionManager $sessionManager;
-    
+
     public function __construct()
     {
         $this->db = Database::getInstance();
@@ -29,14 +30,14 @@ abstract class BaseController
         $this->moduleLoader = (new ModuleLoader(null, $this->db))->discover();
         $this->sessionManager = new SessionManager($this->db);
     }
-    
+
     /**
      * Get module or render 404 error
      */
     protected function getModuleOrFail(string $slug): TestModuleInterface
     {
         $module = $this->moduleLoader->getModule($slug);
-        
+
         if (!$module) {
             http_response_code(404);
             echo $this->view->render('error-page', [
@@ -45,10 +46,10 @@ abstract class BaseController
             ]);
             exit;
         }
-        
+
         return $module;
     }
-    
+
     /**
      * Get test from database or fail
      */
@@ -58,7 +59,7 @@ abstract class BaseController
             'SELECT * FROM tests WHERE slug = ? AND is_active = 1',
             [$slug]
         );
-        
+
         if (!$test) {
             http_response_code(404);
             echo $this->view->render('error-page', [
@@ -67,10 +68,10 @@ abstract class BaseController
             ]);
             exit;
         }
-        
+
         return $test;
     }
-    
+
     /**
      * Render JSON response
      */
@@ -81,7 +82,7 @@ abstract class BaseController
         echo json_encode($data);
         exit;
     }
-    
+
     /**
      * Render error response
      */

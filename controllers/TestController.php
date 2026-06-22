@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Test Controller
- * 
+ *
  * Handles test taking flow
  */
 
@@ -23,16 +24,16 @@ class TestController extends BaseController
         // Get module
         $module = $this->getModuleOrFail($slug);
         $metadata = $module->getMetadata();
-        
+
         // Check if test is active in database
         $test = $this->getTestOrFail($slug);
-        
+
         // Create new session
         $session = $this->sessionManager->createSession($test['id'], [
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
-        
+
         // Get questions
         $questions = $module->getQuestions();
 
@@ -46,7 +47,7 @@ class TestController extends BaseController
             'module' => $module, // Pass module for custom JS/demographics
         ]);
     }
-    
+
     /**
      * Save answers (AJAX)
      * POST /test/{slug}/save
@@ -54,28 +55,28 @@ class TestController extends BaseController
     public function save(string $slug): void
     {
         header('Content-Type: application/json');
-        
+
         $input = json_decode(file_get_contents('php://input'), true);
-        
+
         if (!$input || empty($input['session_token'])) {
             echo json_encode(['success' => false, 'error' => 'Invalid request']);
             return;
         }
-        
+
         // Verify session
         $session = $this->sessionManager->getSessionByToken($input['session_token']);
         if (!$session) {
             echo json_encode(['success' => false, 'error' => 'Session not found']);
             return;
         }
-        
+
         // Save answers
         $answers = $input['answers'] ?? [];
         $this->sessionManager->saveAnswers($session['id'], $answers);
-        
+
         echo json_encode(['success' => true]);
     }
-    
+
     /**
      * Submit test for scoring
      * POST /test/{slug}/submit
@@ -84,7 +85,7 @@ class TestController extends BaseController
     {
         // Get module
         $module = $this->getModuleOrFail($slug);
-        
+
         // Get session from POST data
         $sessionId = $_POST['session_id'] ?? null;
         if (!$sessionId || !Uuid::isValid($sessionId)) {
@@ -97,10 +98,10 @@ class TestController extends BaseController
             echo 'Session not found';
             return;
         }
-        
+
         // Collect all answers from POST
         $answers = $_POST['answers'] ?? [];
-        
+
         // Normalize answers - convert string values to proper types
         $normalizedAnswers = [];
         foreach ($answers as $questionId => $answer) {
@@ -120,20 +121,20 @@ class TestController extends BaseController
 
         // Calculate results
         $rawResults = $module->calculateResults($allAnswers);
-        
+
         // Generate interpretation
         $interpretation = $module->generateInterpretation($rawResults);
-        
+
         // Complete session
         $this->sessionManager->completeSession($sessionId, array_merge($rawResults, [
             'interpretation' => $interpretation,
         ]));
-        
+
         // Redirect to results page
         header('Location: /result/' . $slug . '/' . $session['session_token']);
         exit;
     }
-    
+
     /**
      * Start pair test
      * GET /test/{slug}/pair?partner={token}
@@ -146,7 +147,7 @@ class TestController extends BaseController
             echo 'Partner token required';
             return;
         }
-        
+
         // Verify partner session
         $partnerSession = $this->sessionManager->getSessionByToken($partnerToken);
         if (!$partnerSession) {
@@ -154,7 +155,7 @@ class TestController extends BaseController
             echo 'Partner session not found';
             return;
         }
-        
+
         // Get module
         $module = $this->getModuleOrFail($slug);
         if (!$module->supportsPairMode()) {
@@ -162,19 +163,19 @@ class TestController extends BaseController
             echo 'This test does not support pair mode';
             return;
         }
-        
+
         $metadata = $module->getMetadata();
-        
+
         // Get test from DB
         $test = $this->getTestOrFail($slug);
-        
+
         // Create new session with partner token
         $session = $this->sessionManager->createSession($test['id'], [
             'partner_token' => $partnerToken,
         ]);
-        
+
         $questions = $module->getQuestions();
-        
+
         echo $this->view->render('test-wrapper', [
             'test' => array_merge($test, $metadata),
             'session' => $session,
@@ -183,7 +184,7 @@ class TestController extends BaseController
             'partner_token' => $partnerToken,
         ]);
     }
-    
+
     /**
      * Submit pair test
      * POST /test/{slug}/pair/submit
@@ -197,22 +198,22 @@ class TestController extends BaseController
             echo 'This test does not support pair mode';
             return;
         }
-        
+
         $sessionId = $_POST['session_id'] ?? null;
         $partnerToken = $_POST['partner_token'] ?? null;
-        
+
         if (!$sessionId || !$partnerToken) {
             http_response_code(400);
             echo 'Missing required data';
             return;
         }
-        
+
         // Process submission similar to regular submit...
         // Then create pair comparison
-        
+
         echo json_encode(['success' => true, 'redirect' => '/pair/{comparison_id}']);
     }
-    
+
     /**
      * Get test ID by slug
      */

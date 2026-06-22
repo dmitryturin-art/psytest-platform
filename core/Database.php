@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Database Connection Wrapper
- * 
+ *
  * PDO-based database abstraction with security features
  */
 
@@ -18,13 +19,13 @@ class Database
     private static ?Database $instance = null;
     private PDO $connection;
     private array $config;
-    
+
     private function __construct(array $config)
     {
         $this->config = $config;
         $this->connect();
     }
-    
+
     /**
      * Get singleton instance
      */
@@ -37,10 +38,10 @@ class Database
             }
             self::$instance = new self($config);
         }
-        
+
         return self::$instance;
     }
-    
+
     /**
      * Establish database connection
      */
@@ -71,7 +72,7 @@ class Database
             throw new PDOException("Database connection failed");
         }
     }
-    
+
     /**
      * Get PDO connection
      */
@@ -79,10 +80,10 @@ class Database
     {
         return $this->connection;
     }
-    
+
     /**
      * Execute a SELECT query
-     * 
+     *
      * @param string $sql SQL query with placeholders
      * @param array $params Query parameters
      * @return array Query results
@@ -92,10 +93,10 @@ class Database
         $stmt = $this->execute($sql, $params);
         return $stmt->fetchAll();
     }
-    
+
     /**
      * Execute a SELECT query and fetch single row
-     * 
+     *
      * @param string $sql SQL query with placeholders
      * @param array $params Query parameters
      * @return array|null Single row or null if not found
@@ -106,10 +107,10 @@ class Database
         $result = $stmt->fetch();
         return $result ?: null;
     }
-    
+
     /**
      * Execute an INSERT, UPDATE, or DELETE query
-     * 
+     *
      * @param string $sql SQL query with placeholders
      * @param array $params Query parameters
      * @return int Number of affected rows or last insert ID
@@ -125,28 +126,28 @@ class Database
             throw $e;
         }
     }
-    
+
     /**
      * Insert a record and return the ID
-     * 
+     *
      * @param string $table Table name
      * @param array $data Associative array of column => value
      * @return string Last insert ID
      */
     public function insert(string $table, array $data): string
     {
-        $columns = implode(', ', array_map(fn($col) => "`$col`", array_keys($data)));
+        $columns = implode(', ', array_map(fn ($col) => "`$col`", array_keys($data)));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
-        
+
         $sql = "INSERT INTO `$table` ($columns) VALUES ($placeholders)";
         $this->execute($sql, array_values($data));
-        
+
         return $this->connection->lastInsertId();
     }
-    
+
     /**
      * Update records in a table
-     * 
+     *
      * @param string $table Table name
      * @param array $data Associative array of column => value
      * @param string $where WHERE clause (with placeholders)
@@ -160,17 +161,17 @@ class Database
             $setParts[] = "`$column` = ?";
         }
         $setClause = implode(', ', $setParts);
-        
+
         $sql = "UPDATE `$table` SET $setClause WHERE $where";
         $params = array_merge(array_values($data), $whereParams);
-        
+
         $stmt = $this->execute($sql, $params);
         return $stmt->rowCount();
     }
-    
+
     /**
      * Delete records from a table
-     * 
+     *
      * @param string $table Table name
      * @param string $where WHERE clause (with placeholders)
      * @param array $params WHERE clause parameters
@@ -182,7 +183,7 @@ class Database
         $stmt = $this->execute($sql, $params);
         return $stmt->rowCount();
     }
-    
+
     /**
      * Begin a transaction
      */
@@ -190,7 +191,7 @@ class Database
     {
         return $this->connection->beginTransaction();
     }
-    
+
     /**
      * Commit a transaction
      */
@@ -198,7 +199,7 @@ class Database
     {
         return $this->connection->commit();
     }
-    
+
     /**
      * Rollback a transaction
      */
@@ -206,7 +207,7 @@ class Database
     {
         return $this->connection->rollBack();
     }
-    
+
     /**
      * Check if a transaction is active
      */
@@ -214,7 +215,7 @@ class Database
     {
         return $this->connection->inTransaction();
     }
-    
+
     /**
      * Quote a string for safe use in queries
      */
@@ -222,12 +223,14 @@ class Database
     {
         return $this->connection->quote($string);
     }
-    
+
     /**
      * Prevent cloning
      */
-    private function __clone() {}
-    
+    private function __clone()
+    {
+    }
+
     /**
      * Prevent unserialization
      */

@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Module Loader
- * 
+ *
  * Discovers and loads test modules from the modules directory
  */
 
@@ -15,17 +16,17 @@ class ModuleLoader
 {
     private const CACHE_KEY = 'psytest_modules_registry';
     private const CACHE_TTL = 3600; // 1 час
-    
+
     private array $modules = [];
     private string $modulesPath;
     private ?Database $db = null;
-    
+
     public function __construct(?string $modulesPath = null, ?Database $db = null)
     {
         $this->modulesPath = $modulesPath ?? __DIR__ . '/../modules';
         $this->db = $db ?? Database::getInstance();
     }
-    
+
     /**
      * Discover and register all test modules
      */
@@ -39,29 +40,29 @@ class ModuleLoader
                 return $this;
             }
         }
-        
+
         if (!is_dir($this->modulesPath)) {
             throw new \RuntimeException("Modules directory not found: {$this->modulesPath}");
         }
-        
+
         $directories = glob($this->modulesPath . '/*', GLOB_ONLYDIR);
-        
+
         if ($directories === false) {
             return $this;
         }
-        
+
         foreach ($directories as $dir) {
             $this->loadModule($dir);
         }
-        
+
         // Сохранение в кэш APCu
         if (function_exists('apcu_store')) {
             apcu_store(self::CACHE_KEY, $this->modules, self::CACHE_TTL);
         }
-        
+
         return $this;
     }
-    
+
     /**
      * Load a single module from directory
      */
@@ -108,7 +109,7 @@ class ModuleLoader
             error_log("Failed to load module $moduleName: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Get module class name from directory
      */
@@ -122,7 +123,7 @@ class ModuleLoader
         // Try to find the actual class in the file
         if (file_exists($moduleFile)) {
             $content = file_get_contents($moduleFile);
-            
+
             // Extract namespace and class from PHP file
             if (preg_match('/namespace\s+([^;]+);/', $content, $nsMatches)) {
                 $namespace = trim($nsMatches[1]);
@@ -135,7 +136,7 @@ class ModuleLoader
         // Fallback to PSR-4 convention
         return 'PsyTest\\Modules\\' . ucfirst($moduleName) . '\\' . $className . 'Module';
     }
-    
+
     /**
      * Get a module by slug
      */
@@ -144,10 +145,10 @@ class ModuleLoader
         if (!isset($this->modules[$slug])) {
             return null;
         }
-        
+
         return $this->modules[$slug]['instance'];
     }
-    
+
     /**
      * Get module metadata by slug
      */
@@ -156,10 +157,10 @@ class ModuleLoader
         if (!isset($this->modules[$slug])) {
             return null;
         }
-        
+
         return $this->modules[$slug]['metadata'];
     }
-    
+
     /**
      * Get all registered modules
      */
@@ -171,7 +172,7 @@ class ModuleLoader
         }
         return $result;
     }
-    
+
     /**
      * Get all active modules (from database)
      */
@@ -179,7 +180,7 @@ class ModuleLoader
     {
         $sql = "SELECT * FROM tests WHERE is_active = 1 ORDER BY sort_order, name";
         $tests = $this->db->select($sql);
-        
+
         $result = [];
         foreach ($tests as $test) {
             if (isset($this->modules[$test['slug']])) {
@@ -189,10 +190,10 @@ class ModuleLoader
                 );
             }
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Check if a module exists
      */
@@ -200,7 +201,7 @@ class ModuleLoader
     {
         return isset($this->modules[$slug]);
     }
-    
+
     /**
      * Get module path
      */
@@ -209,10 +210,10 @@ class ModuleLoader
         if (!isset($this->modules[$slug])) {
             return null;
         }
-        
+
         return $this->modules[$slug]['path'];
     }
-    
+
     /**
      * Очистить кэш модулей (для разработки)
      */

@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Session Manager
- * 
+ *
  * Handles test session creation, token generation, and lifecycle
  */
 
@@ -9,30 +10,30 @@ declare(strict_types=1);
 
 namespace PsyTest\Core;
 
-use Ramsey\Uuid\Uuid;
 use DateTime;
 use DateTimeImmutable;
+use Ramsey\Uuid\Uuid;
 
 class SessionManager
 {
     private Database $db;
     private int $sessionTtlDays;
-    
+
     public function __construct(?Database $db = null, ?int $sessionTtlDays = null)
     {
         $this->db = $db ?? Database::getInstance();
-        
+
         if ($sessionTtlDays === null) {
             $configLoader = require __DIR__ . '/../config.php';
             $sessionTtlDays = $configLoader->sessionTtlDays();
         }
-        
+
         $this->sessionTtlDays = $sessionTtlDays;
     }
-    
+
     /**
      * Create a new test session
-     * 
+     *
      * @param int $testId Test ID
      * @param array $options Optional: email, name, demographics, partner_token
      * @return array Session data including tokens
@@ -42,9 +43,9 @@ class SessionManager
         $sessionId = Uuid::uuid4()->toString();
         $sessionToken = $this->generateUniqueToken();
         $partnerToken = $options['partner_token'] ?? null;
-        
+
         $expiresAt = new DateTimeImmutable("+{$this->sessionTtlDays} days");
-        
+
         $data = [
             'id' => $sessionId,
             'test_id' => $testId,
@@ -61,14 +62,14 @@ class SessionManager
             'created_at' => date('Y-m-d H:i:s'),
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
-        
+
         $this->db->insert('test_sessions', $data);
-        
+
         // Log session creation
         $this->logActivity($sessionId, $testId, 'session_created', [
             'has_partner' => $partnerToken !== null,
         ]);
-        
+
         return [
             'id' => $sessionId,
             'test_id' => $testId,
@@ -77,10 +78,10 @@ class SessionManager
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
     }
-    
+
     /**
      * Get session by token
-     * 
+     *
      * @param string $token Session or partner token
      * @return array|null Session data or null if not found/expired
      */
@@ -105,7 +106,7 @@ class SessionManager
 
         return $session;
     }
-    
+
     /**
      * Get session by ID
      */
@@ -126,10 +127,10 @@ class SessionManager
 
         return $session;
     }
-    
+
     /**
      * Save answers to session
-     * 
+     *
      * @param string $sessionId Session ID
      * @param array $answers User answers
      * @return bool Success
@@ -142,17 +143,17 @@ class SessionManager
             'id = ?',
             [$sessionId]
         );
-        
+
         $this->logActivity($sessionId, null, 'answers_saved', [
             'answer_count' => count($answers),
         ]);
-        
+
         return true;
     }
-    
+
     /**
      * Complete a session with results
-     * 
+     *
      * @param string $sessionId Session ID
      * @param array $results Calculated results
      * @return bool Success
@@ -169,15 +170,15 @@ class SessionManager
             'id = ?',
             [$sessionId]
         );
-        
+
         // Get session for logging
         $session = $this->getSessionById($sessionId);
-        
+
         $this->logActivity($sessionId, $session['test_id'] ?? null, 'session_completed');
-        
+
         return true;
     }
-    
+
     /**
      * Update session email (for paid interpretations)
      */
@@ -190,7 +191,7 @@ class SessionManager
             [$sessionId]
         ) > 0;
     }
-    
+
     /**
      * Delete a session (GDPR compliance)
      */
@@ -198,7 +199,7 @@ class SessionManager
     {
         // Get session info before deletion for logging
         $session = $this->getSessionById($sessionId);
-        
+
         if ($session) {
             $this->db->update(
                 'test_sessions',
@@ -213,17 +214,17 @@ class SessionManager
                 'id = ?',
                 [$sessionId]
             );
-            
+
             $this->logActivity($sessionId, $session['test_id'], 'session_deleted', [
                 'reason' => 'user_request',
             ]);
-            
+
             return true;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Check if session exists and is valid
      */
@@ -231,10 +232,10 @@ class SessionManager
     {
         return $this->getSessionByToken($token) !== null;
     }
-    
+
     /**
      * Generate a pair comparison record
-     * 
+     *
      * @param int $testId Test ID
      * @param string $session1Id First session ID
      * @param string $session2Id Second session ID
@@ -249,7 +250,7 @@ class SessionManager
     ): array {
         $comparisonId = Uuid::uuid4()->toString();
         $expiresAt = new DateTimeImmutable("+{$this->sessionTtlDays} days");
-        
+
         $data = [
             'id' => $comparisonId,
             'test_id' => $testId,
@@ -259,9 +260,9 @@ class SessionManager
             'generated_at' => date('Y-m-d H:i:s'),
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
-        
+
         $this->db->insert('pair_comparisons', $data);
-        
+
         return [
             'id' => $comparisonId,
             'test_id' => $testId,
@@ -270,7 +271,7 @@ class SessionManager
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
     }
-    
+
     /**
      * Get pair comparison by session ID
      */
@@ -290,7 +291,7 @@ class SessionManager
 
         return $comparison;
     }
-    
+
     /**
      * Generate a cryptographically secure token
      */
@@ -298,7 +299,7 @@ class SessionManager
     {
         return bin2hex(random_bytes($length / 2));
     }
-    
+
     /**
      * Generate unique session token with collision check
      */
@@ -306,20 +307,20 @@ class SessionManager
     {
         for ($i = 0; $i < $maxAttempts; $i++) {
             $token = $this->generateSecureToken();
-            
+
             $exists = $this->db->selectOne(
                 'SELECT id FROM test_sessions WHERE session_token = ?',
                 [$token]
             );
-            
+
             if (!$exists) {
                 return $token;
             }
         }
-        
+
         throw new \RuntimeException('Failed to generate unique session token');
     }
-    
+
     /**
      * Log activity for audit purposes
      */
@@ -344,26 +345,26 @@ class SessionManager
             error_log("Activity logging failed: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Get client IP address
      */
     private function getClientIp(): string
     {
-        $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? 
-              $_SERVER['HTTP_X_FORWARDED_FOR'] ?? 
-              $_SERVER['HTTP_X_REAL_IP'] ?? 
-              $_SERVER['REMOTE_ADDR'] ?? 
+        $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ??
+              $_SERVER['HTTP_X_FORWARDED_FOR'] ??
+              $_SERVER['HTTP_X_REAL_IP'] ??
+              $_SERVER['REMOTE_ADDR'] ??
               '0.0.0.0';
-        
+
         // Take first IP if multiple (X-Forwarded-For can contain chain)
         if (str_contains($ip, ',')) {
             $ip = explode(',', $ip)[0];
         }
-        
+
         return trim($ip);
     }
-    
+
     /**
      * Get user agent
      */

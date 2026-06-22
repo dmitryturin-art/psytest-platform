@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Beck Anxiety Inventory (BAI) Module
- * 
+ *
  * Шкала тревоги Бека для оценки выраженности тревоги
- * 
+ *
  * @author Aaron T. Beck
  * @version 1.0
  */
@@ -89,7 +90,7 @@ class BeckAnxietyModule extends BaseTestModule
         if ($this->questions === null) {
             $this->questions = $this->loadQuestionsFromJson('questions.json');
         }
-        
+
         return $this->questions;
     }
 
@@ -101,7 +102,7 @@ class BeckAnxietyModule extends BaseTestModule
         $totalScore = 0;
         $answeredCount = 0;
         $symptomScores = [];
-        
+
         // Подсчёт суммы баллов
         foreach ($answers as $questionId => $answer) {
             $question = $this->findQuestionById((int) $questionId);
@@ -109,7 +110,7 @@ class BeckAnxietyModule extends BaseTestModule
                 $points = $this->getPointsForAnswer($question, $answer);
                 $totalScore += $points;
                 $answeredCount++;
-                
+
                 // Сохраняем баллы по симптомам
                 $symptomScores[$questionId] = [
                     'text' => $question['text'],
@@ -118,16 +119,16 @@ class BeckAnxietyModule extends BaseTestModule
                 ];
             }
         }
-        
+
         // Определение уровня тревоги
         $level = $this->getLevel($totalScore);
         $levelName = self::LEVEL_NAMES[$level] ?? $level;
         $interpretation = self::INTERPRETATIONS[$level] ?? '';
-        
+
         // Расчёт процента от максимума
         $maxScore = 63; // 21 вопрос × 3 балла
         $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100) : 0;
-        
+
         return [
             'total_score' => $totalScore,
             'max_score' => $maxScore,
@@ -152,7 +153,7 @@ class BeckAnxietyModule extends BaseTestModule
         $levelName = $scores['level_name'] ?? self::LEVEL_NAMES[$level] ?? $level;
         $interpretation = $scores['interpretation'] ?? self::INTERPRETATIONS[$level] ?? '';
         $recommendations = $scores['recommendations'] ?? self::RECOMMENDATIONS[$level] ?? [];
-        
+
         // Формируем summary
         $summary = sprintf(
             'Ваш результат: %d из 63 баллов (%s). %s',
@@ -160,7 +161,7 @@ class BeckAnxietyModule extends BaseTestModule
             $levelName,
             $interpretation
         );
-        
+
         return [
             'summary' => $summary,
             'total_score' => $totalScore,
@@ -226,11 +227,11 @@ class BeckAnxietyModule extends BaseTestModule
             'differences' => [],
         ];
     }
-    
+
     // ============================================
     // Вспомогательные методы
     // ============================================
-    
+
     /**
      * Найти вопрос по ID
      */
@@ -244,7 +245,7 @@ class BeckAnxietyModule extends BaseTestModule
         }
         return null;
     }
-    
+
     /**
      * Получить баллы за ответ
      */
@@ -253,16 +254,16 @@ class BeckAnxietyModule extends BaseTestModule
         if (!isset($question['options'])) {
             return 0;
         }
-        
+
         foreach ($question['options'] as $option) {
             if ((string) $option['value'] === (string) $answer) {
                 return (int) $option['value'];
             }
         }
-        
+
         return 0;
     }
-    
+
     /**
      * Определить уровень по баллам
      */
@@ -275,29 +276,35 @@ class BeckAnxietyModule extends BaseTestModule
         }
         return 'minimal';
     }
-    
+
     /**
      * Получить топ симптомов по баллам
      */
     protected function getTopSymptoms(array $symptomScores, int $limit = 5): array
     {
         // Фильтруем только симптомы с баллами > 0
-        $filtered = array_filter($symptomScores, fn($s) => $s['score'] > 0);
-        
+        $filtered = array_filter($symptomScores, fn ($s) => $s['score'] > 0);
+
         // Сортируем по убыванию баллов
-        usort($filtered, fn($a, $b) => $b['score'] - $a['score']);
-        
+        usort($filtered, fn ($a, $b) => $b['score'] - $a['score']);
+
         return array_slice($filtered, 0, $limit);
     }
-    
+
     /**
      * Получить интенсивность симптома (для CSS класса)
      */
     protected function getSymptomIntensity(int $score): string
     {
-        if ($score >= 3) return 'high';
-        if ($score >= 2) return 'moderate';
-        if ($score >= 1) return 'low';
+        if ($score >= 3) {
+            return 'high';
+        }
+        if ($score >= 2) {
+            return 'moderate';
+        }
+        if ($score >= 1) {
+            return 'low';
+        }
         return 'none';
     }
 

@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Test Module Interface
- * 
+ *
  * All test modules must implement this interface
  */
 
@@ -32,10 +33,10 @@ interface TestModuleInterface
      * }
      */
     public function getMetadata(): array;
-    
+
     /**
      * Get test questions
-     * 
+     *
      * @return array Structured questions with options
      *               Example: [
      *                   ['id' => 1, 'text' => 'Question text', 'options' => [...]],
@@ -43,10 +44,10 @@ interface TestModuleInterface
      *               ]
      */
     public function getQuestions(): array;
-    
+
     /**
      * Calculate test results from answers
-     * 
+     *
      * @param array $answers User answers (question_id => answer)
      * @return array Calculated scores and raw results
      */
@@ -62,10 +63,10 @@ interface TestModuleInterface
      * @return ResultSection[] Ordered list of result sections
      */
     public function buildSections(array $results): array;
-    
+
     /**
      * Generate interpretation from scores
-     * 
+     *
      * @param array $scores Calculated scores
      * @return array {
      *     @type string $summary Brief summary
@@ -74,14 +75,14 @@ interface TestModuleInterface
      * }
      */
     public function generateInterpretation(array $scores): array;
-    
+
     /**
      * Check if module supports pair comparison mode
-     * 
+     *
      * @return bool True if pair mode is supported
      */
     public function supportsPairMode(): bool;
-    
+
     /**
      * Compare two session results (for pair mode)
      *

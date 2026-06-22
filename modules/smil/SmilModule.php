@@ -1,10 +1,11 @@
 <?php
+
 /**
  * SMIL (MMPI) Test Module - Full Version
- * 
+ *
  * Standardized Multivariate Personality Inventory
  * Adaptation by F.B. Sobchik
- * 
+ *
  * Full 566 questions version with:
  * - 3 validity scales (L, F, K)
  * - 10 clinical scales (0-9)
@@ -226,17 +227,17 @@ class SmilModule extends BaseTestModule
     public function getQuestionsForGender(?string $gender = null): array
     {
         $questions = $this->getQuestions();
-        
+
         // If no gender specified or questions don't have gender variants, return as is
         if ($gender === null) {
             return $questions;
         }
-        
+
         // Map questions to use gender-specific text
         $genderedQuestions = [];
         foreach ($questions as $question) {
             $genderedQuestion = $question;
-            
+
             // Check if question has gender variants
             if (isset($question['text_male']) && isset($question['text_female'])) {
                 // Use gender-specific text
@@ -249,10 +250,10 @@ class SmilModule extends BaseTestModule
                 // Fallback: if no 'text' field, use text_male as default
                 $genderedQuestion['text'] = $question['text_male'] ?? $question['text_female'] ?? '';
             }
-            
+
             $genderedQuestions[] = $genderedQuestion;
         }
-        
+
         return $genderedQuestions;
     }
 
@@ -334,9 +335,9 @@ class SmilModule extends BaseTestModule
             'indices' => $indices,
             'additional_scores' => $additionalScores,
             'gender' => $gender,
-            'answered_count' => count(array_filter($answers, fn($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)),
+            'answered_count' => count(array_filter($answers, fn ($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)),
             'total_questions' => 566,
-            'completion_rate' => round(count(array_filter($answers, fn($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)) / 566 * 100, 1),
+            'completion_rate' => round(count(array_filter($answers, fn ($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)) / 566 * 100, 1),
         ];
     }
 
@@ -351,7 +352,7 @@ class SmilModule extends BaseTestModule
         }
         $content = file_get_contents($filepath);
         $data = json_decode($content, true) ?? [];
-        
+
         // Extract scales from the data structure
         return $data['scales'] ?? [];
     }
@@ -368,17 +369,17 @@ class SmilModule extends BaseTestModule
     {
         $normsData = $this->loadAdditionalScalesNorms();
         $results = [];
-        
+
         foreach ($normsData as $category => $scales) {
             foreach ($scales as $code => $info) {
                 if (!isset($info['key']) || !isset($info['norms'])) {
                     continue;
                 }
-                
+
                 // Calculate raw score
                 $rawScore = 0;
                 $key = $info['key'];
-                
+
                 foreach ($key['true'] ?? [] as $questionId) {
                     // Check if answer is truthy (1, true, 'true', '1')
                     // Skip "не знаю" answers (value 2)
@@ -389,7 +390,7 @@ class SmilModule extends BaseTestModule
                         }
                     }
                 }
-                
+
                 foreach ($key['false'] ?? [] as $questionId) {
                     // Check if answer is falsy (0, false, '', null)
                     // Skip "не знаю" answers (value 2)
@@ -400,22 +401,22 @@ class SmilModule extends BaseTestModule
                         }
                     }
                 }
-                
+
                 // Get norms for gender
                 $norms = $info['norms'][$gender] ?? $info['norms']['male'] ?? [];
                 $M = $norms['M'] ?? 0;
                 $delta = $norms['delta'] ?? 1;
-                
+
                 // Calculate T-score: T = 50 + 10 × (X - M) / δ
                 if ($delta == 0) {
                     $tScore = 50;
                 } else {
                     $tScore = round(50 + 10 * ($rawScore - $M) / $delta);
                 }
-                
+
                 // Clamp to valid range (20-120 for MMPI/SMIL)
                 $tScore = max(20, min(120, $tScore));
-                
+
                 $results[$code] = [
                     'name' => $info['name'] ?? $code,
                     'raw' => $rawScore,
@@ -426,7 +427,7 @@ class SmilModule extends BaseTestModule
                 ];
             }
         }
-        
+
         return $results;
     }
 
@@ -437,12 +438,12 @@ class SmilModule extends BaseTestModule
     {
         $interpretations = $this->loadInterpretations();
         $level = $this->getScoreLevel($tScore);
-        
+
         // Try to find interpretation in additional_scales section
         if (isset($interpretations['additional_scales'][$category][$code]['levels'][$level])) {
             return $interpretations['additional_scales'][$category][$code]['levels'][$level];
         }
-        
+
         // Fallback: try to find in any category
         if (isset($interpretations['additional_scales'])) {
             foreach ($interpretations['additional_scales'] as $cat => $scales) {
@@ -451,7 +452,7 @@ class SmilModule extends BaseTestModule
                 }
             }
         }
-        
+
         return 'Интерпретация отсутствует';
     }
 
@@ -479,10 +480,10 @@ class SmilModule extends BaseTestModule
             if ($answer === 2 || $answer === '2') {
                 continue;
             }
-            
+
             // Convert answer to boolean for backward compatibility
             $answerBool = ($answer === 1 || $answer === '1' || $answer === true || $answer === 'true');
-            
+
             // Find question in questions array
             foreach ($questions as $question) {
                 if ($question['id'] == $questionId) {
@@ -519,20 +520,20 @@ class SmilModule extends BaseTestModule
     protected function calculateUnknownScale(array $answers): int
     {
         $unknownCount = 0;
-        
+
         // Count answers with value 2 ("не знаю")
         foreach ($answers as $questionId => $answer) {
             // Skip non-numeric keys (like 'gender', 'age', etc.)
             if (!is_numeric($questionId)) {
                 continue;
             }
-            
+
             // Check if answer is "не знаю"
             if ($answer === self::ANSWER_UNKNOWN || $answer === (string)self::ANSWER_UNKNOWN) {
                 $unknownCount++;
             }
         }
-        
+
         return $unknownCount;
     }
 
@@ -557,7 +558,7 @@ class SmilModule extends BaseTestModule
             168, 182, 184, 197, 200, 205, 266, 275, 293,
             334, 349, 350, 462, 464, 474, 542, 551
         ];
-        
+
         $correctCount = 0;
         foreach ($controlQuestions as $qNum) {
             // Правильный ответ на контрольный вопрос - "Да" (1)
@@ -565,7 +566,7 @@ class SmilModule extends BaseTestModule
                 $correctCount++;
             }
         }
-        
+
         return $correctCount;
     }
 
@@ -614,26 +615,26 @@ class SmilModule extends BaseTestModule
     {
         $norms = $this->loadBasicScalesNorms();
         $tScores = [];
-        
+
         foreach ($rawScores as $scale => $rawScore) {
             if (!isset($norms[$scale])) {
                 $tScores[$scale] = 50.0;
                 continue;
             }
-            
+
             $scaleNorms = $norms[$scale][$gender] ?? $norms[$scale]['male'];
             $M = $scaleNorms['M'];
             $delta = $scaleNorms['delta'];
-            
+
             // Apply K-correction if needed
             $kFactor = $norms[$scale]['kCorrectionFactor'] ?? null;
             $correctedRaw = $rawScore;
-            
+
             if ($kFactor !== null && isset($rawScores['K'])) {
                 $kCorrection = round($rawScores['K'] * $kFactor);
                 $correctedRaw = $rawScore + $kCorrection;
             }
-            
+
             // Calculate T-score using formula: T = 50 + 10 × (X - M) / δ
             if ($delta == 0) {
                 $tScores[$scale] = 50.0;
@@ -643,7 +644,7 @@ class SmilModule extends BaseTestModule
                 $tScores[$scale] = round(max(20, min(120, $tScore)));
             }
         }
-        
+
         return $tScores;
     }
 
@@ -787,7 +788,7 @@ class SmilModule extends BaseTestModule
         }
 
         $sorted = $profile;
-        usort($sorted, fn($a, $b) => $b['score'] - $a['score']);
+        usort($sorted, fn ($a, $b) => $b['score'] - $a['score']);
         $dominant = array_slice($sorted, 0, 3);
 
         $profileType = $this->determineProfileType($profile);
@@ -809,7 +810,7 @@ class SmilModule extends BaseTestModule
         if ($score >= 75) {
             return 'very_high';
         }
-        
+
         foreach (self::THRESHOLDS as $level => $range) {
             if ($score >= $range['min'] && $score <= $range['max']) {
                 return $level;
@@ -849,8 +850,12 @@ class SmilModule extends BaseTestModule
      */
     protected function calculateMarkerPosition(float $value): float
     {
-        if ($value <= 29) return 5;
-        if ($value >= 120) return 95;
+        if ($value <= 29) {
+            return 5;
+        }
+        if ($value >= 120) {
+            return 95;
+        }
         return 15 + (($value - 30) / 90) * 70;
     }
 
@@ -859,7 +864,7 @@ class SmilModule extends BaseTestModule
      */
     protected function determineProfileType(array $profile): string
     {
-        $elevated = array_filter($profile, fn($p) => $p['score'] >= 60);
+        $elevated = array_filter($profile, fn ($p) => $p['score'] >= 60);
 
         if (empty($elevated)) {
             return 'normosthenic';
@@ -891,7 +896,7 @@ class SmilModule extends BaseTestModule
     protected function getCodeType(array $profile): string
     {
         $sorted = $profile;
-        uasort($sorted, fn($a, $b) => $b['score'] - $a['score']);
+        uasort($sorted, fn ($a, $b) => $b['score'] - $a['score']);
 
         $top2 = array_slice(array_keys($sorted), 0, 2);
 
@@ -1098,7 +1103,7 @@ class SmilModule extends BaseTestModule
             order: 70,
         );
 
-        usort($sections, fn($a, $b) => $a->order <=> $b->order);
+        usort($sections, fn ($a, $b) => $a->order <=> $b->order);
         return $sections;
     }
 
@@ -1185,11 +1190,17 @@ class SmilModule extends BaseTestModule
 
             $formula = $info['formula'];
             $correction = 0;
-            if ($formula === '+0.5K') $correction = round($K * 0.5);
-            elseif ($formula === '+0.3K') $correction = round($K * 0.3);
-            elseif ($formula === '+0.4K') $correction = round($K * 0.4);
-            elseif ($formula === '+1.0K') $correction = $K;
-            elseif ($formula === '+0.2K') $correction = round($K * 0.2);
+            if ($formula === '+0.5K') {
+                $correction = round($K * 0.5);
+            } elseif ($formula === '+0.3K') {
+                $correction = round($K * 0.3);
+            } elseif ($formula === '+0.4K') {
+                $correction = round($K * 0.4);
+            } elseif ($formula === '+1.0K') {
+                $correction = $K;
+            } elseif ($formula === '+0.2K') {
+                $correction = round($K * 0.2);
+            }
 
             $scales[] = [
                 'code' => $code,
@@ -1225,11 +1236,15 @@ class SmilModule extends BaseTestModule
 
         $categories = [];
         foreach ($normsData as $category => $scales) {
-            if (empty($scales)) continue;
+            if (empty($scales)) {
+                continue;
+            }
 
             $items = [];
             foreach ($scales as $code => $info) {
-                if (!isset($additionalScores[$code])) continue;
+                if (!isset($additionalScores[$code])) {
+                    continue;
+                }
 
                 $score = $additionalScores[$code];
                 $tScore = $score['t'] ?? 50;

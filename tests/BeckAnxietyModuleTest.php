@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PsyTest\Tests;
 
 use PHPUnit\Framework\TestCase;
-use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
+use PsyTest\Modules\ResultSection;
 
 final class BeckAnxietyModuleTest extends TestCase
 {

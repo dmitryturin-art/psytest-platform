@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PsyTest\Modules;
@@ -11,7 +12,8 @@ final class ResultSection
         public readonly array $data,
         public readonly ?string $block = null,
         public readonly int $order = 0,
-    ) {}
+    ) {
+    }
 
     /** Section types */
     public const TYPE_PROFILE_CHART = 'profile_chart';

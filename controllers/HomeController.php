@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Home Controller
  */
@@ -17,19 +18,19 @@ class HomeController extends BaseController
         header('Location: /tests');
         exit;
     }
-    
+
     /**
      * List all available tests
      */
     public function tests(): void
     {
         $tests = $this->moduleLoader->getActiveModules();
-        
+
         echo $this->view->render('tests-list', [
             'tests' => $tests,
         ]);
     }
-    
+
     /**
      * Privacy policy page
      */
@@ -40,7 +41,7 @@ class HomeController extends BaseController
             'content' => $this->getPrivacyContent(),
         ]);
     }
-    
+
     /**
      * Terms of service page
      */
@@ -51,7 +52,7 @@ class HomeController extends BaseController
             'content' => $this->getTermsContent(),
         ]);
     }
-    
+
     /**
      * Deleted session page
      */
@@ -69,7 +70,7 @@ class HomeController extends BaseController
             ',
         ]);
     }
-    
+
     /**
      * Error page
      */
@@ -80,7 +81,7 @@ class HomeController extends BaseController
             'errorCode' => $code,
         ]);
     }
-    
+
     /**
      * Privacy policy content
      */
@@ -122,7 +123,7 @@ class HomeController extends BaseController
             </div>
         ';
     }
-    
+
     /**
      * Terms of service content
      */

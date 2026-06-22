@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Router
- * 
+ *
  * Simple MVC-style router with support for RESTful routes
  */
 
@@ -14,7 +15,7 @@ class Router
     private array $routes = [];
     private array $middleware = [];
     private ?string $basePath = null;
-    
+
     /**
      * Set base path for URL generation
      */
@@ -22,7 +23,7 @@ class Router
     {
         $this->basePath = rtrim($path, '/');
     }
-    
+
     /**
      * Get base path
      */
@@ -30,7 +31,7 @@ class Router
     {
         return $this->basePath ?? '';
     }
-    
+
     /**
      * Register a GET route
      */
@@ -38,7 +39,7 @@ class Router
     {
         return $this->addRoute('GET', $path, $handler);
     }
-    
+
     /**
      * Register a POST route
      */
@@ -46,7 +47,7 @@ class Router
     {
         return $this->addRoute('POST', $path, $handler);
     }
-    
+
     /**
      * Register a PUT route
      */
@@ -54,7 +55,7 @@ class Router
     {
         return $this->addRoute('PUT', $path, $handler);
     }
-    
+
     /**
      * Register a DELETE route
      */
@@ -62,7 +63,7 @@ class Router
     {
         return $this->addRoute('DELETE', $path, $handler);
     }
-    
+
     /**
      * Register a route for multiple methods
      */
@@ -73,28 +74,28 @@ class Router
         }
         return $this;
     }
-    
+
     /**
      * Add a route to the collection
      */
     private function addRoute(string $method, string $path, callable|array $handler): self
     {
         $path = '/' . trim($path, '/');
-        
+
         // Convert path parameters to regex
         $pattern = preg_replace('/\{([a-zA-Z_]+)\}/', '(?P<$1>[^/]+)', $path);
         $pattern = '#^' . $pattern . '$#';
-        
+
         $this->routes[] = [
             'method' => $method,
             'path' => $path,
             'pattern' => $pattern,
             'handler' => $handler,
         ];
-        
+
         return $this;
     }
-    
+
     /**
      * Register global middleware
      */
@@ -103,7 +104,7 @@ class Router
         $this->middleware[] = $middleware;
         return $this;
     }
-    
+
     /**
      * Dispatch the request to the appropriate handler
      */
@@ -111,23 +112,23 @@ class Router
     {
         $uri = $uri ?? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $method ?? $_SERVER['REQUEST_METHOD'];
-        
+
         // Remove base path if set
         if ($this->basePath && str_starts_with($uri, $this->basePath)) {
             $uri = substr($uri, strlen($this->basePath));
         }
-        
+
         $uri = '/' . trim($uri, '/');
-        
+
         foreach ($this->routes as $route) {
             if ($route['method'] !== $method) {
                 continue;
             }
-            
+
             if (preg_match($route['pattern'], $uri, $matches)) {
                 // Extract named parameters
                 $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
-                
+
                 // Run middleware
                 foreach ($this->middleware as $middleware) {
                     $result = $middleware($method, $uri, $params);
@@ -135,17 +136,17 @@ class Router
                         return $result;
                     }
                 }
-                
+
                 // Call handler
                 return $this->callHandler($route['handler'], $params);
             }
         }
-        
+
         // No route found
         http_response_code(404);
         return $this->renderError('Page not found', 404);
     }
-    
+
     /**
      * Call the route handler (supports closures and controller arrays)
      */
@@ -154,10 +155,10 @@ class Router
         if (is_callable($handler)) {
             return call_user_func_array($handler, $params);
         }
-        
+
         if (is_array($handler) && count($handler) === 2) {
             [$controller, $action] = $handler;
-            
+
             if (is_string($controller) && class_exists($controller)) {
                 $instance = new $controller();
                 if (method_exists($instance, $action)) {
@@ -165,10 +166,10 @@ class Router
                 }
             }
         }
-        
+
         throw new \RuntimeException("Invalid route handler");
     }
-    
+
     /**
      * Generate a URL for a named route (future enhancement)
      */
@@ -177,7 +178,7 @@ class Router
         // Named routes can be implemented here
         return $this->basePath . '/' . trim($name, '/');
     }
-    
+
     /**
      * Redirect to a URL
      */
@@ -186,7 +187,7 @@ class Router
         header("Location: $url", true, $statusCode);
         exit;
     }
-    
+
     /**
      * Render JSON response
      */
@@ -196,7 +197,7 @@ class Router
         header('Content-Type: application/json');
         return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
-    
+
     /**
      * Render an error page
      */
@@ -204,7 +205,7 @@ class Router
     {
         http_response_code($statusCode);
         header('Content-Type: text/html; charset=utf-8');
-        
+
         return sprintf(
             '<!DOCTYPE html><html><head><title>Error %d</title></head>' .
             '<body><h1>Error %d</h1><p>%s</p></body></html>',
@@ -213,7 +214,7 @@ class Router
             htmlspecialchars($message, ENT_QUOTES, 'UTF-8')
         );
     }
-    
+
     /**
      * Get all registered routes (for debugging)
      */
