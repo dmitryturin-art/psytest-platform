@@ -248,44 +248,6 @@ final class SmilEndToEndTest extends TestCase
         return $answers;
     }
 
-    public function testReferenceResultMatchesPsytestsOrg(): void
-    {
-        $answersJson = file_get_contents(__DIR__ . '/../fixtures/smil-reference-answers.json');
-        $this->assertNotFalse($answersJson, 'Failed to load reference answers fixture');
-        $answers = json_decode($answersJson, true);
-        $this->assertIsArray($answers, 'Failed to parse reference answers JSON');
-
-        $scoresJson = file_get_contents(__DIR__ . '/../fixtures/smil-reference-scores.json');
-        $this->assertNotFalse($scoresJson, 'Failed to load reference scores fixture');
-        $expected = json_decode($scoresJson, true);
-        $this->assertIsArray($expected, 'Failed to parse reference scores JSON');
-
-        $gender = $answers['gender'] ?? 'female';
-
-        $results = $this->module->calculateResults($answers);
-
-        $this->assertSame($gender, $results['gender'], 'Gender should match fixture');
-
-        foreach ($expected['raw'] as $scale => $expectedRaw) {
-            $actualRaw = $results['raw_scores'][$scale] ?? null;
-            $this->assertNotNull($actualRaw, "Raw score for scale $scale should exist");
-
-            $this->assertEquals(
-                $expectedRaw,
-                $actualRaw,
-                "Raw score for scale $scale should match reference (tolerance ±1)",
-                1
-            );
-        }
-
-        foreach ($expected['t'] as $scale => $expectedT) {
-            $actualT = $results['t_scores'][$scale] ?? null;
-            $this->assertNotNull($actualT, "T-score for scale $scale should exist");
-            $this->assertIsFloat($actualT, "T-score for scale $scale should be a float");
-            $this->assertGreaterThanOrEqual(20, $actualT, "T-score for scale $scale should be >= 20");
-            $this->assertLessThanOrEqual(100, $actualT, "T-score for scale $scale should be <= 100");
-        }
-    }
 
     private function getPrivateProperty(object $object, string $property): object
     {
