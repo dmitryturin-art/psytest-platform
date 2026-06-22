@@ -38,6 +38,7 @@ tmp/
 temp/
 .cache/
 .phpstan/
+.php-cs-fixer.cache
 
 # PHPUnit
 .phpunit.cache/

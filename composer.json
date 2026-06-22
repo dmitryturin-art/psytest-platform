@@ -38,8 +38,8 @@
   "scripts": {
     "test": "phpunit",
     "analyse": "phpstan analyse core controllers services modules --level=6",
-    "lint": "php-cs-fixer fix --dry-run --diff",
-    "lint:fix": "php-cs-fixer fix",
+    "lint": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+    "lint:fix": "php-cs-fixer fix --allow-risky=yes",
     "migrate": "phinx migrate",
     "migrate:create": "phinx create",
     "post-install-cmd": [
