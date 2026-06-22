@@ -1,0 +1,37 @@
+{
+  "note": "Reference scores from psytests.org SMIL result",
+  "psytests_raw_5F": 39,
+  "implementation_raw_5": 74,
+  "bug": "RawScoreCalculator counts both 5M and 5F items (74) instead of gender-specific (39 for female)",
+  "raw": {
+    "L": 4,
+    "F": 7,
+    "K": 19,
+    "1": 10,
+    "2": 23,
+    "3": 24,
+    "4": 19,
+    "5": 74,
+    "6": 10,
+    "7": 32,
+    "8": 24,
+    "9": 15,
+    "0": 34
+  },
+  "t": {
+    "L": 49,
+    "F": 52,
+    "K": 65,
+    "1": 50,
+    "2": 66,
+    "3": 70,
+    "4": 54,
+    "5": 119,
+    "6": 58,
+    "7": 76,
+    "8": 59,
+    "9": 51,
+    "0": 60
+  },
+  "gender": "female"
+}
