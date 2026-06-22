@@ -41,6 +41,11 @@ parameters:
 			path: controllers/ResultController.php
 
 		-
+			message: "#^Method PsyTest\\\\Controllers\\\\ResultController\\:\\:renderSectionsToHtml\\(\\) has parameter \\$sections with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: controllers/ResultController.php
+
+		-
 			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:__construct\\(\\) has parameter \\$config with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: core/Database.php
@@ -356,6 +361,11 @@ parameters:
 			path: core/View.php
 
 		-
+			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:buildSections\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/BaseTestModule.php
+
+		-
 			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:calculateResults\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/BaseTestModule.php
@@ -416,11 +426,6 @@ parameters:
 			path: modules/BaseTestModule.php
 
 		-
-			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:renderResults\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/BaseTestModule.php
-
-		-
 			message: "#^Method PsyTest\\\\Modules\\\\BaseTestModule\\:\\:validateAnswers\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/BaseTestModule.php
@@ -444,6 +449,16 @@ parameters:
 			message: "#^Property PsyTest\\\\Modules\\\\BaseTestModule\\:\\:\\$questionsCache type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/BaseTestModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\ResultSection\\:\\:__construct\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/ResultSection.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:buildSections\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/TestModuleInterface.php
 
 		-
 			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:calculateResults\\(\\) has parameter \\$answers with no value type specified in iterable type array\\.$#"
@@ -491,17 +506,17 @@ parameters:
 			path: modules/TestModuleInterface.php
 
 		-
-			message: "#^Method PsyTest\\\\Modules\\\\TestModuleInterface\\:\\:renderResults\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/TestModuleInterface.php
-
-		-
 			message: "#^Comparison operation \"\\>\" between 63 and 0 is always true\\.$#"
 			count: 1
 			path: modules/beck-anxiety/BeckAnxietyModule.php
 
 		-
 			message: "#^Else branch is unreachable because ternary operator condition is always true\\.$#"
+			count: 1
+			path: modules/beck-anxiety/BeckAnxietyModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:buildSections\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/beck-anxiety/BeckAnxietyModule.php
 
@@ -576,11 +591,6 @@ parameters:
 			path: modules/beck-anxiety/BeckAnxietyModule.php
 
 		-
-			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:renderResults\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/beck-anxiety/BeckAnxietyModule.php
-
-		-
 			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
 			count: 1
 			path: modules/smil/SmilModule.php
@@ -616,12 +626,102 @@ parameters:
 			path: modules/smil/SmilModule.php
 
 		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildAdditionalScalesData\\(\\) has parameter \\$additionalScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildAdditionalScalesData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildIndicesData\\(\\) has parameter \\$indices with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildIndicesData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildInterpretationData\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildInterpretationData\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildInterpretationData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
 			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildProfile\\(\\) has parameter \\$scores with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/smil/SmilModule.php
 
 		-
 			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildProfile\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildProfileChartData\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildProfileChartData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildRecommendationsData\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildRecommendationsData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildScalesTableData\\(\\) has parameter \\$correctedScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildScalesTableData\\(\\) has parameter \\$rawScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildScalesTableData\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildScalesTableData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildSections\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildValidityData\\(\\) has parameter \\$validity with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildValidityData\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/smil/SmilModule.php
 
@@ -806,97 +906,12 @@ parameters:
 			path: modules/smil/SmilModule.php
 
 		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderAdditionalScalesTable\\(\\) has parameter \\$additionalScores with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderCalculationsTable\\(\\) has parameter \\$correctedScores with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderCalculationsTable\\(\\) has parameter \\$rawScores with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderClinicalScalesDetail\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderIndicesSection\\(\\) has parameter \\$indices with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderInterpretationSection\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderInvalidResults\\(\\) has parameter \\$validity with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderProfileChart\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderProfileTypeSection\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderProfileTypeSection\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderRawScoresTable\\(\\) has parameter \\$rawScores with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderRecommendationsSection\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderReportHeader\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderResults\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderScoresTable\\(\\) has parameter \\$profile with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderTScoresTable\\(\\) has parameter \\$correctedScores with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderTScoresTable\\(\\) has parameter \\$tScores with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:renderValiditySection\\(\\) has parameter \\$validity with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
 			message: "#^Offset '0'\\|'1'\\|'2'\\|'3'\\|'4'\\|'5'\\|'6'\\|'7'\\|'8'\\|'9' on array\\{L\\: 'Шкала лжи', F\\: 'Шкала достоверности', K\\: 'Коррекционная шкала', 1\\: 'Ипохондрия \\(Hs\\)', 2\\: 'Депрессия \\(D\\)', 3\\: 'Истерия \\(Hy\\)', 4\\: 'Психопатия \\(Pd\\)', 5\\: 'Маскулинность…', \\.\\.\\.\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: modules/smil/SmilModule.php
+
+		-
+			message: "#^Offset '0'\\|'1'\\|'2'\\|'3'\\|'4'\\|'5'\\|'6'\\|'7'\\|'8'\\|'9'\\|'F'\\|'K'\\|'L' on array\\{L\\: 'L', F\\: 'F', K\\: 'K', 1\\: '1 Hs', 2\\: '2 D', 3\\: '3 Hy', 4\\: '4 Pd', 5\\: '5 Mf', \\.\\.\\.\\} on left side of \\?\\? always exists and is not nullable\\.$#"
 			count: 1
 			path: modules/smil/SmilModule.php
 

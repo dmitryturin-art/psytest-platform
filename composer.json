@@ -37,7 +37,7 @@
   },
   "scripts": {
     "test": "phpunit",
-    "analyse": "phpstan analyse core controllers services modules --level=6",
+    "analyse": "phpstan analyse core controllers services modules --level=6 --memory-limit=512M",
     "lint": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
     "lint:fix": "php-cs-fixer fix --allow-risky=yes",
     "migrate": "phinx migrate",
