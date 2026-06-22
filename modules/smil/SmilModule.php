@@ -21,6 +21,10 @@ namespace PsyTest\Modules\Smil;
 
 use PsyTest\Modules\BaseTestModule;
 use PsyTest\Modules\ResultSection;
+use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
+use PsyTest\Modules\Smil\Scoring\RawScoreCalculator;
+use PsyTest\Modules\Smil\Scoring\TScoreCalculator;
+use PsyTest\Modules\Smil\Scoring\ValidityAssessor;
 
 class SmilModule extends BaseTestModule
 {
@@ -184,6 +188,24 @@ class SmilModule extends BaseTestModule
         ],
     ];
 
+    private RawScoreCalculator $rawScoreCalc;
+    private TScoreCalculator $tScoreCalc;
+    private ValidityAssessor $validityAssessor;
+    private AdditionalScalesCalculator $additionalCalc;
+
+    /**
+     * Initialize module - set up scoring calculators
+     */
+    protected function initialize(): void
+    {
+        parent::initialize();
+
+        $this->rawScoreCalc = new RawScoreCalculator($this->getQuestions());
+        $this->tScoreCalc = new TScoreCalculator($this->loadBasicScalesNorms());
+        $this->validityAssessor = new ValidityAssessor();
+        $this->additionalCalc = new AdditionalScalesCalculator($this->loadAdditionalScalesNorms());
+    }
+
     /**
      * Get test metadata
      */
@@ -298,46 +320,32 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Calculate SMIL results - Full version with all scales
+     * Calculate SMIL results - delegates to scoring calculators
      */
     public function calculateResults(array $answers): array
     {
-        // Calculate raw scores for basic scales
-        $rawScores = $this->calculateRawScores($answers);
-
-        // Get gender from demographics
+        $rawScores = $this->rawScoreCalc->calculate($answers);
         $gender = $answers['gender'] ?? 'male';
-
-        // Convert to T-scores using gender-specific norms
-        $tScores = $this->convertToTScores($rawScores, $gender);
-
-        // Apply K-correction to clinical scales (already applied in convertToTScores)
-        $correctedScores = $tScores;
-
-        // Calculate additional scales
-        $additionalScores = $this->calculateAdditionalScales($answers, $gender);
-
-        // Calculate validity indicators (including "?" scale)
-        $validity = $this->assessValidity($tScores, $answers);
-
-        // Calculate additional indices
+        $tScores = $this->tScoreCalc->calculate($rawScores, $gender);
+        $validity = $this->validityAssessor->assess($tScores, $answers);
+        $additionalScores = $this->additionalCalc->calculate($answers, $gender);
         $indices = $this->calculateIndices($rawScores, $tScores);
+        $profile = $this->buildProfile($tScores);
 
-        // Build profile
-        $profile = $this->buildProfile($correctedScores);
+        $numericAnswerCount = count(array_filter($answers, fn ($k) => is_numeric($k), ARRAY_FILTER_USE_KEY));
 
         return [
             'raw_scores' => $rawScores,
             't_scores' => $tScores,
-            'corrected_scores' => $correctedScores,
+            'corrected_scores' => $tScores,
             'validity' => $validity,
             'profile' => $profile,
             'indices' => $indices,
             'additional_scores' => $additionalScores,
             'gender' => $gender,
-            'answered_count' => count(array_filter($answers, fn ($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)),
+            'answered_count' => $numericAnswerCount,
             'total_questions' => 566,
-            'completion_rate' => round(count(array_filter($answers, fn ($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)) / 566 * 100, 1),
+            'completion_rate' => round($numericAnswerCount / 566 * 100, 1),
         ];
     }
 
@@ -355,80 +363,6 @@ class SmilModule extends BaseTestModule
 
         // Extract scales from the data structure
         return $data['scales'] ?? [];
-    }
-
-    /**
-     * Calculate additional scales raw scores and T-scores
-     *
-     * Answer values:
-     * - 1 = "Верно" (true)
-     * - 0 = "Неверно" (false)
-     * - 2 = "Не знаю" (unknown) - not counted for scale calculations
-     */
-    protected function calculateAdditionalScales(array $answers, string $gender): array
-    {
-        $normsData = $this->loadAdditionalScalesNorms();
-        $results = [];
-
-        foreach ($normsData as $category => $scales) {
-            foreach ($scales as $code => $info) {
-                if (!isset($info['key']) || !isset($info['norms'])) {
-                    continue;
-                }
-
-                // Calculate raw score
-                $rawScore = 0;
-                $key = $info['key'];
-
-                foreach ($key['true'] ?? [] as $questionId) {
-                    // Check if answer is truthy (1, true, 'true', '1')
-                    // Skip "не знаю" answers (value 2)
-                    if (isset($answers[$questionId])) {
-                        $answer = $answers[$questionId];
-                        if ($answer === 1 || $answer === '1' || $answer === true || $answer === 'true') {
-                            $rawScore++;
-                        }
-                    }
-                }
-
-                foreach ($key['false'] ?? [] as $questionId) {
-                    // Check if answer is falsy (0, false, '', null)
-                    // Skip "не знаю" answers (value 2)
-                    if (isset($answers[$questionId])) {
-                        $answer = $answers[$questionId];
-                        if ($answer === 0 || $answer === '0' || $answer === false || $answer === 'false') {
-                            $rawScore++;
-                        }
-                    }
-                }
-
-                // Get norms for gender
-                $norms = $info['norms'][$gender] ?? $info['norms']['male'] ?? [];
-                $M = $norms['M'] ?? 0;
-                $delta = $norms['delta'] ?? 1;
-
-                // Calculate T-score: T = 50 + 10 × (X - M) / δ
-                if ($delta == 0) {
-                    $tScore = 50;
-                } else {
-                    $tScore = round(50 + 10 * ($rawScore - $M) / $delta);
-                }
-
-                // Clamp to valid range (20-120 for MMPI/SMIL)
-                $tScore = max(20, min(120, $tScore));
-
-                $results[$code] = [
-                    'name' => $info['name'] ?? $code,
-                    'raw' => $rawScore,
-                    't' => $tScore,
-                    'M' => $M,
-                    'delta' => $delta,
-                    'interpretation' => $this->getAdditionalScaleInterpretation($code, $tScore, $category),
-                ];
-            }
-        }
-
-        return $results;
     }
 
     /**
@@ -457,143 +391,6 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Calculate raw scores for each scale
-     *
-     * Answer values:
-     * - 1 = "Верно" (true)
-     * - 0 = "Неверно" (false)
-     * - 2 = "Не знаю" (unknown) - not counted for most scales, but affects validity
-     */
-    protected function calculateRawScores(array $answers): array
-    {
-        $rawScores = [
-            'L' => 0, 'F' => 0, 'K' => 0,
-            '1' => 0, '2' => 0, '3' => 0, '4' => 0, '5' => 0,
-            '6' => 0, '7' => 0, '8' => 0, '9' => 0, '0' => 0,
-        ];
-
-        $questions = $this->getQuestions();
-
-        foreach ($answers as $questionId => $answer) {
-            // Skip "не знаю" answers (value 2) for scale calculations
-            // They are tracked separately for validity assessment
-            if ($answer === 2 || $answer === '2') {
-                continue;
-            }
-
-            // Convert answer to boolean for backward compatibility
-            $answerBool = ($answer === 1 || $answer === '1' || $answer === true || $answer === 'true');
-
-            // Find question in questions array
-            foreach ($questions as $question) {
-                if ($question['id'] == $questionId) {
-                    $scale = $question['scale'] ?? null;
-                    $direction = $question['direction'] ?? 1;
-
-                    if ($scale && isset($rawScores[$scale])) {
-                        if ($direction === 1) {
-                            $rawScores[$scale] += $answerBool ? 1 : 0;
-                        } else {
-                            $rawScores[$scale] += $answerBool ? 0 : 1;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        return $rawScores;
-    }
-
-    /**
-     * Calculate "?" scale (unknown/unanswered questions)
-     *
-     * According to Sobchik methodology:
-     * - ≤ 40: acceptable
-     * - 41-60: caution, guardedness
-     * - 61-70: questionable validity
-     * - > 70: protocol invalid
-     *
-     * @param array $answers User answers
-     * @return int Count of "не знаю" answers
-     */
-    protected function calculateUnknownScale(array $answers): int
-    {
-        $unknownCount = 0;
-
-        // Count answers with value 2 ("не знаю")
-        foreach ($answers as $questionId => $answer) {
-            // Skip non-numeric keys (like 'gender', 'age', etc.)
-            if (!is_numeric($questionId)) {
-                continue;
-            }
-
-            // Check if answer is "не знаю"
-            if ($answer === self::ANSWER_UNKNOWN || $answer === (string)self::ANSWER_UNKNOWN) {
-                $unknownCount++;
-            }
-        }
-
-        return $unknownCount;
-    }
-
-    /**
-     * Calculate control questions scale (QC)
-     *
-     * 27 control questions with instruction "Обведите номер данного утверждения кружочком"
-     * Correct answer: "Да" (1)
-     *
-     * According to Sobchik methodology:
-     * - < 20: protocol invalid (low attention)
-     * - ≥ 20: acceptable
-     *
-     * @param array $answers User answers
-     * @return int Count of correct answers (0-27)
-     */
-    protected function calculateControlScale(array $answers): int
-    {
-        // 27 control questions
-        $controlQuestions = [
-            14, 33, 48, 63, 66, 69, 121, 123, 133, 151,
-            168, 182, 184, 197, 200, 205, 266, 275, 293,
-            334, 349, 350, 462, 464, 474, 542, 551
-        ];
-
-        $correctCount = 0;
-        foreach ($controlQuestions as $qNum) {
-            // Правильный ответ на контрольный вопрос - "Да" (1)
-            if (isset($answers[$qNum]) && ($answers[$qNum] == self::ANSWER_YES || $answers[$qNum] === 1 || $answers[$qNum] === '1')) {
-                $correctCount++;
-            }
-        }
-
-        return $correctCount;
-    }
-
-    /**
-     * Get scale items from questions
-     */
-    protected function getScaleItems(): array
-    {
-        $scaleItems = [];
-        $questions = $this->getQuestions();
-
-        foreach ($questions as $question) {
-            $scale = $question['scale'] ?? null;
-            $direction = $question['direction'] ?? 1;
-
-            if ($scale) {
-                if (!isset($scaleItems[$scale])) {
-                    $scaleItems[$scale] = [];
-                }
-                $scaleItems[$scale][$question['id']] = $direction;
-            }
-        }
-
-        return $scaleItems;
-    }
-
-    /**
      * Load basic scales norms from JSON
      */
     protected function loadBasicScalesNorms(): array
@@ -605,152 +402,6 @@ class SmilModule extends BaseTestModule
         $content = file_get_contents($filepath);
         $data = json_decode($content, true) ?? [];
         return $data['scales'] ?? [];
-    }
-
-    /**
-     * Convert raw scores to T-scores using Sobchik formula
-     * T = 50 + 10 × (X - M) / δ
-     */
-    protected function convertToTScores(array $rawScores, string $gender): array
-    {
-        $norms = $this->loadBasicScalesNorms();
-        $tScores = [];
-
-        foreach ($rawScores as $scale => $rawScore) {
-            if (!isset($norms[$scale])) {
-                $tScores[$scale] = 50.0;
-                continue;
-            }
-
-            $scaleNorms = $norms[$scale][$gender] ?? $norms[$scale]['male'];
-            $M = $scaleNorms['M'];
-            $delta = $scaleNorms['delta'];
-
-            // Apply K-correction if needed
-            $kFactor = $norms[$scale]['kCorrectionFactor'] ?? null;
-            $correctedRaw = $rawScore;
-
-            if ($kFactor !== null && isset($rawScores['K'])) {
-                $kCorrection = round($rawScores['K'] * $kFactor);
-                $correctedRaw = $rawScore + $kCorrection;
-            }
-
-            // Calculate T-score using formula: T = 50 + 10 × (X - M) / δ
-            if ($delta == 0) {
-                $tScores[$scale] = 50.0;
-            } else {
-                $tScore = 50 + 10 * ($correctedRaw - $M) / $delta;
-                // Clamp T-score to valid range (20-120 for MMPI/SMIL)
-                $tScores[$scale] = round(max(20, min(120, $tScore)));
-            }
-        }
-
-        return $tScores;
-    }
-
-    /**
-     * Assess validity of results
-     *
-     * @param array $tScores T-scores for validity scales
-     * @param array $answers User answers (to calculate unknown count)
-     * @return array Validity assessment
-     */
-    protected function assessValidity(array $tScores, array $answers): array
-    {
-        $L = $tScores['L'] ?? 50;
-        $F = $tScores['F'] ?? 50;
-        $K = $tScores['K'] ?? 50;
-
-        $valid = true;
-        $warnings = [];
-
-        // Calculate "?" scale (unknown answers)
-        $unknownCount = $this->calculateUnknownScale($answers);
-
-        // Calculate control scale (QC)
-        $controlScore = $this->calculateControlScale($answers);
-
-        // Check control scale (QC) - Sobchik methodology
-        if ($controlScore < 20) {
-            $valid = false;
-            $warnings[] = "Протокол недостоверен: низкая внимательность (QC = {$controlScore} < 20)";
-        }
-
-        // Check "?" scale (unknown answers) - Sobchik methodology
-        if ($unknownCount > 70) {
-            $valid = false;
-            $warnings[] = "Протокол недостоверен: слишком много ответов \"Не знаю\" ({$unknownCount} > 70)";
-        } elseif ($unknownCount > 60) {
-            $warnings[] = "Сомнительная достоверность: много ответов \"Не знаю\" ({$unknownCount})";
-        } elseif ($unknownCount > 40) {
-            $warnings[] = "Настороженность: повышенное количество ответов \"Не знаю\" ({$unknownCount})";
-        }
-
-        if ($L >= 65) {
-            $valid = false;
-            $warnings[] = 'Высокая социальная желательность - результаты могут быть недостоверны';
-        }
-
-        if ($F >= 70) {
-            $valid = false;
-            $warnings[] = 'Высокий показатель F - возможны случайные ответы или преувеличение проблем';
-        } elseif ($F >= 65) {
-            $warnings[] = 'Повышенный показатель F - возможна тенденция к преувеличению';
-        }
-
-        if ($K >= 65) {
-            $warnings[] = 'Высокая защитная позиция - клинические шкалы могут быть занижены';
-        } elseif ($K <= 35) {
-            $warnings[] = 'Низкая защитная позиция - возможна излишняя откровенность';
-        }
-
-        $fkIndex = $F - $K;
-        if ($fkIndex > 20) {
-            $warnings[] = 'Индекс F-K повышен - возможна симуляция';
-        } elseif ($fkIndex < -15) {
-            $warnings[] = 'Индекс F-K понижен - возможна диссимуляция';
-        }
-
-        return [
-            'is_valid' => $valid,
-            'warnings' => $warnings,
-            'L_score' => $L,
-            'F_score' => $F,
-            'K_score' => $K,
-            'FK_index' => $fkIndex,
-            'unknown_count' => $unknownCount,
-            'control_score' => $controlScore,
-        ];
-    }
-
-    /**
-     * Apply K-correction to clinical scales with formulas
-     */
-    protected function applyKCorrection(array $tScores, array $rawScores): array
-    {
-        $corrected = $tScores;
-        $K = $rawScores['K'] ?? 0;
-
-        // Formulas from additional-scales.json
-        $formulas = [
-            '1' => 0.5,  // +0.5K
-            '3' => 0.3,  // +0.3K
-            '4' => 0.4,  // +0.4K
-            '6' => 0.3,  // +0.3K
-            '7' => 1.0,  // +1.0K
-            '8' => 0.2,  // +0.2K
-            '9' => 0.2,  // +0.2K
-            '0' => 0.0,  // No correction
-        ];
-
-        foreach ($formulas as $scale => $fraction) {
-            if (isset($corrected[$scale]) && $fraction > 0) {
-                $kCorrection = round($K * $fraction);
-                $corrected[$scale] = round($tScores[$scale] + $kCorrection, 1);
-            }
-        }
-
-        return $corrected;
     }
 
     /**

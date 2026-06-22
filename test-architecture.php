@@ -112,6 +112,10 @@ if (file_exists(__DIR__ . '/modules/smil/SmilModule.php')) {
     require_once __DIR__ . '/modules/TestModuleInterface.php';
     require_once __DIR__ . '/modules/BaseTestModule.php';
     require_once __DIR__ . '/modules/ResultSection.php';
+    require_once __DIR__ . '/modules/smil/Scoring/RawScoreCalculator.php';
+    require_once __DIR__ . '/modules/smil/Scoring/TScoreCalculator.php';
+    require_once __DIR__ . '/modules/smil/Scoring/ValidityAssessor.php';
+    require_once __DIR__ . '/modules/smil/Scoring/AdditionalScalesCalculator.php';
     require_once __DIR__ . '/modules/smil/SmilModule.php';
     
     try {
