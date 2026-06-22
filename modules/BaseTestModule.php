@@ -130,11 +130,6 @@ abstract class BaseTestModule implements TestModuleInterface
     }
 
     /**
-     * Render results (must be implemented)
-     */
-    abstract public function renderResults(array $results): string;
-    
-    /**
      * Supports pair mode (override if supported)
      */
     public function supportsPairMode(): bool

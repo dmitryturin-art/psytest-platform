@@ -75,9 +75,6 @@ interface TestModuleInterface
      */
     public function generateInterpretation(array $scores): array;
     
-    /** @deprecated Use buildSections() + Twig blocks. Kept for backward compat; will be removed in Plan 3. */
-    public function renderResults(array $results): string;
-    
     /**
      * Check if module supports pair comparison mode
      * 

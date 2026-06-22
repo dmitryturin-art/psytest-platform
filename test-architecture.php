@@ -111,6 +111,7 @@ echo "\n4. Проверка модуля СМИЛ...\n";
 if (file_exists(__DIR__ . '/modules/smil/SmilModule.php')) {
     require_once __DIR__ . '/modules/TestModuleInterface.php';
     require_once __DIR__ . '/modules/BaseTestModule.php';
+    require_once __DIR__ . '/modules/ResultSection.php';
     require_once __DIR__ . '/modules/smil/SmilModule.php';
     
     try {
@@ -143,9 +144,9 @@ if (file_exists(__DIR__ . '/modules/smil/SmilModule.php')) {
         echo "   ✓ Интерпретация работает\n";
         echo "   - Summary: " . (isset($interpretation['summary']) ? 'есть' : 'нет') . "\n";
         
-        // Проверка рендеринга
-        $html = $module->renderResults($results);
-        echo "   ✓ Рендеринг HTML работает (длина: " . strlen($html) . " символов)\n";
+        // Проверка секций (новый контракт buildSections)
+        $sections = $module->buildSections($results);
+        echo "   ✓ Секции рендеринга работают (количество: " . count($sections) . ")\n";
         
     } catch (\Exception $e) {
         echo "   ✗ Ошибка: " . $e->getMessage() . "\n";

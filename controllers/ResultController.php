@@ -67,30 +67,15 @@ class ResultController extends BaseController
         }
 
         $sections = $module->buildSections($results);
-        if (!empty($sections)) {
-            echo $this->view->render('result-layout', [
-                'test' => $test,
-                'session' => $session,
-                'sections' => $sections,
-                'results' => $results,
-                'ai_interpretation_available' => !$aiInterpretation,
-                'pair_comparison' => $pairComparison,
-            ]);
-        } else {
-            $resultsHtml = $module->renderResults($results);
-            $interpretation = $results['interpretation'] ?? null;
-            $template = $module->getResultTemplate() ?? 'result-page';
-            echo $this->view->render('result-page', [
-                'test' => $test,
-                'session' => $session,
-                'results' => $results,
-                'results_html' => $resultsHtml,
-                'interpretation' => $interpretation,
-                'ai_interpretation_available' => !$aiInterpretation,
-                'pair_comparison' => $pairComparison,
-                'pair_comparison_html' => $pairComparisonHtml,
-            ]);
-        }
+
+        echo $this->view->render('result-layout', [
+            'test' => $test,
+            'session' => $session,
+            'sections' => $sections,
+            'results' => $results,
+            'ai_interpretation_available' => !$aiInterpretation,
+            'pair_comparison' => $pairComparison,
+        ]);
     }
     
     /**
@@ -122,11 +107,7 @@ class ResultController extends BaseController
         $results = $session['calculated_results'];
 
         $sections = $module->buildSections($results);
-        if (!empty($sections)) {
-            $resultsHtml = $this->renderSectionsToHtml($sections);
-        } else {
-            $resultsHtml = $module->renderResults($results);
-        }
+        $resultsHtml = $this->renderSectionsToHtml($sections);
         
         // Generate PDF
         $pdfPath = $this->pdfGenerator->generateTestResult($session, $test, $resultsHtml);
@@ -241,7 +222,8 @@ class ResultController extends BaseController
         $session2 = $this->sessionManager->getSessionById($comparison['session_2_id']);
         
         // Render comparison HTML
-        $comparisonHtml = $module->renderResults($comparison['comparison_data']);
+        $comparisonData = $comparison['comparison_data'];
+        $comparisonHtml = '<pre>' . htmlspecialchars(is_string($comparisonData) ? $comparisonData : json_encode($comparisonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) . '</pre>';
         
         // Generate PDF
         $pdfPath = $this->pdfGenerator->generatePairComparison($comparison, $test, $comparisonHtml);
