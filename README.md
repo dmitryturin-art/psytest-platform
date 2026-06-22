@@ -214,18 +214,26 @@ YOOMONEY_API_KEY=your_api_key
 - ✅ Криптографические токены сессий
 - ✅ 152-ФЗ совместимость (удаление данных)
 
-## 📝 Тестирование
+## 🧪 Тестирование и качество
 
 ```bash
-# Проверка архитектуры
-php test-architecture.php
+# Unit-тесты
+composer test
 
-# Проверка модуля
-php -r "
-require 'vendor/autoload.php';
-\$module = new PsyTest\Modules\Smil\SmilModule();
-print_r(\$module->getMetadata());
-"
+# Статический анализ (PHPStan level 6)
+composer analyse
+
+# Проверка стиля кода (dry-run)
+composer lint
+
+# Авто-исправление стиля
+composer lint:fix
+
+# Миграции БД
+composer migrate
+
+# Smoke-тест архитектуры (без БД)
+php test-architecture.php
 ```
 
 ## 🤝 Вклад
