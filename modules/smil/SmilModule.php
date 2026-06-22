@@ -211,23 +211,7 @@ class SmilModule extends BaseTestModule
     public function getQuestions(): array
     {
         if ($this->questions === null) {
-            // Load full 566 questions with gender variants + scale keys + control flags
             $this->questions = $this->loadQuestionsFromJson('questions-566-full.json');
-            
-            // Fallback to gender version (without scale keys)
-            if (empty($this->questions)) {
-                $this->questions = $this->loadQuestionsFromJson('questions-566-gender.json');
-            }
-            
-            // Fallback to corrected version (without gender variants)
-            if (empty($this->questions)) {
-                $this->questions = $this->loadQuestionsFromJson('questions-566-correct.json');
-            }
-            
-            // Final fallback to demo version
-            if (empty($this->questions)) {
-                $this->questions = $this->loadQuestionsFromJson('questions.json');
-            }
         }
         return $this->questions;
     }
