@@ -22,6 +22,9 @@ composer.lock
 *.swo
 *~
 
+# Reference materials (Sobchik PDFs, psytests.org samples)
+/source/
+
 # OS
 .DS_Store
 Thumbs.db
