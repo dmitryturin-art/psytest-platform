@@ -114,10 +114,10 @@ class ResultController extends BaseController
         $pdfPath = $this->pdfGenerator->generateTestResult($session, $test, $resultsHtml);
 
         // Send file
-        $fullPath = __DIR__ . '/..' . $pdfPath;
+        $fullPath = dirname(__DIR__) . $pdfPath;
         if (!file_exists($fullPath)) {
             http_response_code(500);
-            echo 'PDF generation failed';
+            echo 'PDF generation failed: ' . $fullPath;
             return;
         }
 
@@ -230,7 +230,7 @@ class ResultController extends BaseController
         $pdfPath = $this->pdfGenerator->generatePairComparison($comparison, $test, $comparisonHtml);
 
         // Send file
-        $fullPath = __DIR__ . '/..' . $pdfPath;
+        $fullPath = dirname(__DIR__) . $pdfPath;
         header('Content-Type: application/pdf');
         header('Content-Disposition: inline; filename="pair_comparison_' . date('YmdHis') . '.pdf"');
         header('Content-Length: ' . (file_exists($fullPath) ? filesize($fullPath) : 0));
@@ -281,7 +281,12 @@ class ResultController extends BaseController
         $html = '';
         foreach ($sections as $section) {
             if ($section->block) {
-                $html .= $this->view->render($section->block, $section->data);
+                // Remove .twig extension if present, View::render will add it
+                $template = $section->block;
+                if (str_ends_with($template, '.twig')) {
+                    $template = substr($template, 0, -5);
+                }
+                $html .= $this->view->render($template, $section->data);
             } elseif ($section->type === ResultSection::TYPE_RAW_HTML) {
                 $html .= $section->data['html'] ?? '';
             }

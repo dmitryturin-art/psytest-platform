@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PsyTest\Modules\Smil\Scoring;
@@ -77,8 +78,12 @@ final class ValidityAssessor
     {
         $count = 0;
         foreach ($answers as $qid => $answer) {
-            if (!is_numeric($qid)) continue;
-            if ((int) $answer === 2) $count++;
+            if (!is_numeric($qid)) {
+                continue;
+            }
+            if ((int) $answer === 2) {
+                $count++;
+            }
         }
         return $count;
     }
