@@ -307,19 +307,6 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Load T-score tables from JSON
-     */
-    protected function loadTScoreTables(): array
-    {
-        $filepath = $this->modulePath . '/t-score-tables.json';
-        if (!file_exists($filepath)) {
-            return [];
-        }
-        $content = file_get_contents($filepath);
-        return json_decode($content, true) ?? [];
-    }
-
-    /**
      * Calculate SMIL results - delegates to scoring calculators
      */
     public function calculateResults(array $answers): array

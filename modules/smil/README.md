@@ -146,13 +146,19 @@
 
 ```
 modules/smil/
-├── SmilModule.php              # Основной класс модуля
+├── SmilModule.php              # Оркестратор: вызывает калькуляторы, собирает ResultSection[]
 ├── metadata.json               # Метаданные теста
-├── questions.json              # Вопросы (50 для демо)
-├── questions-full.json         # Все 566 вопросов
-├── additional-scales.json      # Дополнительные шкалы
-├── t-score-tables.json         # T-таблицы для M/F
-├── interpretations.json        # Интерпретации шкал
+├── questions-566-full.json     # Все 566 вопросов (ключи исправлены по Соломину)
+├── basic_scales_norms.json     # Нормы Собчик для базовых шкал (M, σ, K-вес)
+├── additional-scales.json      # Дополнительные шкалы (метаданные/группировка)
+├── additional-scales-norms.json # Нормы для T-преобразования доп. шкал
+├── interpretations.json        # Текстовые интерпретации по диапазонам T-баллов
+├── Scoring/                    # Калькуляторы (чистые классы)
+│   ├── RawScoreCalculator.php
+│   ├── TScoreCalculator.php
+│   ├── ValidityAssessor.php
+│   ├── AdditionalScalesCalculator.php
+│   └── keys/mmpi-key-solomin.json
 └── README.md                   # Эта документация
 ```
 
@@ -328,15 +334,15 @@ $html = $module->renderResults($results);
    ```
    Ожидаемо: 566
 
-2. **Проверить T-таблицы:**
+2. **Эталонный расчёт (сверка с psytests.org):**
    ```bash
-   php -r "require 'vendor/autoload.php'; \$m = new SmilModule(); print_r(\$m->loadTScoreTables());"
+   vendor/bin/phpunit --filter SmilEndToEnd
    ```
-   Ожидаемо: male/female таблицы
+   Ожидаемо: 8 тестов, 281 assertion — все зелёные (raw и T-баллы всех 13 шкал совпадают с эталоном ±2).
 
-3. **Тестовый расчёт:**
+3. **Симуляция полного прогона:**
    ```bash
-   php bin/create-fake-smil-session.php
+   php bin/simulate-smil-test.php
    ```
 
 ### Частые ошибки
