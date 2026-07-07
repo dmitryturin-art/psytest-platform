@@ -179,8 +179,17 @@ class BeckAnxietyModule extends BaseTestModule
         $maxScore = $results['max_score'] ?? 63;
         $level = $results['level'] ?? 'minimal';
         $levelName = $results['level_name'] ?? self::LEVEL_NAMES[$level] ?? '';
-        $interpretation = $results['interpretation'] ?? '';
-        $recommendations = $results['recommendations'] ?? [];
+
+        // interpretation can be a string (from calculateResults) or an array (from generateInterpretation merged in DB)
+        $rawInterp = $results['interpretation'] ?? '';
+        if (is_array($rawInterp)) {
+            $interpretation = $rawInterp['interpretation_text'] ?? $rawInterp['summary'] ?? '';
+        } else {
+            $interpretation = $rawInterp;
+        }
+
+        $rawRec = $results['recommendations'] ?? [];
+        $recommendations = is_array($rawRec) && isset($rawRec['summary']) ? ($rawRec['recommendations'] ?? []) : $rawRec;
 
         return [
             new ResultSection(
@@ -192,6 +201,7 @@ class BeckAnxietyModule extends BaseTestModule
                     'level' => $level,
                     'level_label' => $levelName,
                     'description' => $interpretation,
+                    'thresholds' => self::THRESHOLDS,
                 ],
                 block: 'blocks/score-badge.twig',
                 order: 10,

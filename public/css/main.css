@@ -589,6 +589,161 @@ body {
     margin-bottom: var(--spacing-xl);
 }
 
+/* Results Sections */
+.results-section {
+    margin-bottom: var(--spacing-xl);
+}
+.results-section:last-child {
+    margin-bottom: 0;
+}
+.section-title {
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+    margin: 0 0 var(--spacing-md) 0;
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Score Badge — visual scale for BDI/HADS/BAI */
+.score-badge {
+    text-align: center;
+}
+.score-badge__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+.score-badge__number {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+}
+.score-badge__divider {
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+}
+.score-badge__level {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 4px 16px;
+    border-radius: var(--radius-pill, 100px);
+    line-height: 1.4;
+}
+.score-badge--normal .score-badge__level {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+.score-badge--minimal .score-badge__level {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+.score-badge--mild .score-badge__level,
+.score-badge--subclinical .score-badge__level {
+    background: #fff3e0;
+    color: #e65100;
+}
+.score-badge--moderate .score-badge__level,
+.score-badge--clinical .score-badge__level {
+    background: #fce4ec;
+    color: #c62828;
+}
+.score-badge--severe .score-badge__level,
+.score-badge--high .score-badge__level {
+    background: #f3e5f5;
+    color: #6a1b9a;
+}
+
+/* Scale bar with threshold zones */
+.score-badge__scale {
+    position: relative;
+    display: flex;
+    height: 14px;
+    border-radius: 7px;
+    overflow: hidden;
+    margin: 0 auto 6px;
+    max-width: 500px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+}
+.score-badge__zone {
+    height: 100%;
+    position: relative;
+    border-right: 1px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+}
+.score-badge__zone:last-child {
+    border-right: none;
+}
+.score-badge__zone--normal,
+.score-badge__zone--minimal {
+    background: #66bb6a;
+}
+.score-badge__zone--mild,
+.score-badge__zone--subclinical {
+    background: #ffa726;
+}
+.score-badge__zone--moderate,
+.score-badge__zone--clinical {
+    background: #ef5350;
+}
+.score-badge__zone--severe,
+.score-badge__zone--high {
+    background: #ab47bc;
+}
+
+/* BAI override: green → orange → red (no purple) */
+.test-beck-anxiety .score-badge__zone--moderate {
+    background: #ffa726;
+}
+.test-beck-anxiety .score-badge__zone--high {
+    background: #ef5350;
+}
+.test-beck-anxiety .score-badge--moderate .score-badge__level {
+    background: #fff3e0;
+    color: #e65100;
+}
+.test-beck-anxiety .score-badge--high .score-badge__level {
+    background: #fce4ec;
+    color: #c62828;
+}
+
+/* Marker — white vertical line on the scale */
+.score-badge__marker {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 4px;
+    background: #fff;
+    border: 2px solid #2c3e50;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    z-index: 2;
+    box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+/* Scale labels below the bar */
+.score-badge__scale-labels {
+    display: flex;
+    max-width: 500px;
+    margin: 0 auto var(--spacing-lg);
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+.score-badge__scale-label {
+    flex-shrink: 0;
+}
+
+.score-badge__description {
+    margin: var(--spacing-sm) 0 0;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+
 /* SMIL Results Specific */
 .smil-results {
     width: 100%;

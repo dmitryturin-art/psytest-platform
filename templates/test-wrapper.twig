@@ -41,18 +41,16 @@
         {% set demoReq = module.getDemographicsRequirements()|default({}) %}
         {% if demoReq.gender is defined and demoReq.gender %}
         <div class="demographics-section" id="demographicsSection">
-            <h3 class="demographics-title">📋 Информация о респонденте</h3>
+            <h3 class="demographics-title">Информация о респонденте</h3>
             <p class="demographics-subtitle">Пожалуйста, укажите данные перед началом тестирования</p>
 
             <div class="demographics-options">
                 <label class="demographic-option">
                     <input type="radio" name="demographics[gender]" value="male" required>
-                    <span class="option-icon">👨</span>
                     <span class="option-label">Мужской</span>
                 </label>
                 <label class="demographic-option">
                     <input type="radio" name="demographics[gender]" value="female" required>
-                    <span class="option-icon">👩</span>
                     <span class="option-label">Женский</span>
                 </label>
             </div>
@@ -120,11 +118,8 @@
             <button type="button" class="btn btn-secondary" id="prevBtn" style="visibility: hidden">
                 ← Назад
             </button>
-            <button type="button" class="btn btn-primary" id="nextBtn">
-                Далее →
-            </button>
             <button type="submit" class="btn btn-success" id="submitBtn" style="display: none">
-                ✓ Завершить тестирование
+                Завершить тестирование
             </button>
         </div>
     </form>

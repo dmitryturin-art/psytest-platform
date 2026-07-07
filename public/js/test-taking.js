@@ -58,6 +58,9 @@
         }
     }
 
+    // Auto-advance delay (ms) — gives visual feedback before transitioning
+    const AUTO_ADVANCE_DELAY = 300;
+
     /**
      * Initialize test questions
      */
@@ -65,6 +68,16 @@
         // Prevent double initialization
         if (formInitialized) return;
         formInitialized = true;
+
+        // Show questions and navigation (needed when no demographics gate)
+        const questionsContainer = document.getElementById('questionsContainer');
+        if (questionsContainer) {
+            questionsContainer.style.display = 'block';
+        }
+        const testNavigation = document.getElementById('testNavigation');
+        if (testNavigation) {
+            testNavigation.style.display = 'flex';
+        }
 
         // Get all question cards
         questions = Array.from(document.querySelectorAll('.question-card'));
@@ -75,17 +88,13 @@
 
         // Setup navigation buttons
         const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
 
         if (prevBtn) {
             prevBtn.addEventListener('click', goToPreviousQuestion);
         }
 
-        if (nextBtn) {
-            nextBtn.addEventListener('click', goToNextQuestion);
-        }
-
+        // Submit button starts hidden (shown on last question)
         if (submitBtn) {
             submitBtn.style.display = 'none';
         }
@@ -93,24 +102,30 @@
         // Show first question
         showQuestion(currentQuestionIndex);
 
-        // Auto-save on answer change
+        // Auto-advance on answer change + auto-save
         const form = document.getElementById('testForm');
         if (form) {
             form.addEventListener('change', function (e) {
                 if (e.target.name && e.target.name.startsWith('answers[')) {
                     saveAnswer(e.target);
+                    scheduleAutoAdvance();
                 }
             });
         }
 
-        // Keyboard navigation
+        // Keyboard navigation: Escape = back, Enter on last = submit
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowRight' || e.key === 'Enter') {
-                e.preventDefault();
-                goToNextQuestion();
-            } else if (e.key === 'ArrowLeft') {
+            if (e.key === 'Escape' || e.key === 'ArrowLeft') {
                 e.preventDefault();
                 goToPreviousQuestion();
+            }
+            // Enter only triggers submit on the last question
+            if (e.key === 'Enter' && currentQuestionIndex === questions.length - 1) {
+                const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn && submitBtn.style.display !== 'none') {
+                    e.preventDefault();
+                    form?.requestSubmit();
+                }
             }
         });
 
@@ -276,25 +291,15 @@
         if (!questions || questions.length === 0) return;
 
         const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
 
         if (prevBtn) {
             prevBtn.style.visibility = currentQuestionIndex > 0 ? 'visible' : 'hidden';
         }
 
-        if (nextBtn) {
-            if (currentQuestionIndex >= questions.length - 1) {
-                nextBtn.style.display = 'none';
-                if (submitBtn) {
-                    submitBtn.style.display = 'inline-flex';
-                }
-            } else {
-                nextBtn.style.display = 'inline-flex';
-                if (submitBtn) {
-                    submitBtn.style.display = 'none';
-                }
-            }
+        // Submit button only visible on the last question
+        if (submitBtn) {
+            submitBtn.style.display = currentQuestionIndex >= questions.length - 1 ? 'inline-flex' : 'none';
         }
     }
 
@@ -333,6 +338,30 @@
 
         // Auto-save to server (debounced)
         debounceSave();
+    }
+
+    /**
+     * Auto-advance to next question after a short delay.
+     * On the last question, show the Submit button instead.
+     */
+    function scheduleAutoAdvance() {
+        if (!questions || questions.length === 0) return;
+        if (currentQuestionIndex >= questions.length - 1) {
+            // On last question — show submit button
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.style.display = 'inline-flex';
+                submitBtn.focus();
+            }
+            return;
+        }
+
+        setTimeout(function () {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            }
+        }, AUTO_ADVANCE_DELAY);
     }
 
     /**

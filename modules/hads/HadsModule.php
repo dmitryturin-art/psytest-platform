@@ -245,6 +245,7 @@ class HadsModule extends BaseTestModule
                     'level' => $anxietyLevel,
                     'level_label' => $anxietyLevelName,
                     'description' => $anxietyInterpretation,
+                    'thresholds' => self::THRESHOLDS,
                 ],
                 block: 'blocks/score-badge.twig',
                 order: 10,
@@ -258,6 +259,7 @@ class HadsModule extends BaseTestModule
                     'level' => $depressionLevel,
                     'level_label' => $depressionLevelName,
                     'description' => $depressionInterpretation,
+                    'thresholds' => self::THRESHOLDS,
                 ],
                 block: 'blocks/score-badge.twig',
                 order: 15,
@@ -266,7 +268,10 @@ class HadsModule extends BaseTestModule
                 type: ResultSection::TYPE_INTERPRETATION,
                 title: 'Интерпретация',
                 data: [
-                    'text' => $anxietyInterpretation . ' ' . $depressionInterpretation,
+                    'scales' => [
+                        ['code' => 'Тревога', 'name' => 'Уровень тревоги', 'score' => $anxietyScore, 'max' => 21, 'level' => $anxietyLevel, 'level_name' => $anxietyLevelName, 'detail' => $anxietyInterpretation],
+                        ['code' => 'Депрессия', 'name' => 'Уровень депрессии', 'score' => $depressionScore, 'max' => 21, 'level' => $depressionLevel, 'level_name' => $depressionLevelName, 'detail' => $depressionInterpretation],
+                    ],
                 ],
                 block: 'blocks/interpretation.twig',
                 order: 20,
