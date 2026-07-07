@@ -143,6 +143,15 @@
             gender: selectedGender,
         };
 
+        // Collect age if present
+        const ageInput = document.getElementById('demographicsAge');
+        if (ageInput && ageInput.value) {
+            const age = parseInt(ageInput.value, 10);
+            if (!isNaN(age)) {
+                demographics.age = age;
+            }
+        }
+
         return true;
     }
 
@@ -349,16 +358,23 @@
 
         if (typeof TEST_CONFIG === 'undefined') return;
 
+        const payload = {
+            session_token: TEST_CONFIG.sessionToken,
+            answers: answers,
+        };
+
+        // Include demographics if collected
+        if (Object.keys(demographics).length > 0) {
+            payload.demographics = demographics;
+        }
+
         try {
             const response = await fetch(`${TEST_CONFIG.basePath}/test/${TEST_CONFIG.slug}/save`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    session_token: TEST_CONFIG.sessionToken,
-                    answers: answers,
-                }),
+                body: JSON.stringify(payload),
             });
 
             const result = await response.json();
@@ -398,6 +414,9 @@
             submitBtn.textContent = 'Обработка...';
         }
 
+        // Inject demographics as hidden inputs into the form before submission
+        injectDemographicsInputs(e.target);
+
         // Save final answers to server
         await saveAnswersToServer();
 
@@ -407,6 +426,34 @@
         // Submit form
         e.target.removeEventListener('submit', handleFormSubmit);
         e.target.submit();
+    }
+
+    /**
+     * Inject demographics as hidden inputs into the form
+     */
+    function injectDemographicsInputs(form) {
+        if (Object.keys(demographics).length === 0) return;
+
+        // Remove previously injected inputs (in case of re-submission)
+        form.querySelectorAll('input[data-demographic]').forEach(el => el.remove());
+
+        if (demographics.gender) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'demographics[gender]';
+            input.value = demographics.gender;
+            input.setAttribute('data-demographic', 'true');
+            form.appendChild(input);
+        }
+
+        if (demographics.age) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'demographics[age]';
+            input.value = demographics.age;
+            input.setAttribute('data-demographic', 'true');
+            form.appendChild(input);
+        }
     }
 
 })();

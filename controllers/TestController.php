@@ -74,6 +74,12 @@ class TestController extends BaseController
         $answers = $input['answers'] ?? [];
         $this->sessionManager->saveAnswers($session['id'], $answers);
 
+        // Save demographics if provided
+        $demographics = $input['demographics'] ?? [];
+        if (!empty($demographics)) {
+            $this->sessionManager->saveDemographics($session['id'], $demographics);
+        }
+
         echo json_encode(['success' => true]);
     }
 
@@ -115,6 +121,20 @@ class TestController extends BaseController
 
         // Merge with previously saved answers
         $allAnswers = array_merge($session['answers'], $normalizedAnswers);
+
+        // Merge demographics from form into answers (for calculateResults)
+        $formDemographics = $_POST['demographics'] ?? [];
+        if (!empty($formDemographics)) {
+            $this->sessionManager->saveDemographics($sessionId, $formDemographics);
+        }
+        // Also merge demographics from session (saved via AJAX)
+        if (!empty($session['demographics'])) {
+            $allAnswers = array_merge($allAnswers, $session['demographics']);
+        }
+        // Form demographics take precedence over AJAX-saved ones
+        if (!empty($formDemographics)) {
+            $allAnswers = array_merge($allAnswers, $formDemographics);
+        }
 
         // Save final answers
         $this->sessionManager->saveAnswers($sessionId, $allAnswers);

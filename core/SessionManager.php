@@ -152,6 +152,29 @@ class SessionManager
     }
 
     /**
+     * Save demographics data for a session
+     *
+     * @param string $sessionId Session ID
+     * @param array $demographics Demographics data (gender, age, etc.)
+     * @return bool Success
+     */
+    public function saveDemographics(string $sessionId, array $demographics): bool
+    {
+        if (empty($demographics)) {
+            return false;
+        }
+
+        $this->db->update(
+            'test_sessions',
+            ['demographics' => json_encode($demographics)],
+            'id = ?',
+            [$sessionId]
+        );
+
+        return true;
+    }
+
+    /**
      * Complete a session with results
      *
      * @param string $sessionId Session ID
