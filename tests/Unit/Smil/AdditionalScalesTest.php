@@ -57,7 +57,7 @@ class AdditionalScalesTest extends TestCase
     {
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
+        // setAccessible() is a no-op since PHP 8.1 and deprecated in 8.5
         return $method->invokeArgs($object, $parameters);
     }
 }

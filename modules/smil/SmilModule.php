@@ -1103,25 +1103,6 @@ class SmilModule extends BaseTestModule
         ];
     }
 
-    private function buildIndicesData(array $indices): array
-    {
-        $items = [];
-        $labels = [
-            'FK_index' => ['F-K индекс', 'Разность F и K — при положительных значениях возможна аггравация'],
-            'FK_ratio' => ['F-K соотношение', 'Отношение F к K'],
-            'anxiety_index' => ['Индекс тревоги', 'Композитный показатель тревожности'],
-            'depression_index' => ['Индекс депрессии', 'Композитный показатель депрессии'],
-        ];
-        foreach (['FK_index', 'FK_ratio', 'anxiety_index', 'depression_index'] as $key) {
-            $items[] = [
-                'name' => $labels[$key][0],
-                'value' => $indices[$key] ?? 0,
-                'description' => $labels[$key][1],
-            ];
-        }
-        return ['indices' => $items];
-    }
-
     /**
      * Check if SMIL supports pair mode
      */
