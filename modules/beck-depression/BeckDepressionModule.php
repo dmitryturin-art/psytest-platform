@@ -139,7 +139,7 @@ class BeckDepressionModule extends BaseTestModule
         return [
             'total_score' => $totalScore,
             'max_score' => $maxScore,
-            'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100) : 0,
+            'percentage' => (int) round(($totalScore / $maxScore) * 100),
             'level' => $level,
             'level_name' => $levelName,
             'interpretation' => $interpretation,

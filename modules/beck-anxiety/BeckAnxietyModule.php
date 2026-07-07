@@ -127,7 +127,7 @@ class BeckAnxietyModule extends BaseTestModule
 
         // Расчёт процента от максимума
         $maxScore = 63; // 21 вопрос × 3 балла
-        $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100) : 0;
+        $percentage = (int) round(($totalScore / $maxScore) * 100);
 
         return [
             'total_score' => $totalScore,

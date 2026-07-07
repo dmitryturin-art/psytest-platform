@@ -506,16 +506,6 @@ parameters:
 			path: modules/TestModuleInterface.php
 
 		-
-			message: "#^Comparison operation \"\\>\" between 63 and 0 is always true\\.$#"
-			count: 1
-			path: modules/beck-anxiety/BeckAnxietyModule.php
-
-		-
-			message: "#^Else branch is unreachable because ternary operator condition is always true\\.$#"
-			count: 1
-			path: modules/beck-anxiety/BeckAnxietyModule.php
-
-		-
 			message: "#^Method PsyTest\\\\Modules\\\\BeckAnxiety\\\\BeckAnxietyModule\\:\\:buildSections\\(\\) has parameter \\$results with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/beck-anxiety/BeckAnxietyModule.php
