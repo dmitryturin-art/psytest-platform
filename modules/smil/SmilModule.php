@@ -347,6 +347,7 @@ class SmilModule extends BaseTestModule
             'answered_count' => $numericAnswerCount,
             'total_questions' => 566,
             'completion_rate' => round($numericAnswerCount / 566 * 100, 1),
+            'interpretation' => $interpretation,
         ];
     }
 
@@ -389,6 +390,72 @@ class SmilModule extends BaseTestModule
         }
 
         return 'Интерпретация отсутствует';
+    }
+
+    /**
+     * Build interpretation summary and recommendations for calculateResults().
+     */
+    protected function buildInterpretationOutput(array $profile, array $validity, array $tScores): array
+    {
+        $profileType = $profile['profile_type'] ?? 'unknown';
+        $typeInfo = self::PROFILE_TYPES[$profileType] ?? ['name' => 'Не определён', 'description' => ''];
+
+        $summary = $typeInfo['description'];
+        $recommendations = [];
+
+        if (!$validity['is_valid']) {
+            $summary = 'Протокол недостоверен. Рекомендуется повторное тестирование при внимательном отношении к вопросам.';
+            $recommendations[] = 'Повторное прохождение теста с внимательным отношением ко всем вопросам.';
+            return compact('summary', 'recommendations');
+        }
+
+        // Generate recommendations based on elevated scales
+        $elevatedScales = [];
+        foreach ($profile['scales'] ?? [] as $scale => $data) {
+            if (($data['score'] ?? 0) >= 65) {
+                $elevatedScales[$scale] = $data;
+            }
+        }
+
+        if (empty($elevatedScales)) {
+            $recommendations[] = 'Профиль в пределах нормы. Рекомендовано наблюдение в динамике через 6-12 месяцев.';
+            return compact('summary', 'recommendations');
+        }
+
+        // Anxiety-related
+        if (isset($elevatedScales['7']) || isset($elevatedScales['2'])) {
+            $recommendations[] = 'Повышенный уровень тревожности и/или депрессивных тенденций. Рекомендована консультация клинического психолога.';
+        }
+
+        // Psychotic spectrum
+        if (isset($elevatedScales['8']) || isset($elevatedScales['6'])) {
+            $recommendations[] = 'Выраженные показатели по шкалам шизоидного/параноидального спектра. Показана углубленная диагностика.';
+        }
+
+        // Psychopathic traits
+        if (isset($elevatedScales['4'])) {
+            $recommendations[] = 'Склонность к импульсивному поведению и нарушению социальных норм. Рекомендована работа с психологом по развитию самоконтроля.';
+        }
+
+        // Hysteria
+        if (isset($elevatedScales['3'])) {
+            $recommendations[] = 'Выраженная демонстративность и эмоциональная лабильность. Показаны техники релаксации и стресс-менеджмента.';
+        }
+
+        // Social introversion
+        if (isset($elevatedScales['0'])) {
+            $recommendations[] = 'Выраженная интроверсия и социальный дискомфорт. Рекомендована постепенная социальная активность в комфортной среде.';
+        }
+
+        // Generic recommendation
+        if (count($recommendations) < 2) {
+            $recommendations[] = 'Рекомендовано наблюдение в динамике через 3-6 месяцев.';
+            $recommendations[] = 'При сохранении или ухудшении показателей — консультация клинического психолога.';
+        }
+
+        $recommendations[] = 'Результаты носят ознакомительный характер и не являются диагнозом. Для профессиональной интерпретации обратитесь к квалифицированному специалисту.';
+
+        return compact('summary', 'recommendations');
     }
 
     /**
@@ -690,20 +757,20 @@ class SmilModule extends BaseTestModule
         if (!$validity['is_valid']) {
             $sections[] = new ResultSection(
                 type: ResultSection::TYPE_VALIDITY,
-                title: '⚠️ Протокол недостоверен',
+                title: '⚠️ Протокол недостоверен — контрольные шкалы',
                 data: $this->buildValidityData($validity),
                 block: 'blocks/validity.twig',
                 order: 0,
             );
+        } else {
+            $sections[] = new ResultSection(
+                type: ResultSection::TYPE_VALIDITY,
+                title: 'Контрольные шкалы',
+                data: $this->buildValidityData($validity),
+                block: 'blocks/validity.twig',
+                order: 10,
+            );
         }
-
-        $sections[] = new ResultSection(
-            type: ResultSection::TYPE_VALIDITY,
-            title: 'Контрольные шкалы',
-            data: $this->buildValidityData($validity),
-            block: 'blocks/validity.twig',
-            order: 10,
-        );
 
         $sections[] = new ResultSection(
             type: ResultSection::TYPE_PROFILE_CHART,
@@ -730,14 +797,6 @@ class SmilModule extends BaseTestModule
                 order: 40,
             );
         }
-
-        $sections[] = new ResultSection(
-            type: ResultSection::TYPE_INDICES,
-            title: 'Дополнительные индексы',
-            data: $this->buildIndicesData($indices),
-            block: 'blocks/indices.twig',
-            order: 50,
-        );
 
         $sections[] = new ResultSection(
             type: ResultSection::TYPE_INTERPRETATION,
