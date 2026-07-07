@@ -15,41 +15,29 @@ interface TestModuleInterface
     /**
      * Get test metadata
      *
-     * @return array {
-     *     @type string $slug URL-friendly identifier
-     *     @type string $name Display name
-     *     @type string $description Test description
-     *     @type int $question_count Number of questions
-     *     @type int $estimated_time Estimated completion time in minutes
-     *     @type array $scales List of scales measured
-     *     @type array $requires_demographics {
-     *         @type bool $gender Require gender selection (default: false)
-     *         @type bool $age Require age input (default: false)
-     *         @type int $min_age Minimum age (default: 14)
-     *         @type int $max_age Maximum age (default: 100)
-     *     }
-     *     @type string $result_template Custom result template (default: null)
-     *     @type string $test_template Custom test template (default: null)
-     * }
+     * @return array<string, mixed> Metadata: slug, name, description, question_count,
+     *                              estimated_time, scales, requires_demographics {gender, age, ...},
+     *                              result_template, test_template.
      */
     public function getMetadata(): array;
 
     /**
      * Get test questions
      *
-     * @return array Structured questions with options
-     *               Example: [
-     *                   ['id' => 1, 'text' => 'Question text', 'options' => [...]],
-     *                   ...
-     *               ]
+     * Question shape is module-specific:
+     *  - BDI/HADS/BAI: {id, text, options: [{value, text}]}
+     *  - SMIL:         {id, text_male, text_female, is_control, scales: [{scale, direction}]}
+     *
+     * @return list<array<string, mixed>> Structured questions.
      */
     public function getQuestions(): array;
 
     /**
      * Calculate test results from answers
      *
-     * @param array $answers User answers (question_id => answer)
-     * @return array Calculated scores and raw results
+     * @param array<int|string, mixed> $answers User answers (question_id => answer).
+     *
+     * @return array<string, mixed> Calculated scores and raw results; shape is module-specific.
      */
     public function calculateResults(array $answers): array;
 
@@ -59,20 +47,18 @@ interface TestModuleInterface
      * Each section is a ResultSection with type, title, data, and optional twig block.
      * Sections are rendered by result-layout.twig using reusable block components.
      *
-     * @param array $results Calculated results from calculateResults()
-     * @return ResultSection[] Ordered list of result sections
+     * @param array<string, mixed> $results Calculated results from calculateResults().
+     *
+     * @return list<ResultSection> Ordered list of result sections.
      */
     public function buildSections(array $results): array;
 
     /**
      * Generate interpretation from scores
      *
-     * @param array $scores Calculated scores
-     * @return array {
-     *     @type string $summary Brief summary
-     *     @type array $scales Detailed interpretation per scale
-     *     @type array $recommendations Recommendations if any
-     * }
+     * @param array<string, mixed> $scores Calculated scores.
+     *
+     * @return array{summary: string, scales?: list<array<string, mixed>>, recommendations?: list<string>}
      */
     public function generateInterpretation(array $scores): array;
 
@@ -86,9 +72,10 @@ interface TestModuleInterface
     /**
      * Compare two session results (for pair mode)
      *
-     * @param array $results1 First session results
-     * @param array $results2 Second session results
-     * @return array Comparison data
+     * @param array<string, mixed> $results1 First session results.
+     * @param array<string, mixed> $results2 Second session results.
+     *
+     * @return array<string, mixed> Comparison data.
      */
     public function comparePairResults(array $results1, array $results2): array;
 

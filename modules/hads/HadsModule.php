@@ -313,7 +313,9 @@ class HadsModule extends BaseTestModule
     // ============================================
 
     /**
-     * Найти вопрос по ID
+     * Найти вопрос по ID.
+     *
+     * @return array<string, mixed>|null Question data or null if not found.
      */
     protected function findQuestionById(int $id): ?array
     {
@@ -327,7 +329,9 @@ class HadsModule extends BaseTestModule
     }
 
     /**
-     * Получить баллы за ответ
+     * Получить баллы за ответ.
+     *
+     * @param array<string, mixed> $question Question data with 'options'.
      */
     protected function getPointsForAnswer(array $question, mixed $answer): int
     {
@@ -371,7 +375,9 @@ class HadsModule extends BaseTestModule
     }
 
     /**
-     * Get demographics requirements
+     * Get demographics requirements.
+     *
+     * @return array{gender: bool, age: bool, min_age?: int, max_age?: int}
      */
     public function getDemographicsRequirements(): array
     {

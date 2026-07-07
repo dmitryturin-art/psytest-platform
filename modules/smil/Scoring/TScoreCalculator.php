@@ -9,9 +9,12 @@ final class TScoreCalculator
     private const T_MIN = 20;
     private const T_MAX = 100;
 
-    /** @var array<string, array> */
+    /** @var array<string, array{male?: array{M: int|float, delta: int|float}, female?: array{M: int|float, delta: int|float}, kCorrectionFactor?: int|float}> */
     private array $norms;
 
+    /**
+     * @param array<string, mixed> $norms Basic-scale norms (Собчик), keyed by scale code.
+     */
     public function __construct(array $norms)
     {
         $this->norms = $norms;
@@ -22,6 +25,11 @@ final class TScoreCalculator
      *
      * Formula: T = 50 + 10 * (X - M) / σ, clamped to [20, 100]
      * K-correction: X' = X + round(K * factor)
+     *
+     * @param array<string, int> $rawScores Raw scores keyed by scale code (L, F, K, 1-9, 0).
+     * @param string             $gender    'male' or 'female'.
+     *
+     * @return array<string, float>
      */
     public function calculate(array $rawScores, string $gender): array
     {

@@ -381,6 +381,12 @@ class SmilModule extends BaseTestModule
 
     /**
      * Build interpretation summary and recommendations for calculateResults().
+     *
+     * @param array<string, mixed> $profile   Profile data with 'profile_type' and 'scales'.
+     * @param array<string, mixed> $validity  Validity assessment ('is_valid', etc.).
+     * @param array<string, float>  $tScores  T-scores keyed by scale code.
+     *
+     * @return array{summary: string, recommendations: list<string>}
      */
     protected function buildInterpretationOutput(array $profile, array $validity, array $tScores): array
     {

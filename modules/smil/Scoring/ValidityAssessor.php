@@ -13,6 +13,11 @@ final class ValidityAssessor
 
     /**
      * Assess protocol validity from T-scores, answers, and control questions.
+     *
+     * @param array<string, float> $tScores T-scores keyed by scale code (L, F, K, ...).
+     * @param array<int, int>      $answers question_id => answer (0/1/2).
+     *
+     * @return array{is_valid: bool, warnings: list<string>, L_score: int, F_score: int, K_score: int, FK_index: int, unknown_count: int, control_score: int}
      */
     public function assess(array $tScores, array $answers): array
     {
@@ -74,6 +79,9 @@ final class ValidityAssessor
         ];
     }
 
+    /**
+     * @param array<int|string, int> $answers question_id => answer.
+     */
     private function countUnknown(array $answers): int
     {
         $count = 0;
@@ -88,6 +96,9 @@ final class ValidityAssessor
         return $count;
     }
 
+    /**
+     * @param array<int|string, int> $answers question_id => answer.
+     */
     private function countControlCorrect(array $answers): int
     {
         $correct = 0;

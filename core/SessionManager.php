@@ -152,10 +152,11 @@ class SessionManager
     }
 
     /**
-     * Save demographics data for a session
+     * Save demographics data for a session.
      *
-     * @param string $sessionId Session ID
-     * @param array $demographics Demographics data (gender, age, etc.)
+     * @param string                           $sessionId   Session ID.
+     * @param array<string, mixed>             $demographics Demographics data (gender, age, etc.).
+     *
      * @return bool Success
      */
     public function saveDemographics(string $sessionId, array $demographics): bool

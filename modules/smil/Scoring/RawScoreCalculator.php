@@ -24,7 +24,7 @@ final class RawScoreCalculator
     private array $questionMap;
 
     /**
-     * @param array $questions Array of {id, scales: [{scale, direction}, ...], ...}
+     * @param array<int, array{id: int, scales?: list<array{scale: string, direction: int}>}> $questions Question list from questions-566-full.json.
      */
     public function __construct(array $questions)
     {
@@ -37,7 +37,7 @@ final class RawScoreCalculator
             $entries = [];
             foreach ($scales as $entry) {
                 $scale = (string) $entry['scale'];
-                $direction = (int) ($entry['direction'] ?? 1);
+                $direction = (int) $entry['direction'];
                 $entries[] = [
                     'scale' => $scale,
                     'direction' => $direction,
@@ -105,6 +105,9 @@ final class RawScoreCalculator
         return $rawScores;
     }
 
+    /**
+     * @param array<int|string, int|bool|string> $answers question_id => answer.
+     */
     public function countUnknown(array $answers): int
     {
         $count = 0;

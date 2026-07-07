@@ -316,7 +316,8 @@ class ResultController extends BaseController
      * Render a static profile chart for PDF output using HTML/CSS.
      * Generates a bar chart compatible with DomPDF (no JavaScript, no SVG).
      *
-     * @param array $data Profile chart data with 'scores' and 'labels' arrays
+     * @param array{scores?: list<float|int>, labels?: list<string>} $data Profile chart data with 'scores' and 'labels' arrays.
+     *
      * @return string HTML bar chart
      */
     private function renderProfileChartHtml(array $data): string

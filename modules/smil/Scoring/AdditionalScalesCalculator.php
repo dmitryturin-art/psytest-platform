@@ -6,8 +6,12 @@ namespace PsyTest\Modules\Smil\Scoring;
 
 final class AdditionalScalesCalculator
 {
+    /** @var array<string, array<string, array{key?: array{true?: list<int>, false?: list<int>}, norms?: array<string, array{M: int|float, delta: int|float}>, name?: string}>> */
     private array $norms;
 
+    /**
+     * @param array<string, mixed> $norms Additional-scale norms keyed by category → code → info.
+     */
     public function __construct(array $norms)
     {
         $this->norms = $norms;
@@ -16,9 +20,10 @@ final class AdditionalScalesCalculator
     /**
      * Calculate additional scales raw scores and T-scores.
      *
-     * @param array $answers question_id => answer
-     * @param string $gender 'male' or 'female'
-     * @return array<string, array>
+     * @param array<int|string, int|bool|string> $answers question_id => answer.
+     * @param string                             $gender  'male' or 'female'.
+     *
+     * @return array<string, array{name: string, raw: int, t: float, M: int|float, delta: int|float, interpretation: string}>
      */
     public function calculate(array $answers, string $gender): array
     {
