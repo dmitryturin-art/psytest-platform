@@ -40,7 +40,7 @@ final class RawScoreCalculatorTest extends TestCase
         $this->assertSame(20, $raw['2'], '2: 20 direction=+1 items, Yes→20');
         $this->assertSame(12, $raw['3'], '3: 12 direction=+1 items, Yes→12');
         $this->assertSame(24, $raw['4'], '4: 24 direction=+1 items, Yes→24');
-        $this->assertSame(54, $raw['5'], '5: 54 direction=+1 items (5F+5M), Yes→54');
+        $this->assertSame(29, $raw['5'], '5: 29 direction=+1 items in 5M (default=male), Yes→29');
         $this->assertSame(25, $raw['6'], '6: 25 direction=+1 items, Yes→25');
         $this->assertSame(38, $raw['7'], '7: 38 direction=+1 items, Yes→38');
         $this->assertSame(59, $raw['8'], '8: 59 direction=+1 items, Yes→59');
@@ -68,7 +68,7 @@ final class RawScoreCalculatorTest extends TestCase
         $this->assertSame(40, $raw['2'], '2: 40 direction=-1 items, No→40');
         $this->assertSame(47, $raw['3'], '3: 47 direction=-1 items, No→47');
         $this->assertSame(26, $raw['4'], '4: 26 direction=-1 items, No→26');
-        $this->assertSame(66, $raw['5'], '5: 66 direction=-1 items (5F+5M), No→66');
+        $this->assertSame(31, $raw['5'], '5: 31 direction=-1 items in 5M (default=male), No→31');
         $this->assertSame(15, $raw['6'], '6: 15 direction=-1 items, No→15');
         $this->assertSame(9, $raw['7'], '7: 9 direction=-1 items, No→9');
         $this->assertSame(19, $raw['8'], '8: 19 direction=-1 items, No→19');
@@ -101,6 +101,65 @@ final class RawScoreCalculatorTest extends TestCase
         }
 
         $this->assertSame(10, $this->calc->countUnknown($answers));
+    }
+
+    public function testScale5FiltersByGender(): void
+    {
+        $data = json_decode(
+            file_get_contents(__DIR__ . '/../../modules/smil/questions-566-full.json'),
+            true
+        );
+        $answers = [];
+        foreach ($data['questions'] as $q) {
+            $answers[$q['id']] = RawScoreCalculator::ANSWER_YES;
+        }
+
+        $raw = $this->calc->calculate($answers, 'female');
+        $this->assertSame(25, $raw['5'], 'Scale 5 female: 25 direct items in 5F subset');
+
+        // Male: only 5M items should count
+        $raw = $this->calc->calculate($answers, 'male');
+        $this->assertSame(29, $raw['5'], 'Scale 5 male: 29 direct items in 5M subset');
+    }
+
+    public function testScale5DefaultGenderIsMale(): void
+    {
+        $data = json_decode(
+            file_get_contents(__DIR__ . '/../../modules/smil/questions-566-full.json'),
+            true
+        );
+        $answers = [];
+        foreach ($data['questions'] as $q) {
+            $answers[$q['id']] = RawScoreCalculator::ANSWER_YES;
+        }
+
+        // Without gender parameter, defaults to male (backward compat)
+        $raw = $this->calc->calculate($answers);
+        $this->assertSame(29, $raw['5'], 'Scale 5 default (male): 29 direct items');
+    }
+
+    public function testGenderParameterDoesNotAffectOtherScales(): void
+    {
+        $data = json_decode(
+            file_get_contents(__DIR__ . '/../../modules/smil/questions-566-full.json'),
+            true
+        );
+        $answers = [];
+        foreach ($data['questions'] as $q) {
+            $answers[$q['id']] = RawScoreCalculator::ANSWER_YES;
+        }
+
+        $rawMale = $this->calc->calculate($answers, 'male');
+        $rawFemale = $this->calc->calculate($answers, 'female');
+
+        // All scales except 5 must be identical
+        foreach (['L', 'F', 'K', '1', '2', '3', '4', '6', '7', '8', '9', '0'] as $s) {
+            $this->assertSame(
+                $rawMale[$s],
+                $rawFemale[$s],
+                "Scale $s must not be affected by gender"
+            );
+        }
     }
 
     public function testCountUnknownIgnoresNonNumericKeys(): void

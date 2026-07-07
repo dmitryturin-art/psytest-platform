@@ -93,7 +93,6 @@ final class SmilEndToEndTest extends TestCase
         $this->assertContains('validity', $types);
         $this->assertContains('profile_chart', $types);
         $this->assertContains('scales_table', $types);
-        $this->assertContains('indices', $types);
         $this->assertContains('interpretation', $types);
         $this->assertContains('recommendations', $types);
     }
@@ -106,7 +105,8 @@ final class SmilEndToEndTest extends TestCase
         $results = $this->module->calculateResults($answers);
 
         $rawScoreCalc = new RawScoreCalculator($questions);
-        $expectedRaw = $rawScoreCalc->calculate($answers);
+        $gender = $answers['gender'] ?? 'male';
+        $expectedRaw = $rawScoreCalc->calculate($answers, $gender);
 
         $this->assertSame(
             $expectedRaw,

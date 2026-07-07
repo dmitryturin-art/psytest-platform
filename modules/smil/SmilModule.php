@@ -324,13 +324,14 @@ class SmilModule extends BaseTestModule
      */
     public function calculateResults(array $answers): array
     {
-        $rawScores = $this->rawScoreCalc->calculate($answers);
         $gender = $answers['gender'] ?? 'male';
+        $rawScores = $this->rawScoreCalc->calculate($answers, $gender);
         $tScores = $this->tScoreCalc->calculate($rawScores, $gender);
         $validity = $this->validityAssessor->assess($tScores, $answers);
         $additionalScores = $this->additionalCalc->calculate($answers, $gender);
         $indices = $this->calculateIndices($rawScores, $tScores);
         $profile = $this->buildProfile($tScores);
+        $interpretation = $this->buildInterpretationOutput($profile, $validity, $tScores);
 
         $numericAnswerCount = count(array_filter($answers, fn ($k) => is_numeric($k), ARRAY_FILTER_USE_KEY));
 

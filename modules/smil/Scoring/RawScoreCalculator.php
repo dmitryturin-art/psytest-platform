@@ -15,6 +15,11 @@ final class RawScoreCalculator
         '5M' => '5',
     ];
 
+    private const GENDER_SUFFIXES = [
+        'male' => 'M',
+        'female' => 'F',
+    ];
+
     /** @var array<int, list<array{scale: string, direction: int}>> */
     private array $questionMap;
 
@@ -46,15 +51,18 @@ final class RawScoreCalculator
      * Calculate raw scores from answers.
      *
      * @param array<int, int|string> $answers question_id => answer
+     * @param string $gender 'male' or 'female' (default: 'male')
      * @return array<string, int> scale_code => raw_score
      */
-    public function calculate(array $answers): array
+    public function calculate(array $answers, string $gender = 'male'): array
     {
         $rawScores = [
             'L' => 0, 'F' => 0, 'K' => 0,
             '1' => 0, '2' => 0, '3' => 0, '4' => 0, '5' => 0,
             '6' => 0, '7' => 0, '8' => 0, '9' => 0, '0' => 0,
         ];
+
+        $genderSuffix = self::GENDER_SUFFIXES[$gender] ?? 'M';
 
         foreach ($answers as $questionId => $answer) {
             $qid = (int) $questionId;
@@ -68,18 +76,28 @@ final class RawScoreCalculator
             }
 
             foreach ($this->questionMap[$qid] as $entry) {
-                $scale = $this->normalizeScale($entry['scale']);
+                $scale = $entry['scale'];
 
-                if (!isset($rawScores[$scale])) {
+                // Gender-specific filtering: skip 5M for females, 5F for males
+                if ($scale === '5M' && $genderSuffix === 'F') {
+                    continue;
+                }
+                if ($scale === '5F' && $genderSuffix === 'M') {
+                    continue;
+                }
+
+                $normalizedScale = $this->normalizeScale($scale);
+
+                if (!isset($rawScores[$normalizedScale])) {
                     continue;
                 }
 
                 $isYes = ($answerInt === self::ANSWER_YES);
 
                 if ($entry['direction'] === 1) {
-                    $rawScores[$scale] += $isYes ? 1 : 0;
+                    $rawScores[$normalizedScale] += $isYes ? 1 : 0;
                 } else {
-                    $rawScores[$scale] += $isYes ? 0 : 1;
+                    $rawScores[$normalizedScale] += $isYes ? 0 : 1;
                 }
             }
         }
