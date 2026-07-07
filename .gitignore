@@ -11,6 +11,7 @@ composer.lock
 
 # Storage (keep structure, ignore contents)
 /storage/*.pdf
+/storage/pdfs/*.pdf
 /storage/*.log
 /storage/cache/*
 !storage/.gitkeep
@@ -59,3 +60,16 @@ package-lock.json
 # Kilo local install (Superpowers skills, plugins, etc.)
 .kilo/
 .superpowers/
+
+# Playwright MCP snapshots (debug artifacts)
+/.playwright-mcp/
+
+# Claude / ZCode local config
+/.claude/
+
+# Ad-hoc debug screenshots and notes at repo root
+/*.png
+/smil-*.md
+/smilF-*.md
+/bai-*.md
+/tests-*.md
