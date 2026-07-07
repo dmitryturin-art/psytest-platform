@@ -104,30 +104,32 @@ SmilModule       BeckDepression   HadsModule   BeckAnxiety
 
 ## 4. Маршрутизация
 
-Маршруты определяются в `core/Router.php` (~225 строк). Поддерживает GET/POST с параметрами.
+Маршруты регистрируются в `public/index.php`. Роутер (`core/Router.php`, ~225 строк) поддерживает GET/POST с параметрами и base path. Реальный список маршрутов:
 
-| # | HTTP | Маршрут | Controller | Action | Описание |
-|---|------|---------|-----------|--------|----------|
-| 1 | GET | `/` | HomeController | index | Главная страница |
-| 2 | GET | `/tests` | HomeController | testsList | Список доступных тестов |
-| 3 | GET | `/test/{slug}` | TestController | start | Начало прохождения теста |
-| 4 | POST | `/test/{slug}/save` | TestController | save | Сохранение ответа (AJAX) |
-| 5 | POST | `/test/{slug}/submit` | TestController | submit | Завершение теста |
-| 6 | GET | `/result/{token}` | ResultController | show | Просмотр результатов |
-| 7 | GET | `/result/{token}/pdf` | ResultController | pdf | Генерация PDF |
-| 8 | DELETE | `/result/{token}` | ResultController | delete | Удаление результатов |
-| 9 | GET | `/result/{token}/interpretation` | ResultController | interpretation | AI-интерпретация |
-| 10 | POST | `/result/{token}/interpretation/generate` | ResultController | generateInterpretation | Запуск генерации |
-| 11 | GET | `/result/{token}/profile` | ResultController | showProfile | Профиль СМИЛ |
-| 12 | POST | `/result/{token}/delete` | ResultController | deleteConfirm | Подтверждение удаления |
-| 13 | GET | `/api/health` | ApiController | health | Health-check |
-| 14 | POST | `/api/yoomoney/webhook` | ApiController | yoomoneyWebhook | Webhook оплаты |
-| 15 | GET | `/api/yoomoney/success` | ApiController | paymentSuccess | Успешная оплата |
-| 16 | GET | `/privacy` | HomeController | privacy | Политика конфиденциальности |
-| 17 | GET | `/terms` | HomeController | terms | Условия использования |
-| 18 | POST | `/test/{slug}/demographics` | TestController | saveDemographics | Сохранение демографии |
-| 19 | GET | `/result/{token}/resend` | ResultController | resendEmail | Повторная отправка email |
-| 20 | GET | `/admin` | HomeController | admin | Админ-панель (базовая) |
+| # | HTTP | Маршрут | Controller::action | Описание |
+|---|------|---------|--------------------|----------|
+| 1 | GET | `/` | HomeController::index | Главная (редирект на `/tests`) |
+| 2 | GET | `/tests` | HomeController::tests | Каталог доступных тестов |
+| 3 | GET | `/test/{slug}` | TestController::start | Начало прохождения теста |
+| 4 | POST | `/test/{slug}/save` | TestController::save | Auto-save ответа (AJAX) |
+| 5 | POST | `/test/{slug}/submit` | TestController::submit | Завершение теста, расчёт |
+| 6 | GET | `/test/{slug}/pair` | TestController::pairStart | Парный режим: старт |
+| 7 | POST | `/test/{slug}/pair/submit` | TestController::pairSubmit | Парный режим: сабмит |
+| 8 | GET | `/result/{slug}/{token}` | ResultController::show | Просмотр результатов |
+| 9 | GET | `/result/{slug}/{token}/pdf` | ResultController::pdf | Генерация PDF |
+| 10 | POST | `/result/{token}/delete` | ResultController::delete | Удаление (GDPR soft-delete) |
+| 11 | GET | `/pair/{id}` | ResultController::pairShow | Парное сравнение |
+| 12 | GET | `/pair/{id}/pdf` | ResultController::pairPdf | PDF парного сравнения |
+| 13 | GET | `/interpretation/{token}` | ResultController::interpretation | AI-интерпретация (платная) |
+| 14 | POST | `/interpretation/{token}/pay` | ResultController::initiatePayment | Инициировать оплату интерпретации |
+| 15 | POST | `/webhook/yoomoney` | ApiController::yoomoneyWebhook | Webhook оплаты YooMoney |
+| 16 | GET | `/api/health` | ApiController::health | Health-check (JSON) |
+| 17 | GET | `/privacy` | HomeController::privacy | Политика конфиденциальности |
+| 18 | GET | `/terms` | HomeController::terms | Условия использования |
+| 19 | GET | `/deleted` | HomeController::deleted | Страница «данные удалены» |
+| 20 | GET | `/error/{code}` | HomeController::error | Страница ошибки |
+
+**Важно:** маршрут результата — `/result/{slug}/{token}` (два параметра), а не `/result/{token}`. Доступ к результатам — по публичному `session_token` (VARCHAR(64)) без авторизации.
 
 ---
 
@@ -285,54 +287,57 @@ abstract class BaseController
 }
 ```
 
-### TestController — `controllers/TestController.php` (~225 строк)
+### TestController — `controllers/TestController.php`
 
 Основной контроллер прохождения тестов.
 
 ```php
 class TestController extends BaseController
 {
-    public function start(string $slug): void;           // GET /test/{slug}
-    public function save(string $slug): void;            // POST /test/{slug}/save (AJAX)
-    public function submit(string $slug): void;          // POST /test/{slug}/submit
-    public function saveDemographics(string $slug): void; // POST /test/{slug}/demographics
+    public function start(string $slug): void;            // GET /test/{slug}
+    public function save(string $slug): void;             // POST /test/{slug}/save (AJAX)
+    public function submit(string $slug): void;           // POST /test/{slug}/submit
+    public function pairStart(string $slug): void;        // GET /test/{slug}/pair
+    public function pairSubmit(string $slug): void;       // POST /test/{slug}/pair/submit
 }
 ```
 
-**`start()`**: создаёт `test_sessions` с UUID и `session_token`, загружает вопросы модуля, рендерит `test-wrapper.twig`.
+**`start()`**: создаёт `test_sessions` (UUID + `session_token`), загружает вопросы модуля, рендерит `test-wrapper.twig`.
 
-**`save()`**: принимает JSON с ответом, валидирует, сохраняет в `answers` (JSON-столбец), возвращает success/fail.
+**`save()`**: принимает JSON с ответом и опционально `demographics`, сохраняет в `answers`/`demographics` JSON-столбцы, возвращает `{success: true}`.
 
-**`submit()`**: финализирует сессию, вызывает `calculateResults()`, сохраняет `calculated_results`, редиректит на `/result/{token}`.
+**`submit()`**: merge ответов и демографии из сессии и формы, финализирует, вызывает `calculateResults()`, сохраняет `calculated_results`, редиректит на `/result/{slug}/{token}`.
 
-### ResultController — `controllers/ResultController.php` (~310 строк)
+### ResultController — `controllers/ResultController.php`
 
 ```php
 class ResultController extends BaseController
 {
-    public function show(string $token): void;                    // GET /result/{token}
-    public function pdf(string $token): void;                      // GET /result/{token}/pdf
-    public function delete(string $token): void;                   // DELETE /result/{token}
-    public function deleteConfirm(string $token): void;            // POST /result/{token}/delete
-    public function interpretation(string $token): void;           // GET /result/{token}/interpretation
-    public function generateInterpretation(string $token): void;    // POST .../generate
-    public function showProfile(string $token): void;               // GET /result/{token}/profile
-    public function resendEmail(string $token): void;               // GET /result/{token}/resend
+    public function show(string $slug, string $token): void;      // GET /result/{slug}/{token}
+    public function pdf(string $slug, string $token): void;       // GET /result/{slug}/{token}/pdf
+    public function delete(string $token): void;                  // POST /result/{token}/delete
+    public function pairShow(string $id): void;                   // GET /pair/{id}
+    public function pairPdf(string $id): void;                    // GET /pair/{id}/pdf
+    public function interpretation(string $token): void;          // GET /interpretation/{token}
+    private function renderProfileChartHtml(array $data): string; // статичный HTML-график для PDF
 }
 ```
 
-Доступ по публичному `session_token` — не требует авторизации. GDPR soft-delete через `delete()`.
+Доступ по публичному `session_token` (VARCHAR(64)) — не требует авторизации. GDPR soft-delete через `delete()` (меняет `status` на `deleted`).
 
-### HomeController — `controllers/HomeController.php` (~162 строки)
+Для PDF профиль-чарт (Chart.js canvas) заменяется статичным HTML bar-chart (`renderProfileChartHtml`), потому что DomPDF не исполняет JavaScript.
+
+### HomeController — `controllers/HomeController.php`
 
 ```php
 class HomeController extends BaseController
 {
-    public function index(): void;           // GET /
-    public function testsList(): void;       // GET /tests
-    public function privacy(): void;         // GET /privacy
-    public function terms(): void;            // GET /terms
-    public function admin(): void;           // GET /admin
+    public function index(): void;          // GET / → редирект на /tests
+    public function tests(): void;          // GET /tests
+    public function privacy(): void;        // GET /privacy
+    public function terms(): void;          // GET /terms
+    public function deleted(): void;        // GET /deleted
+    public function error(int $code = 404): void;  // GET /error/{code}
 }
 ```
 
@@ -632,80 +637,97 @@ T_final = clamp(T_corrected, 20, 100)
 
 ### Схема: 6 таблиц
 
-```sql
--- Основные таблицы
+Актуальный DDL — в `database/schema.sql` (MySQL 5.7+/MariaDB 10.2+). Ниже ключевые поля. ID сессий и интерпретаций — CHAR(36) UUID.
 
+```sql
 CREATE TABLE tests (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    slug VARCHAR(100) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    module_class VARCHAR(255),
-    is_active TINYINT(1) DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(100) NOT NULL UNIQUE,
+  module_class VARCHAR(255) NOT NULL,           -- FQCN класса модуля
+  description TEXT,
+  is_active TINYINT(1) DEFAULT 1,
+  sort_order INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE test_sessions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    test_id INT NOT NULL,
-    session_token CHAR(36) NOT NULL,          -- UUID, публичный доступ
-    demographics JSON,                          -- пол, возраст и пр. (зависит от модуля)
-    answers JSON,                               -- ответы на вопросы
-    calculated_results JSON,                   -- результат calculateResults()
-    is_completed TINYINT(1) DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,
-    FOREIGN KEY (test_id) REFERENCES tests(id)
+  id CHAR(36) PRIMARY KEY,                       -- UUID
+  test_id INT UNSIGNED NOT NULL,
+  session_token VARCHAR(64) NOT NULL UNIQUE,     -- публичный токен доступа (в URL)
+  partner_token VARCHAR(64) DEFAULT NULL,        -- для парного режима
+  user_email VARCHAR(255) DEFAULT NULL,
+  user_name VARCHAR(255) DEFAULT NULL,
+  demographics JSON DEFAULT NULL,                -- пол, возраст (пол нужен СМИЛ для шкалы 5)
+  answers JSON NOT NULL,                         -- ответы на вопросы
+  calculated_results JSON NOT NULL,              -- результат calculateResults()
+  status ENUM('partial','completed','expired','deleted') DEFAULT 'partial',
+  ip_address VARCHAR(45) DEFAULT NULL,
+  user_agent VARCHAR(500) DEFAULT NULL,
+  completed_at TIMESTAMP NULL DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE
 );
 
 CREATE TABLE pair_comparisons (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    session_id INT NOT NULL,
-    comparison_type VARCHAR(50),
-    comparison_data JSON,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (session_id) REFERENCES test_sessions(id)
+  id CHAR(36) PRIMARY KEY,
+  test_id INT UNSIGNED NOT NULL,
+  session_1_id CHAR(36) NOT NULL,
+  session_2_id CHAR(36) NOT NULL,
+  comparison_data JSON NOT NULL,
+  generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE ai_interpretations (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    session_id INT NOT NULL,
-    model VARCHAR(100),
-    prompt TEXT,
-    response TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (session_id) REFERENCES test_sessions(id)
+  id CHAR(36) PRIMARY KEY,
+  session_id CHAR(36) NOT NULL,
+  payment_id VARCHAR(255) DEFAULT NULL,          -- ID платежа YooMoney
+  payment_status ENUM('pending','completed','failed','refunded') DEFAULT 'pending',
+  payment_amount DECIMAL(10,2) DEFAULT NULL,
+  payment_completed_at TIMESTAMP NULL DEFAULT NULL,
+  interpretation_text LONGTEXT,                  -- AI-генерация
+  pdf_path VARCHAR(500) DEFAULT NULL,
+  email_sent_at TIMESTAMP NULL DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (session_id) REFERENCES test_sessions(id) ON DELETE CASCADE
 );
 
 CREATE TABLE activity_log (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    session_id INT,
-    action VARCHAR(100),
-    details JSON,
-    ip_address VARCHAR(45),
-    user_agent TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (session_id) REFERENCES test_sessions(id)
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  session_id CHAR(36) DEFAULT NULL,
+  test_id INT UNSIGNED DEFAULT NULL,
+  action VARCHAR(100) NOT NULL,
+  details JSON DEFAULT NULL,
+  ip_address VARCHAR(45) DEFAULT NULL,
+  user_agent VARCHAR(500) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE payment_transactions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    session_id INT,
-    yoomoney_payment_id VARCHAR(100),
-    amount DECIMAL(10, 2),
-    status VARCHAR(50),            -- pending / succeeded / failed
-    webhook_payload JSON,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (session_id) REFERENCES test_sessions(id)
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  transaction_id VARCHAR(255) NOT NULL UNIQUE,   -- ID транзакции YooMoney
+  session_id CHAR(36) NOT NULL,
+  interpretation_id CHAR(36) DEFAULT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  currency CHAR(3) DEFAULT 'RUB',
+  status VARCHAR(50) NOT NULL,
+  payment_method VARCHAR(50) DEFAULT NULL,
+  raw_payload JSON DEFAULT NULL,                 -- полный webhook payload
+  processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 ### Ключевые моменты
 
-- `session_token` — UUID CHAR(36) для публичного доступа без авторизации
-- `demographics`, `answers`, `calculated_results` — JSON-столбцы, формат зависит от модуля
-- Схема также доступна в `database/schema.sql`
-- Миграции управляются через Phinx (`phinx.php`)
+- `session_token` — VARCHAR(64), публичный токен доступа без авторизации (в URL `/result/{slug}/{token}`)
+- `id` сессий — CHAR(36) UUID; `id` логов и транзакций — автоинкрементные
+- `status` — enum жизненного цикла сессии (`partial` → `completed` / `expired` / `deleted`); GDPR soft-delete = `status='deleted'`
+- `demographics`, `answers`, `calculated_results`, `comparison_data`, `details`, `raw_payload` — JSON-столбцы
+- Актуальный DDL — в `database/schema.sql`. Миграций Phinx пока нет (создание БД — `php bin/install-db.php`)
 
 ---
 
