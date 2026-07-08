@@ -2708,3 +2708,100 @@ body {
 .legend-point.deviation {
     background: crimson;
 }
+
+/* ============================================
+   LAZARUS — Dual-scale question (Я + Партнёр)
+   ============================================ */
+.dual-scale {
+    margin-top: var(--spacing-md);
+}
+.dual-scale__legend {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    font-size: 0.72rem;
+    color: var(--color-text-secondary, #7f8c8d);
+    margin-bottom: var(--spacing-sm);
+    padding-left: 90px;
+}
+.dual-scale__label-mid {
+    text-align: center;
+    flex: 1;
+}
+.dual-scale__row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 6px 0;
+}
+.dual-scale__row + .dual-scale__row {
+    border-top: 1px dashed var(--color-border, #e0e0e0);
+}
+.dual-scale__who {
+    flex-shrink: 0;
+    width: 90px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text-primary, #2c3e50);
+}
+.dual-scale__who-hint {
+    display: block;
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--color-text-secondary, #7f8c8d);
+}
+.dual-scale__options {
+    display: flex;
+    flex: 1;
+    gap: 4px;
+    justify-content: space-between;
+}
+.scale-option {
+    position: relative;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+}
+.scale-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.scale-option__num {
+    display: block;
+    padding: 8px 0;
+    border: 1px solid var(--color-border, #d0d0d0);
+    border-radius: 6px;
+    background: var(--color-bg-white, #fff);
+    color: var(--color-text-primary, #2c3e50);
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+.scale-option:hover .scale-option__num {
+    border-color: var(--color-primary, #3498db);
+    background: #eaf4fb;
+}
+.scale-option input[type="radio"]:checked + .scale-option__num {
+    background: var(--color-primary, #3498db);
+    border-color: var(--color-primary, #3498db);
+    color: #fff;
+    font-weight: 700;
+}
+.question-card--dual {
+    max-width: 640px;
+}
+@media (max-width: 600px) {
+    .dual-scale__legend {
+        padding-left: 70px;
+        font-size: 0.65rem;
+    }
+    .dual-scale__who {
+        width: 70px;
+        font-size: 0.82rem;
+    }
+    .scale-option__num {
+        padding: 7px 0;
+        font-size: 0.75rem;
+    }
+}

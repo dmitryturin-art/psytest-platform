@@ -346,6 +346,25 @@
      */
     function scheduleAutoAdvance() {
         if (!questions || questions.length === 0) return;
+
+        // For dual-scale questions (two radio groups: _self + _partner),
+        // only advance once ALL required radios in the card are answered.
+        const currentCard = questions[currentQuestionIndex];
+        if (currentCard && currentCard.classList.contains('question-card--dual')) {
+            const requiredRadios = currentCard.querySelectorAll('input[type="radio"][required]');
+            const answeredNames = new Set();
+            requiredRadios.forEach(function (r) {
+                if (r.checked) answeredNames.add(r.name);
+            });
+            const requiredNames = new Set();
+            requiredRadios.forEach(function (r) {
+                requiredNames.add(r.name);
+            });
+            if (answeredNames.size < requiredNames.size) {
+                return; // ждём остальные ответы
+            }
+        }
+
         if (currentQuestionIndex >= questions.length - 1) {
             // On last question — show submit button
             const submitBtn = document.getElementById('submitBtn');

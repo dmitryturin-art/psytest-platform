@@ -73,3 +73,6 @@ package-lock.json
 /smilF-*.md
 /bai-*.md
 /tests-*.md
+
+# ZCode plan-mode artifacts
+/.zcode/
