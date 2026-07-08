@@ -633,6 +633,46 @@ T_final = clamp(T_corrected, 20, 100)
 
 ---
 
+## 12b. Модуль Лазаруса (Marital Satisfaction Questionnaire)
+
+`modules/lazarus/LazarusModule.php` — единственный модуль с поддержкой парного режима.
+
+- **16 пунктов**, каждый с **двойной оценкой**: «Я» (своя удовлетворённость) + «Партнёр» (как, по мнению респондента, ответил бы партнёр)
+- **Шкала ответов**: 1–10 (1–3 «Не соответствует», 4–7 «Отчасти», 8–10 «Полностью»)
+- **Домены** (16): Общение (кол-во/качество), Интим, Финансы, Время вместе, Социальная сфера, Родительство, Союзничество, Досуг, Ценности, Эмоциональная близость, Доверие, Привычки партнёра, Семья партнёра, Своя семья, Внешность
+
+### Расчёт
+
+- `answers[N_self]`, `answers[N_partner]` → `self_scores[1..16]`, `partner_scores[1..16]`
+- `total_self` = Σ(self), max = 160; `level`: <80 → `dissatisfied`, ≥80 → `satisfied`
+- `perception_gaps[N]` = self − partner (насколько респондент думает, что партнёр менее/более доволен)
+
+### Парный режим (первый и единственный)
+
+| # | HTTP | Маршрут | Описание |
+|---|------|---------|----------|
+| 1 | — | Партнёр 1 проходит `/test/lazarus` | Обычный flow, `is_pair=false` |
+| 2 | GET | `/result/lazarus/{token1}` | Результат П1 + блок pair-invite со ссылкой |
+| 3 | GET | `/test/lazarus/pair?partner={token1}` | Партнёр 2 по ссылке, `pairStart()` создаёт сессию с `partner_token` |
+| 4 | POST | `/test/lazarus/pair/submit` | П2 сабмитит → `pairSubmit()`: расчёт + `comparePairResults()` + `createPairComparison()` |
+| 5 | GET | `/pair/{id}` | `pairShow()` — страница сравнения |
+| 6 | GET | `/result/{slug}/{token}/pair-status` | Polling: вернёт `has_comparison`, когда П2 завершит |
+
+**Polling**: страница П1 опрашивает `/pair-status` каждые 15с; когда П2 завершает — comparison появляется автоматически (reload).
+
+**comparePairResults()** для каждого пункта: `p1_self`, `p2_self`, `difference`, `p1_perception`, `p2_perception`, `p1_accuracy` (perception-vs-reality), `p2_accuracy`. `overall_agreement` — средний процент совпадения.
+
+### Twig-блоки (новые)
+
+| Блок | Назначение |
+|------|-----------|
+| `blocks/pair-invite.twig` | Ссылка-приглашение для Партнёра 1 |
+| `blocks/pair-comparison.twig` | Таблица сравнения 16 пунктов с perception gaps |
+
+Константы секций: `ResultSection::TYPE_PAIR_INVITE`, `TYPE_PAIR_COMPARISON`.
+
+---
+
 ## 13. База данных
 
 ### Схема: 6 таблиц

@@ -108,6 +108,33 @@ class SessionManager
     }
 
     /**
+     * Get a session strictly by its session_token (not partner_token).
+     *
+     * Use this when looking up a specific partner's own session by the token
+     * they were issued — getSessionByToken() also matches partner_token, which
+     * can return the wrong row when multiple sessions share a partner_token.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getSessionBySessionToken(string $token): ?array
+    {
+        $sql = "SELECT * FROM test_sessions
+                WHERE session_token = :token
+                AND expires_at > NOW()
+                AND status NOT IN ('expired', 'deleted')";
+
+        $session = $this->db->selectOne($sql, ['token' => $token]);
+
+        if ($session) {
+            $session['answers'] = !empty($session['answers']) ? json_decode($session['answers'], true) : [];
+            $session['calculated_results'] = !empty($session['calculated_results']) ? json_decode($session['calculated_results'], true) : [];
+            $session['demographics'] = !empty($session['demographics']) ? json_decode($session['demographics'], true) : [];
+        }
+
+        return $session;
+    }
+
+    /**
      * Get session by ID
      */
     public function getSessionById(string $sessionId): ?array

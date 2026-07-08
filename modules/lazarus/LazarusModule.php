@@ -36,7 +36,7 @@ final class LazarusModule extends BaseTestModule
         'satisfied'    => 'Суммарный показатель 80 и выше свидетельствует об общей удовлетворённости отношениями. Тем не менее полезно обсудить отдельные пункты с низкими оценками.',
     ];
 
-    /** @var list<string> Рекомендации по уровням. */
+    /** @var array<string, list<string>> Рекомендации по уровням. */
     private const RECOMMENDATIONS = [
         'dissatisfied' => [
             'Обсудите с партнёром пункты, оценённые наиболее низко, — что именно вызывает неудовлетворённость.',
@@ -197,20 +197,24 @@ final class LazarusModule extends BaseTestModule
             order: 40,
         );
 
-        // Если есть результат сравнения пары — блок сравнения.
+        // Если есть результат сравнения пары — блок сравнения (для обоих партнёров).
         if (isset($results['pair_comparison'])) {
             $sections[] = new ResultSection(
-                type: ResultSection::TYPE_RAW_HTML,
+                type: ResultSection::TYPE_PAIR_COMPARISON,
                 title: 'Сравнение с партнёром',
-                data: ['html' => $results['pair_comparison_html'] ?? ''],
+                data: ['comparison' => $results['pair_comparison']],
+                block: 'blocks/pair-comparison.twig',
                 order: 50,
             );
-        } elseif ($this->supportsPairMode() && !isset($results['is_pair_partner'])) {
-            // Партнёр 1, ещё не имеет сравнения — показать приглашение.
+        } elseif ($this->supportsPairMode()) {
+            // Сравнения ещё нет — показать приглашение, чтобы Партнёр 1 мог
+            // пригласить Партнёра 2. Партнёр 2 сюда не доходит: после pairSubmit
+            // он редиректится на /pair/{id}, где comparison уже создан.
             $sections[] = new ResultSection(
-                type: ResultSection::TYPE_RAW_HTML,
+                type: ResultSection::TYPE_PAIR_INVITE,
                 title: 'Пригласить партнёра',
-                data: ['html' => 'PAIR_INVITE_PLACEHOLDER'],
+                data: [],
+                block: 'blocks/pair-invite.twig',
                 order: 60,
             );
         }

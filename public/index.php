@@ -62,6 +62,7 @@ $router->post('/test/{slug}/pair/submit', [TestController::class, 'pairSubmit'])
 // Results
 $router->get('/result/{slug}/{token}', [ResultController::class, 'show']);
 $router->get('/result/{slug}/{token}/pdf', [ResultController::class, 'pdf']);
+$router->get('/result/{slug}/{token}/pair-status', [ResultController::class, 'pairStatus']);
 $router->post('/result/{token}/delete', [ResultController::class, 'delete']);
 
 // Pair comparison results

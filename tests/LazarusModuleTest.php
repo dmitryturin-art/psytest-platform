@@ -132,12 +132,32 @@ final class LazarusModuleTest extends TestCase
         // Должна быть секция с приглашением партнёра (нет pair_comparison в results)
         $hasInvite = false;
         foreach ($sections as $s) {
-            if ($s->type === ResultSection::TYPE_RAW_HTML && $s->title === 'Пригласить партнёра') {
+            if ($s->type === ResultSection::TYPE_PAIR_INVITE) {
                 $hasInvite = true;
+                $this->assertSame('blocks/pair-invite.twig', $s->block);
                 break;
             }
         }
         $this->assertTrue($hasInvite, 'Pair invite section should be present when no comparison');
+    }
+
+    public function testBuildSectionsShowsComparisonWhenPresent(): void
+    {
+        $r = $this->module->calculateResults($this->allAnswers(self: 7, partner: 7));
+        $r2 = $this->module->calculateResults($this->allAnswers(self: 6, partner: 8));
+        $r['pair_comparison'] = $this->module->comparePairResults($r, $r2);
+
+        $sections = $this->module->buildSections($r);
+
+        $hasComparison = false;
+        foreach ($sections as $s) {
+            if ($s->type === ResultSection::TYPE_PAIR_COMPARISON) {
+                $hasComparison = true;
+                $this->assertSame('blocks/pair-comparison.twig', $s->block);
+                break;
+            }
+        }
+        $this->assertTrue($hasComparison, 'Pair comparison section should be present');
     }
 
     public function testComparePairResultsProducesItemsAndAgreement(): void

@@ -168,8 +168,8 @@ class TestController extends BaseController
             return;
         }
 
-        // Verify partner session
-        $partnerSession = $this->sessionManager->getSessionByToken($partnerToken);
+        // Verify partner session (strictly by session_token — see pairSubmit note)
+        $partnerSession = $this->sessionManager->getSessionBySessionToken($partnerToken);
         if (!$partnerSession) {
             http_response_code(404);
             echo 'Partner session not found';
@@ -208,10 +208,13 @@ class TestController extends BaseController
     /**
      * Submit pair test
      * POST /test/{slug}/pair/submit
+     *
+     * Second partner submits their answers. Calculates their results,
+     * completes the session, then creates a pair comparison linking the
+     * first partner's session (found via partner_token).
      */
     public function pairSubmit(string $slug): void
     {
-        // Similar to submit, but creates pair comparison
         $module = $this->getModuleOrFail($slug);
         if (!$module->supportsPairMode()) {
             http_response_code(400);
@@ -222,16 +225,76 @@ class TestController extends BaseController
         $sessionId = $_POST['session_id'] ?? null;
         $partnerToken = $_POST['partner_token'] ?? null;
 
-        if (!$sessionId || !$partnerToken) {
+        if (!$sessionId || !Uuid::isValid($sessionId) || !$partnerToken) {
             http_response_code(400);
-            echo 'Missing required data';
+            echo 'Missing or invalid session/partner data';
             return;
         }
 
-        // Process submission similar to regular submit...
-        // Then create pair comparison
+        $session = $this->sessionManager->getSessionById($sessionId);
+        if (!$session || $session['test_id'] !== $this->getTestIdBySlug($slug)) {
+            http_response_code(404);
+            echo 'Session not found';
+            return;
+        }
 
-        echo json_encode(['success' => true, 'redirect' => '/pair/{comparison_id}']);
+        // Collect & normalize answers (same logic as submit()).
+        $answers = $_POST['answers'] ?? [];
+        $normalizedAnswers = [];
+        foreach ($answers as $questionId => $answer) {
+            if (is_numeric($answer)) {
+                $normalizedAnswers[$questionId] = (int) $answer;
+            } else {
+                $normalizedAnswers[$questionId] = $answer === 'true' || $answer === true;
+            }
+        }
+
+        $allAnswers = array_merge($session['answers'], $normalizedAnswers);
+        $formDemographics = $_POST['demographics'] ?? [];
+        if (!empty($formDemographics)) {
+            $this->sessionManager->saveDemographics($sessionId, $formDemographics);
+        }
+        if (!empty($session['demographics'])) {
+            $allAnswers = array_merge($allAnswers, $session['demographics']);
+        }
+        if (!empty($formDemographics)) {
+            $allAnswers = array_merge($allAnswers, $formDemographics);
+        }
+        $this->sessionManager->saveAnswers($sessionId, $allAnswers);
+
+        // Calculate results & complete this (second partner's) session.
+        $rawResults = $module->calculateResults($allAnswers);
+        $rawResults['is_pair_partner'] = true;
+        $interpretation = $module->generateInterpretation($rawResults);
+        $this->sessionManager->completeSession($sessionId, array_merge($rawResults, [
+            'interpretation' => $interpretation,
+        ]));
+
+        // Find the first partner's session strictly by their own session_token.
+        // getSessionBySessionToken() (not getSessionByToken) — the latter also
+        // matches partner_token and could return the second partner's own session
+        // instead, since both share the same partner_token value.
+        $partnerSession = $this->sessionManager->getSessionBySessionToken($partnerToken);
+        if (!$partnerSession || empty($partnerSession['calculated_results'])) {
+            // First partner hasn't completed yet — redirect to own result page.
+            header('Location: /result/' . $slug . '/' . $session['session_token']);
+            exit;
+        }
+
+        $comparison = $module->comparePairResults(
+            $partnerSession['calculated_results'],
+            $rawResults
+        );
+
+        $comparisonRecord = $this->sessionManager->createPairComparison(
+            (int) $session['test_id'],
+            $partnerSession['id'],
+            $sessionId,
+            $comparison
+        );
+
+        header('Location: /pair/' . $comparisonRecord['id']);
+        exit;
     }
 
     /**
