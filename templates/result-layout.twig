@@ -1,0 +1,114 @@
+{% extends "layout.twig" %}
+
+{% block title %}Результаты: {{ test.name }} — {{ appName }}{% endblock %}
+{% block body_class %}results-page test-{{ test.slug }}{% endblock %}
+
+{% block content %}
+<div class="results-wrapper">
+    <div class="results-header">
+        <h1 class="results-title">{{ test.name }}</h1>
+        <p class="results-subtitle">Результаты тестирования</p>
+        <div class="results-meta">
+            <span class="meta-item">📅 {{ session.created_at|date("d.m.Y H:i") }}</span>
+            <span class="meta-item">🔗 ID: {{ session.id|slice(0, 8) }}...</span>
+        </div>
+    </div>
+
+    <div class="results-actions">
+        <a href="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/pdf"
+           class="btn btn-secondary" target="_blank">📄 Скачать PDF</a>
+        {% if ai_interpretation_available %}
+        <a href="{{ basePath }}/interpretation/{{ session.session_token }}"
+           class="btn btn-primary">✨ AI-интерпретация</a>
+        {% endif %}
+        <button class="btn btn-outline" onclick="copyResultLink()">🔗 Копировать ссылку</button>
+        <button class="btn btn-outline" onclick="openDeleteModal()">🗑️ Удалить данные</button>
+    </div>
+
+    <div class="results-content">
+        {% for section in sections %}
+        <div class="results-section results-section--{{ section.type }}">
+            {% if section.title %}
+            <h2 class="section-title">{{ section.title }}</h2>
+            {% endif %}
+            <div class="section-body">
+                {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="results-disclaimer">
+        <p><strong>Важно:</strong> Результаты носят ознакомительный характер и не являются диагнозом. Для профессиональной интерпретации обратитесь к квалифицированному специалисту.</p>
+    </div>
+</div>
+
+{{ include('blocks/_delete-modal.twig') }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const RESULT_CONFIG = {
+    sessionId: '{{ session.id }}',
+    sessionToken: '{{ session.session_token }}',
+    testSlug: '{{ test.slug }}',
+    basePath: '{{ basePath }}',
+};
+
+function copyResultLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('✓ Ссылка скопирована в буфер обмена');
+    }).catch(err => {
+        console.error('Failed to copy link:', err);
+        showToast('Ошибка при копировании ссылки', 'error');
+    });
+}
+
+function openDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function confirmDelete() {
+    fetch(`${RESULT_CONFIG.basePath}/result/${RESULT_CONFIG.sessionToken}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `${RESULT_CONFIG.basePath}/deleted`;
+        } else {
+            alert('Ошибка при удалении: ' + (data.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(err => {
+        alert('Ошибка при удалении: ' + err.message);
+    });
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 15px 25px; background: #27ae60; color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; animation: slideIn 0.3s ease;';
+    if (type === 'error') {
+        toast.style.background = '#e74c3c';
+    }
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
+<script src="{{ basePath }}/js/results.js"></script>
+{% endblock %}

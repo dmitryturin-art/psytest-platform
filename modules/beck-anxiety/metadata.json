@@ -13,7 +13,7 @@
     {"level": "high", "min": 36, "max": 63, "name": "Высокая тревога", "description": "Значение выше 36 баллов (при максимуме в 63 балла) свидетельствует об очень высокой тревоге"}
   ],
   "requires_demographics": {
-    "gender": true,
+    "gender": false,
     "age": false
   },
   "version": "1.0",

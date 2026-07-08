@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Home Controller
  */
@@ -7,23 +8,8 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
-use PsyTest\Core\Database;
-use PsyTest\Core\View;
-use PsyTest\Core\ModuleLoader;
-
-class HomeController
+class HomeController extends BaseController
 {
-    private Database $db;
-    private View $view;
-    private ModuleLoader $moduleLoader;
-    
-    public function __construct()
-    {
-        $this->db = Database::getInstance();
-        $this->view = View::getInstance();
-        $this->moduleLoader = (new ModuleLoader(null, $this->db))->discover();
-    }
-    
     /**
      * Home page - redirect to tests list
      */
@@ -32,19 +18,19 @@ class HomeController
         header('Location: /tests');
         exit;
     }
-    
+
     /**
      * List all available tests
      */
     public function tests(): void
     {
         $tests = $this->moduleLoader->getActiveModules();
-        
+
         echo $this->view->render('tests-list', [
             'tests' => $tests,
         ]);
     }
-    
+
     /**
      * Privacy policy page
      */
@@ -55,7 +41,7 @@ class HomeController
             'content' => $this->getPrivacyContent(),
         ]);
     }
-    
+
     /**
      * Terms of service page
      */
@@ -66,7 +52,7 @@ class HomeController
             'content' => $this->getTermsContent(),
         ]);
     }
-    
+
     /**
      * Deleted session page
      */
@@ -84,7 +70,7 @@ class HomeController
             ',
         ]);
     }
-    
+
     /**
      * Error page
      */
@@ -95,7 +81,7 @@ class HomeController
             'errorCode' => $code,
         ]);
     }
-    
+
     /**
      * Privacy policy content
      */
@@ -137,7 +123,7 @@ class HomeController
             </div>
         ';
     }
-    
+
     /**
      * Terms of service content
      */

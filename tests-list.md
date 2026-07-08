@@ -1,0 +1,64 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "🧠 PsyTest" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: 🧠
+        - generic [ref=e7]: PsyTest
+      - navigation [ref=e8]:
+        - link "Все тесты" [ref=e9] [cursor=pointer]:
+          - /url: /tests
+  - main [ref=e10]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - heading "Психологические тесты" [level=1] [ref=e14]
+        - paragraph [ref=e15]: Выберите тест для прохождения. Все тесты анонимны, результаты сохраняются по уникальной ссылке.
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "СМИЛ (адаптация MMPI, Ф. Собчик)" [level=2] [ref=e19]
+          - generic [ref=e20]:
+            - paragraph [ref=e21]: Стандартизированный многофакторный метод исследования личности. Адаптация Ф.Б. Собчик. Опросник содержит 566 вопросов, направленных на оценку различны...
+            - generic [ref=e22]:
+              - generic [ref=e23]: 📝 566 вопросов
+              - generic [ref=e24]: ⏱️ ~45 мин
+            - generic [ref=e26]:
+              - text: "Шкалы:"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: Array, Array, Array, Array, Array, Array, Array, Array, Array, Array, Array, Array, Array
+          - link "Пройти тест" [ref=e28] [cursor=pointer]:
+            - /url: /test/smil
+        - generic [ref=e29]:
+          - heading "Шкала тревоги Бека (BAI)" [level=2] [ref=e31]
+          - generic [ref=e32]:
+            - paragraph [ref=e33]: Шкала тревоги Бека (Beck Anxiety Inventory) — опросник для оценки выраженности тревоги у взрослых и подростков. Состоит из 21 вопроса, описывающих раз...
+            - generic [ref=e34]:
+              - generic [ref=e35]: 📝 21 вопросов
+              - generic [ref=e36]: ⏱️ ~5 мин
+            - generic [ref=e38]:
+              - text: "Шкалы:"
+              - text: "Warning: Array to string conversion in /Users/dmitrijturin/VibeCoding/hyptest/vendor/twig/twig/src/Extension/CoreExtension.php on line 847"
+              - text: Array
+          - link "Пройти тест" [ref=e40] [cursor=pointer]:
+            - /url: /test/beck-anxiety
+  - contentinfo [ref=e41]:
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - paragraph [ref=e45]: © 2026 PsyTest. Все права защищены.
+        - paragraph [ref=e46]: Результаты тестирования носят ознакомительный характер и не заменяют очную консультацию специалиста.
+      - generic [ref=e47]:
+        - link "Конфиденциальность" [ref=e48] [cursor=pointer]:
+          - /url: /privacy
+        - link "Условия использования" [ref=e49] [cursor=pointer]:
+          - /url: /terms

@@ -1,0 +1,29 @@
+{
+    "note": "Additional scales calculated from smil-reference-answers.json using Собчик norms (female)",
+    "gender": "female",
+    "scales": {
+        "A": {"raw": 12, "t": 44},
+        "R": {"raw": 5, "t": 20},
+        "Es": {"raw": 4, "t": 20},
+        "Do": {"raw": 7, "t": 23},
+        "Re": {"raw": 5, "t": 20},
+        "Pk": {"raw": 12, "t": 62},
+        "MAC": {"raw": 15, "t": 61},
+        "O-H": {"raw": 17, "t": 66},
+        "ANX": {"raw": 12, "t": 49},
+        "FRS": {"raw": 14, "t": 82},
+        "OBS": {"raw": 11, "t": 43},
+        "DEP": {"raw": 12, "t": 44},
+        "HEA": {"raw": 17, "t": 58},
+        "BIZ": {"raw": 14, "t": 36},
+        "ANG": {"raw": 15, "t": 61},
+        "CYN": {"raw": 3, "t": 47},
+        "ASP": {"raw": 17, "t": 66},
+        "TPA": {"raw": 11, "t": 43},
+        "LSE": {"raw": 9, "t": 37},
+        "SOD": {"raw": 8, "t": 30},
+        "FAM": {"raw": 15, "t": 61},
+        "WRK": {"raw": 9, "t": 41},
+        "TRT": {"raw": 15, "t": 58}
+    }
+}

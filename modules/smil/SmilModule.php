@@ -1,10 +1,11 @@
 <?php
+
 /**
  * SMIL (MMPI) Test Module - Full Version
- * 
+ *
  * Standardized Multivariate Personality Inventory
  * Adaptation by F.B. Sobchik
- * 
+ *
  * Full 566 questions version with:
  * - 3 validity scales (L, F, K)
  * - 10 clinical scales (0-9)
@@ -19,6 +20,11 @@ declare(strict_types=1);
 namespace PsyTest\Modules\Smil;
 
 use PsyTest\Modules\BaseTestModule;
+use PsyTest\Modules\ResultSection;
+use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
+use PsyTest\Modules\Smil\Scoring\RawScoreCalculator;
+use PsyTest\Modules\Smil\Scoring\TScoreCalculator;
+use PsyTest\Modules\Smil\Scoring\ValidityAssessor;
 
 class SmilModule extends BaseTestModule
 {
@@ -40,6 +46,13 @@ class SmilModule extends BaseTestModule
         '9' => 'Гипомания (Ma)',
         '0' => 'Интроверсия (Si)',
     ];
+
+    /**
+     * Answer values
+     */
+    protected const ANSWER_YES = 1;
+    protected const ANSWER_UNKNOWN = 2;  // "Не знаю" / "?"
+    protected const ANSWER_NO = 0;
 
     /**
      * T-score thresholds for interpretation
@@ -175,6 +188,24 @@ class SmilModule extends BaseTestModule
         ],
     ];
 
+    private RawScoreCalculator $rawScoreCalc;
+    private TScoreCalculator $tScoreCalc;
+    private ValidityAssessor $validityAssessor;
+    private AdditionalScalesCalculator $additionalCalc;
+
+    /**
+     * Initialize module - set up scoring calculators
+     */
+    protected function initialize(): void
+    {
+        parent::initialize();
+
+        $this->rawScoreCalc = new RawScoreCalculator($this->getQuestions());
+        $this->tScoreCalc = new TScoreCalculator($this->loadBasicScalesNorms());
+        $this->validityAssessor = new ValidityAssessor();
+        $this->additionalCalc = new AdditionalScalesCalculator($this->loadAdditionalScalesNorms());
+    }
+
     /**
      * Get test metadata
      */
@@ -204,15 +235,48 @@ class SmilModule extends BaseTestModule
     public function getQuestions(): array
     {
         if ($this->questions === null) {
-            // Try to load full version first
-            $this->questions = $this->loadQuestionsFromJson('questions-full.json');
-            
-            // Fallback to demo version if full not available
-            if (empty($this->questions)) {
-                $this->questions = $this->loadQuestionsFromJson('questions.json');
-            }
+            $this->questions = $this->loadQuestionsFromJson('questions-566-full.json');
         }
         return $this->questions;
+    }
+
+    /**
+     * Get questions with gender-specific text
+     *
+     * @param string|null $gender Gender ('male' or 'female'), if null returns raw questions
+     * @return array Questions with appropriate text for gender
+     */
+    public function getQuestionsForGender(?string $gender = null): array
+    {
+        $questions = $this->getQuestions();
+
+        // If no gender specified or questions don't have gender variants, return as is
+        if ($gender === null) {
+            return $questions;
+        }
+
+        // Map questions to use gender-specific text
+        $genderedQuestions = [];
+        foreach ($questions as $question) {
+            $genderedQuestion = $question;
+
+            // Check if question has gender variants
+            if (isset($question['text_male']) && isset($question['text_female'])) {
+                // Use gender-specific text
+                if ($gender === 'male') {
+                    $genderedQuestion['text'] = $question['text_male'];
+                } else {
+                    $genderedQuestion['text'] = $question['text_female'];
+                }
+            } elseif (!isset($question['text'])) {
+                // Fallback: if no 'text' field, use text_male as default
+                $genderedQuestion['text'] = $question['text_male'] ?? $question['text_female'] ?? '';
+            }
+
+            $genderedQuestions[] = $genderedQuestion;
+        }
+
+        return $genderedQuestions;
     }
 
     /**
@@ -243,59 +307,34 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Load T-score tables from JSON
-     */
-    protected function loadTScoreTables(): array
-    {
-        $filepath = $this->modulePath . '/t-score-tables.json';
-        if (!file_exists($filepath)) {
-            return [];
-        }
-        $content = file_get_contents($filepath);
-        return json_decode($content, true) ?? [];
-    }
-
-    /**
-     * Calculate SMIL results - Full version with all scales
+     * Calculate SMIL results - delegates to scoring calculators
      */
     public function calculateResults(array $answers): array
     {
-        // Calculate raw scores for basic scales
-        $rawScores = $this->calculateRawScores($answers);
-
-        // Get gender from demographics
         $gender = $answers['gender'] ?? 'male';
-
-        // Convert to T-scores using gender-specific norms
-        $tScores = $this->convertToTScores($rawScores, $gender);
-
-        // Apply K-correction to clinical scales (already applied in convertToTScores)
-        $correctedScores = $tScores;
-
-        // Calculate additional scales
-        $additionalScores = $this->calculateAdditionalScales($answers, $gender);
-
-        // Calculate validity indicators
-        $validity = $this->assessValidity($tScores);
-
-        // Calculate additional indices
+        $rawScores = $this->rawScoreCalc->calculate($answers, $gender);
+        $tScores = $this->tScoreCalc->calculate($rawScores, $gender);
+        $validity = $this->validityAssessor->assess($tScores, $answers);
+        $additionalScores = $this->additionalCalc->calculate($answers, $gender);
         $indices = $this->calculateIndices($rawScores, $tScores);
+        $profile = $this->buildProfile($tScores);
+        $interpretation = $this->buildInterpretationOutput($profile, $validity, $tScores);
 
-        // Build profile
-        $profile = $this->buildProfile($correctedScores);
+        $numericAnswerCount = count(array_filter($answers, fn ($k) => is_numeric($k), ARRAY_FILTER_USE_KEY));
 
         return [
             'raw_scores' => $rawScores,
             't_scores' => $tScores,
-            'corrected_scores' => $correctedScores,
+            'corrected_scores' => $tScores,
             'validity' => $validity,
             'profile' => $profile,
             'indices' => $indices,
             'additional_scores' => $additionalScores,
             'gender' => $gender,
-            'answered_count' => count($answers),
+            'answered_count' => $numericAnswerCount,
             'total_questions' => 566,
-            'completion_rate' => round(count($answers) / 566 * 100, 1),
+            'completion_rate' => round($numericAnswerCount / 566 * 100, 1),
+            'interpretation' => $interpretation,
         ];
     }
 
@@ -310,127 +349,106 @@ class SmilModule extends BaseTestModule
         }
         $content = file_get_contents($filepath);
         $data = json_decode($content, true) ?? [];
-        
+
         // Extract scales from the data structure
         return $data['scales'] ?? [];
     }
 
     /**
-     * Calculate additional scales raw scores and T-scores
+     * Get interpretation for additional scale
      */
-    protected function calculateAdditionalScales(array $answers, string $gender): array
+    protected function getAdditionalScaleInterpretation(string $code, float $tScore, string $category = ''): string
     {
-        $normsData = $this->loadAdditionalScalesNorms();
-        $results = [];
-        
-        foreach ($normsData as $category => $scales) {
-            foreach ($scales as $code => $info) {
-                if (!isset($info['key']) || !isset($info['norms'])) {
-                    continue;
+        $interpretations = $this->loadInterpretations();
+        $level = $this->getScoreLevel($tScore);
+
+        // Try to find interpretation in additional_scales section
+        if (isset($interpretations['additional_scales'][$category][$code]['levels'][$level])) {
+            return $interpretations['additional_scales'][$category][$code]['levels'][$level];
+        }
+
+        // Fallback: try to find in any category
+        if (isset($interpretations['additional_scales'])) {
+            foreach ($interpretations['additional_scales'] as $cat => $scales) {
+                if (isset($scales[$code]['levels'][$level])) {
+                    return $scales[$code]['levels'][$level];
                 }
-                
-                // Calculate raw score
-                $rawScore = 0;
-                $key = $info['key'];
-                
-                foreach ($key['true'] ?? [] as $questionId) {
-                    // Check if answer is truthy (1, true, 'true', '1')
-                    if (isset($answers[$questionId]) && $answers[$questionId]) {
-                        $rawScore++;
-                    }
-                }
-                
-                foreach ($key['false'] ?? [] as $questionId) {
-                    // Check if answer is falsy (0, false, '', null)
-                    if (isset($answers[$questionId]) && !$answers[$questionId]) {
-                        $rawScore++;
-                    }
-                }
-                
-                // Get norms for gender
-                $norms = $info['norms'][$gender] ?? $info['norms']['male'] ?? [];
-                $M = $norms['M'] ?? 0;
-                $delta = $norms['delta'] ?? 1;
-                
-                // Calculate T-score: T = 50 + 10 × (X - M) / δ
-                if ($delta == 0) {
-                    $tScore = 50;
-                } else {
-                    $tScore = round(50 + 10 * ($rawScore - $M) / $delta);
-                }
-                
-                // Clamp to valid range
-                $tScore = max(0, min(120, $tScore));
-                
-                $results[$code] = [
-                    'name' => $info['name'] ?? $code,
-                    'raw' => $rawScore,
-                    't' => $tScore,
-                    'M' => $M,
-                    'delta' => $delta,
-                ];
             }
         }
-        
-        return $results;
+
+        return 'Интерпретация отсутствует';
     }
 
     /**
-     * Calculate raw scores for each scale
+     * Build interpretation summary and recommendations for calculateResults().
+     *
+     * @param array<string, mixed> $profile   Profile data with 'profile_type' and 'scales'.
+     * @param array<string, mixed> $validity  Validity assessment ('is_valid', etc.).
+     * @param array<string, float>  $tScores  T-scores keyed by scale code.
+     *
+     * @return array{summary: string, recommendations: list<string>}
      */
-    protected function calculateRawScores(array $answers): array
+    protected function buildInterpretationOutput(array $profile, array $validity, array $tScores): array
     {
-        $rawScores = [
-            'L' => 0, 'F' => 0, 'K' => 0,
-            '1' => 0, '2' => 0, '3' => 0, '4' => 0, '5' => 0,
-            '6' => 0, '7' => 0, '8' => 0, '9' => 0, '0' => 0,
-        ];
+        $profileType = $profile['profile_type'] ?? 'unknown';
+        $typeInfo = self::PROFILE_TYPES[$profileType] ?? ['name' => 'Не определён', 'description' => ''];
 
-        $questions = $this->getQuestions();
+        $summary = $typeInfo['description'];
+        $recommendations = [];
 
-        foreach ($answers as $questionId => $answer) {
-            // Find question in questions array
-            foreach ($questions as $question) {
-                if ($question['id'] == $questionId) {
-                    $scale = $question['scale'] ?? null;
-                    $direction = $question['direction'] ?? 1;
+        if (!$validity['is_valid']) {
+            $summary = 'Протокол недостоверен. Рекомендуется повторное тестирование при внимательном отношении к вопросам.';
+            $recommendations[] = 'Повторное прохождение теста с внимательным отношением ко всем вопросам.';
+            return compact('summary', 'recommendations');
+        }
 
-                    if ($scale && isset($rawScores[$scale])) {
-                        if ($direction === 1) {
-                            $rawScores[$scale] += $answer ? 1 : 0;
-                        } else {
-                            $rawScores[$scale] += $answer ? 0 : 1;
-                        }
-                    }
-                    break;
-                }
+        // Generate recommendations based on elevated scales
+        $elevatedScales = [];
+        foreach ($profile['scales'] ?? [] as $scale => $data) {
+            if (($data['score'] ?? 0) >= 65) {
+                $elevatedScales[$scale] = $data;
             }
         }
 
-        return $rawScores;
-    }
-
-    /**
-     * Get scale items from questions
-     */
-    protected function getScaleItems(): array
-    {
-        $scaleItems = [];
-        $questions = $this->getQuestions();
-
-        foreach ($questions as $question) {
-            $scale = $question['scale'] ?? null;
-            $direction = $question['direction'] ?? 1;
-
-            if ($scale) {
-                if (!isset($scaleItems[$scale])) {
-                    $scaleItems[$scale] = [];
-                }
-                $scaleItems[$scale][$question['id']] = $direction;
-            }
+        if (empty($elevatedScales)) {
+            $recommendations[] = 'Профиль в пределах нормы. Рекомендовано наблюдение в динамике через 6-12 месяцев.';
+            return compact('summary', 'recommendations');
         }
 
-        return $scaleItems;
+        // Anxiety-related
+        if (isset($elevatedScales['7']) || isset($elevatedScales['2'])) {
+            $recommendations[] = 'Повышенный уровень тревожности и/или депрессивных тенденций. Рекомендована консультация клинического психолога.';
+        }
+
+        // Psychotic spectrum
+        if (isset($elevatedScales['8']) || isset($elevatedScales['6'])) {
+            $recommendations[] = 'Выраженные показатели по шкалам шизоидного/параноидального спектра. Показана углубленная диагностика.';
+        }
+
+        // Psychopathic traits
+        if (isset($elevatedScales['4'])) {
+            $recommendations[] = 'Склонность к импульсивному поведению и нарушению социальных норм. Рекомендована работа с психологом по развитию самоконтроля.';
+        }
+
+        // Hysteria
+        if (isset($elevatedScales['3'])) {
+            $recommendations[] = 'Выраженная демонстративность и эмоциональная лабильность. Показаны техники релаксации и стресс-менеджмента.';
+        }
+
+        // Social introversion
+        if (isset($elevatedScales['0'])) {
+            $recommendations[] = 'Выраженная интроверсия и социальный дискомфорт. Рекомендована постепенная социальная активность в комфортной среде.';
+        }
+
+        // Generic recommendation
+        if (count($recommendations) < 2) {
+            $recommendations[] = 'Рекомендовано наблюдение в динамике через 3-6 месяцев.';
+            $recommendations[] = 'При сохранении или ухудшении показателей — консультация клинического психолога.';
+        }
+
+        $recommendations[] = 'Результаты носят ознакомительный характер и не являются диагнозом. Для профессиональной интерпретации обратитесь к квалифицированному специалисту.';
+
+        return compact('summary', 'recommendations');
     }
 
     /**
@@ -445,203 +463,6 @@ class SmilModule extends BaseTestModule
         $content = file_get_contents($filepath);
         $data = json_decode($content, true) ?? [];
         return $data['scales'] ?? [];
-    }
-
-    /**
-     * Convert raw scores to T-scores using Sobchik formula
-     * T = 50 + 10 × (X - M) / δ
-     */
-    protected function convertToTScores(array $rawScores, string $gender): array
-    {
-        $norms = $this->loadBasicScalesNorms();
-        $tScores = [];
-        
-        foreach ($rawScores as $scale => $rawScore) {
-            if (!isset($norms[$scale])) {
-                $tScores[$scale] = 50.0;
-                continue;
-            }
-            
-            $scaleNorms = $norms[$scale][$gender] ?? $norms[$scale]['male'];
-            $M = $scaleNorms['M'];
-            $delta = $scaleNorms['delta'];
-            
-            // Apply K-correction if needed
-            $kFactor = $norms[$scale]['kCorrectionFactor'] ?? null;
-            $correctedRaw = $rawScore;
-            
-            if ($kFactor !== null && isset($rawScores['K'])) {
-                $kCorrection = round($rawScores['K'] * $kFactor);
-                $correctedRaw = $rawScore + $kCorrection;
-            }
-            
-            // Calculate T-score using formula: T = 50 + 10 × (X - M) / δ
-            if ($delta == 0) {
-                $tScores[$scale] = 50.0;
-            } else {
-                $tScore = 50 + 10 * ($correctedRaw - $M) / $delta;
-                $tScores[$scale] = round($tScore);
-            }
-        }
-        
-        return $tScores;
-    }
-
-    /**
-     * Get T-score tables for males
-     */
-    protected function getTScoresMale(): array
-    {
-        // Simplified T-score tables - full version would have complete tables
-        return [
-            'L' => [0 => 35, 1 => 40, 2 => 45, 3 => 50, 4 => 55, 5 => 60, 6 => 65],
-            'F' => [0 => 40, 1 => 45, 2 => 50, 3 => 55, 4 => 60, 5 => 65, 6 => 70],
-            'K' => [0 => 55, 1 => 50, 2 => 45, 3 => 40, 4 => 35, 5 => 30],
-            '1' => [0 => 35, 5 => 45, 10 => 55, 15 => 65, 20 => 75],
-            '2' => [0 => 40, 5 => 50, 10 => 60, 15 => 70, 20 => 80],
-            '3' => [0 => 40, 5 => 50, 10 => 60, 15 => 70],
-            '4' => [0 => 40, 5 => 50, 10 => 60, 15 => 70, 20 => 80],
-            '5' => [0 => 45, 5 => 55, 10 => 65, 15 => 75],
-            '6' => [0 => 40, 5 => 50, 10 => 60, 15 => 70],
-            '7' => [0 => 35, 5 => 45, 10 => 55, 15 => 65, 20 => 75],
-            '8' => [0 => 40, 5 => 50, 10 => 60, 15 => 70, 20 => 80],
-            '9' => [0 => 45, 5 => 55, 10 => 65, 15 => 75],
-            '0' => [0 => 40, 5 => 50, 10 => 60, 15 => 70],
-        ];
-    }
-
-    /**
-     * Get T-score tables for females
-     */
-    protected function getTScoresFemale(): array
-    {
-        // Simplified T-score tables - full version would have complete tables
-        return [
-            'L' => [0 => 35, 1 => 40, 2 => 45, 3 => 50, 4 => 55, 5 => 60],
-            'F' => [0 => 40, 1 => 45, 2 => 50, 3 => 55, 4 => 60, 5 => 65],
-            'K' => [0 => 55, 1 => 50, 2 => 45, 3 => 40, 4 => 35],
-            '1' => [0 => 40, 5 => 50, 10 => 60, 15 => 70, 20 => 80],
-            '2' => [0 => 45, 5 => 55, 10 => 65, 15 => 75, 20 => 85],
-            '3' => [0 => 45, 5 => 55, 10 => 65, 15 => 75],
-            '4' => [0 => 40, 5 => 50, 10 => 60, 15 => 70],
-            '5' => [0 => 45, 5 => 55, 10 => 65, 15 => 75],
-            '6' => [0 => 40, 5 => 50, 10 => 60, 15 => 70],
-            '7' => [0 => 40, 5 => 50, 10 => 60, 15 => 70],
-            '8' => [0 => 40, 5 => 50, 10 => 60, 15 => 70],
-            '9' => [0 => 45, 5 => 55, 10 => 65, 15 => 75],
-            '0' => [0 => 45, 5 => 55, 10 => 65, 15 => 75],
-        ];
-    }
-
-    /**
-     * Lookup T-score from table with interpolation
-     */
-    protected function lookupTScore(int|string $scale, int $rawScore, array $tables): float
-    {
-        $scaleKey = (string) $scale;
-
-        if (!isset($tables[$scaleKey])) {
-            return 50.0;
-        }
-
-        $table = $tables[$scaleKey];
-
-        if (isset($table[$rawScore])) {
-            return (float) $table[$rawScore];
-        }
-
-        $lower = max(array_filter(array_keys($table), fn($k) => $k <= $rawScore));
-        $upper = min(array_filter(array_keys($table), fn($k) => $k >= $rawScore));
-
-        if ($lower === $upper) {
-            return (float) $table[$lower];
-        }
-
-        if (!isset($table[$lower]) || !isset($table[$upper])) {
-            return $lower > $rawScore ? (float) $table[$lower] : (float) $table[$upper];
-        }
-
-        $ratio = ($rawScore - $lower) / ($upper - $lower);
-        $tScore = $table[$lower] + $ratio * ($table[$upper] - $table[$lower]);
-
-        return round($tScore, 1);
-    }
-
-    /**
-     * Assess validity of results
-     */
-    protected function assessValidity(array $tScores): array
-    {
-        $L = $tScores['L'] ?? 50;
-        $F = $tScores['F'] ?? 50;
-        $K = $tScores['K'] ?? 50;
-
-        $valid = true;
-        $warnings = [];
-
-        if ($L >= 65) {
-            $valid = false;
-            $warnings[] = 'Высокая социальная желательность - результаты могут быть недостоверны';
-        }
-
-        if ($F >= 70) {
-            $valid = false;
-            $warnings[] = 'Высокий показатель F - возможны случайные ответы или преувеличение проблем';
-        } elseif ($F >= 65) {
-            $warnings[] = 'Повышенный показатель F - возможна тенденция к преувеличению';
-        }
-
-        if ($K >= 65) {
-            $warnings[] = 'Высокая защитная позиция - клинические шкалы могут быть занижены';
-        } elseif ($K <= 35) {
-            $warnings[] = 'Низкая защитная позиция - возможна излишняя откровенность';
-        }
-
-        $fkIndex = $F - $K;
-        if ($fkIndex > 20) {
-            $warnings[] = 'Индекс F-K повышен - возможна симуляция';
-        } elseif ($fkIndex < -15) {
-            $warnings[] = 'Индекс F-K понижен - возможна диссимуляция';
-        }
-
-        return [
-            'is_valid' => $valid,
-            'warnings' => $warnings,
-            'L_score' => $L,
-            'F_score' => $F,
-            'K_score' => $K,
-            'FK_index' => $fkIndex,
-        ];
-    }
-
-    /**
-     * Apply K-correction to clinical scales with formulas
-     */
-    protected function applyKCorrection(array $tScores, array $rawScores): array
-    {
-        $corrected = $tScores;
-        $K = $rawScores['K'] ?? 0;
-
-        // Formulas from additional-scales.json
-        $formulas = [
-            '1' => 0.5,  // +0.5K
-            '3' => 0.3,  // +0.3K
-            '4' => 0.4,  // +0.4K
-            '6' => 0.3,  // +0.3K
-            '7' => 1.0,  // +1.0K
-            '8' => 0.2,  // +0.2K
-            '9' => 0.2,  // +0.2K
-            '0' => 0.0,  // No correction
-        ];
-
-        foreach ($formulas as $scale => $fraction) {
-            if (isset($corrected[$scale]) && $fraction > 0) {
-                $kCorrection = round($K * $fraction);
-                $corrected[$scale] = round($tScores[$scale] + $kCorrection, 1);
-            }
-        }
-
-        return $corrected;
     }
 
     /**
@@ -679,7 +500,7 @@ class SmilModule extends BaseTestModule
         }
 
         $sorted = $profile;
-        usort($sorted, fn($a, $b) => $b['score'] - $a['score']);
+        usort($sorted, fn ($a, $b) => $b['score'] - $a['score']);
         $dominant = array_slice($sorted, 0, 3);
 
         $profileType = $this->determineProfileType($profile);
@@ -697,13 +518,19 @@ class SmilModule extends BaseTestModule
      */
     protected function getScoreLevel(float $score): string
     {
+        // Handle very high scores (above 100)
+        if ($score >= 75) {
+            return 'very_high';
+        }
+
         foreach (self::THRESHOLDS as $level => $range) {
             if ($score >= $range['min'] && $score <= $range['max']) {
                 return $level;
             }
         }
 
-        return 'normal';
+        // Handle very low scores (below 0)
+        return 'low';
     }
 
     /**
@@ -716,11 +543,40 @@ class SmilModule extends BaseTestModule
     }
 
     /**
+     * Get level name in Russian
+     */
+    protected function getLevelName(string $level): string
+    {
+        $names = [
+            'low' => 'Низкий',
+            'normal' => 'Норма',
+            'elevated' => 'Повышенный',
+            'high' => 'Высокий',
+            'very_high' => 'Очень высокий',
+        ];
+        return $names[$level] ?? $level;
+    }
+
+    /**
+     * Calculate marker position for visual scale (0-100%)
+     */
+    protected function calculateMarkerPosition(float $value): float
+    {
+        if ($value <= 29) {
+            return 5;
+        }
+        if ($value >= 120) {
+            return 95;
+        }
+        return 15 + (($value - 30) / 90) * 70;
+    }
+
+    /**
      * Determine profile type
      */
     protected function determineProfileType(array $profile): string
     {
-        $elevated = array_filter($profile, fn($p) => $p['score'] >= 60);
+        $elevated = array_filter($profile, fn ($p) => $p['score'] >= 60);
 
         if (empty($elevated)) {
             return 'normosthenic';
@@ -752,7 +608,7 @@ class SmilModule extends BaseTestModule
     protected function getCodeType(array $profile): string
     {
         $sorted = $profile;
-        uasort($sorted, fn($a, $b) => $b['score'] - $a['score']);
+        uasort($sorted, fn ($a, $b) => $b['score'] - $a['score']);
 
         $top2 = array_slice(array_keys($sorted), 0, 2);
 
@@ -877,403 +733,258 @@ class SmilModule extends BaseTestModule
         return $recommendations;
     }
 
-    /**
-     * Render results as HTML - Detailed professional report
-     */
-    public function renderResults(array $results): string
+
+    public function buildSections(array $results): array
     {
         $validity = $results['validity'] ?? [];
         $profile = $results['profile'] ?? [];
+        $interpretation = $results['interpretation'] ?? [];
+        $rawScores = $results['raw_scores'] ?? [];
         $tScores = $results['t_scores'] ?? [];
         $correctedScores = $results['corrected_scores'] ?? [];
-        $rawScores = $results['raw_scores'] ?? [];
         $indices = $results['indices'] ?? [];
-        $interpretation = $results['interpretation'] ?? [];
         $additionalScores = $results['additional_scores'] ?? [];
 
+        $sections = [];
+
         if (!$validity['is_valid']) {
-            return $this->renderInvalidResults($validity);
+            $sections[] = new ResultSection(
+                type: ResultSection::TYPE_VALIDITY,
+                title: '⚠️ Протокол недостоверен — контрольные шкалы',
+                data: $this->buildValidityData($validity),
+                block: 'blocks/validity.twig',
+                order: 0,
+            );
+        } else {
+            $sections[] = new ResultSection(
+                type: ResultSection::TYPE_VALIDITY,
+                title: 'Контрольные шкалы',
+                data: $this->buildValidityData($validity),
+                block: 'blocks/validity.twig',
+                order: 10,
+            );
         }
 
-        $html = '<div class="smil-results">';
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_PROFILE_CHART,
+            title: 'Профиль личности',
+            data: $this->buildProfileChartData($correctedScores),
+            block: 'blocks/profile-chart.twig',
+            order: 20,
+        );
 
-        // Navigation
-        $html .= $this->renderNavigation();
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_SCALES_TABLE,
+            title: 'Основные шкалы',
+            data: $this->buildScalesTableData($rawScores, $tScores, $correctedScores),
+            block: 'blocks/scales-table.twig',
+            order: 30,
+        );
 
-        // Header
-        $html .= $this->renderReportHeader($results);
+        if (!empty($additionalScores)) {
+            $sections[] = new ResultSection(
+                type: ResultSection::TYPE_SCALES_TABLE,
+                title: 'Дополнительные шкалы',
+                data: $this->buildAdditionalScalesData($additionalScores),
+                block: 'blocks/scales-table.twig',
+                order: 40,
+            );
+        }
 
-        // Section 1: Validity
-        $html .= $this->renderValiditySection($validity);
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_INTERPRETATION,
+            title: 'Интерпретация',
+            data: $this->buildInterpretationData($profile, $interpretation),
+            block: 'blocks/interpretation.twig',
+            order: 60,
+        );
 
-        // Section 2: T-Scores Table (moved up)
-        $html .= $this->renderTScoresTable($tScores, $correctedScores);
+        $sections[] = new ResultSection(
+            type: ResultSection::TYPE_RECOMMENDATIONS,
+            title: 'Рекомендации',
+            data: $this->buildRecommendationsData($interpretation),
+            block: 'blocks/recommendations.twig',
+            order: 70,
+        );
 
-        // Section 3: Full Calculations Table
-        $html .= $this->renderCalculationsTable($rawScores, $correctedScores);
-
-        // Section 4: Additional Scales (T-scores with visual indicators)
-        $html .= $this->renderAdditionalScalesTable($additionalScores);
-
-        // Section 5: Additional Indices
-        $html .= $this->renderIndicesSection($indices);
-
-        // Section 6: Profile Chart
-        $html .= $this->renderProfileChart($correctedScores);
-
-        // Section 7: Clinical Scales Detailed
-        $html .= $this->renderClinicalScalesDetail($profile);
-
-        // Section 8: Profile Type & Code Type
-        $html .= $this->renderProfileTypeSection($profile, $interpretation);
-
-        // Section 9: Recommendations
-        $html .= $this->renderRecommendationsSection($interpretation);
-
-        $html .= '</div>';
-
-        return $html;
+        usort($sections, fn ($a, $b) => $a->order <=> $b->order);
+        return $sections;
     }
 
-    /**
-     * Render page navigation
-     */
-    protected function renderNavigation(): string
+    private function buildValidityData(array $validity): array
     {
-        $html = '<nav class="results-navigation">';
-        $html .= '<a href="#validity" class="nav-link">✓ Валидность</a>';
-        $html .= '<a href="#t-scores" class="nav-link">📈 T-баллы</a>';
-        $html .= '<a href="#calculations" class="nav-link">📊 Расчёты</a>';
-        $html .= '<a href="#additional-scales" class="nav-link">📊 Доп. шкалы</a>';
-        $html .= '<a href="#profile" class="nav-link">📊 Профиль</a>';
-        $html .= '<a href="#interpretation" class="nav-link">📋 Интерпретация</a>';
-        $html .= '</nav>';
-        return $html;
-    }
-
-    /**
-     * Render report header
-     */
-    protected function renderReportHeader(array $results): string
-    {
-        $genderText = $results['gender'] === 'female' ? 'Женский' : 'Мужской';
-        $answeredCount = $results['answered_count'] ?? 0;
-        $totalQuestions = 566;
-
-        $html = '<div class="report-header">';
-        $html .= '<h2>📋 Отчёт по тестированию СМИЛ (MMPI)</h2>';
-        $html .= '<div class="report-meta">';
-        $html .= '<div class="meta-item"><span class="label">Пол респондента:</span><span class="value">' . $genderText . '</span></div>';
-        $html .= '<div class="meta-item"><span class="label">Отвечено вопросов:</span><span class="value">' . $answeredCount . ' из ' . $totalQuestions . '</span></div>';
-        $html .= '<div class="meta-item"><span class="label">Процент заполнения:</span><span class="value">' . ($results['completion_rate'] ?? 0) . '%</span></div>';
-        $html .= '</div>';
-        $html .= '</div>';
-
-        return $html;
-    }
-
-    /**
-     * Render raw scores table - Collapsible (closed by default)
-     */
-    protected function renderRawScoresTable(array $rawScores): string
-    {
-        $html = '<details class="scores-section raw-scores-accordion" id="raw-scores">';
-        $html .= '<summary class="scores-accordion-header">';
-        $html .= '<span class="category-icon">📊</span>';
-        $html .= '<span class="category-title">Сырые баллы (Raw Scores)</span>';
-        $html .= '<span class="category-count">' . count($rawScores) . ' шкал</span>';
-        $html .= '</summary>';
-        $html .= '<div class="scores-accordion-content">';
-        $html .= '<table class="scores-table raw-scores">';
-        $html .= '<thead><tr><th>Шкала</th><th>Название</th><th>Сырой балл</th><th>Описание</th></tr></thead>';
-        $html .= '<tbody>';
-
-        $scaleInfo = [
-            'L' => ['Шкала лжи', 'Оценка стремления представить себя в лучшем свете'],
-            'F' => ['Шкала достоверности', 'Выявление случайных или тенденциозных ответов'],
-            'K' => ['Коррекционная шкала', 'Учёт защитной установки респондента'],
-            '1' => ['Ипохондрия (Hs)', 'Оценка невротической депрессии, фиксация на здоровье'],
-            '2' => ['Депрессия (D)', 'Оценка эмоционального состояния, подавленности'],
-            '3' => ['Истерия (Hy)', 'Склонность к конверсионным реакциям, демонстративность'],
-            '4' => ['Психопатия (Pd)', 'Социально-поведенческие характеристики, импульсивность'],
-            '5' => ['Маскулинность-фемининность (Mf)', 'Оценка личностных особенностей, интересов'],
-            '6' => ['Паранойя (Pa)', 'Ригидность, подозрительность, чувствительность к критике'],
-            '7' => ['Психастения (Pt)', 'Тревожность, мнительность, навязчивости'],
-            '8' => ['Шизофрения (Sc)', 'Своеобразие мышления и восприятия, аутизация'],
-            '9' => ['Гипомания (Ma)', 'Энергичность, импульсивность, активность'],
-            '0' => ['Интроверсия (Si)', 'Направленность личности, общительность'],
+        return [
+            'is_valid' => $validity['is_valid'] ?? false,
+            'L_score' => $validity['L_score'] ?? 50,
+            'F_score' => $validity['F_score'] ?? 50,
+            'K_score' => $validity['K_score'] ?? 50,
+            'FK_index' => $validity['FK_index'] ?? 0,
+            'unknown_count' => $validity['unknown_count'] ?? 0,
+            'control_score' => $validity['control_score'] ?? 0,
+            'warnings' => $validity['warnings'] ?? [],
         ];
-
-        foreach ($rawScores as $scale => $score) {
-            $name = $scaleInfo[$scale][0] ?? $scale;
-            $desc = $scaleInfo[$scale][1] ?? '';
-            $html .= '<tr>';
-            $html .= '<td><strong>' . $scale . '</strong></td>';
-            $html .= '<td>' . $name . '</td>';
-            $html .= '<td class="score">' . $score . '</td>';
-            $html .= '<td class="description">' . $desc . '</td>';
-            $html .= '</tr>';
-        }
-
-        $html .= '</tbody></table>';
-        $html .= '</div>';
-        $html .= '</details>';
-        return $html;
     }
 
-    /**
-     * Render T-scores table - Compact with visual indicators
-     */
-    protected function renderTScoresTable(array $tScores, array $correctedScores): string
+    private function buildProfileChartData(array $tScores): array
     {
-        $html = '<div class="scores-section" id="t-scores">';
-        $html .= '<h3>📈 Стандартизированные баллы (T-баллы)</h3>';
-        
-        $html .= '<table class="scores-table t-scores-compact">';
-        $html .= '<thead>';
-        $html .= '<tr>';
-        $html .= '<th>Шкала</th>';
-        $html .= '<th>Название</th>';
-        $html .= '<th>T-балл</th>';
-        $html .= '<th>Визуализация</th>';
-        $html .= '</tr>';
-        $html .= '</thead>';
-        $html .= '<tbody>';
-
-        $clinicalScales = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-
-        foreach ($clinicalScales as $scale) {
-            $corrected = $correctedScores[$scale] ?? 50;
-            $level = $this->getScoreLevel($corrected);
-            
-            $html .= '<tr class="level-' . $level . '">';
-            $html .= '<td><strong>' . $scale . '</strong></td>';
-            $html .= '<td>' . self::SCALE_NAMES[$scale] . '</td>';
-            $html .= '<td class="score-value">' . $corrected . 'T</td>';
-            $html .= '<td><div class="mini-visual-scale" data-score="' . $corrected . '"></div></td>';
-            $html .= '</tr>';
+        $scaleOrder = ['L', 'F', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+        $scaleLabels = ['L' => 'L', 'F' => 'F', 'K' => 'K', '1' => '1 Hs', '2' => '2 D', '3' => '3 Hy', '4' => '4 Pd', '5' => '5 Mf', '6' => '6 Pa', '7' => '7 Pt', '8' => '8 Sc', '9' => '9 Ma', '0' => '0 Si'];
+        $scores = [];
+        $labels = [];
+        foreach ($scaleOrder as $s) {
+            $scores[] = $tScores[$s] ?? 50;
+            $labels[] = $scaleLabels[$s] ?? $s;
         }
-
-        $html .= '</tbody></table>';
-        
-        $html .= '<div class="k-correction-note">';
-        $html .= '<p><strong>Примечание:</strong> K-коррекция применяется к клиническим шкалам для учёта защитной позиции респондента.</p>';
-        $html .= '</div>';
-        
-        $html .= '</div>';
-        return $html;
-    }
-
-    /**
-     * Get level name in Russian
-     */
-    protected function getLevelName(string $level): string
-    {
-        $names = [
-            'low' => 'Низкий',
-            'normal' => 'Норма',
-            'elevated' => 'Повышенный',
-            'high' => 'Высокий',
-            'very_high' => 'Очень высокий',
+        return [
+            'scores' => $scores,
+            'labels' => $labels,
+            'chart_id' => 'smilClassicProfile',
         ];
-        return $names[$level] ?? $level;
     }
 
-    /**
-     * Render full calculations table
-     */
-    protected function renderCalculationsTable(array $rawScores, array $correctedScores): string
+    private function buildScalesTableData(array $rawScores, array $tScores, array $correctedScores): array
     {
-        $html = '<details class="scale-accordion" style="margin-bottom: var(--spacing-xl);">';
-        $html .= '<summary class="scale-accordion-header">';
-        $html .= '<span class="category-title">📊 Расчёты (детальная таблица)</span>';
-        $html .= '</summary>';
-        $html .= '<div class="scale-accordion-content">';
-        $html .= '<table class="scores-table calculations-table">';
-        $html .= '<thead>';
-        $html .= '<tr>';
-        $html .= '<th>Код</th>';
-        $html .= '<th>Название</th>';
-        $html .= '<th>Сырой балл</th>';
-        $html .= '<th>Формула</th>';
-        $html .= '<th>Корр.</th>';
-        $html .= '<th>Балл</th>';
-        $html .= '<th>max</th>';
-        $html .= '<th>M</th>';
-        $html .= '<th>SD</th>';
-        $html .= '<th>T-Балл</th>';
-        $html .= '</tr>';
-        $html .= '</thead>';
-        $html .= '<tbody>';
-
-        // Control scales
         $controlScales = [
-            'L' => ['Шкала лжи', 16, 4.20, 2.90],
-            'F' => ['Шкала достоверности', 65, 4.67, 2.78],
-            'K' => ['Шкала коррекции', 30, 12.10, 5.40],
+            'L' => ['name' => 'Шкала лжи', 'max' => 16, 'M' => 4.20, 'SD' => 2.90, 'formula' => '-'],
+            'F' => ['name' => 'Шкала достоверности', 'max' => 65, 'M' => 4.67, 'SD' => 2.78, 'formula' => '-'],
+            'K' => ['name' => 'Коррекционная шкала', 'max' => 30, 'M' => 12.10, 'SD' => 5.40, 'formula' => '-'],
         ];
+
+        $clinicalScales = [
+            '1' => ['name' => 'Ипохондрия (Hs)', 'max' => 48, 'M' => 12.90, 'SD' => 4.83, 'formula' => '+0.5K'],
+            '2' => ['name' => 'Депрессия (D)', 'max' => 60, 'M' => 18.90, 'SD' => 5.00, 'formula' => '-'],
+            '3' => ['name' => 'Истерия (Hy)', 'max' => 59, 'M' => 18.65, 'SD' => 5.38, 'formula' => '+0.3K'],
+            '4' => ['name' => 'Психопатия (Pd)', 'max' => 62, 'M' => 18.68, 'SD' => 4.11, 'formula' => '+0.4K'],
+            '5' => ['name' => 'Маскулинность-фемининность (Mf)', 'max' => 60, 'M' => 36.70, 'SD' => -4.67, 'formula' => '-'],
+            '6' => ['name' => 'Паранойя (Pa)', 'max' => 40, 'M' => 7.90, 'SD' => 3.40, 'formula' => '+0.3K'],
+            '7' => ['name' => 'Психастения (Pt)', 'max' => 77, 'M' => 25.70, 'SD' => 6.10, 'formula' => '+1.0K'],
+            '8' => ['name' => 'Шизофрения (Sc)', 'max' => 108, 'M' => 22.73, 'SD' => 6.36, 'formula' => '+0.2K'],
+            '9' => ['name' => 'Гипомания (Ma)', 'max' => 52, 'M' => 17.00, 'SD' => 4.06, 'formula' => '+0.2K'],
+            '0' => ['name' => 'Интроверсия (Si)', 'max' => 70, 'M' => 25.00, 'SD' => 10.00, 'formula' => '-'],
+        ];
+
+        $scales = [];
+        $K = $rawScores['K'] ?? 0;
 
         foreach ($controlScales as $code => $info) {
             $raw = $rawScores[$code] ?? 0;
-            $html .= '<tr>';
-            $html .= '<td><strong>' . $code . '</strong></td>';
-            $html .= '<td>' . $info[0] . '</td>';
-            $html .= '<td class="score">' . $raw . '</td>';
-            $html .= '<td>-</td>';
-            $html .= '<td>-</td>';
-            $html .= '<td class="score">' . $raw . '</td>';
-            $html .= '<td>' . $info[1] . '</td>';
-            $html .= '<td>' . $info[2] . '</td>';
-            $html .= '<td>' . $info[3] . '</td>';
-            $html .= '<td>' . ($correctedScores[$code] ?? '-') . '</td>';
-            $html .= '</tr>';
-        }
+            $corrected = $correctedScores[$code] ?? $tScores[$code] ?? 50;
+            $level = $this->getScoreLevel($corrected);
 
-        // Clinical scales with formulas
-        $clinicalScales = [
-            '1' => ['1. Ипохондрия (Hs)', 48, 12.90, 4.83, '+0.5K'],
-            '2' => ['2. Депрессия (D)', 60, 18.90, 5.00, '-'],
-            '3' => ['3. Истерия (Hy)', 59, 18.65, 5.38, '+0.3K'],
-            '4' => ['4. Психопатия (Pd)', 62, 18.68, 4.11, '+0.4K'],
-            '5' => ['5. Маскулинность-фемининность (Mf)', 60, 36.70, -4.67, '-'],
-            '6' => ['6. Паранойя (Pa)', 40, 7.90, 3.40, '+0.3K'],
-            '7' => ['7. Психастения (Pt)', 77, 25.70, 6.10, '+1.0K'],
-            '8' => ['8. Шизофрения (Sc)', 108, 22.73, 6.36, '+0.2K'],
-            '9' => ['9. Гипомания (Ma)', 52, 17.00, 4.06, '+0.2K'],
-            '0' => ['0. Интроверсия (Si)', 70, 25.00, 10.00, '-'],
-        ];
+            $scales[] = [
+                'code' => $code,
+                'name' => $info['name'],
+                'raw' => $raw,
+                'formula' => $info['formula'],
+                'correction' => 0,
+                'corrected_raw' => $raw,
+                'max' => $info['max'],
+                'M' => $info['M'],
+                'SD' => $info['SD'],
+                't_score' => $corrected,
+                'level' => $level,
+                'level_name' => $this->getLevelName($level),
+            ];
+        }
 
         foreach ($clinicalScales as $code => $info) {
             $raw = $rawScores[$code] ?? 0;
-            $corrected = $correctedScores[$code] ?? 50;
-            $formula = $info[4];
-            
-            // Calculate correction
-            $correction = 0;
-            $K = $rawScores['K'] ?? 0;
-            if ($formula === '+0.5K') $correction = round($K * 0.5);
-            elseif ($formula === '+0.3K') $correction = round($K * 0.3);
-            elseif ($formula === '+0.4K') $correction = round($K * 0.4);
-            elseif ($formula === '+1.0K') $correction = $K;
-            elseif ($formula === '+0.2K') $correction = round($K * 0.2);
-            
-            $totalScore = $raw + $correction;
+            $corrected = $correctedScores[$code] ?? $tScores[$code] ?? 50;
+            $level = $this->getScoreLevel($corrected);
 
-            $html .= '<tr>';
-            $html .= '<td><strong>' . $code . '</strong></td>';
-            $html .= '<td>' . $info[0] . '</td>';
-            $html .= '<td class="score">' . $raw . '</td>';
-            $html .= '<td class="formula">' . $formula . '</td>';
-            $html .= '<td class="correction">' . ($correction > 0 ? '+' . $correction : '-') . '</td>';
-            $html .= '<td class="score">' . $totalScore . '</td>';
-            $html .= '<td>' . $info[1] . '</td>';
-            $html .= '<td>' . $info[2] . '</td>';
-            $html .= '<td>' . $info[3] . '</td>';
-            $html .= '<td class="t-score">' . $corrected . '</td>';
-            $html .= '</tr>';
+            $formula = $info['formula'];
+            $correction = 0;
+            if ($formula === '+0.5K') {
+                $correction = round($K * 0.5);
+            } elseif ($formula === '+0.3K') {
+                $correction = round($K * 0.3);
+            } elseif ($formula === '+0.4K') {
+                $correction = round($K * 0.4);
+            } elseif ($formula === '+1.0K') {
+                $correction = $K;
+            } elseif ($formula === '+0.2K') {
+                $correction = round($K * 0.2);
+            }
+
+            $scales[] = [
+                'code' => $code,
+                'name' => $info['name'],
+                'raw' => $raw,
+                'formula' => $formula,
+                'correction' => $correction,
+                'corrected_raw' => $raw + $correction,
+                'max' => $info['max'],
+                'M' => $info['M'],
+                'SD' => $info['SD'],
+                't_score' => $corrected,
+                'level' => $level,
+                'level_name' => $this->getLevelName($level),
+            ];
         }
 
-        $html .= '</tbody></table>';
-        $html .= '</div>';
-        $html .= '</details>';
-        return $html;
+        return ['scales' => $scales];
     }
 
-    protected function renderAdditionalScalesTable(array $additionalScores): string
+    private function buildAdditionalScalesData(array $additionalScores): array
     {
         if (empty($additionalScores)) {
-            return '<div class="scores-section additional-scales"><p>Дополнительные шкалы не рассчитаны</p></div>';
+            return ['categories' => []];
         }
-        
+
         $normsData = $this->loadAdditionalScalesNorms();
-        $html = '<div class="scores-section additional-scales" id="additional-scales">';
-        $html .= '<h3>📊 Дополнительные шкалы</h3>';
-        
         $categoryNames = [
             'factor' => 'Факторные шкалы',
             'special' => 'Специальные шкалы',
             'content' => 'Контент-шкалы',
         ];
-        
+
+        $categories = [];
         foreach ($normsData as $category => $scales) {
-            if (empty($scales)) continue;
-            
-            // Filter scales with scores
-            $scalesWithScores = [];
+            if (empty($scales)) {
+                continue;
+            }
+
+            $items = [];
             foreach ($scales as $code => $info) {
-                if (isset($additionalScores[$code])) {
-                    $scalesWithScores[$code] = array_merge($info, $additionalScores[$code]);
+                if (!isset($additionalScores[$code])) {
+                    continue;
                 }
-            }
-            
-            if (empty($scalesWithScores)) continue;
-            
-            $html .= '<details class="scale-accordion" open>';
-            $html .= '<summary class="scale-accordion-header">';
-            $html .= '<span class="category-title">' . ($categoryNames[$category] ?? $category) . '</span>';
-            $html .= '<span class="category-count">' . count($scalesWithScores) . ' шкал</span>';
-            $html .= '</summary>';
-            $html .= '<div class="scale-accordion-content">';
-            $html .= '<table class="scores-table additional-scores-table">';
-            $html .= '<thead>';
-            $html .= '<tr>';
-            $html .= '<th>№</th>';
-            $html .= '<th>Название</th>';
-            $html .= '<th>Индикатор</th>';
-            $html .= '<th>T-балл</th>';
-            $html .= '</tr>';
-            $html .= '</thead>';
-            $html .= '<tbody>';
-            
-            foreach ($scalesWithScores as $code => $info) {
-                $tScore = $info['t'] ?? 50;
+
+                $score = $additionalScores[$code];
+                $tScore = $score['t'] ?? 50;
                 $level = $this->getScoreLevel($tScore);
-                $description = $info['description'] ?? '';
-                $name = $info['name'] ?? $code;
                 $markerPos = $this->calculateMarkerPosition($tScore);
-                
-                $html .= '<tr class="level-' . $level . '">';
-                $html .= '<td><strong>' . $code . '</strong></td>';
-                $html .= '<td>';
-                if (!empty($description)) {
-                    $html .= '<span class="scale-name-tooltip" data-tooltip="' . htmlspecialchars($description, ENT_QUOTES, 'UTF-8') . '">';
-                    $html .= htmlspecialchars($name);
-                    $html .= '</span>';
-                } else {
-                    $html .= htmlspecialchars($name);
-                }
-                $html .= '</td>';
-                $html .= '<td><div class="mini-visual-scale" style="--marker-pos: ' . number_format($markerPos, 2) . '%"></div></td>';
-                $html .= '<td class="score-value">' . $tScore . '</td>';
-                $html .= '</tr>';
+
+                $items[] = [
+                    'code' => $code,
+                    'name' => $info['name'] ?? $code,
+                    'description' => $info['description'] ?? '',
+                    'raw' => $score['raw'] ?? 0,
+                    't_score' => $tScore,
+                    'level' => $level,
+                    'level_name' => $this->getLevelName($level),
+                    'marker_position' => round($markerPos, 2),
+                    'interpretation' => $score['interpretation'] ?? $this->getAdditionalScaleInterpretation($code, $tScore, $category),
+                ];
             }
-            
-            $html .= '</tbody></table>';
-            $html .= '</div>';
-            $html .= '</details>';
+
+            if (!empty($items)) {
+                $categories[] = [
+                    'name' => $categoryNames[$category] ?? $category,
+                    'count' => count($items),
+                    'items' => $items,
+                ];
+            }
         }
-        
-        $html .= '</div>';
-        return $html;
+
+        return ['categories' => $categories];
     }
 
-    /**
-     * Calculate marker position for visual scale (0-100%)
-     */
-    protected function calculateMarkerPosition(float $value): float
+    private function buildInterpretationData(array $profile, array $interpretation): array
     {
-        if ($value <= 29) return 5;
-        if ($value >= 120) return 95;
-        return 15 + (($value - 30) / 90) * 70;
-    }
-
-    /**
-     * Render clinical scales detailed interpretation
-     */
-    protected function renderClinicalScalesDetail(array $profile): string
-    {
-        $html = '<div class="clinical-scales-detail">';
-        $html .= '<h3>📋 Подробная интерпретация клинических шкал</h3>';
+        $profileType = $profile['profile_type'] ?? 'unknown';
+        $codeType = $profile['code_type'] ?? '';
+        $typeInfo = self::PROFILE_TYPES[$profileType] ?? ['name' => 'Не определён', 'description' => 'Требуется профессиональная интерпретация'];
 
         $detailedInterpretations = [
             '1' => [
@@ -1348,255 +1059,41 @@ class SmilModule extends BaseTestModule
             ],
         ];
 
-        $scales = $profile['scales'] ?? [];
-
-        foreach ($scales as $scale => $data) {
+        $scalesData = [];
+        foreach ($profile['scales'] ?? [] as $scale => $data) {
             $level = $data['level'] ?? 'normal';
-            $interpretation = $detailedInterpretations[$scale][$level] ?? '';
-
-            $html .= '<div class="scale-detail-card level-' . $level . '">';
-            $html .= '<div class="scale-header">';
-            $html .= '<span class="scale-number">' . $scale . '</span>';
-            $html .= '<div class="scale-info">';
-            $html .= '<h4>' . $data['name'] . '</h4>';
-            $html .= '<span class="scale-score">T-балл: <strong>' . $data['score'] . '</strong> (' . $this->getLevelName($level) . ')</span>';
-            $html .= '</div>';
-            $html .= '</div>';
-            $html .= '<div class="scale-interpretation">';
-            $html .= '<p>' . $interpretation . '</p>';
-            $html .= '</div>';
-            $html .= '</div>';
+            $scalesData[] = [
+                'code' => $scale,
+                'name' => $data['name'] ?? $scale,
+                'score' => $data['score'] ?? 0,
+                'level' => $level,
+                'level_name' => $this->getLevelName($level),
+                'interpretation' => $data['interpretation'] ?? '',
+                'detail' => $detailedInterpretations[$scale][$level] ?? '',
+            ];
         }
 
-        $html .= '</div>';
-        return $html;
-    }
-
-    /**
-     * Render profile type section
-     */
-    protected function renderProfileTypeSection(array $profile, array $interpretation): string
-    {
-        $html = '<div class="profile-type-section">';
-        $html .= '<h3>🎯 Тип профиля и код</h3>';
-
-        $profileType = $profile['profile_type'] ?? 'unknown';
-        $codeType = $profile['code_type'] ?? '';
-
-        $typeDescriptions = self::PROFILE_TYPES;
-        $typeInfo = $typeDescriptions[$profileType] ?? ['name' => 'Не определён', 'description' => 'Требуется профессиональная интерпретация'];
-
-        $html .= '<div class="profile-type-card">';
-        $html .= '<h4>Тип профиля: ' . $typeInfo['name'] . '</h4>';
-        $html .= '<p>' . $typeInfo['description'] . '</p>';
-        $html .= '</div>';
-
-        $html .= '<div class="code-type-card">';
-        $html .= '<h4>Код профиля: ' . $codeType . '</h4>';
-        $html .= '<p>Код профиля определяется двумя наиболее elevated шкалами. Характеризует ведущие тенденции личности.</p>';
-        $html .= '</div>';
-
-        if (!empty($profile['dominant'])) {
-            $html .= '<div class="dominant-scales">';
-            $html .= '<h4>Наиболее выраженные шкалы:</h4>';
-            $html .= '<ul class="dominant-list">';
-            foreach ($profile['dominant'] as $dominant) {
-                $html .= '<li class="dominant-item">';
-                $html .= '<span class="scale-badge">' . $dominant['name'] . '</span>';
-                $html .= '<span class="score-value">' . $dominant['score'] . ' T-баллов</span>';
-                $html .= '</li>';
-            }
-            $html .= '</ul>';
-            $html .= '</div>';
+        $dominant = [];
+        foreach ($profile['dominant'] ?? [] as $d) {
+            $dominant[] = ['name' => $d['name'], 'score' => $d['score']];
         }
 
-        $html .= '</div>';
-        return $html;
+        return [
+            'profile_type' => $profileType,
+            'profile_type_name' => $typeInfo['name'],
+            'profile_type_description' => $typeInfo['description'],
+            'code_type' => $codeType,
+            'summary' => $interpretation['summary'] ?? '',
+            'scales' => $scalesData,
+            'dominant' => $dominant,
+        ];
     }
 
-    /**
-     * Render recommendations section
-     */
-    protected function renderRecommendationsSection(array $interpretation): string
+    private function buildRecommendationsData(array $interpretation): array
     {
-        $html = '<div class="recommendations-section">';
-        $html .= '<h3>💡 Рекомендации</h3>';
-
-        $recommendations = $interpretation['recommendations'] ?? [];
-
-        if (!empty($recommendations)) {
-            $html .= '<ul class="recommendations-list">';
-            foreach ($recommendations as $rec) {
-                $html .= '<li class="recommendation-item">✓ ' . htmlspecialchars($rec) . '</li>';
-            }
-            $html .= '</ul>';
-        }
-
-        $html .= '</div>';
-        return $html;
-    }
-
-    /**
-     * Render validity indicators section
-     */
-    protected function renderValiditySection(array $validity): string
-    {
-        $statusClass = $validity['is_valid'] ? 'valid' : 'invalid';
-        $statusText = $validity['is_valid'] ? '✓ Достоверно' : '⚠️ Недост��верно';
-
-        $html = '<div class="validity-section status-' . $statusClass . '">';
-        $html .= '<h3>Оц��нка достоверн��сти</h3>';
-        $html .= '<div class="validity-indicators">';
-        $html .= '<div class="indicator"><span class="label">L (Ложь):</span><span class="value">' . $validity['L_score'] . '</span></div>';
-        $html .= '<div class="indicator"><span class="label">F (Достоверность):</span><span class="value">' . $validity['F_score'] . '</span></div>';
-        $html .= '<div class="indicator"><span class="label">K (Коррекция):</span><span class="value">' . $validity['K_score'] . '</span></div>';
-        $html .= '<div class="indicator"><span class="label">F-K индекс:</span><span class="value">' . $validity['FK_index'] . '</span></div>';
-        $html .= '</div>';
-        $html .= '<div class="validity-status">' . $statusText . '</div>';
-
-        if (!empty($validity['warnings'])) {
-            $html .= '<div class="validity-warnings"><ul>';
-            foreach ($validity['warnings'] as $warning) {
-                $html .= '<li>' . htmlspecialchars($warning) . '</li>';
-            }
-            $html .= '</ul></div>';
-        }
-
-        $html .= '</div>';
-
-        return $html;
-    }
-
-    /**
-     * Render additional indices section
-     */
-    protected function renderIndicesSection(array $indices): string
-    {
-        $html = '<div class="indices-section">';
-        $html .= '<h3>Дополнительные индексы</h3>';
-        $html .= '<div class="indices-grid">';
-        $html .= '<div class="index-item"><span class="index-label">Индекс тревоги:</span><span class="index-value">' . ($indices['anxiety_index'] ?? '-') . '</span></div>';
-        $html .= '<div class="index-item"><span class="index-label">Индекс депрессии:</span><span class="index-value">' . ($indices['depression_index'] ?? '-') . '</span></div>';
-        $html .= '<div class="index-item"><span class="index-label">F/K отношение:</span><span class="index-value">' . ($indices['FK_ratio'] ?? '-') . '</span></div>';
-        $html .= '</div>';
-        $html .= '</div>';
-
-        return $html;
-    }
-
-    /**
-     * Render profile chart (Chart.js compatible)
-     */
-    protected function renderProfileChart(array $tScores): string
-    {
-        $clinicalScales = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-        $scaleNames = ['1' => 'Hs', '2' => 'D', '3' => 'Hy', '4' => 'Pd', '5' => 'Mf',
-                      '6' => 'Pa', '7' => 'Pt', '8' => 'Sc', '9' => 'Ma', '0' => 'Si'];
-
-        $data = [];
-        foreach ($clinicalScales as $scale) {
-            $data[] = $tScores[$scale] ?? 50;
-        }
-
-        $dataJson = json_encode($data);
-        $labelsJson = json_encode(array_values($scaleNames));
-
-        $html = '<div class="profile-chart-container">';
-        $html .= '<h3>📊 Профиль личности</h3>';
-        $html .= '<div class="chart-wrapper">';
-        $html .= '<canvas id="smilProfileChart" data-scores=\'' . $dataJson . '\' data-labels=\'' . $labelsJson . '\'></canvas>';
-        $html .= '</div>';
-        $html .= '<div class="chart-legend">';
-        $html .= '<div class="legend-item"><span class="legend-color low"></span> Низкий (0-44T)</div>';
-        $html .= '<div class="legend-item"><span class="legend-color normal"></span> Норма (45-54T)</div>';
-        $html .= '<div class="legend-item"><span class="legend-color elevated"></span> Повышенный (55-64T)</div>';
-        $html .= '<div class="legend-item"><span class="legend-color high"></span> Высокий (65-74T)</div>';
-        $html .= '<div class="legend-item"><span class="legend-color very-high"></span> Очень высокий (75T+)</div>';
-        $html .= '</div>';
-        $html .= '</div>';
-
-        return $html;
-    }
-
-    /**
-     * Render scores table
-     */
-    protected function renderScoresTable(array $profile): string
-    {
-        $scales = $profile['scales'] ?? [];
-
-        $html = '<table class="scores-table"><thead><tr>';
-        $html .= '<th>Шкала</th><th>T-балл</th><th>Уровень</th><th>Интерпретация</th>';
-        $html .= '</tr></thead><tbody>';
-
-        foreach ($scales as $scale => $data) {
-            $levelClass = $data['level'];
-            $levelText = [
-                'low' => 'Низкий',
-                'normal' => 'Норма',
-                'elevated' => 'Повышенный',
-                'high' => 'Высокий',
-                'very_high' => 'Очень высокий',
-            ][$data['level']] ?? $data['level'];
-
-            $html .= '<tr class="level-' . $levelClass . '">';
-            $html .= '<td><strong>' . $data['name'] . '</strong></td>';
-            $html .= '<td class="score">' . $data['score'] . '</td>';
-            $html .= '<td>' . $levelText . '</td>';
-            $html .= '<td>' . htmlspecialchars($data['interpretation']) . '</td>';
-            $html .= '</tr>';
-        }
-
-        $html .= '</tbody></table>';
-
-        return $html;
-    }
-
-    /**
-     * Render interpretation section
-     */
-    protected function renderInterpretationSection(array $profile): string
-    {
-        $profileType = $profile['profile_type'] ?? 'unknown';
-        $codeType = $profile['code_type'] ?? '';
-
-        $typeNames = self::PROFILE_TYPES;
-
-        $html = '<div class="interpretation-section">';
-        $html .= '<h3>Интерпретация</h3>';
-        $html .= '<p><strong>Тип профиля:</strong> ' . ($typeNames[$profileType]['name'] ?? $profileType) . '</p>';
-        $html .= '<p><strong>Код профиля:</strong> ' . $codeType . '</p>';
-
-        if (!empty($profile['dominant'])) {
-            $html .= '<h4>Наиболее выраженные шкалы:</h4><ul>';
-            foreach ($profile['dominant'] as $dominant) {
-                $html .= '<li><strong>' . $dominant['name'] . '</strong>: ' . $dominant['score'] . ' T-баллов</li>';
-            }
-            $html .= '</ul>';
-        }
-
-        $html .= '</div>';
-
-        return $html;
-    }
-
-    /**
-     * Render invalid results message
-     */
-    protected function renderInvalidResults(array $validity): string
-    {
-        $warnings = implode('<br>', $validity['warnings'] ?? []);
-
-        $html = '<div class="smil-results smil-invalid">';
-        $html .= '<div class="alert alert-warning">';
-        $html .= '<h3>⚠️ Результаты недостоверны</h3>';
-        $html .= '<p>К сожалению, результаты тестирования не могут быть считаны достоверными по следующим причинам:</p>';
-        $html .= '<p><strong>' . $warnings . '</strong></p>';
-        $html .= '<p>Рекомендуется пройти тестирование повторно, отвечая более внимательно и искренне.</p>';
-        $html .= '</div>';
-        $html .= '</div>';
-
-        return $html;
+        return [
+            'items' => $interpretation['recommendations'] ?? [],
+        ];
     }
 
     /**

@@ -1,7 +1,8 @@
 <?php
+
 /**
  * PDF Generator
- * 
+ *
  * Generates PDF reports from test results using DomPDF
  */
 
@@ -16,29 +17,29 @@ class PDFGenerator
 {
     private Dompdf $dompdf;
     private string $storagePath;
-    
+
     public function __construct(?string $storagePath = null)
     {
         $this->storagePath = $storagePath ?? __DIR__ . '/../storage/pdfs';
-        
+
         // Ensure storage directory exists
         if (!is_dir($this->storagePath)) {
             mkdir($this->storagePath, 0755, true);
         }
-        
+
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', false);
         $options->set('defaultFont', 'DejaVu Sans');
         $options->set('defaultPaperSize', 'a4');
         $options->set('defaultPaperOrientation', 'portrait');
-        
+
         $this->dompdf = new Dompdf($options);
     }
-    
+
     /**
      * Generate PDF from HTML content
-     * 
+     *
      * @param string $html HTML content
      * @param string $filename Output filename (without path)
      * @param bool $saveToFile Save to storage and return path
@@ -48,21 +49,21 @@ class PDFGenerator
     {
         // Add base styles
         $fullHtml = $this->wrapInHtml($html);
-        
+
         $this->dompdf->loadHtml($fullHtml);
         $this->dompdf->setPaper('a4', 'portrait');
         $this->dompdf->render();
-        
+
         if ($saveToFile) {
             return $this->saveToFile($this->dompdf->output(), $filename);
         }
-        
+
         return $this->dompdf->output();
     }
-    
+
     /**
      * Generate test result PDF
-     * 
+     *
      * @param array $session Session data
      * @param array $test Test metadata
      * @param string $resultsHtml Rendered results HTML
@@ -74,15 +75,15 @@ class PDFGenerator
         string $resultsHtml
     ): string {
         $filename = "result_{$session['id']}.pdf";
-        
+
         $html = $this->renderTestResultTemplate($session, $test, $resultsHtml);
-        
+
         return $this->generate($html, $filename, true);
     }
-    
+
     /**
      * Generate AI interpretation PDF
-     * 
+     *
      * @param array $session Session data
      * @param array $test Test metadata
      * @param string $interpretationText AI interpretation text
@@ -94,15 +95,15 @@ class PDFGenerator
         string $interpretationText
     ): string {
         $filename = "interpretation_{$session['id']}.pdf";
-        
+
         $html = $this->renderInterpretationTemplate($session, $test, $interpretationText);
-        
+
         return $this->generate($html, $filename, true);
     }
-    
+
     /**
      * Generate pair comparison PDF
-     * 
+     *
      * @param array $comparison Comparison data
      * @param array $test Test metadata
      * @param string $comparisonHtml Rendered comparison HTML
@@ -114,27 +115,27 @@ class PDFGenerator
         string $comparisonHtml
     ): string {
         $filename = "pair_{$comparison['id']}.pdf";
-        
+
         $html = $this->renderPairTemplate($comparison, $test, $comparisonHtml);
-        
+
         return $this->generate($html, $filename, true);
     }
-    
+
     /**
      * Save PDF content to file
      */
     private function saveToFile(string $content, string $filename): string
     {
         $filepath = $this->storagePath . '/' . $filename;
-        
+
         if (file_put_contents($filepath, $content) === false) {
             throw new \RuntimeException("Failed to save PDF: $filepath");
         }
-        
+
         // Return relative path for storage in database
         return '/storage/pdfs/' . $filename;
     }
-    
+
     /**
      * Wrap content in HTML template
      */
@@ -236,7 +237,7 @@ class PDFGenerator
 </html>
 HTML;
     }
-    
+
     /**
      * Render test result template
      */
@@ -246,7 +247,7 @@ HTML;
         string $resultsHtml
     ): string {
         $date = date('d.m.Y H:i', strtotime($session['created_at']));
-        
+
         $content = <<<HTML
 <div class="header">
     <h1>{$test['name']}</h1>
@@ -269,10 +270,10 @@ HTML;
     <p>Конфиденциально. Документ сгенерирован автоматически.</p>
 </div>
 HTML;
-        
+
         return $this->wrapInHtml($content, $test['name'] . ' - Результаты');
     }
-    
+
     /**
      * Render AI interpretation template
      */
@@ -282,7 +283,7 @@ HTML;
         string $interpretationText
     ): string {
         $date = date('d.m.Y H:i', strtotime($session['created_at']));
-        
+
         $content = <<<HTML
 <div class="header">
     <h1>Развёрнутая интерпретация</h1>
@@ -305,10 +306,10 @@ HTML;
     <p>Для получения квалифицированной интерпретации и рекомендаций обратитесь к специалисту.</p>
 </div>
 HTML;
-        
+
         return $this->wrapInHtml($content, 'Интерпретация результатов');
     }
-    
+
     /**
      * Render pair comparison template
      */
@@ -318,7 +319,7 @@ HTML;
         string $comparisonHtml
     ): string {
         $date = date('d.m.Y H:i', strtotime($comparison['generated_at']));
-        
+
         $content = <<<HTML
 <div class="header">
     <h1>Сравнительный анализ</h1>
@@ -338,30 +339,30 @@ HTML;
     <p>Результаты сравнения носят ознакомительный характер.</p>
 </div>
 HTML;
-        
+
         return $this->wrapInHtml($content, 'Сравнение результатов');
     }
-    
+
     /**
      * Render user info section
      */
     private function renderUserInfo(array $session): string
     {
         $parts = [];
-        
+
         if (!empty($session['user_email'])) {
             $parts[] = "<strong>Email:</strong> " . htmlspecialchars($session['user_email']);
         }
-        
+
         if (!empty($session['user_name'])) {
             $parts[] = "<strong>Имя:</strong> " . htmlspecialchars($session['user_name']);
         }
-        
+
         if (!empty($session['demographics'])) {
-            $demo = is_string($session['demographics']) 
-                ? json_decode($session['demographics'], true) 
+            $demo = is_string($session['demographics'])
+                ? json_decode($session['demographics'], true)
                 : $session['demographics'];
-            
+
             if (!empty($demo['age'])) {
                 $parts[] = "<strong>Возраст:</strong> " . (int)$demo['age'];
             }
@@ -369,14 +370,14 @@ HTML;
                 $parts[] = "<strong>Пол:</strong> " . htmlspecialchars($demo['gender']);
             }
         }
-        
+
         if (empty($parts)) {
             return '';
         }
-        
+
         return '<p>' . implode(' | ', $parts) . '</p>';
     }
-    
+
     /**
      * Get storage path
      */

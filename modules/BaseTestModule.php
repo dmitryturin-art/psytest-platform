@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Base Abstract Test Module
- * 
+ *
  * Provides common functionality for all test modules
  */
 
@@ -14,16 +15,17 @@ abstract class BaseTestModule implements TestModuleInterface
     protected string $modulePath;
     protected array $metadata;
     protected ?array $questions = null;
-    
+    private static array $questionsCache = []; // Статический кэш
+
     public function __construct()
     {
         // Auto-detect module path
         $reflector = new \ReflectionClass($this);
         $this->modulePath = dirname($reflector->getFileName());
-        
+
         $this->initialize();
     }
-    
+
     /**
      * Initialize module (override in child classes)
      */
@@ -35,7 +37,7 @@ abstract class BaseTestModule implements TestModuleInterface
             $this->metadata = json_decode(file_get_contents($metadataFile), true) ?? [];
         }
     }
-    
+
     /**
      * Get module path
      */
@@ -43,7 +45,7 @@ abstract class BaseTestModule implements TestModuleInterface
     {
         return $this->modulePath;
     }
-    
+
     /**
      * Load questions from JSON file
      */
@@ -51,21 +53,37 @@ abstract class BaseTestModule implements TestModuleInterface
     {
         $filepath = $this->modulePath . '/' . $filename;
 
+        // Проверка статического кэша
+        if (isset(self::$questionsCache[$filepath])) {
+            return self::$questionsCache[$filepath];
+        }
+
         if (!file_exists($filepath)) {
             return [];
         }
 
         $content = file_get_contents($filepath);
-        $data = json_decode($content, true) ?? [];
-        
-        // Handle both formats: array of questions or object with "questions" key
-        if (isset($data['questions']) && is_array($data['questions'])) {
-            return $data['questions'];
+        if ($content === false) {
+            throw new \RuntimeException("Failed to read file: {$filepath}");
         }
-        
-        return is_array($data) ? $data : [];
+
+        $data = json_decode($content, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException(
+                "Failed to parse JSON in {$filepath}: " . json_last_error_msg()
+            );
+        }
+
+        // Handle both formats: array of questions or object with "questions" key
+        $questions = $data['questions'] ?? $data ?? [];
+
+        // Сохранение в статический кэш
+        self::$questionsCache[$filepath] = $questions;
+
+        return $questions;
     }
-    
+
     /**
      * Get metadata (override if not using JSON)
      */
@@ -80,7 +98,7 @@ abstract class BaseTestModule implements TestModuleInterface
             'scales' => [],
         ], $this->metadata);
     }
-    
+
     /**
      * Get questions (override in child classes)
      */
@@ -89,25 +107,29 @@ abstract class BaseTestModule implements TestModuleInterface
         if ($this->questions === null) {
             $this->questions = $this->loadQuestionsFromJson();
         }
-        
+
         return $this->questions;
     }
-    
+
     /**
      * Calculate results (must be implemented)
      */
     abstract public function calculateResults(array $answers): array;
-    
+
     /**
      * Generate interpretation (must be implemented)
      */
     abstract public function generateInterpretation(array $scores): array;
-    
+
     /**
-     * Render results (must be implemented)
+     * Default: return empty sections array.
+     * Override in each test module to provide its result structure.
      */
-    abstract public function renderResults(array $results): string;
-    
+    public function buildSections(array $results): array
+    {
+        return [];
+    }
+
     /**
      * Supports pair mode (override if supported)
      */
@@ -115,7 +137,7 @@ abstract class BaseTestModule implements TestModuleInterface
     {
         return false;
     }
-    
+
     /**
      * Compare pair results (override if pair mode supported)
      */
@@ -127,7 +149,7 @@ abstract class BaseTestModule implements TestModuleInterface
             'differences' => [],
         ];
     }
-    
+
     /**
      * Get slug from class name
      */
@@ -136,10 +158,10 @@ abstract class BaseTestModule implements TestModuleInterface
         $className = (new \ReflectionClass($this))->getShortName();
         return strtolower(str_replace('Module', '', $className));
     }
-    
+
     /**
      * Calculate T-scores (standardized scores)
-     * 
+     *
      * @param float $rawScore Raw score
      * @param float $mean Population mean
      * @param float $stdDev Population standard deviation
@@ -150,13 +172,13 @@ abstract class BaseTestModule implements TestModuleInterface
         if ($stdDev == 0) {
             return 50.0;
         }
-        
+
         $zScore = ($rawScore - $mean) / $stdDev;
         $tScore = 50 + ($zScore * 10);
-        
+
         return round($tScore, 1);
     }
-    
+
     /**
      * Normalize score to a range
      */
@@ -165,10 +187,10 @@ abstract class BaseTestModule implements TestModuleInterface
         if ($max == $min) {
             return 0;
         }
-        
+
         return ($score - $min) / ($max - $min);
     }
-    
+
     /**
      * Get interpretation level based on score
      */
@@ -179,10 +201,10 @@ abstract class BaseTestModule implements TestModuleInterface
                 return $threshold['level'];
             }
         }
-        
+
         return 'normal';
     }
-    
+
     /**
      * Sanitize answer value
      */
@@ -191,10 +213,10 @@ abstract class BaseTestModule implements TestModuleInterface
         if (is_string($answer)) {
             return trim($answer);
         }
-        
+
         return $answer;
     }
-    
+
     /**
      * Validate answers structure
      */
@@ -246,5 +268,13 @@ abstract class BaseTestModule implements TestModuleInterface
             'min_age' => 14,
             'max_age' => 100,
         ];
+    }
+
+    /**
+     * Очистить кэш вопросов (для тестов)
+     */
+    public static function clearQuestionsCache(): void
+    {
+        self::$questionsCache = [];
     }
 }

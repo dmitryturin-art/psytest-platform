@@ -1,0 +1,55 @@
+{
+  "description": "HADS reference result — moderate anxiety, borderline depression (typical clinical outpatient profile)",
+  "source": "Constructed from Zigmond & Snaith (1983) scoring framework and published case study patterns",
+  "demographics": {
+    "gender": "female",
+    "age": 45
+  },
+  "answers": {
+    "1": 2,
+    "2": 1,
+    "3": 3,
+    "4": 1,
+    "5": 2,
+    "6": 2,
+    "7": 2,
+    "8": 1,
+    "9": 2,
+    "10": 1,
+    "11": 2,
+    "12": 1,
+    "13": 1,
+    "14": 1
+  },
+  "subscale_scores": {
+    "anxiety": {
+      "code": "HADS-A",
+      "items": [1, 3, 5, 7, 9, 11, 13],
+      "item_values": {"1": 2, "3": 3, "5": 2, "7": 2, "9": 2, "11": 2, "13": 1},
+      "raw_score": 14,
+      "severity": "moderate_to_severe",
+      "severity_ranges": {
+        "normal": {"min": 0, "max": 7},
+        "subclinical": {"min": 8, "max": 10},
+        "clinical": {"min": 11, "max": 21}
+      }
+    },
+    "depression": {
+      "code": "HADS-D",
+      "items": [2, 4, 6, 8, 10, 12, 14],
+      "item_values": {"2": 1, "4": 1, "6": 2, "8": 1, "10": 1, "12": 1, "14": 1},
+      "raw_score": 8,
+      "severity": "subclinical",
+      "severity_ranges": {
+        "normal": {"min": 0, "max": 7},
+        "subclinical": {"min": 8, "max": 10},
+        "clinical": {"min": 11, "max": 21}
+      }
+    }
+  },
+  "total_score": 22,
+  "validity": {
+    "all_items_answered": true,
+    "scorable": true
+  }
+}

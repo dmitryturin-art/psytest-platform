@@ -1,0 +1,46 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "🧠 PsyTest" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: 🧠
+        - generic [ref=e7]: PsyTest
+      - navigation [ref=e8]:
+        - link "Все тесты" [ref=e9] [cursor=pointer]:
+          - /url: /tests
+  - main [ref=e10]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - heading "Психологические тесты" [level=1] [ref=e14]
+        - paragraph [ref=e15]: Выберите тест для прохождения. Все тесты анонимны, результаты сохраняются по уникальной ссылке.
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "СМИЛ (адаптация MMPI, Ф. Собчик)" [level=2] [ref=e19]
+          - generic [ref=e20]:
+            - paragraph [ref=e21]: Стандартизированный многофакторный метод исследования личности. Адаптация Ф.Б. Собчик. Опросник содержит 566 вопросов, направленных на оценку различны...
+            - generic [ref=e22]:
+              - generic [ref=e23]: 📝 566 вопросов
+              - generic [ref=e24]: ⏱️ ~45 мин
+            - generic [ref=e25]: "Шкалы: Шкала лжи, Шкала достоверности, Коррекционная шкала, Ипохондрия (Hs), Депрессия (D), Истерия (Hy), Психопатия (Pd), Маскулинность-фемининность (Mf), Паранойя (Pa), Психастения (Pt), Шизофрения (Sc), Гипомания (Ma), Интроверсия (Si)"
+          - link "Пройти тест" [ref=e27] [cursor=pointer]:
+            - /url: /test/smil
+        - generic [ref=e28]:
+          - heading "Шкала тревоги Бека (BAI)" [level=2] [ref=e30]
+          - generic [ref=e31]:
+            - paragraph [ref=e32]: Шкала тревоги Бека (Beck Anxiety Inventory) — опросник для оценки выраженности тревоги у взрослых и подростков. Состоит из 21 вопроса, описывающих раз...
+            - generic [ref=e33]:
+              - generic [ref=e34]: 📝 21 вопросов
+              - generic [ref=e35]: ⏱️ ~5 мин
+            - generic [ref=e36]: "Шкалы: Общий балл тревоги"
+          - link "Пройти тест" [ref=e38] [cursor=pointer]:
+            - /url: /test/beck-anxiety
+  - contentinfo [ref=e39]:
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - paragraph [ref=e43]: © 2026 PsyTest. Все права защищены.
+        - paragraph [ref=e44]: Результаты тестирования носят ознакомительный характер и не заменяют очную консультацию специалиста.
+      - generic [ref=e45]:
+        - link "Конфиденциальность" [ref=e46] [cursor=pointer]:
+          - /url: /privacy
+        - link "Условия использования" [ref=e47] [cursor=pointer]:
+          - /url: /terms

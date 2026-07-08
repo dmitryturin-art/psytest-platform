@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Email Service
- * 
+ *
  * Handles email sending for notifications and reports
  */
 
@@ -16,16 +17,16 @@ class EmailService
     private Database $db;
     private array $mailConfig;
     private string $fromEmail;
-    
+
     public function __construct()
     {
         $this->db = Database::getInstance();
-        
+
         $configLoader = require __DIR__ . '/../config.php';
         $this->mailConfig = $configLoader->mailConfig();
         $this->fromEmail = $configLoader->mailFrom();
     }
-    
+
     /**
      * Send interpretation ready notification
      */
@@ -34,18 +35,18 @@ class EmailService
         if (empty($session['user_email'])) {
             return false;
         }
-        
+
         $to = $session['user_email'];
         $subject = 'Ваша AI-интерпретация готова';
-        
+
         $body = $this->renderEmailTemplate('interpretation_ready', [
             'session' => $session,
             'interpretation' => $interpretation,
         ]);
-        
+
         return $this->send($to, $subject, $body);
     }
-    
+
     /**
      * Send pair comparison invitation
      */
@@ -53,15 +54,15 @@ class EmailService
     {
         $to = $partnerEmail;
         $subject = 'Вас приглашают пройти парное тестирование';
-        
+
         $body = $this->renderEmailTemplate('pair_invitation', [
             'session' => $session,
             'pair_url' => $pairUrl,
         ]);
-        
+
         return $this->send($to, $subject, $body);
     }
-    
+
     /**
      * Generic email sender
      */
@@ -74,15 +75,15 @@ class EmailService
             'MIME-Version: 1.0',
             'Content-Type: text/html; charset=UTF-8',
         ];
-        
+
         // If SMTP is configured, use PHPMailer or similar
         if (!empty($this->mailConfig['host'])) {
             return $this->sendSmtp($to, $subject, $body);
         }
-        
+
         return mail($to, $subject, $body, implode("\r\n", $headers));
     }
-    
+
     /**
      * Send via SMTP (using PHPMailer if available)
      */
@@ -92,7 +93,7 @@ class EmailService
         // For now, fall back to mail()
         return $this->send($to, $subject, $body);
     }
-    
+
     /**
      * Render email template
      */
@@ -102,17 +103,17 @@ class EmailService
             'interpretation_ready' => $this->getInterpretationReadyTemplate($data),
             'pair_invitation' => $this->getPairInvitationTemplate($data),
         ];
-        
+
         return $templates[$template] ?? '';
     }
-    
+
     /**
      * Interpretation ready email template
      */
     private function getInterpretationReadyTemplate(array $data): string
     {
         $session = $data['session'];
-        
+
         return <<<HTML
 <!DOCTYPE html>
 <html>
@@ -155,7 +156,7 @@ class EmailService
 </html>
 HTML;
     }
-    
+
     /**
      * Pair invitation email template
      */

@@ -33,7 +33,7 @@
                 
                 {% if test.scales %}
                 <div class="test-card-scales">
-                    <small>Шкалы: {{ test.scales|join(', ') }}</small>
+                    <small>Шкалы: {% for scale in test.scales %}{{ scale.name }}{% if not loop.last %}, {% endif %}{% endfor %}</small>
                 </div>
                 {% endif %}
             </div>

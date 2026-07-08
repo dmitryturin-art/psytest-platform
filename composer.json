@@ -10,6 +10,12 @@
     "ramsey/uuid": "^4.7",
     "monolog/monolog": "^3.0"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5",
+    "phpstan/phpstan": "^1.11",
+    "friendsofphp/php-cs-fixer": "^3.54",
+    "robmorgan/phinx": "^0.16"
+  },
   "autoload": {
     "psr-4": {
       "PsyTest\\Core\\": "core/",
@@ -17,7 +23,14 @@
       "PsyTest\\Modules\\": "modules/",
       "PsyTest\\Controllers\\": "controllers/",
       "PsyTest\\Modules\\Smil\\": "modules/smil/",
-      "PsyTest\\Modules\\BeckAnxiety\\": "modules/beck-anxiety/"
+      "PsyTest\\Modules\\BeckAnxiety\\": "modules/beck-anxiety/",
+      "PsyTest\\Modules\\BeckDepression\\": "modules/beck-depression/",
+      "PsyTest\\Modules\\Hads\\": "modules/hads/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PsyTest\\Tests\\": "tests/"
     }
   },
   "config": {
@@ -25,6 +38,12 @@
     "sort-packages": true
   },
   "scripts": {
+    "test": "phpunit",
+    "analyse": "phpstan analyse core controllers services modules --level=6 --memory-limit=512M",
+    "lint": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+    "lint:fix": "php-cs-fixer fix --allow-risky=yes",
+    "migrate": "phinx migrate",
+    "migrate:create": "phinx create",
     "post-install-cmd": [
       "chmod +x bin/cleanup-sessions.php 2>/dev/null || true"
     ]

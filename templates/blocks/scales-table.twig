@@ -1,0 +1,48 @@
+<table class="scores-table {{ class|default('') }}">
+    <thead>
+        <tr>
+            <th>Шкала</th>
+            <th>Название</th>
+            <th>Сырой балл</th>
+            <th>T-балл</th>
+            <th>Уровень</th>
+            {% if show_viz|default(false) %}<th>Визуализация</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% if categories is defined and categories|length > 0 %}
+            {# Additional scales with categories #}
+            {% for category in categories %}
+                <tr class="category-header">
+                    <td colspan="{{ show_viz|default(false) ? '6' : '5' }}"><strong>{{ category.name }}</strong></td>
+                </tr>
+                {% for item in category.items %}
+                <tr class="level--{{ item.level }}">
+                    <td><strong>{{ item.code }}</strong></td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.raw|default('—') }}</td>
+                    <td>{{ item.t_score }}</td>
+                    <td>{{ item.level_name|default('—') }}</td>
+                    {% if show_viz|default(false) %}
+                        <td class="viz-cell">
+                            <div class="scale-indicator" style="--marker-pos: {{ item.marker_position|default(50) }}%"></div>
+                        </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            {% endfor %}
+        {% else %}
+            {# Basic scales without categories #}
+            {% for s in scales|default([]) %}
+            <tr class="level--{{ s.level }}">
+                <td><strong>{{ s.code }}</strong></td>
+                <td>{{ s.name }}</td>
+                <td>{{ s.raw }}</td>
+                <td>{{ s.t_score }}</td>
+                <td>{{ s.level_name|default(s.level_label|default('—')) }}</td>
+                {% if show_viz|default(false) %}<td class="viz-cell"><div class="scale-bar" style="width: {{ s.t_score }}%"></div></td>{% endif %}
+            </tr>
+            {% endfor %}
+        {% endif %}
+    </tbody>
+</table>

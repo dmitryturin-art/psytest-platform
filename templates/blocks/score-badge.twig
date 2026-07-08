@@ -1,0 +1,33 @@
+<div class="score-badge score-badge--{{ level }}">
+    <div class="score-badge__header">
+        <div class="score-badge__number">{{ score }}<span class="score-badge__divider">/</span>{{ max }}</div>
+        <div class="score-badge__level">{{ level_label }}</div>
+    </div>
+
+    {% if thresholds is defined %}
+    {% set pct = (score / max * 100)|round(1) %}
+    <div class="score-badge__scale">
+        {% for name, range in thresholds %}
+            <div class="score-badge__zone score-badge__zone--{{ name }}"
+                 style="flex-grow: {{ range.max - range.min + 1 }};{% if loop.first %} border-radius: 7px 0 0 7px;{% endif %}{% if loop.last %} border-right: none; border-radius: 0 7px 7px 0;{% endif %}"
+                 title="{{ name }}: {{ range.min }}–{{ range.max }}">
+            </div>
+        {% endfor %}
+        <div class="score-badge__marker" style="left: {{ pct }}%;"></div>
+    </div>
+    <div class="score-badge__scale-labels">
+        {% for name, range in thresholds %}
+            {% if loop.first %}
+            <span class="score-badge__scale-label">{{ range.min }}</span>
+            {% endif %}
+            {% if loop.last %}
+            <span class="score-badge__scale-label" style="margin-left: auto;">{{ range.max }}</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if description %}
+    <p class="score-badge__description">{{ description }}</p>
+    {% endif %}
+</div>

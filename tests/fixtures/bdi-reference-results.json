@@ -1,0 +1,53 @@
+{
+  "description": "BDI-II reference result based on Pearson BDI-II Sample Interpretive Report (John Sample, 18M, 2016)",
+  "source": "Pearson BDI-II Sample Interpretive Report, QG 1.1, assessed 2016-10-10",
+  "demographics": {
+    "gender": "male",
+    "age": 18,
+    "marital_status": "single",
+    "education": "high_school",
+    "occupation": "student"
+  },
+  "answers": {
+    "1": 1,
+    "2": 2,
+    "3": 1,
+    "4": 1,
+    "5": 2,
+    "6": 1,
+    "7": 0,
+    "8": 1,
+    "9": 2,
+    "10": 1,
+    "11": 1,
+    "12": 1,
+    "13": 1,
+    "14": 2,
+    "15": 1,
+    "16": 1,
+    "17": 1,
+    "18": 2,
+    "19": 1,
+    "20": 2,
+    "21": 1
+  },
+  "raw_score": 26,
+  "t_score": 78,
+  "percentile": 97.4,
+  "severity": "moderate",
+  "severity_ranges": {
+    "minimal": {"min": 0, "max": 13},
+    "mild": {"min": 14, "max": 19},
+    "moderate": {"min": 20, "max": 28},
+    "severe": {"min": 29, "max": 63}
+  },
+  "clinical_flags": [
+    "suicidal_ideation_item_9_score_above_0",
+    "imminent_suicide_risk"
+  ],
+  "item_severity_distribution": {
+    "minimal": [7],
+    "mild": [1, 3, 4, 6, 8, 10, 11, 12, 13, 15, 16, 17, 19, 21],
+    "moderate": [2, 5, 9, 14, 18, 20]
+  }
+}

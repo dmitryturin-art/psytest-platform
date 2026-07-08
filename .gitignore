@@ -11,6 +11,7 @@ composer.lock
 
 # Storage (keep structure, ignore contents)
 /storage/*.pdf
+/storage/pdfs/*.pdf
 /storage/*.log
 /storage/cache/*
 !storage/.gitkeep
@@ -21,6 +22,9 @@ composer.lock
 *.swp
 *.swo
 *~
+
+# Reference materials (Sobchik PDFs, psytests.org samples)
+/source/
 
 # OS
 .DS_Store
@@ -34,15 +38,38 @@ logs/
 tmp/
 temp/
 .cache/
+.phpstan/
+.php-cs-fixer.cache
+
+# PHPUnit
+.phpunit.cache/
 
 # Uploads (keep structure)
 /public/uploads/*
 !public/uploads/.gitkeep
 
-# Database backups
+# Database backups (keep schema, ignore dumps)
 *.sql
+!database/schema.sql
 database/backups/
 
 # Node (if using build tools)
 node_modules/
 package-lock.json
+
+# Kilo local install (Superpowers skills, plugins, etc.)
+.kilo/
+.superpowers/
+
+# Playwright MCP snapshots (debug artifacts)
+/.playwright-mcp/
+
+# Claude / ZCode local config
+/.claude/
+
+# Ad-hoc debug screenshots and notes at repo root
+/*.png
+/smil-*.md
+/smilF-*.md
+/bai-*.md
+/tests-*.md

@@ -1,0 +1,16 @@
+<div class="interpretation-block">
+    {% if profile_type_name is defined and profile_type_name %}
+    <div class="profile-type-summary">
+        <p><strong>Тип профиля:</strong> {{ profile_type_name }}{% if code_type is defined and code_type %} (код {{ code_type }}){% endif %}</p>
+        {% if profile_type_description is defined and profile_type_description %}
+        <p class="profile-type-description">{{ profile_type_description }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% for s in scales %}
+    <div class="interpretation-item interpretation-item--{{ s.level }}">
+        <h4 class="interpretation-item__code">{{ s.code }} — {{ s.name }} <small>(T={{ s.score }}, {{ s.level_name }})</small></h4>
+        <p class="interpretation-item__text">{{ s.detail }}</p>
+    </div>
+    {% endfor %}
+</div>
