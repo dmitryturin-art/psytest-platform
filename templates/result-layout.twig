@@ -109,6 +109,24 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+// Poll for pair comparison status (Lazarus: first partner waiting for second).
+(function () {
+    const inviteBlock = document.querySelector('.pair-invite-block');
+    if (!inviteBlock) return;
+
+    setInterval(function () {
+        fetch(`${RESULT_CONFIG.basePath}/result/${RESULT_CONFIG.testSlug}/${RESULT_CONFIG.sessionToken}/pair-status`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.has_comparison) {
+                    showToast('Партнёр прошёл тест! Загружаем сравнение...');
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            })
+            .catch(() => {});
+    }, 15000);
+})();
 </script>
 <script src="{{ basePath }}/js/results.js"></script>
 {% endblock %}

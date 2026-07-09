@@ -24,4 +24,6 @@ final class ResultSection
     public const TYPE_RECOMMENDATIONS = 'recommendations';
     public const TYPE_INDICES = 'indices';
     public const TYPE_RAW_HTML = 'raw_html';
+    public const TYPE_PAIR_COMPARISON = 'pair_comparison';
+    public const TYPE_PAIR_INVITE = 'pair_invite';
 }

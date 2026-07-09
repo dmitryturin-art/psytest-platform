@@ -59,11 +59,11 @@ class ResultController extends BaseController
 
         // Check for pair comparison
         $pairComparison = $this->sessionManager->getPairComparisonBySession($session['id']);
-        $pairComparisonHtml = null;
         if ($pairComparison && $module->supportsPairMode()) {
-            $pairComparisonHtml = $module->comparePairResults(
+            $partnerResults = $this->getPartnerResults($pairComparison, $session['id']);
+            $results['pair_comparison'] = $module->comparePairResults(
                 $session['calculated_results'],
-                $this->getPartnerResults($pairComparison, $session['id'])
+                $partnerResults
             );
         }
 
@@ -76,6 +76,31 @@ class ResultController extends BaseController
             'results' => $results,
             'ai_interpretation_available' => !$aiInterpretation,
             'pair_comparison' => $pairComparison,
+        ]);
+    }
+
+    /**
+     * Check pair comparison status (for polling).
+     * GET /result/{slug}/{token}/pair-status
+     *
+     * Returns JSON: {has_comparison: bool, comparison_id: ?string}
+     * Used by the first partner's result page to auto-refresh when the
+     * second partner completes the test.
+     */
+    public function pairStatus(string $slug, string $token): void
+    {
+        header('Content-Type: application/json');
+        $session = $this->sessionManager->getSessionByToken($token);
+        if (!$session) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Session not found']);
+            return;
+        }
+
+        $comparison = $this->sessionManager->getPairComparisonBySession($session['id']);
+        echo json_encode([
+            'has_comparison' => $comparison !== null,
+            'comparison_id' => $comparison['id'] ?? null,
         ]);
     }
 
@@ -181,11 +206,14 @@ class ResultController extends BaseController
             return;
         }
 
-        // Render comparison
-        $comparisonHtml = $module->comparePairResults(
+        // Render comparison data + render its twig block to HTML
+        $comparisonData = $module->comparePairResults(
             $session1['calculated_results'],
             $session2['calculated_results']
         );
+        $comparisonHtml = $this->view->render('blocks/pair-comparison', [
+            'comparison' => $comparisonData,
+        ]);
 
         echo $this->view->render('result-page', [
             'test' => $test,

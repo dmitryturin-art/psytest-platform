@@ -1,0 +1,59 @@
+<div class="pair-comparison-block">
+    {% if comparison.summary is defined %}
+    <p class="pair-comparison__summary">{{ comparison.summary }}</p>
+    {% endif %}
+
+    {% if comparison.overall_agreement is defined %}
+    <div class="pair-comparison__agreement">
+        <div class="agreement-bar">
+            <div class="agreement-fill" style="width: {{ comparison.overall_agreement }}%"></div>
+        </div>
+        <span class="agreement-label">Согласованность: {{ comparison.overall_agreement }}%</span>
+    </div>
+    {% endif %}
+
+    <table class="pair-comparison__table">
+        <thead>
+            <tr>
+                <th class="col-item">Пункт</th>
+                <th class="col-score">Вы</th>
+                <th class="col-score">Партнёр</th>
+                <th class="col-diff">Разница</th>
+                <th class="col-gap">Ваш perception gap</th>
+                <th class="col-gap">Партнёр perception gap</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in comparison.items %}
+            <tr class="row-diff-{{ item.difference|abs }}">
+                <td class="col-item">
+                    <span class="item-domain">{{ item.domain }}</span>
+                    <span class="item-text">{{ item.text }}</span>
+                </td>
+                <td class="col-score">{{ item.p1_self ?? '—' }}</td>
+                <td class="col-score">{{ item.p2_self ?? '—' }}</td>
+                <td class="col-diff {{ item.difference == 0 ? 'diff-match' : 'diff-mismatch' }}">
+                    {% if item.difference is not null %}
+                        {% if item.difference > 0 %}+{{ item.difference }}{% else %}{{ item.difference }}{% endif %}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="col-gap {{ item.p1_accuracy is not null and item.p1_accuracy|abs >= 2 ? 'gap-large' : '' }}">
+                    {% if item.p1_accuracy is not null %}
+                        {% if item.p1_accuracy > 0 %}+{{ item.p1_accuracy }}{% else %}{{ item.p1_accuracy }}{% endif %}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="col-gap {{ item.p2_accuracy is not null and item.p2_accuracy|abs >= 2 ? 'gap-large' : '' }}">
+                    {% if item.p2_accuracy is not null %}
+                        {% if item.p2_accuracy > 0 %}+{{ item.p2_accuracy }}{% else %}{{ item.p2_accuracy }}{% endif %}
+                    {% else %}—{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pair-comparison__legend">
+        <p><strong>Разница</strong> — расхождение между вашей оценкой и оценкой партнёра (0 = полное совпадение).</p>
+        <p><strong>Perception gap</strong> — насколько вы (или партнёр) угадали ответ другого. Отрицательный = недооценили, положительный = переоценили.</p>
+    </div>
+</div>

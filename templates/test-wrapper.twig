@@ -32,10 +32,13 @@
     </div>
 
     <!-- Test Form -->
-    <form id="testForm" class="test-form" method="POST" action="{{ basePath }}/test/{{ test.slug }}/submit">
+    <form id="testForm" class="test-form" method="POST" action="{{ is_pair ? (basePath ~ '/test/' ~ test.slug ~ '/pair/submit') : (basePath ~ '/test/' ~ test.slug ~ '/submit') }}">
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="session_id" value="{{ session.id }}">
+        {% if is_pair and partner_token %}
+        <input type="hidden" name="partner_token" value="{{ partner_token }}">
+        {% endif %}
 
         <!-- Demographics Section (only if required by module) -->
         {% set demoReq = module.getDemographicsRequirements()|default({}) %}
@@ -73,10 +76,44 @@
         <!-- Questions Container (hidden until demographics completed) -->
         <div class="questions-container" id="questionsContainer" style="display: none;">
             {% for question in questions %}
-            <div class="question-card" data-question-id="{{ question.id }}"
+            <div class="question-card{% if question.dual|default(false) %} question-card--dual{% endif %}" data-question-id="{{ question.id }}"
                  {% if question.text_male is defined %}data-text-male="{{ question.text_male }}"{% endif %}
                  {% if question.text_female is defined %}data-text-female="{{ question.text_female }}"{% endif %}>
                 <p class="question-text">{{ question.id }}. {{ question.text ?? question.text_male ?? question.text_female }}</p>
+
+                {% if question.dual|default(false) %}
+                {# Двойная оценка: «Я» + «Партнёр», шкала 1-10 #}
+                <div class="dual-scale">
+                    <div class="dual-scale__legend">
+                        <span class="dual-scale__label-end">Не соответствует</span>
+                        <span class="dual-scale__label-mid">Отчасти соответствует</span>
+                        <span class="dual-scale__label-end">Полностью соответствует</span>
+                    </div>
+                    {% set scale_labels = {1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10'} %}
+                    <div class="dual-scale__row">
+                        <span class="dual-scale__who">Я</span>
+                        <div class="dual-scale__options">
+                            {% for v in 1..10 %}
+                            <label class="scale-option">
+                                <input type="radio" name="answers[{{ question.id }}_self]" value="{{ v }}" required>
+                                <span class="scale-option__num">{{ v }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="dual-scale__row">
+                        <span class="dual-scale__who">Партнёр<span class="dual-scale__who-hint"> (по моему мнению)</span></span>
+                        <div class="dual-scale__options">
+                            {% for v in 1..10 %}
+                            <label class="scale-option">
+                                <input type="radio" name="answers[{{ question.id }}_partner]" value="{{ v }}" required>
+                                <span class="scale-option__num">{{ v }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
                 <div class="answer-options{% if test.answer_type|default('ternary') == 'ternary' %} has-ternary{% endif %}">
                     {% if question.options is defined and question.options is not empty %}
                         {% for option in question.options %}
@@ -109,6 +146,7 @@
                         </label>
                     {% endif %}
                 </div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
