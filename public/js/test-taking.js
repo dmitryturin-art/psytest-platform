@@ -312,7 +312,15 @@
 
         if (!progressFill || !progressText) return;
 
-        const answeredCount = Object.keys(answers).length;
+        // Count unique answered question ids. For dual questions the keys are
+        // like "1_self"/"1_partner" — collapse to the numeric question id so
+        // a fully-answered dual question counts as 1, not 2.
+        const answeredIds = new Set();
+        Object.keys(answers).forEach(function (key) {
+            const m = key.match(/^(\d+)/);
+            if (m) answeredIds.add(m[1]);
+        });
+        const answeredCount = answeredIds.size;
         const totalQuestions = typeof TEST_CONFIG !== 'undefined' ? TEST_CONFIG.totalQuestions : questions.length;
         const percentage = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
 
@@ -324,7 +332,8 @@
      * Save an answer
      */
     function saveAnswer(input) {
-        const questionId = input.name.match(/answers\[(\d+)\]/);
+        // Supports both "answers[1]" (single) and "answers[1_self]" / "answers[1_partner]" (dual)
+        const questionId = input.name.match(/answers\[([^\]]+)\]/);
         if (!questionId) return;
 
         const value = input.value; // Keep as string (0,1,2,3)
@@ -442,18 +451,6 @@
         e.preventDefault();
 
         if (!questions || questions.length === 0) return;
-
-        const totalQuestions = questions.length;
-        const answeredCount = Object.keys(answers).length;
-
-        if (answeredCount < totalQuestions) {
-            const confirmed = confirm(
-                `Вы ответили на ${answeredCount} из ${totalQuestions} вопросов. ` +
-                'Завершить тестирование?'
-            );
-
-            if (!confirmed) return;
-        }
 
         // Show loading state
         const submitBtn = document.getElementById('submitBtn');

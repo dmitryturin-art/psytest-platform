@@ -1,0 +1,29 @@
+<table class="lazarus-items-table">
+    <thead>
+        <tr>
+            <th class="col-item">Пункт</th>
+            <th class="col-score">Моя оценка</th>
+            <th class="col-score">Оценка за партнёра</th>
+            <th class="col-gap">Расхождение</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in scales %}
+        <tr class="level--{{ s.level }}">
+            <td class="col-item">
+                <span class="item-domain">{{ s.name }}</span>
+                <span class="item-text">{{ s.text }}</span>
+            </td>
+            <td class="col-score">{{ s.score }}<span class="of-10">/10</span></td>
+            <td class="col-score">{{ s.partner }}<span class="of-10">/10</span></td>
+            <td class="col-gap {{ s.gap == 0 ? 'gap-zero' : (s.gap|abs >= 3 ? 'gap-large' : 'gap-small') }}">
+                {% if s.gap > 0 %}+{{ s.gap }}{% else %}{{ s.gap }}{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p class="lazarus-items-hint">
+    <strong>Расхождение</strong> — разница между вашей оценкой и тем, как, по вашему мнению, ответил бы партнёр.
+    Положительное значение — вы оценили пункт выше, отрицательное — ниже, чем ожидаете от партнёра.
+</p>

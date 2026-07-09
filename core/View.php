@@ -49,6 +49,7 @@ class View
 
         // Add global variables
         $this->twig->addGlobal('appName', $configLoader->appName());
+        $this->twig->addGlobal('appUrl', $configLoader->appUrl());
         $this->twig->addGlobal('basePath', $this->getBasePath());
         $this->twig->addGlobal('isDebug', $isDebug);
 

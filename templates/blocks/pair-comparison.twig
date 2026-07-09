@@ -8,7 +8,7 @@
         <div class="agreement-bar">
             <div class="agreement-fill" style="width: {{ comparison.overall_agreement }}%"></div>
         </div>
-        <span class="agreement-label">Согласованность: {{ comparison.overall_agreement }}%</span>
+        <span class="agreement-label">Согласованность ответов: {{ comparison.overall_agreement }}%</span>
     </div>
     {% endif %}
 
@@ -16,11 +16,11 @@
         <thead>
             <tr>
                 <th class="col-item">Пункт</th>
-                <th class="col-score">Вы</th>
-                <th class="col-score">Партнёр</th>
+                <th class="col-score">Ответ 1-го</th>
+                <th class="col-score">Ответ 2-го</th>
                 <th class="col-diff">Разница</th>
-                <th class="col-gap">Ваш perception gap</th>
-                <th class="col-gap">Партнёр perception gap</th>
+                <th class="col-gap">1-й: ожидание vs реальность</th>
+                <th class="col-gap">2-й: ожидание vs реальность</th>
             </tr>
         </thead>
         <tbody>
@@ -53,7 +53,7 @@
     </table>
 
     <div class="pair-comparison__legend">
-        <p><strong>Разница</strong> — расхождение между вашей оценкой и оценкой партнёра (0 = полное совпадение).</p>
-        <p><strong>Perception gap</strong> — насколько вы (или партнёр) угадали ответ другого. Отрицательный = недооценили, положительный = переоценили.</p>
+        <p><strong>Разница</strong> — расхождение между ответами первого и второго партнёра (0 = полное совпадание).</p>
+        <p><strong>Ожидание vs реальность</strong> — насколько каждый угадал ответ другого. Отрицательное значение — недооценили, положительное — переоценили.</p>
     </div>
 </div>
