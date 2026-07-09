@@ -250,9 +250,14 @@ class ResultController extends BaseController
         $session1 = $this->sessionManager->getSessionById($comparison['session_1_id']);
         $session2 = $this->sessionManager->getSessionById($comparison['session_2_id']);
 
-        // Render comparison HTML
-        $comparisonData = $comparison['comparison_data'];
-        $comparisonHtml = '<pre>' . htmlspecialchars(is_string($comparisonData) ? $comparisonData : json_encode($comparisonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) . '</pre>';
+        // Render comparison via the module + its twig block (not raw JSON dump)
+        $comparisonData = $module->comparePairResults(
+            $session1['calculated_results'],
+            $session2['calculated_results']
+        );
+        $comparisonHtml = $this->view->render('blocks/pair-comparison', [
+            'comparison' => $comparisonData,
+        ]);
 
         // Generate PDF
         $pdfPath = $this->pdfGenerator->generatePairComparison($comparison, $test, $comparisonHtml);

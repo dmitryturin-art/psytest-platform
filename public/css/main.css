@@ -338,8 +338,9 @@ body {
    Test Taking Page
    ============================================ */
 .test-wrapper {
-    max-width: 800px;
+    max-width: 820px;
     margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md);
 }
 
 .test-header {
@@ -710,14 +711,29 @@ body {
     color: #c62828;
 }
 
-/* Marker — white vertical line on the scale */
+/* Lazarus override: red (dissatisfied) → green (satisfied) */
+.score-badge__zone--dissatisfied {
+    background: #ef5350;
+}
+.score-badge__zone--satisfied {
+    background: #66bb6a;
+}
+.score-badge--dissatisfied .score-badge__level {
+    background: #fce4ec;
+    color: #c62828;
+}
+.score-badge--satisfied .score-badge__level {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* Marker — visible pointer on the scale */
 .score-badge__marker {
     position: absolute;
-    top: -2px;
-    bottom: -2px;
-    width: 4px;
-    background: #fff;
-    border: 2px solid #2c3e50;
+    top: -3px;
+    bottom: -3px;
+    width: 3px;
+    background: #2c3e50;
     border-radius: 2px;
     transform: translateX(-50%);
     z-index: 2;
@@ -2789,7 +2805,8 @@ body {
     font-weight: 700;
 }
 .question-card--dual {
-    max-width: 640px;
+    /* full width of the test-wrapper, no extra constraint */
+    max-width: 100%;
 }
 @media (max-width: 600px) {
     .dual-scale__legend {
@@ -2918,4 +2935,112 @@ body {
     .pair-invite__link-box { flex-direction: column; }
     .pair-comparison__table { font-size: 0.78rem; }
     .pair-comparison__table .item-text { max-width: 180px; }
+}
+
+/* ============================================
+   LAZARUS — items table (single result)
+   ============================================ */
+.lazarus-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.lazarus-items-table th {
+    text-align: left;
+    padding: 12px 10px;
+    background: #f0f3f5;
+    border-bottom: 2px solid var(--color-border, #d0d0d0);
+    font-weight: 600;
+    color: var(--color-text-primary, #2c3e50);
+    font-size: 0.82rem;
+}
+.lazarus-items-table th.col-score,
+.lazarus-items-table th.col-gap {
+    text-align: center;
+}
+.lazarus-items-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--color-border, #e8e8e8);
+    vertical-align: top;
+}
+.lazarus-items-table td.col-score,
+.lazarus-items-table td.col-gap {
+    text-align: center;
+    font-weight: 600;
+}
+.lazarus-items-table .of-10 {
+    color: var(--color-text-secondary, #95a5a6);
+    font-weight: 400;
+    font-size: 0.78rem;
+}
+.lazarus-items-table .item-domain {
+    display: block;
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--color-text-secondary, #7f8c8d);
+    margin-bottom: 2px;
+}
+.lazarus-items-table .item-text {
+    display: block;
+    max-width: 380px;
+}
+.lazarus-items-table tr.level--low td.col-score:first-of-type { color: #c62828; }
+.lazarus-items-table tr.level--high td.col-score:first-of-type { color: #2e7d32; }
+.gap-zero { color: #27ae60; }
+.gap-small { color: var(--color-text-secondary, #7f8c8d); }
+.gap-large { color: #e67e22; font-weight: 700; }
+.lazarus-items-hint {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: var(--color-text-secondary, #7f8c8d);
+    line-height: 1.5;
+}
+
+/* Simple interpretation block (Lazarus) */
+.interpretation-block--simple {
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: #f0f7ff;
+    border-left: 4px solid var(--color-primary, #3498db);
+    border-radius: 0 8px 8px 0;
+}
+.interpretation-block--simple .interpretation-text {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--color-text-primary, #2c3e50);
+}
+
+/* Premium UX polish — test taking */
+.test-wrapper {
+    background: var(--color-bg, #f8f9fa);
+    min-height: calc(100vh - 60px);
+}
+.question-card {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.question-card.answered {
+    border-color: var(--color-primary, #3498db);
+}
+.question-card.error {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+}
+.progress-container {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-bg, #f8f9fa);
+    padding: var(--spacing-sm) 0;
+}
+.test-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border, #e0e0e0);
 }

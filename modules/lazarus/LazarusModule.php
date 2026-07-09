@@ -155,9 +155,11 @@ final class LazarusModule extends BaseTestModule
         $interp = $this->generateInterpretation($results);
 
         $sections = [];
+
+        // Score badge — без названия уровня в title (избегаем дублирования).
         $sections[] = new ResultSection(
             type: ResultSection::TYPE_SCORE_BADGE,
-            title: 'Удовлетворённость отношениями',
+            title: 'Результат',
             data: [
                 'score'       => $total,
                 'max'         => $max,
@@ -170,22 +172,23 @@ final class LazarusModule extends BaseTestModule
             order: 10,
         );
 
-        // Таблица по 16 пунктам с двумя оценками и perception gap.
+        // Таблица по 16 пунктам с двумя оценками и расхождением.
         $sections[] = new ResultSection(
             type: ResultSection::TYPE_SCALES_TABLE,
-            title: 'Профиль удовлетворённости по пунктам',
+            title: 'Профиль по пунктам',
             data: [
                 'scales' => $this->buildItemTable($results),
             ],
-            block: 'blocks/scales-table.twig',
+            block: 'blocks/lazarus-items.twig',
             order: 20,
         );
 
+        // Интерпретация — текстовый блок (summary).
         $sections[] = new ResultSection(
             type: ResultSection::TYPE_INTERPRETATION,
             title: 'Интерпретация',
             data: ['text' => $interp['summary']],
-            block: 'blocks/interpretation.twig',
+            block: 'blocks/lazarus-interpretation.twig',
             order: 30,
         );
 
@@ -207,9 +210,7 @@ final class LazarusModule extends BaseTestModule
                 order: 50,
             );
         } elseif ($this->supportsPairMode()) {
-            // Сравнения ещё нет — показать приглашение, чтобы Партнёр 1 мог
-            // пригласить Партнёра 2. Партнёр 2 сюда не доходит: после pairSubmit
-            // он редиректится на /pair/{id}, где comparison уже создан.
+            // Сравнения ещё нет — показать приглашение.
             $sections[] = new ResultSection(
                 type: ResultSection::TYPE_PAIR_INVITE,
                 title: 'Пригласить партнёра',

@@ -1,22 +1,22 @@
-{% set invite_link = basePath ~ '/test/' ~ test.slug ~ '/pair?partner=' ~ session.session_token %}
+{% set invite_link = appUrl ~ '/test/' ~ test.slug ~ '/pair?partner=' ~ session.session_token %}
 <div class="pair-invite-block">
     <p class="pair-invite__text">
-        Чтобы сравнить ваши ответы с ответами партнёра, отправьте ему эту ссылку:
+        Хотите сравнить ваши ответы с ответами партнёра? Отправьте ему эту ссылку —
+        когда партнёр пройдёт тест, здесь автоматически появится сравнение.
     </p>
     <div class="pair-invite__link-box">
         <input type="text" id="pairInviteLink" class="pair-invite__input" readonly
                value="{{ invite_link }}" onclick="this.select()">
-        <button type="button" class="btn btn-primary" onclick="copyPairLink()">Копировать ссылку</button>
+        <button type="button" class="btn btn-primary" onclick="copyPairLink(this)">Копировать</button>
     </div>
     <p class="pair-invite__hint">
-        Когда партнёр пройдёт тест, на этой странице автоматически появится сравнение ваших ответов.
+        Ссылку можно отправить любым удобным способом — в мессенджере, по email и т.п.
     </p>
 </div>
 <script>
-function copyPairLink() {
+function copyPairLink(btn) {
     const input = document.getElementById('pairInviteLink');
     navigator.clipboard.writeText(input.value).then(function () {
-        const btn = event.target;
         const original = btn.textContent;
         btn.textContent = '✓ Скопировано';
         setTimeout(function () { btn.textContent = original; }, 2000);
