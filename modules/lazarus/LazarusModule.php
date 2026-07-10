@@ -157,6 +157,8 @@ final class LazarusModule extends BaseTestModule
         $sections = [];
 
         // Score badge — без названия уровня в title (избегаем дублирования).
+        // description берём из константы, не из $results['interpretation']
+        // (там после generateInterpretation лежит массив [summary,recommendations]).
         $sections[] = new ResultSection(
             type: ResultSection::TYPE_SCORE_BADGE,
             title: 'Результат',
@@ -165,7 +167,7 @@ final class LazarusModule extends BaseTestModule
                 'max'         => $max,
                 'level'       => $level,
                 'level_label' => $levelName,
-                'description' => $results['interpretation'] ?? '',
+                'description' => self::INTERPRETATIONS[$level] ?? '',
                 'thresholds'  => self::THRESHOLDS,
             ],
             block: 'blocks/score-badge.twig',

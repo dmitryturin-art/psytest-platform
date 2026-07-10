@@ -293,7 +293,11 @@ class TestController extends BaseController
             $comparison
         );
 
-        header('Location: /pair/' . $comparisonRecord['id']);
+        // Redirect Partner 2 to THEIR OWN result page. The result page (show())
+        // finds the comparison via getPairComparisonBySession() and renders the
+        // comparison block alongside their personal scores — same as Partner 1.
+        // No separate /pair/{id} page is needed for the normal flow.
+        header('Location: /result/' . $slug . '/' . $session['session_token']);
         exit;
     }
 

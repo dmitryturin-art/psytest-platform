@@ -95,6 +95,40 @@ final class LazarusE2ETest extends TestCase
         $p2Comparison = $this->sm->getPairComparisonBySession($p2Session['id']);
         $this->assertNotNull($p2Comparison, 'P2 can also find comparison');
 
+        // ---- Both partners see comparison on their OWN result page ----
+        // Simulate what ResultController::show() does for P1.
+        $p1Results = $p1Found['calculated_results'];
+        $p1Results['pair_comparison'] = $this->module->comparePairResults(
+            $p1Results,
+            $p2Results
+        );
+        $p1Sections = $this->module->buildSections($p1Results);
+        $p1HasComparison = false;
+        foreach ($p1Sections as $s) {
+            if ($s->type === \PsyTest\Modules\ResultSection::TYPE_PAIR_COMPARISON) {
+                $p1HasComparison = true;
+            }
+        }
+        $this->assertTrue($p1HasComparison, 'P1 result page shows comparison');
+
+        // Simulate show() for P2 — comparison must also appear there.
+        $p2Refreshed = $this->sm->getSessionById($p2Session['id']);
+        $p2ResultsRefreshed = $p2Refreshed['calculated_results'];
+        // show() computes comparison relative to the CURRENT session:
+        // for P2, partner is P1.
+        $p2ResultsRefreshed['pair_comparison'] = $this->module->comparePairResults(
+            $p2ResultsRefreshed,
+            $p1Found['calculated_results']
+        );
+        $p2Sections = $this->module->buildSections($p2ResultsRefreshed);
+        $p2HasComparison = false;
+        foreach ($p2Sections as $s) {
+            if ($s->type === \PsyTest\Modules\ResultSection::TYPE_PAIR_COMPARISON) {
+                $p2HasComparison = true;
+            }
+        }
+        $this->assertTrue($p2HasComparison, 'P2 result page also shows comparison');
+
         // ---- Comparison data integrity ----
         $items = $comparison['items'];
         $this->assertCount(16, $items);
