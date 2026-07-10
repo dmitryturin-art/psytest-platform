@@ -779,7 +779,8 @@ CREATE TABLE payment_transactions (
 |--------|-----------|-------|
 | `layout.twig` | Базовый layout (head, nav, footer) | ~72 |
 | `test-wrapper.twig` | Процесс прохождения теста | ~166 |
-| `result-layout.twig` | Страница результатов | ~114 |
+| `result-layout.twig` | Страница результатов | ~140 |
+| `result-page.twig` | Страница результатов (парный режим Lazarus) | ~188 |
 | `tests-list.twig` | Каталог тестов | ~57 |
 
 ### Блоки result-layout.twig
@@ -794,6 +795,20 @@ CREATE TABLE payment_transactions (
 {% block score_badge %}       — Бейдж суммарного балла (BDI/HADS/BAI)
 {% block _delete_modal %}    — Модальное окно удаления (GDPR)
 ```
+
+### Интерактивность страниц результатов (inline-JS)
+
+Оба шаблона (`result-layout.twig`, `result-page.twig`) определяют:
+- `copySessionId(id)` — клик по сокращённому `🔗 ID: …` копирует полный ID в буфер
+  обмена; тултип «Скопировать ID», курсор-поинтер.
+- `copyResultLink()` — копирует URL результата в буфер обмена.
+- `confirmDelete()` — удаление сессии (POST → редирект на `/deleted`).
+- `result-layout.twig` дополнительно опрашивает `/pair-status` каждые 15 с
+  (первый партнёр ждёт второго в режиме Lazarus).
+
+Уведомления — класс `.toast` (см. `main.css`). В `result-layout.twig` toast
+создаётся в JS (`showToast()`); инлайн-стиль обязан обнулять `bottom/left/transform`
+из CSS-класса, иначе фиксированный элемент растягивается на весь экран.
 
 ### Пользовательские функции Twig
 

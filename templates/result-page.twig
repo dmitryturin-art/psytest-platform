@@ -16,7 +16,7 @@
                 <span class="meta-icon">📅</span>
                 {{ session.created_at|date("d.m.Y H:i") }}
             </span>
-            <span class="meta-item">
+            <span class="meta-item" style="cursor:pointer" title="Скопировать ID" onclick="copySessionId('{{ session.id }}')">
                 <span class="meta-icon">🔗</span>
                 ID: {{ session.id|slice(0, 8) }}...
             </span>
@@ -125,6 +125,20 @@ const RESULT_CONFIG = {
     testSlug: '{{ test.slug }}',
     basePath: '{{ basePath }}',
 };
+
+function copySessionId(id) {
+    navigator.clipboard.writeText(id).then(() => {
+        const toast = document.getElementById('copyToast');
+        toast.textContent = '✓ ID скопирован в буфер обмена';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }).catch(() => {
+        const toast = document.getElementById('copyToast');
+        toast.textContent = 'Ошибка при копировании ID';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    });
+}
 
 function copyResultLink() {
     const url = window.location.href;
