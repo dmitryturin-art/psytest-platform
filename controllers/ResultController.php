@@ -57,15 +57,8 @@ class ResultController extends BaseController
             [$session['id']]
         );
 
-        // Check for pair comparison
-        $pairComparison = $this->sessionManager->getPairComparisonBySession($session['id']);
-        if ($pairComparison && $module->supportsPairMode()) {
-            $partnerResults = $this->getPartnerResults($pairComparison, $session['id']);
-            $results['pair_comparison'] = $module->comparePairResults(
-                $session['calculated_results'],
-                $partnerResults
-            );
-        }
+        // Attach pair comparison data (if any) so buildSections can render it.
+        $this->enrichWithPairComparison($results, $session, $module);
 
         $sections = $module->buildSections($results);
 
@@ -75,7 +68,6 @@ class ResultController extends BaseController
             'sections' => $sections,
             'results' => $results,
             'ai_interpretation_available' => !$aiInterpretation,
-            'pair_comparison' => $pairComparison,
         ]);
     }
 
@@ -131,6 +123,12 @@ class ResultController extends BaseController
 
         // Get results
         $results = $session['calculated_results'];
+
+        // Attach pair comparison (if any) so the PDF includes it, and mark
+        // as PDF so buildSections suppresses the invite-to-partner block
+        // (an invite link has no place in a printed document).
+        $this->enrichWithPairComparison($results, $session, $module);
+        $results['is_pdf'] = true;
 
         $sections = $module->buildSections($results);
         $resultsHtml = $this->renderSectionsToHtml($sections);
@@ -343,6 +341,31 @@ class ResultController extends BaseController
         $partnerSession = $this->sessionManager->getSessionById($partnerSessionId);
 
         return $partnerSession['calculated_results'] ?? [];
+    }
+
+    /**
+     * Attach pair comparison data to $results (in place) when a pair
+     * comparison exists for this session. Shared by show() and pdf() so
+     * both render the comparison block consistently.
+     *
+     * @param array<string, mixed>                &$results Calculated results (modified).
+     * @param array<string, mixed>                $session  Session row.
+     * @param \PsyTest\Modules\TestModuleInterface $module   Module instance.
+     */
+    private function enrichWithPairComparison(array &$results, array $session, \PsyTest\Modules\TestModuleInterface $module): void
+    {
+        if (!$module->supportsPairMode()) {
+            return;
+        }
+        $pairComparison = $this->sessionManager->getPairComparisonBySession($session['id']);
+        if (!$pairComparison) {
+            return;
+        }
+        $partnerResults = $this->getPartnerResults($pairComparison, $session['id']);
+        $results['pair_comparison'] = $module->comparePairResults(
+            $session['calculated_results'],
+            $partnerResults
+        );
     }
 
     /**

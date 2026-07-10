@@ -211,8 +211,9 @@ final class LazarusModule extends BaseTestModule
                 block: 'blocks/pair-comparison.twig',
                 order: 50,
             );
-        } elseif ($this->supportsPairMode()) {
-            // Сравнения ещё нет — показать приглашение.
+        } elseif ($this->supportsPairMode() && empty($results['is_pdf'])) {
+            // Сравнения ещё нет — показать приглашение (только на web-странице,
+            // не в PDF: приглашение-ссылка не нужна в распечатанном документе).
             $sections[] = new ResultSection(
                 type: ResultSection::TYPE_PAIR_INVITE,
                 title: 'Пригласить партнёра',
