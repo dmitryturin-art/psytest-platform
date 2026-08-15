@@ -5,7 +5,7 @@
 ## Сейчас
 
 - Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
-- Активная package-ветка: `codex/01-disable-broken-paid-flow`.
+- Активная package-ветка: `codex/01-csrf-enforcement`.
 - Последняя принятая package-ветка: `codex/governance-roadmap`; опубликована в GitHub через `main` до `c7bb44e`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates и dependency safety улучшены; legacy платный путь закрывается, публичная продажа пока не готова к запуску.

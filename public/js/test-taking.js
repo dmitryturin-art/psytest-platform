@@ -430,6 +430,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRF-Token': TEST_CONFIG.csrfToken,
                 },
                 body: JSON.stringify(payload),
             });

@@ -19,6 +19,14 @@
 
 ## 2026-08-15
 
+### 01.3 — CSRF enforcement
+
+- Этап / ветка / commit: этап 01.3, `codex/01-csrf-enforcement`, commit pending.
+- Цель: запретить все активные browser state-changing requests без session-bound CSRF token, не затронув scoring и retired webhook.
+- Сделано: добавлен единый `CsrfMiddleware` для POST/PUT/PATCH/DELETE; `POST /webhook/yoomoney` — единственное явное исключение, поскольку retired controller отвечает 410 и не обрабатывает payload. AJAX autosave и delete requests передают `X-CSRF-Token`; формы используют hidden token.
+- Проверки и evidence: negative missing/invalid token, valid header/form token, repeat token и explicit webhook exception покрыты `CsrfMiddlewareTest`; узко 7 tests/17 assertions; полный `composer test` — 100 tests, 1145 assertions; PHPStan, lint и `git diff --check` — pass.
+- Следующий шаг: commit/push и реальный CI; после него 01.4 token boundaries.
+
 ### 00D follow-up — Linux PSR-4 compatibility Лазаруса
 
 - Этап / ветка / commit: этап 00D, `codex/00-fix-lazarus-autoload`, commit pending.

@@ -24,6 +24,7 @@ use PsyTest\Core\Router;
 use PsyTest\Core\Database;
 use PsyTest\Core\SessionManager;
 use PsyTest\Core\ModuleLoader;
+use PsyTest\Core\CsrfMiddleware;
 use PsyTest\Controllers\HomeController;
 use PsyTest\Controllers\TestController;
 use PsyTest\Controllers\ResultController;
@@ -112,6 +113,11 @@ $router->middleware(function($method, $uri, &$params) use ($configLoader) {
 
     return null; // Continue to route
 });
+
+// All browser state-changing routes require a session-bound token. The retired
+// legacy YooMoney webhook is explicitly exempt because it processes no payload
+// and always returns 410; a future provider webhook needs provider validation.
+$router->middleware(new CsrfMiddleware(['/webhook/yoomoney']));
 
 // ============================================
 // Dispatch
