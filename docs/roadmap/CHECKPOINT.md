@@ -6,7 +6,7 @@
 
 - Проект: PsyTest Platform.
 - Активный этап: 00 — управление и baseline.
-- Ветка: `codex/governance-roadmap`.
+- Package-ветка: `codex/governance-roadmap`; готова к fast-forward merge в `main`.
 - Функциональный код: не изменён.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -14,22 +14,24 @@
 
 - Проведён полный аудит проекта.
 - Зафиксированы решения владельца о бесплатных результатах, платных разборах, YooKassa, купонах, двух типах отчёта, кабинете терапевта, SMIL и размещении на 23time.ru.
-- Начато создание канонической системы управления разработкой в отдельной ветке.
+- Завершено создание канонической системы управления разработкой в отдельной ветке.
 - Superpowers больше не является обязательной методологией.
+- Созданы и проверены все этапы 00–09, audit traceability, decision/status/worklog/checkpoint/lessons и честный GitHub README.
+- Коммиты: `0943c80` — repository hygiene; `0866ae0` — audited delivery program.
 
 ## Что сейчас в работе
 
-- Все phase-файлы и матрица трассировки созданы.
-- Идёт независимое review cross-links, README и состава GitHub-публикации.
-- Готовится первый governance-коммит и отдельный housekeeping-коммит без продуктового кода.
+- Governance package локально завершён и проверен тремя независимыми reviews.
+- Остались local merge и GitHub publication handoff.
+- GitHub publication заблокирован только недействительным `gh` token.
 
 ## Ближайшие действия
 
-1. Исправить замечания трёх независимых reviews.
-2. Проверить Markdown-ссылки, Git diff и отсутствие generated/sensitive files.
-3. Сделать governance и repository-housekeeping коммиты.
-4. Слить проверенную ветку в `main`; публикация ждёт рабочей GitHub-аутентификации.
-5. Следующим work package начать baseline/containment, не UI и не payment implementation.
+1. Fast-forward merge package-ветки в локальный `main`.
+2. Выполнить `gh auth login -h github.com`, определить visibility и решить вопрос старой PDF history.
+3. Отправить безопасный `main` в GitHub.
+4. Переключить основную задачу на Terra.
+5. В новой ветке начать reproducible baseline и обновление Dompdf, не UI и не payment implementation.
 
 ## Известные блокеры и риски
 

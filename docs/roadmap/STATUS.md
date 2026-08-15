@@ -5,16 +5,17 @@
 ## Сейчас
 
 - Активный этап: [00 — управление и baseline](phases/00-governance-baseline.md).
-- Ветка: `codex/governance-roadmap`.
+- Последняя package-ветка: `codex/governance-roadmap`; локальная интеграция в `main` готовится.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: функциональный код в текущем work package не менялся; публичный платный путь не готов к запуску.
-- Текущий work package: канонический roadmap, GitHub README, правила, решения, фазы, журналы, трассировка аудита и repository hygiene.
+- Завершённый work package: канонический roadmap, GitHub README, правила, решения, фазы, журналы, трассировка аудита и repository hygiene (`0943c80`, `0866ae0`).
+- Следующий work package: `codex/00-reproducible-baseline` — исправление quality gates; начинать после merge и GitHub handoff.
 
 ## Готовность этапов
 
 | Этап | Состояние | Прогресс/условие перехода |
 |---|---|---|
-| 00 | В работе | governance-каркас готовится; затем воспроизводимый baseline и исправление документационных gate |
+| 00 | В работе | governance-каркас готов; далее воспроизводимый baseline и исправление документационных gate |
 | 01 | Не начат | начинается после первого governance-коммита |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
@@ -48,9 +49,9 @@
 
 ## Следующие пять действий
 
-1. Просмотреть полный staged diff и сделать governance/housekeeping коммиты.
-2. Слить ветку локально в `main`; после GitHub re-auth определить visibility и безопасно опубликовать.
-3. В отдельном work package воспроизвести полный baseline и починить сами quality-gate scripts.
+1. Слить `codex/governance-roadmap` локально в `main`.
+2. После GitHub re-auth определить visibility и безопасно опубликовать `main`.
+3. В `codex/00-reproducible-baseline` воспроизвести полный baseline и починить сами quality-gate scripts.
 4. Начать этап 01 с отключения сломанного платного CTA и обновления уязвимой зависимости.
 5. Закрывать security findings отдельными regression-тестами до UI-редизайна.
 

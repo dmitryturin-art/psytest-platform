@@ -32,7 +32,7 @@
 
 ### Управленческий каркас
 
-- Этап / ветка / commit: этап 00, `codex/governance-roadmap`, commit pending.
+- Этап / ветка / commit: этап 00, `codex/governance-roadmap`, `0866ae0`.
 - Цель: превратить аудит и решения владельца в исполнимую программу, не зависящую от памяти одного чата.
 - Сделано: новый индекс roadmap, product/engineering rules, phase structure, decision/status/traceability framework, changelog/worklog/checkpoint/lessons; README приведён к честному текущему состоянию; Superpowers удалён из обязательных инструкций.
 - Решения: один work package — одна ветка; аудит обязан иметь полную трассировку; checkpoint не создаёт WIP-коммит автоматически; независимые проверки делегируются быстрым субагентам, интеграция остаётся ведущему.
@@ -43,7 +43,7 @@
 
 ### Очистка состава репозитория перед публикацией
 
-- Этап / ветка / commit: этап 00, `codex/governance-roadmap`, commit pending.
+- Этап / ветка / commit: этап 00, `codex/governance-roadmap`, `0943c80`.
 - Цель: не отправлять в актуальную ветку сгенерированные результаты и локальные debug-артефакты.
 - Сделано: из Git-индекса выведены 2 PDF с индивидуальными результатами и 25 Playwright/root debug artifacts; локальные копии сохранены и покрыты `.gitignore`. Старый `composer.lock` не публикуется: сначала нужно обновить Dompdf, затем начать отслеживать безопасный lockfile.
 - Проверки и evidence: PDF визуально проверены целиком — имени/email нет, но присутствуют score profile и session ID; поэтому принято консервативное решение не хранить их в Git. `composer validate` — pass; актуальный `composer audit` — 6 advisories для Dompdf 3.1.5, исправлены в 3.1.6.
