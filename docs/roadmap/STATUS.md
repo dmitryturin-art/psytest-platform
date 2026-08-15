@@ -5,7 +5,7 @@
 ## Сейчас
 
 - Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
-- Активная package-ветка: `codex/01-dompdf-security`.
+- Последний завершённый package: `codex/01-dompdf-security` (`7272e51`).
 - Последняя принятая package-ветка: `codex/governance-roadmap`; опубликована в GitHub через `main` до `c7bb44e`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates и dependency safety улучшены; публичный платный путь не готов к запуску.
@@ -30,7 +30,7 @@
 | PHPStan | формально pass, baseline 149 | Новые ошибки запрещены; baseline нужно постепенно уменьшать |
 | Architecture check | pass: 5 модулей, шаблоны и статика | project root исправлен и покрыт узким regression-тестом |
 | PHPStan baseline guard | pass: ровно 149 entries | `composer baseline:check` запрещает незаметный рост baseline |
-| Dependency audit | work package: `dompdf` 3.1.6, audit clean | ждёт commit/review; затем `DEP-01` закрывается evidence-ссылкой |
+| Dependency audit | pass: `dompdf` 3.1.6, audit clean | `DEP-01` закрыт в `7272e51`; lock воспроизводим для PHP 8.3 |
 | Browser smoke | пройден частично | Найдены blank sticky nav, progress 20/21, accessibility и responsive-дефекты |
 
 Свежие команды и точный вывод добавляются в [WORKLOG.md](WORKLOG.md); эта таблица не заменяет повторный baseline run.
@@ -50,9 +50,9 @@
 
 ## Следующие пять действий
 
-1. Создать отдельную ветку и обновить Dompdf минимум до 3.1.6, проверить PDF и начать отслеживать безопасный `composer.lock`.
-2. Настроить минимальный CI после того, как audit перестанет быть красным из-за зависимости.
-3. Начать этап 01 с отключения сломанного платного CTA.
+1. Интегрировать `7272e51` в `main` и опубликовать безопасный lockfile.
+2. Настроить минимальный CI после того, как audit перестал быть красным из-за зависимости.
+3. В отдельной ветке начать этап 01 с отключения сломанного платного CTA.
 4. Закрывать security findings отдельными regression-тестами до UI-редизайна.
 5. Не начинать UI-редизайн до закрытия P0 security/payment containment.
 

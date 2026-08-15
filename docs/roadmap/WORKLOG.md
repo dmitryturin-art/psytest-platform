@@ -21,13 +21,13 @@
 
 ### 01 — dependency safety: Dompdf
 
-- Этап / ветка / commit: этап 01, `codex/01-dompdf-security`, commit pending.
+- Этап / ветка / commit: этап 01, `codex/01-dompdf-security`, `7272e51`.
 - Цель: устранить известные security advisories Dompdf и сделать dependency state воспроизводимым, не меняя тестовые формулы, платёжный flow или интерфейс.
 - Сделано: `dompdf/dompdf` обновлён с 3.1.5 до 3.1.6, транзитивный `masterminds/html5` — с 2.10.0 до 2.10.1; безопасный `composer.lock` вновь включён в состав репозитория. По решению владельца минимальная версия проекта поднята с PHP 8.1 до PHP 8.3; Composer разрешает и фиксирует зависимости от этой минимальной платформы. Добавлен узкий in-memory smoke-test PDF с кириллицей: он не читает старые PDF и не создаёт пользовательские отчёты.
 - Проверки и evidence: `composer validate --strict --no-check-publish` — exit 0; `composer audit` — `No security vulnerability advisories found`; `composer show dompdf/dompdf --locked` — v3.1.6; `vendor/bin/phpunit tests/PDFGeneratorSmokeTest.php` — 1 test, 2 assertions, exit 0; полный `composer test` — 88 tests, 1112 assertions, exit 0; `composer check-platform-reqs --lock` — pass; `composer baseline:check` — exit 0; `composer analyse` — exit 0; `composer lint` — exit 0 (вне sandbox из-за loopback requirement); `php bin/check-architecture.php` — exit 0; `git diff --check` — exit 0.
 - Известные ограничения: старые PDF-артефакты и Git history намеренно не рассматриваются по решению владельца. Smoke не заменяет отдельную browser/print-regression проверку пользовательского SMIL-графика, которая относится к UI-этапу.
 - Изменённые файлы: `.gitignore`, `composer.json`, `composer.lock`, актуальные PHP-version docs, `tests/PDFGeneratorSmokeTest.php`, текущая roadmap-документация.
-- Следующий шаг: review + commit этого узкого dependency package; затем 00D/01 containment work packages.
+- Следующий шаг: интегрировать dependency package, затем отдельным work package сделать containment сломанного платного пути.
 
 ### 00B — воспроизводимый quality baseline
 

@@ -5,9 +5,9 @@
 ## Где мы
 
 - Проект: PsyTest Platform.
-- Активный этап: 00 — управление и baseline.
-- Governance package опубликован в `main` на GitHub до `c7bb44e`.
-- Функциональный код: не менялся; quality-gate package закоммичен в `b6756dd` на `codex/00-reproducible-baseline`, рабочее дерево чистое.
+- Активный этап: 01 — containment и безопасность.
+- Governance и baseline package опубликованы в `main` на GitHub до `f1b101b`.
+- Последний локальный security package: `7272e51` на `codex/01-dompdf-security`; он ожидает интеграции. Формулы тестов и пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
 ## Что уже сделано
@@ -24,14 +24,15 @@
 - Governance package локально завершён и проверен тремя независимыми reviews.
 - Governance publication завершена.
 - Воспроизводимый baseline завершён: architecture checker починен, PHPStan baseline capped at 149, evidence — в `WORKLOG.md`.
+- Dependency safety завершён: Dompdf 3.1.6, composer audit clean, composer.lock теперь отслеживается и разрешается для PHP 8.3.
 
 ## Ближайшие действия
 
-1. Проверить и закоммитить текущий узкий baseline-package.
-2. В новой ветке обновить Dompdf, не смешивая dependency security с UI или payment implementation.
-3. Перед обновлением Dompdf прочитать active phase, audit traceability и сделать PDF regression fixtures.
-4. После безопасного dependency update начать отслеживать `composer.lock`.
-5. Затем перейти к containment сломанного платного пути.
+1. Интегрировать и опубликовать `7272e51`.
+2. В новой ветке заняться containment сломанного платного пути, не смешивая его с UI или production YooKassa.
+3. Затем настроить минимальный CI на уже чистом dependency audit.
+4. После containment перейти к CSRF и границам токенов отдельными пакетами.
+5. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
 
 ## Известные блокеры и риски
 
