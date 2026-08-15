@@ -1,0 +1,37 @@
+# Этап 07 — ИИ-отчёты и кабинет терапевта
+
+Статус: **Не начат**. Требует consent/data decisions этапа 02 и entitlement этапа 06.
+
+## Цель
+
+Создавать полноценные, воспроизводимые и редактируемые разборы SMIL/Lazarus для посетителей и клиентов терапевта с прозрачной версией модели/промпта.
+
+## Work packages
+
+1. **Provider adapter.** Настраиваемые provider/model/timeout/retry/cost limits; секреты только в environment/secret storage.
+2. **Prompt registry.** Отдельные versioned templates по test, mode (individual/pair), audience (lay/professional) и report kind. Общего фильтра, обрезающего профессиональный материал, нет.
+3. **Structured context.** Передавать только нужные score/validity/scales и явно введённый запрос; не отправлять лишние идентификаторы. Snapshot позволяет воспроизвести отчёт.
+4. **Report variants.** «Понятный», «Профессиональный», «Оба»; одинаковые факты, разная терминология и структура. Платный сторонний посетитель получает выбранную полную версию.
+5. **Generation jobs.** Queue/retry/idempotency, состояния pending/running/failed/ready; webhook оплаты не ждёт LLM.
+6. **Therapist case.** Связь купона/сессии с кейсом, два AI drafts, rich/plain structured editor, revisions, comparison, approve и explicit send.
+7. **Delivery.** Browser view, PDF/print, email/link с expiry и access control; профессиональная и клиентская редакции сохраняются раздельно.
+8. **Evaluation.** De-identified fixtures SMIL/Lazarus, rubric полноты/фактической согласованности/терминологии, hallucination flags, cost/latency monitoring.
+9. **Owner controls.** Выбор модели/провайдера/active prompt, preview на fixture, rollback версии, kill switch.
+
+## Важные границы
+
+- Для обычного покупателя нет обязательного ручного review владельцем.
+- Для клиента терапевта отправка только после явного одобрения владельца.
+- Понятная версия не скрывает значимые результаты, а объясняет их доступным языком.
+- AI output не меняет числовые результаты теста и не становится источником scoring.
+
+## Проверка и exit criteria
+
+- Contract tests provider failures/retries; prompt snapshot tests; access tests для report links и revisions.
+- Evaluation set проходит согласованный threshold по каждому report type.
+- PDF/email/browser содержат правильную редакцию; draft невозможно случайно выдать клиенту терапевта.
+- Data map/consent актуальны; `AI-01` закрыт.
+
+## Покрытие аудита
+
+`AI-01`, AI-часть `DATA-01`, продуктовые решения D-005/D-006/D-009/D-010/D-014.

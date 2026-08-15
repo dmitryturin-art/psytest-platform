@@ -1,0 +1,41 @@
+# Этап 01 — containment и безопасность
+
+Статус: **Не начат**. Зависит от этапа 00. До выхода из этапа платный CTA скрыт.
+
+## Цель
+
+Убрать известные P0-уязвимости и недоступные сценарии, не меняя психометрические результаты и не строя преждевременно новый payment flow.
+
+## Work packages
+
+1. **Containment платного пути.** Regression-тестом подтвердить broken route/template, скрыть все платные CTA и вернуть безопасный нейтральный ответ на legacy endpoints. Явно пометить YooMoney path как retired.
+2. **Dependency safety.** Обновить `dompdf` минимум до 3.1.6, проверить audit, генерацию PDF, кириллицу, график SMIL и print layout; после этого добавить безопасный `composer.lock` в Git и удалить его временное ignore rule.
+3. **CSRF enforcement.** Инвентаризировать mutating routes, добавить единый middleware/guard, проверить missing/invalid/reused token и совместимость форм.
+4. **Типизированные ссылки.** Разделить session/result/pair/admin tokens, добавить purpose, expiry, revocation и single-use там, где нужно. Запретить `OR`-lookup разных полномочий.
+5. **Route/session integrity.** Сверять route slug с зафиксированным модулем сессии; неизвестные и подменённые slug отклонять до scoring.
+6. **Server-side validation.** До Module API v2 добавить обязательные полнота/тип/диапазон/allowed-values checks для всех текущих модулей.
+7. **Pair boundaries.** Проверить владельца приглашения, срок, одноразовость, повторную отправку и cross-session доступ.
+8. **Web-root hygiene.** Удалить/переместить debug, dumps и тестовые файлы; проверить HTTP-доступ, cookies, security headers и отсутствие stack traces.
+
+Каждый пункт выполняется отдельным небольшим work package/коммитом; dependency, auth и payment containment не смешиваются.
+
+## Запрещено в этом этапе
+
+- Реализовывать production YooKassa или AI reports.
+- Рефакторить scoring SMIL/Lazarus.
+- Одновременно делать визуальный редизайн.
+
+## Проверка
+
+- Negative HTTP tests для CSRF, token purpose, slug mismatch, invalid answers и pair access.
+- `composer audit` без known advisories; PDF smoke fixtures.
+- Browser smoke: бесплатное прохождение/результат доступны, сломанных платных ссылок нет.
+- Полный quality gate; PHPStan baseline не растёт.
+
+## Exit criteria
+
+Все `SEC-*`, `DEP-01`, containment-части `PAY-01..03` и `PAIR-01` закрыты evidence-ссылками. Бесплатные flows работают как до изменений.
+
+## Покрытие аудита
+
+`SEC-01..05`, `DEP-01`, `PAY-01..03` (containment), `PAIR-01`, часть `SEC-04`.
