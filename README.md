@@ -2,7 +2,7 @@
 
 Модульная PHP-платформа для психологического тестирования: прохождение без обязательной регистрации, бесплатный базовый результат, парные сценарии и печатные отчёты.
 
-[![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php&logoColor=white)](https://www.php.net/)
+[![PHP 8.3+](https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php&logoColor=white)](https://www.php.net/)
 [![Status](https://img.shields.io/badge/status-active%20refactoring-D97706)](ROADMAP.md)
 [![License](https://img.shields.io/badge/license-proprietary-374151)](LICENSE)
 
@@ -15,7 +15,7 @@
 - классический профиль СМИЛ с L/F/K, разрывом и шкалами 1–9/0;
 - индивидуальный и парный сценарий Lazarus;
 - PDF/print-вывод результатов;
-- 85 автоматических тестов и 1101 assertion на baseline аудита.
+- 88 автоматических тестов и 1112 assertions в текущем full gate.
 
 ## Куда развивается продукт
 
@@ -49,7 +49,7 @@
 
 ## Технологии
 
-- PHP 8.1+, Twig 3;
+- PHP 8.3+, Twig 3;
 - MySQL 8/InnoDB (на него рассчитаны текущие migrations);
 - PDO, Monolog, Ramsey UUID;
 - Dompdf для PDF;
@@ -76,7 +76,7 @@ docs/roadmap/          rules, phases, decisions, status and project memory
 
 ### Требования
 
-- PHP 8.1 с расширениями, нужными Composer-зависимостям;
+- PHP 8.3 с расширениями, нужными Composer-зависимостям;
 - Composer;
 - MySQL 8;
 - Apache/Nginx либо встроенный PHP server для разработки.

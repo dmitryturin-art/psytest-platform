@@ -22,7 +22,7 @@
 
 | ID | Finding | Риск | Этап | Требуемое доказательство | Статус |
 |---|---|---|---|---|---|
-| DEP-01 | `dompdf` 3.1.5 имеет advisories | P0 | 01 | clean `composer audit`, PDF regression smoke | Запланировано |
+| DEP-01 | `dompdf` 3.1.5 имеет advisories | P0 | 01 | `composer audit` clean и in-memory PDF smoke пройдены в `codex/01-dompdf-security`; ждёт commit | В работе |
 | PAY-01 | Route вызывает отсутствующий `initiatePayment` | P0 | 01/06 | CTA скрыт до реализации; затем end-to-end sandbox test | Запланировано |
 | PAY-02 | Отсутствует payment template | P0 | 01/06 | нет broken route; затем browser checkout flow | Запланировано |
 | PAY-03 | Смешаны YooMoney и YooKassa | P0 | 01/06 | legacy path недоступен; одна YooKassa state machine | Запланировано |

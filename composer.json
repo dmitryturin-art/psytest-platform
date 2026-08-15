@@ -4,7 +4,7 @@
   "type": "project",
   "license": "proprietary",
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.3",
     "twig/twig": "^3.0",
     "dompdf/dompdf": "^3.0",
     "ramsey/uuid": "^4.7",
@@ -35,6 +35,9 @@
   },
   "config": {
     "optimize-autoloader": true,
+    "platform": {
+      "php": "8.3.0"
+    },
     "sort-packages": true
   },
   "scripts": {

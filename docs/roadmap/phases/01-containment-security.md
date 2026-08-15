@@ -10,6 +10,8 @@
 
 1. **Containment платного пути.** Regression-тестом подтвердить broken route/template, скрыть все платные CTA и вернуть безопасный нейтральный ответ на legacy endpoints. Явно пометить YooMoney path как retired.
 2. **Dependency safety.** Обновить `dompdf` минимум до 3.1.6, проверить audit, генерацию PDF, кириллицу, график SMIL и print layout; после этого добавить безопасный `composer.lock` в Git и удалить его временное ignore rule.
+
+Статус dependency safety: выполняется в `codex/01-dompdf-security`; Dompdf 3.1.6, чистый audit и in-memory Cyrillic PDF smoke получены. Проверка старых PDF не требуется по решению владельца; визуальная регрессия SMIL-графика остаётся отдельной UI-проверкой.
 3. **CSRF enforcement.** Инвентаризировать mutating routes, добавить единый middleware/guard, проверить missing/invalid/reused token и совместимость форм.
 4. **Типизированные ссылки.** Разделить session/result/pair/admin tokens, добавить purpose, expiry, revocation и single-use там, где нужно. Запретить `OR`-lookup разных полномочий.
 5. **Route/session integrity.** Сверять route slug с зафиксированным модулем сессии; неизвестные и подменённые slug отклонять до scoring.

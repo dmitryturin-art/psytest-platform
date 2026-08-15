@@ -4,11 +4,11 @@
 
 ## Сейчас
 
-- Активный этап: [00 — управление и baseline](phases/00-governance-baseline.md).
-- Активная package-ветка: `codex/00-reproducible-baseline`.
+- Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
+- Активная package-ветка: `codex/01-dompdf-security`.
 - Последняя принятая package-ветка: `codex/governance-roadmap`; опубликована в GitHub через `main` до `c7bb44e`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
-- Состояние продукта: изменены только локальные quality-gate инструменты; публичный платный путь не готов к запуску.
+- Состояние продукта: quality gates и dependency safety улучшены; публичный платный путь не готов к запуску.
 - Завершённый work package: канонический roadmap, GitHub README, правила, решения, фазы, журналы, трассировка аудита и repository hygiene (`0943c80`, `0866ae0`).
 - Завершённый work package: `codex/00-reproducible-baseline` (`b6756dd`) — architecture checker починен и покрыт regression-тестом; PHPStan baseline capped at 149.
 
@@ -30,7 +30,7 @@
 | PHPStan | формально pass, baseline 149 | Новые ошибки запрещены; baseline нужно постепенно уменьшать |
 | Architecture check | pass: 5 модулей, шаблоны и статика | project root исправлен и покрыт узким regression-тестом |
 | PHPStan baseline guard | pass: ровно 149 entries | `composer baseline:check` запрещает незаметный рост baseline |
-| Dependency audit | `dompdf` 3.1.5: шесть advisories | P0 этапа 01; целевая версия не ниже безопасной актуальной 3.1.x |
+| Dependency audit | work package: `dompdf` 3.1.6, audit clean | ждёт commit/review; затем `DEP-01` закрывается evidence-ссылкой |
 | Browser smoke | пройден частично | Найдены blank sticky nav, progress 20/21, accessibility и responsive-дефекты |
 
 Свежие команды и точный вывод добавляются в [WORKLOG.md](WORKLOG.md); эта таблица не заменяет повторный baseline run.

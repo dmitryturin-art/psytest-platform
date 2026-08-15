@@ -193,7 +193,7 @@ storage/logs/cleanup.log
 
 ## 📞 Если что-то не работает
 
-1. Проверьте версию PHP: `php -v` (нужна 8.1+)
+1. Проверьте версию PHP: `php -v` (нужна 8.3+)
 2. Проверьте расширения: `php -m | grep -i pdo`
 3. Посмотрите логи PHP: `storage/logs/`
 4. Пересоздайте autoload: `composer dump-autoload`

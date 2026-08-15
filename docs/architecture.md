@@ -39,7 +39,7 @@
 
 | Компонент | Технология | Версия |
 |-----------|------------|--------|
-| Backend | PHP | 8.1+ |
+| Backend | PHP | 8.3+ |
 | Database | MySQL/MariaDB | 5.7+/10.2+ |
 | Template Engine | Twig | 3.x |
 | PDF Generation | DomPDF | 2.x |

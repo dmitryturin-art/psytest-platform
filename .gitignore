@@ -2,8 +2,6 @@
 
 # Dependencies
 /vendor/
-# Temporary legacy state: phase 01 updates vulnerable Dompdf, then tracks a safe lockfile.
-composer.lock
 
 # Environment
 .env
