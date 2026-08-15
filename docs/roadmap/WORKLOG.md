@@ -19,6 +19,15 @@
 
 ## 2026-08-15
 
+### Локальная интеграция governance
+
+- Этап / ветка / commit: этап 00, `codex/governance-roadmap` → local `main`, fast-forward до `0dad917`.
+- Цель: принять проверенный documentation/repository package без merge commit и без функциональных изменений.
+- Сделано: три commits интегрированы в локальный `main`; рабочее дерево после merge чистое.
+- Проверки и evidence: active Markdown links — OK; `git diff --check` — OK; package reviewed тремя независимыми субагентами.
+- Не сделано / риски: remote `origin/main` остаётся на `6c51cc3`, потому что `gh auth status` сообщает invalid token. До push нужно определить visibility и решить, требует ли старая PDF history очистки.
+- Следующий шаг: `gh auth login -h github.com`, затем publication safety decision и push.
+
 ### Независимый аудит и формирование продукта
 
 - Этап / ветка / commit: подготовительная работа, `main`, commit baseline `6c51cc3`.

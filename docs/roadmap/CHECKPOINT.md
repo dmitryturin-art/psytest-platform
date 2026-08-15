@@ -6,7 +6,7 @@
 
 - Проект: PsyTest Platform.
 - Активный этап: 00 — управление и baseline.
-- Package-ветка: `codex/governance-roadmap`; готова к fast-forward merge в `main`.
+- Package-ветка `codex/governance-roadmap` fast-forward интегрирована в локальный `main` до `0dad917`; remote ещё на baseline `6c51cc3`.
 - Функциональный код: не изменён.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -22,13 +22,13 @@
 ## Что сейчас в работе
 
 - Governance package локально завершён и проверен тремя независимыми reviews.
-- Остались local merge и GitHub publication handoff.
+- Остался GitHub publication handoff.
 - GitHub publication заблокирован только недействительным `gh` token.
 
 ## Ближайшие действия
 
-1. Fast-forward merge package-ветки в локальный `main`.
-2. Выполнить `gh auth login -h github.com`, определить visibility и решить вопрос старой PDF history.
+1. Выполнить `gh auth login -h github.com`.
+2. Определить visibility и решить вопрос старой PDF history до push.
 3. Отправить безопасный `main` в GitHub.
 4. Переключить основную задачу на Terra.
 5. В новой ветке начать reproducible baseline и обновление Dompdf, не UI и не payment implementation.

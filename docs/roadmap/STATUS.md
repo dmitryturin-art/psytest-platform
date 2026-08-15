@@ -5,7 +5,7 @@
 ## Сейчас
 
 - Активный этап: [00 — управление и baseline](phases/00-governance-baseline.md).
-- Последняя package-ветка: `codex/governance-roadmap`; локальная интеграция в `main` готовится.
+- Последняя package-ветка: `codex/governance-roadmap`; fast-forward интегрирована в локальный `main` до `0dad917`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: функциональный код в текущем work package не менялся; публичный платный путь не готов к запуску.
 - Завершённый work package: канонический roadmap, GitHub README, правила, решения, фазы, журналы, трассировка аудита и repository hygiene (`0943c80`, `0866ae0`).
@@ -49,9 +49,9 @@
 
 ## Следующие пять действий
 
-1. Слить `codex/governance-roadmap` локально в `main`.
-2. После GitHub re-auth определить visibility и безопасно опубликовать `main`.
-3. В `codex/00-reproducible-baseline` воспроизвести полный baseline и починить сами quality-gate scripts.
+1. Выполнить GitHub re-auth, определить visibility и решить, нужна ли sanitization старой PDF history.
+2. Безопасно отправить локальный `main` в GitHub.
+3. Переключить основную задачу на Terra и создать `codex/00-reproducible-baseline`.
 4. Начать этап 01 с отключения сломанного платного CTA и обновления уязвимой зависимости.
 5. Закрывать security findings отдельными regression-тестами до UI-редизайна.
 
@@ -61,4 +61,4 @@
 
 ## Последняя контрольная точка
 
-[CHECKPOINT.md](CHECKPOINT.md) — состояние governance work package до первого коммита.
+[CHECKPOINT.md](CHECKPOINT.md) — состояние после локального merge, перед GitHub publication.
