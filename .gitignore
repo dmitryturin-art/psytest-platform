@@ -2,7 +2,6 @@
 
 # Dependencies
 /vendor/
-composer.lock
 
 # Environment
 .env
@@ -63,6 +62,9 @@ package-lock.json
 
 # Playwright MCP snapshots (debug artifacts)
 /.playwright-mcp/
+
+# Generated Graphify knowledge graph (local navigation artifact)
+/graphify-out/
 
 # Claude / ZCode local config
 /.claude/
