@@ -19,6 +19,15 @@
 
 ## 2026-08-15
 
+### 01.4 — границы токенов результата и пары
+
+- Этап / ветка / commit: этап 01.4, `codex/01-token-boundaries`, commit pending.
+- Цель: исключить неоднозначный `session_token OR partner_token` lookup, не меняя scoring и действующий парный сценарий Лазаруса.
+- Сделано: удалён loose API `getSessionByToken()`; `getSessionByResultToken()` читает только `session_token`; result, PDF, delete, autosave и pair-flow используют явный метод. `partner_token` документирован как relationship reference, а не credential. Устаревший PHPStan baseline entry снят (149 → 148).
+- Проверки и evidence: узкие Lazarus E2E + baseline check — 4 tests/25 assertions; `composer analyse` — pass; полный `composer test` — 100 tests/1146 assertions; `composer lint`, architecture check и `git diff --check` — pass. Всё выполнено на PHP 8.5 при заявленной минимальной платформе PHP 8.3.
+- Не сделано / риски: purpose/admin tokens, single-use invite и отдельная policy revocation относятся к последующим небольшим пакетам этапа 01; route slug/session integrity и validation остаются P0.
+- Следующий шаг: commit, fast-forward merge, push и GitHub Actions; затем 01.5.
+
 ### 00E — тихая отчётность об инструментах работы
 
 - Этап / ветка / commit: этап 00E, `codex/00-quiet-agent-status`, commit pending.

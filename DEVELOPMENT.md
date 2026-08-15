@@ -225,7 +225,7 @@ $metadata = $module->getMetadata();
    ↓
    ResultController->show('smil', $token)
    ↓
-   SessionManager->getSessionByToken($token)
+   SessionManager->getSessionByResultToken($token)
    ↓
    SmilModule->renderResults($results)
    ↓
@@ -655,7 +655,7 @@ $session = $sessionManager->createSession($testId, [
 ]);
 
 // Получение
-$session = $sessionManager->getSessionByToken($token);
+$session = $sessionManager->getSessionByResultToken($token);
 $session = $sessionManager->getSessionById($id);
 
 // Сохранение ответов
@@ -1129,7 +1129,7 @@ $sessionManager->saveAnswers($sessionId, $answers);
 $sessionManager->completeSession($sessionId, $results);
 
 // Получить по токену (для страницы результатов)
-$session = $sessionManager->getSessionByToken($token);
+$session = $sessionManager->getSessionByResultToken($token);
 
 // Удалить (GDPR)
 $sessionManager->deleteSession($sessionId);

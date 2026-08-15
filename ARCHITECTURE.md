@@ -204,23 +204,23 @@ class ModuleLoader
 
 Обнаружение модулей: сканирует `modules/{slug}/`, ищет `{Name}Module.php` + `metadata.json` + `questions.json`.
 
-### SessionManager — `core/SessionManager.php` (~375 строк)
+### SessionManager — `core/SessionManager.php`
+
+Хранилище жизненного цикла прохождения теста, не PHP browser-session.
 
 ```php
-class SessionManager   // Singleton
+class SessionManager
 {
-    private static ?SessionManager $instance = null;
-
-    public static function getInstance(): SessionManager;
-    public function start(): void;
-    public function set(string $key, mixed $value): void;
-    public function get(string $key, mixed $default = null): mixed;
-    public function remove(string $key): void;
-    public function regenerateId(): void;
-    public function destroy(): void;
-    public function isValid(int $ttlDays): bool;      // проверка TTL сессии
+    public function createSession(int $testId, array $options = []): array;
+    public function getSessionByResultToken(string $token): ?array;
+    public function getSessionById(string $sessionId): ?array;
+    public function saveAnswers(string $sessionId, array $answers): bool;
+    public function completeSession(string $sessionId, array $results): bool;
+    public function deleteSession(string $sessionId): bool;
 }
 ```
+
+`session_token` — единственный публичный ключ доступа к результату. `partner_token` не является ключом доступа: он хранит связь второй парной анкеты с первой и не участвует в lookup результата.
 
 ### Security — `core/Security.php` (~334 строки)
 
@@ -323,7 +323,7 @@ class ResultController extends BaseController
 }
 ```
 
-Доступ по публичному `session_token` (VARCHAR(64)) — не требует авторизации. GDPR soft-delete через `delete()` (меняет `status` на `deleted`).
+Доступ по публичному `session_token` (VARCHAR(64)) — не требует авторизации. Это единственный URL-токен результата: `partner_token` не может открыть, скачать, изменить или удалить чужой результат. GDPR soft-delete через `delete()` (меняет `status` на `deleted`).
 
 Для PDF профиль-чарт (Chart.js canvas) заменяется статичным HTML bar-chart (`renderProfileChartHtml`), потому что DomPDF не исполняет JavaScript.
 
@@ -696,7 +696,7 @@ CREATE TABLE test_sessions (
   id CHAR(36) PRIMARY KEY,                       -- UUID
   test_id INT UNSIGNED NOT NULL,
   session_token VARCHAR(64) NOT NULL UNIQUE,     -- публичный токен доступа (в URL)
-  partner_token VARCHAR(64) DEFAULT NULL,        -- для парного режима
+  partner_token VARCHAR(64) DEFAULT NULL,        -- ссылка P2 на session_token P1; не credential
   user_email VARCHAR(255) DEFAULT NULL,
   user_name VARCHAR(255) DEFAULT NULL,
   demographics JSON DEFAULT NULL,                -- пол, возраст (пол нужен СМИЛ для шкалы 5)
@@ -763,7 +763,7 @@ CREATE TABLE payment_transactions (
 
 ### Ключевые моменты
 
-- `session_token` — VARCHAR(64), публичный токен доступа без авторизации (в URL `/result/{slug}/{token}`)
+- `session_token` — VARCHAR(64), единственный публичный токен доступа без авторизации (в URL `/result/{slug}/{token}`); `partner_token` — только ссылка для парного режима
 - `id` сессий — CHAR(36) UUID; `id` логов и транзакций — автоинкрементные
 - `status` — enum жизненного цикла сессии (`partial` → `completed` / `expired` / `deleted`); GDPR soft-delete = `status='deleted'`
 - `demographics`, `answers`, `calculated_results`, `comparison_data`, `details`, `raw_payload` — JSON-столбцы

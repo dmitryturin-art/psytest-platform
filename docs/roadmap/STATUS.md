@@ -5,31 +5,31 @@
 ## Сейчас
 
 - Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
-- Активная package-ветка: `codex/01-csrf-enforcement`.
-- Последняя принятая package-ветка: `codex/governance-roadmap`; опубликована в GitHub через `main` до `c7bb44e`.
+- Активная package-ветка: `codex/01-token-boundaries`.
+- Последняя принятая package-ветка: `codex/00-quiet-agent-status`; опубликована в GitHub через `main` до `ed3d896`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
-- Состояние продукта: quality gates и dependency safety улучшены; legacy платный путь закрывается, публичная продажа пока не готова к запуску.
-- Завершённый work package: канонический roadmap, GitHub README, правила, решения, фазы, журналы, трассировка аудита и repository hygiene (`0943c80`, `0866ae0`).
-- Завершённый work package: `codex/00-reproducible-baseline` (`b6756dd`) — architecture checker починен и покрыт regression-тестом; PHPStan baseline capped at 149.
+- Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
+- Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
+- В текущей ветке проверен 01.4: lookup результата разделён с pair-reference; commit и реальный CI ещё ожидаются.
 
 ## Готовность этапов
 
 | Этап | Состояние | Прогресс/условие перехода |
 |---|---|---|
-| 00 | В работе | governance-каркас готов; далее воспроизводимый baseline и исправление документационных gate |
-| 01 | Не начат | начинается после первого governance-коммита |
+| 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
+| 01 | В работе | 01.1–01.3 завершены; 01.4 token boundaries проверен локально и ожидает интеграции/CI |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
 
 | Проверка | Результат на 2026-08-15 | Интерпретация |
 |---|---|---|
-| PHPUnit | 85 tests, 1101 assertions — pass | Полезная база, но не покрывает критические security/payment/browser flows |
+| PHPUnit | 100 tests, 1146 assertions — pass | Полезная база; security packages добавляют целевые регрессии, browser flow ещё не покрыт полностью |
 | Composer validate | pass | `composer.json` синтаксически корректен |
 | PHP syntax/style | pass | Не доказывает корректность поведения |
-| PHPStan | формально pass, baseline 149 | Новые ошибки запрещены; baseline нужно постепенно уменьшать |
+| PHPStan | pass, baseline 148 | Новые ошибки запрещены; baseline нужно постепенно уменьшать |
 | Architecture check | pass: 5 модулей, шаблоны и статика | project root исправлен и покрыт узким regression-тестом |
-| PHPStan baseline guard | pass: ровно 149 entries | `composer baseline:check` запрещает незаметный рост baseline |
+| PHPStan baseline guard | pass: ровно 148 entries | `composer baseline:check` запрещает незаметный рост baseline |
 | Dependency audit | pass: `dompdf` 3.1.6, audit clean | `DEP-01` закрыт в `7272e51`; lock воспроизводим для PHP 8.3 |
 | Browser smoke | пройден частично | Найдены blank sticky nav, progress 20/21, accessibility и responsive-дефекты |
 
@@ -37,24 +37,22 @@
 
 ## Активные риски
 
-1. CSRF-токен создаётся, но не enforced на изменяющих состояние запросах.
-2. Доступ по token допускает неоднозначный `session OR partner` lookup.
-3. Сервер не гарантирует модульную валидацию ответов и согласованность slug.
-4. Платёжный flow смешивает YooMoney/YooKassa, имеет отсутствующие method/template и цену 499 ₽.
-5. BDI item 9 не создаёт независимый кризисный signal.
-6. Документация обещает свойства, которых фактический код не обеспечивает.
-7. Дополнительные шкалы SMIL: заявлено 200, фактически найдено 23; часть норм противоречива.
-8. Два PDF результатов присутствуют в старой Git history; в актуальной ветке они не отслеживаются. Владелец подтвердил, что они обезличены, и решил не переписывать историю.
+1. Сервер не гарантирует модульную валидацию ответов и согласованность slug.
+2. Legacy payment endpoints безопасно retired, но новый YooKassa/AI flow ещё не спроектирован и не реализован.
+3. BDI item 9 не создаёт независимый кризисный signal.
+4. Документация местами ещё обещает свойства, которых фактический код не обеспечивает.
+5. Дополнительные шкалы SMIL: заявлено 200, фактически найдено 23; часть норм противоречива.
+6. Два PDF результатов присутствуют в старой Git history; в актуальной ветке они не отслеживаются. Владелец подтвердил, что они обезличены, и решил не переписывать историю.
 
 Полный список и владельцы закрытия: [AUDIT_TRACEABILITY.md](AUDIT_TRACEABILITY.md).
 
 ## Следующие пять действий
 
-1. Интегрировать `7272e51` в `main` и опубликовать безопасный lockfile.
-2. Настроить минимальный CI после того, как audit перестал быть красным из-за зависимости.
-3. В отдельной ветке начать этап 01 с отключения сломанного платного CTA.
-4. Закрывать security findings отдельными regression-тестами до UI-редизайна.
-5. Не начинать UI-редизайн до закрытия P0 security/payment containment.
+1. Интегрировать 01.4 token boundaries и подтвердить GitHub Actions.
+2. 01.5: проверить slug/session integrity и обязательную серверную validation.
+3. Закрывать оставшиеся security findings отдельными regression-тестами до UI-редизайна.
+4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
+5. После выхода из этапа 01 перейти к privacy и кризисному BDI flow этапа 02.
 
 ## Решения владельца, нужные сейчас
 
@@ -62,4 +60,4 @@
 
 ## Последняя контрольная точка
 
-[CHECKPOINT.md](CHECKPOINT.md) — состояние после локального merge, перед GitHub publication.
+[CHECKPOINT.md](CHECKPOINT.md) — состояние во время локально проверенного 01.4, перед commit/CI.

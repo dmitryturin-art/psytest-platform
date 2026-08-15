@@ -67,10 +67,10 @@ final class LazarusE2ETest extends TestCase
         // Sessions must be distinct
         $this->assertNotSame($p1Session['id'], $p2Session['id'], 'P1 and P2 must be different sessions');
 
-        // ---- pairSubmit logic: find P1 strictly by session_token ----
-        $p1Found = $this->sm->getSessionBySessionToken($p1Token);
+        // ---- pairSubmit logic: find P1 by result-access token ----
+        $p1Found = $this->sm->getSessionByResultToken($p1Token);
         $this->assertNotNull($p1Found, 'P1 found by session_token');
-        $this->assertSame($p1Session['id'], $p1Found['id'], 'Must be P1, not P2 (the getSessionByToken bug)');
+        $this->assertSame($p1Session['id'], $p1Found['id'], 'Must be P1, not P2');
 
         // ---- Create comparison ----
         $comparison = $this->module->comparePairResults(
@@ -139,11 +139,9 @@ final class LazarusE2ETest extends TestCase
     }
 
     /**
-     * Regression guard: getSessionByToken (loose) vs getSessionBySessionToken (strict).
-     * The loose matcher must NOT be used to find a specific partner — it can
-     * return the wrong session when partner_token collides with session_token.
+     * A partner reference cannot impersonate the first partner's result token.
      */
-    public function testGetSessionByTokenCanReturnWrongSession(): void
+    public function testResultTokenLookupNeverResolvesPartnerReference(): void
     {
         $p1 = $this->sm->createSession($this->testId);
         $p1Token = $p1['session_token'];
@@ -151,17 +149,16 @@ final class LazarusE2ETest extends TestCase
         // P2 created with partner_token = P1's session_token
         $p2 = $this->sm->createSession($this->testId, ['partner_token' => $p1Token]);
 
-        // Strict lookup: always returns P1
-        $strict = $this->sm->getSessionBySessionToken($p1Token);
-        $this->assertNotNull($strict);
-        $this->assertSame($p1['id'], $strict['id'], 'strict lookup returns P1');
+        $p1Lookup = $this->sm->getSessionByResultToken($p1Token);
+        $p2Lookup = $this->sm->getSessionByResultToken($p2['session_token']);
 
-        // Loose lookup: MAY return either (documents the hazard we worked around)
-        $loose = $this->sm->getSessionByToken($p1Token);
-        $this->assertNotNull($loose);
-        $this->assertTrue(
-            $loose['id'] === $p1['id'] || $loose['id'] === $p2['id'],
-            'loose lookup matches by session_token OR partner_token'
+        $this->assertNotNull($p1Lookup);
+        $this->assertSame($p1['id'], $p1Lookup['id'], 'P1 result token resolves only P1');
+        $this->assertNotNull($p2Lookup);
+        $this->assertSame($p2['id'], $p2Lookup['id'], 'P2 result token resolves only P2');
+        $this->assertFalse(
+            method_exists(SessionManager::class, 'getSessionByToken'),
+            'The ambiguous token lookup API must not be reintroduced'
         );
     }
 

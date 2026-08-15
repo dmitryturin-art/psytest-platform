@@ -216,7 +216,7 @@ classDiagram
     class SessionManager {
         -Database db
         +createSession(testId, options) array
-        +getSessionByToken(token) array
+        +getSessionByResultToken(token) array
         +saveAnswers(sessionId, answers)
         +completeSession(sessionId, results)
     }
@@ -346,7 +346,7 @@ POST /api/webhook/payment       → ApiController::paymentWebhook
 **Методы:**
 ```php
 createSession(int $testId, array $options): array
-getSessionByToken(string $token): ?array
+getSessionByResultToken(string $token): ?array
 getSessionById(string $id): ?array
 saveAnswers(string $sessionId, array $answers): void
 completeSession(string $sessionId, array $results): void
@@ -577,7 +577,7 @@ sequenceDiagram
     
     U->>R: GET /result/smil/{token}
     R->>RC: show('smil', token)
-    RC->>SM: getSessionByToken(token)
+    RC->>SM: getSessionByResultToken(token)
     SM->>DB: SELECT test_sessions
     DB-->>SM: session
     SM-->>RC: session

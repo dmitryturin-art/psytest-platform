@@ -64,7 +64,7 @@ class TestController extends BaseController
         }
 
         // Verify session
-        $session = $this->sessionManager->getSessionByToken($input['session_token']);
+        $session = $this->sessionManager->getSessionByResultToken($input['session_token']);
         if (!$session) {
             echo json_encode(['success' => false, 'error' => 'Session not found']);
             return;
@@ -168,8 +168,8 @@ class TestController extends BaseController
             return;
         }
 
-        // Verify partner session (strictly by session_token — see pairSubmit note)
-        $partnerSession = $this->sessionManager->getSessionBySessionToken($partnerToken);
+        // The pair invite contains the first partner's result-access token.
+        $partnerSession = $this->sessionManager->getSessionByResultToken($partnerToken);
         if (!$partnerSession) {
             http_response_code(404);
             echo 'Partner session not found';
@@ -270,11 +270,9 @@ class TestController extends BaseController
             'interpretation' => $interpretation,
         ]));
 
-        // Find the first partner's session strictly by their own session_token.
-        // getSessionBySessionToken() (not getSessionByToken) — the latter also
-        // matches partner_token and could return the second partner's own session
-        // instead, since both share the same partner_token value.
-        $partnerSession = $this->sessionManager->getSessionBySessionToken($partnerToken);
+        // Resolve the first partner by their own result-access token. A
+        // partner_token is a relationship reference, never an access token.
+        $partnerSession = $this->sessionManager->getSessionByResultToken($partnerToken);
         if (!$partnerSession || empty($partnerSession['calculated_results'])) {
             // First partner hasn't completed yet — redirect to own result page.
             header('Location: /result/' . $slug . '/' . $session['session_token']);

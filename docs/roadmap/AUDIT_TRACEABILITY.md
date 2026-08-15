@@ -8,8 +8,8 @@
 
 | ID | Finding | Риск | Этап | Требуемое доказательство | Статус |
 |---|---|---|---|---|---|
-| SEC-01 | CSRF генерируется, но не enforced | P0 | 01 | `e42eb89`: middleware + missing/invalid/valid/reused tests; ждёт GitHub CI | В работе |
-| SEC-02 | Token lookup использует `session OR partner` | P0 | 01 | раздельные типизированные токены, expiry/revocation и cross-access tests | Запланировано |
+| SEC-01 | CSRF генерируется, но не enforced | P0 | 01 | `e42eb89`: middleware + missing/invalid/valid/reused tests; GitHub Actions `31904136305` — success | Закрыто |
+| SEC-02 | Token lookup использует `session OR partner` | P0 | 01 | 01.4: `getSessionByResultToken()` lookup только `session_token`; pair reference больше не credential; Lazarus E2E regression и PHPStan baseline 148; ждёт GitHub CI | В работе |
 | SEC-03 | Route slug не сверяется с session module | P0 | 01 | mismatch возвращает безопасный отказ; regression test | Запланировано |
 | SEC-04 | Нет обязательной серверной module validation | P0 | 01/03 | schema/range/completeness tests для каждого модуля | Запланировано |
 | SEC-05 | Публичные debug/test files | P0 | 01 | web-root inventory и HTTP 404/deny tests | Запланировано |

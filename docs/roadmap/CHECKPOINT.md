@@ -6,8 +6,8 @@
 
 - Проект: PsyTest Platform.
 - Активный этап: 01 — containment и безопасность.
-- Governance и baseline package опубликованы в `main` на GitHub до `f1b101b`.
-- Последний локальный security package: `7272e51` на `codex/01-dompdf-security`; он ожидает интеграции. Формулы тестов и пользовательский flow не менялись.
+- Последний принятый package опубликован в `main` на GitHub до `ed3d896`.
+- Текущий локально проверенный security package: 01.4 на `codex/01-token-boundaries`; commit и GitHub CI ожидаются. Формулы тестов и пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
 ## Что уже сделано
@@ -23,24 +23,24 @@
 
 - Governance package локально завершён и проверен тремя независимыми reviews.
 - Governance publication завершена.
-- Воспроизводимый baseline завершён: architecture checker починен, PHPStan baseline capped at 149, evidence — в `WORKLOG.md`.
+- Воспроизводимый baseline завершён: architecture checker починен, PHPStan baseline capped at 148, evidence — в `WORKLOG.md`.
 - Dependency safety завершён: Dompdf 3.1.6, composer audit clean, composer.lock теперь отслеживается и разрешается для PHP 8.3.
+- Legacy payment CTA/endpoints safely retired; CSRF middleware введён для browser mutations.
+- 01.4 разделяет result-access token и pair-reference: lookup результата использует только `session_token`.
 
 ## Ближайшие действия
 
-1. Интегрировать и опубликовать `7272e51`.
-2. В новой ветке заняться containment сломанного платного пути, не смешивая его с UI или production YooKassa.
-3. Затем настроить минимальный CI на уже чистом dependency audit.
-4. После containment перейти к CSRF и границам токенов отдельными пакетами.
+1. Commit и GitHub Actions для 01.4.
+2. 01.5: route/session integrity и server-side validation как отдельные пакеты.
+3. Закрыть web-root hygiene и pair boundaries до выхода из этапа 01.
+4. Затем перейти к privacy/crisis BDI flow этапа 02.
 5. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
 
 ## Известные блокеры и риски
 
-- Платный route/шаблон/webhook не образуют рабочий процесс.
-- CSRF заявлен, но не enforced.
-- Token lookup неоднозначен.
+- Новый платный flow пока не существует: legacy endpoints намеренно retired до проектирования YooKassa/AI orders.
+- Route/session slug integrity и server-side ответная validation ещё не закрыты.
 - BDI item 9 не имеет самостоятельного safety-flow.
-- dompdf требует обновления.
 - Документация расходится с кодом.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
 - Два старых PDF остаются только в истории; владелец подтвердил их обезличенность и отказался от history rewrite. Новые generated PDF игнорируются и не попадают в Git.

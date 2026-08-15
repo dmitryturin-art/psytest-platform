@@ -326,11 +326,6 @@ parameters:
 			path: core/SessionManager.php
 
 		-
-			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:getSessionByToken\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: core/SessionManager.php
-
-		-
 			message: "#^Method PsyTest\\\\Core\\\\SessionManager\\:\\:logActivity\\(\\) has parameter \\$details with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: core/SessionManager.php

@@ -30,7 +30,7 @@ class ResultController extends BaseController
     public function show(string $slug, string $token): void
     {
         // Get session
-        $session = $this->sessionManager->getSessionByToken($token);
+        $session = $this->sessionManager->getSessionByResultToken($token);
         if (!$session) {
             http_response_code(404);
             echo $this->view->render('error-page');
@@ -75,7 +75,7 @@ class ResultController extends BaseController
     public function pairStatus(string $slug, string $token): void
     {
         header('Content-Type: application/json');
-        $session = $this->sessionManager->getSessionByToken($token);
+        $session = $this->sessionManager->getSessionByResultToken($token);
         if (!$session) {
             http_response_code(404);
             echo json_encode(['error' => 'Session not found']);
@@ -96,7 +96,7 @@ class ResultController extends BaseController
     public function pdf(string $slug, string $token): void
     {
         // Get session
-        $session = $this->sessionManager->getSessionByToken($token);
+        $session = $this->sessionManager->getSessionByResultToken($token);
         if (!$session) {
             http_response_code(404);
             echo 'Session not found';
@@ -152,7 +152,7 @@ class ResultController extends BaseController
     {
         header('Content-Type: application/json');
 
-        $session = $this->sessionManager->getSessionByToken($token);
+        $session = $this->sessionManager->getSessionByResultToken($token);
         if (!$session) {
             echo json_encode(['success' => false, 'error' => 'Session not found']);
             return;
@@ -268,7 +268,7 @@ class ResultController extends BaseController
      */
     public function interpretation(string $token): void
     {
-        $session = $this->sessionManager->getSessionByToken($token);
+        $session = $this->sessionManager->getSessionByResultToken($token);
         if (!$session) {
             http_response_code(404);
             echo $this->view->render('error-page');

@@ -80,43 +80,16 @@ class SessionManager
     }
 
     /**
-     * Get session by token
+     * Look up a session by its public result-access token.
      *
-     * @param string $token Session or partner token
-     * @return array|null Session data or null if not found/expired
-     */
-    public function getSessionByToken(string $token): ?array
-    {
-        $sql = "SELECT * FROM test_sessions
-                WHERE (session_token = :token1 OR partner_token = :token2)
-                AND expires_at > NOW()
-                AND status NOT IN ('expired', 'deleted')";
-
-        $session = $this->db->selectOne($sql, [
-            'token1' => $token,
-            'token2' => $token,
-        ]);
-
-        if ($session) {
-            // Decode JSON fields
-            $session['answers'] = !empty($session['answers']) ? json_decode($session['answers'], true) : [];
-            $session['calculated_results'] = !empty($session['calculated_results']) ? json_decode($session['calculated_results'], true) : [];
-            $session['demographics'] = !empty($session['demographics']) ? json_decode($session['demographics'], true) : [];
-        }
-
-        return $session;
-    }
-
-    /**
-     * Get a session strictly by its session_token (not partner_token).
-     *
-     * Use this when looking up a specific partner's own session by the token
-     * they were issued — getSessionByToken() also matches partner_token, which
-     * can return the wrong row when multiple sessions share a partner_token.
+     * `partner_token` is a relationship reference used only while creating a
+     * pair response. It is deliberately not an alternative access credential:
+     * a result URL, PDF, save, delete, or pair flow must resolve only the
+     * session that issued the token in its own `session_token` column.
      *
      * @return array<string, mixed>|null
      */
-    public function getSessionBySessionToken(string $token): ?array
+    public function getSessionByResultToken(string $token): ?array
     {
         $sql = "SELECT * FROM test_sessions
                 WHERE session_token = :token
@@ -281,7 +254,7 @@ class SessionManager
      */
     public function isValidSession(string $token): bool
     {
-        return $this->getSessionByToken($token) !== null;
+        return $this->getSessionByResultToken($token) !== null;
     }
 
     /**
