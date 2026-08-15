@@ -1,0 +1,75 @@
+name: Quality gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: PHP 8.3 quality gate
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: psytest
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      DB_HOST: 127.0.0.1
+      DB_NAME: psytest
+      DB_USER: root
+      DB_PASS: root
+      DB_CHARSET: utf8mb4
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, dom, xml
+          coverage: none
+
+      - name: Validate Composer manifest and lockfile
+        run: composer validate --strict --no-check-publish
+
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Check known dependency vulnerabilities
+        run: composer audit
+
+      - name: Apply test database migrations
+        run: composer migrate
+
+      - name: Run tests
+        run: composer test
+
+      - name: Check PHPStan baseline cap
+        run: composer baseline:check
+
+      - name: Run static analysis
+        run: composer analyse
+
+      - name: Check formatting
+        run: composer lint
+
+      - name: Check project architecture
+        run: php bin/check-architecture.php
