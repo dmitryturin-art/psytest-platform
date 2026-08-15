@@ -10,7 +10,7 @@
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: изменены только локальные quality-gate инструменты; публичный платный путь не готов к запуску.
 - Завершённый work package: канонический roadmap, GitHub README, правила, решения, фазы, журналы, трассировка аудита и repository hygiene (`0943c80`, `0866ae0`).
-- Выполняемый work package: `codex/00-reproducible-baseline` — architecture checker починен и покрыт regression-тестом; PHPStan baseline capped at 149.
+- Завершённый work package: `codex/00-reproducible-baseline` (`b6756dd`) — architecture checker починен и покрыт regression-тестом; PHPStan baseline capped at 149.
 
 ## Готовность этапов
 
@@ -50,11 +50,11 @@
 
 ## Следующие пять действий
 
-1. Просмотреть и закоммитить work package reproducible baseline.
-2. Обновить Dompdf минимум до 3.1.6, проверить PDF и начать отслеживать безопасный `composer.lock`.
-3. Настроить минимальный CI после того, как audit перестанет быть красным из-за зависимости.
-4. Начать этап 01 с отключения сломанного платного CTA.
-5. Закрывать security findings отдельными regression-тестами до UI-редизайна.
+1. Создать отдельную ветку и обновить Dompdf минимум до 3.1.6, проверить PDF и начать отслеживать безопасный `composer.lock`.
+2. Настроить минимальный CI после того, как audit перестанет быть красным из-за зависимости.
+3. Начать этап 01 с отключения сломанного платного CTA.
+4. Закрывать security findings отдельными regression-тестами до UI-редизайна.
+5. Не начинать UI-редизайн до закрытия P0 security/payment containment.
 
 ## Решения владельца, нужные сейчас
 

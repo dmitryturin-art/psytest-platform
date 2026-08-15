@@ -7,7 +7,7 @@
 - Проект: PsyTest Platform.
 - Активный этап: 00 — управление и baseline.
 - Governance package опубликован в `main` на GitHub до `c7bb44e`.
-- Функциональный код: не менялся; в ветке `codex/00-reproducible-baseline` есть незакоммиченные изменения только quality-gate инструментов и roadmap-документации.
+- Функциональный код: не менялся; quality-gate package закоммичен в `b6756dd` на `codex/00-reproducible-baseline`, рабочее дерево чистое.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
 ## Что уже сделано
@@ -23,7 +23,7 @@
 
 - Governance package локально завершён и проверен тремя независимыми reviews.
 - Governance publication завершена.
-- Воспроизводимый baseline в работе: architecture checker починен, PHPStan baseline capped at 149; после review нужен коммит.
+- Воспроизводимый baseline завершён: architecture checker починен, PHPStan baseline capped at 149, evidence — в `WORKLOG.md`.
 
 ## Ближайшие действия
 
