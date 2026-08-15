@@ -25,7 +25,8 @@
       "PsyTest\\Modules\\Smil\\": "modules/smil/",
       "PsyTest\\Modules\\BeckAnxiety\\": "modules/beck-anxiety/",
       "PsyTest\\Modules\\BeckDepression\\": "modules/beck-depression/",
-      "PsyTest\\Modules\\Hads\\": "modules/hads/"
+      "PsyTest\\Modules\\Hads\\": "modules/hads/",
+      "PsyTest\\Modules\\Lazarus\\": "modules/lazarus/"
     }
   },
   "autoload-dev": {

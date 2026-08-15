@@ -19,6 +19,15 @@
 
 ## 2026-08-15
 
+### 00D follow-up — Linux PSR-4 compatibility Лазаруса
+
+- Этап / ветка / commit: этап 00D, `codex/00-fix-lazarus-autoload`, commit pending.
+- Причина: первый реальный GitHub Actions run `31903840762` корректно обнаружил 20 ошибок `Class PsyTest\Modules\Lazarus\LazarusModule not found`. На macOS ошибка скрывалась регистронезависимой файловой системой.
+- Сделано: добавлено явное Composer PSR-4 mapping для `PsyTest\Modules\Lazarus\` → `modules/lazarus/` и regression-test `class_exists`. Формулы и данные Лазаруса не менялись.
+- Проверки и evidence: после `composer dump-autoload --optimize` полный `composer test` — 93 tests, 1128 assertions, exit 0; Composer validate, baseline guard, PHPStan и `git diff --check` — exit 0.
+- Процесс: первоначально незакоммиченный diff был создан на `main`; до commit он сразу перенесён в отдельную branch. Урок сохранён в `LESSONS.md`.
+- Следующий шаг: commit/push, подтвердить зелёный GitHub Actions run и только затем закрыть 00D.
+
 ### 01 — containment legacy платного пути
 
 - Этап / ветка / commit: этап 01, `codex/01-disable-broken-paid-flow`, `541be90`.

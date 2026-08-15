@@ -70,6 +70,16 @@
 - Защита: pre-publication tracked-file scan; вывод из индекса с сохранением локальной копии; при реальных данных отдельно оценивать history purge и credential/link revocation.
 - Статус: действует; текущие tracked artifacts выведены из индекса. Владелец признал два старых PDF обезличенными и отдельно решил не переписывать историю.
 
+## L-009 — Проверять Composer autoload на Linux, не доверять macOS case-insensitivity
+
+- Наблюдение: модуль Лазаруса загружался на macOS, но реальный Linux CI сообщил `Class ... LazarusModule not found` из-за lowercase-каталога и отсутствующей явной PSR-4 mapping.
+- Риск: локально зелёные тесты и падение production/CI на Linux.
+- Правило: после нового или перемещённого модуля явно проверить его PSR-4 mapping или привести путь к PSR-4; выполнить `composer dump-autoload --optimize` и иметь regression-test `class_exists`.
+- Защита: Linux CI и `tests/LazarusAutoloadTest.php`.
+- Статус: действует.
+
+Дополнение процесса: незакоммиченные изменения нельзя оставлять на `main`; если это произошло, сразу создать отдельную `codex/...`-ветку до staging/commit.
+
 ## Как добавлять урок
 
 Добавить запись, если произошло хотя бы одно:
