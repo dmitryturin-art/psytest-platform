@@ -38,7 +38,7 @@
 | UX-02 | BDI progress заканчивается на 20/21 | P1 | 04 | browser/state regression test | Запланировано |
 | UX-03 | Lazarus legends/touch/accessibility неудобны | P1 | 04 | mobile interaction + screen-reader labels + contrast test | Запланировано |
 | DOC-01 | README/ARCHITECTURE/DEVELOPMENT расходятся с кодом | P1 | 00/01/08 | claim-to-code review, links, актуальные команды и deployment runbook | В работе |
-| CODE-01 | PHPStan baseline подавляет 149 сообщений | P1 | 00/03 | baseline count зафиксирован, не растёт и уменьшается пакетами | В работе |
+| CODE-01 | PHPStan baseline подавляет 149 сообщений | P1 | 00/03 | `composer baseline:check` фиксирует 149 entries; далее baseline уменьшается пакетами | В работе |
 
 ## Сквозные наблюдения без отдельного audit ID
 

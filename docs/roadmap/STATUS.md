@@ -5,11 +5,12 @@
 ## Сейчас
 
 - Активный этап: [00 — управление и baseline](phases/00-governance-baseline.md).
-- Последняя package-ветка: `codex/governance-roadmap`; опубликована в GitHub через `main` до `c7bb44e`.
+- Активная package-ветка: `codex/00-reproducible-baseline`.
+- Последняя принятая package-ветка: `codex/governance-roadmap`; опубликована в GitHub через `main` до `c7bb44e`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
-- Состояние продукта: функциональный код в текущем work package не менялся; публичный платный путь не готов к запуску.
+- Состояние продукта: изменены только локальные quality-gate инструменты; публичный платный путь не готов к запуску.
 - Завершённый work package: канонический roadmap, GitHub README, правила, решения, фазы, журналы, трассировка аудита и repository hygiene (`0943c80`, `0866ae0`).
-- Следующий work package: `codex/00-reproducible-baseline` — исправление quality gates; начинать после merge и GitHub handoff.
+- Выполняемый work package: `codex/00-reproducible-baseline` — architecture checker починен и покрыт regression-тестом; PHPStan baseline capped at 149.
 
 ## Готовность этапов
 
@@ -27,7 +28,8 @@
 | Composer validate | pass | `composer.json` синтаксически корректен |
 | PHP syntax/style | pass | Не доказывает корректность поведения |
 | PHPStan | формально pass, baseline 149 | Новые ошибки запрещены; baseline нужно постепенно уменьшать |
-| Architecture check | fail из-за неверного project root | Инструмент не является рабочим gate до исправления |
+| Architecture check | pass: 5 модулей, шаблоны и статика | project root исправлен и покрыт узким regression-тестом |
+| PHPStan baseline guard | pass: ровно 149 entries | `composer baseline:check` запрещает незаметный рост baseline |
 | Dependency audit | `dompdf` 3.1.5: шесть advisories | P0 этапа 01; целевая версия не ниже безопасной актуальной 3.1.x |
 | Browser smoke | пройден частично | Найдены blank sticky nav, progress 20/21, accessibility и responsive-дефекты |
 
@@ -48,9 +50,9 @@
 
 ## Следующие пять действий
 
-1. Переключить основную задачу на Terra и создать `codex/00-reproducible-baseline`.
-2. Воспроизвести baseline и починить сами quality-gate scripts.
-3. Обновить Dompdf минимум до 3.1.6, проверить PDF и начать отслеживать безопасный `composer.lock`.
+1. Просмотреть и закоммитить work package reproducible baseline.
+2. Обновить Dompdf минимум до 3.1.6, проверить PDF и начать отслеживать безопасный `composer.lock`.
+3. Настроить минимальный CI после того, как audit перестанет быть красным из-за зависимости.
 4. Начать этап 01 с отключения сломанного платного CTA.
 5. Закрывать security findings отдельными regression-тестами до UI-редизайна.
 

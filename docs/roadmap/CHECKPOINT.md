@@ -7,7 +7,7 @@
 - Проект: PsyTest Platform.
 - Активный этап: 00 — управление и baseline.
 - Governance package опубликован в `main` на GitHub до `c7bb44e`.
-- Функциональный код: не изменён.
+- Функциональный код: не менялся; в ветке `codex/00-reproducible-baseline` есть незакоммиченные изменения только quality-gate инструментов и roadmap-документации.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
 ## Что уже сделано
@@ -23,12 +23,12 @@
 
 - Governance package локально завершён и проверен тремя независимыми reviews.
 - Governance publication завершена.
-- Следующая задача — воспроизводимый baseline и dependency security на Terra.
+- Воспроизводимый baseline в работе: architecture checker починен, PHPStan baseline capped at 149; после review нужен коммит.
 
 ## Ближайшие действия
 
-1. Переключить основную задачу на Terra.
-2. В новой ветке начать reproducible baseline и обновление Dompdf, не UI и не payment implementation.
+1. Проверить и закоммитить текущий узкий baseline-package.
+2. В новой ветке обновить Dompdf, не смешивая dependency security с UI или payment implementation.
 3. Перед обновлением Dompdf прочитать active phase, audit traceability и сделать PDF regression fixtures.
 4. После безопасного dependency update начать отслеживать `composer.lock`.
 5. Затем перейти к containment сломанного платного пути.

@@ -72,10 +72,12 @@ composer test
 composer analyse
 composer lint
 php bin/check-architecture.php
-php bin/check-module.php --all
+composer baseline:check
 ```
 
 Если часть gate пока сломана baseline-состоянием, зафиксировать это в `STATUS.md`; не выдавать старую поломку за результат текущего изменения.
+
+`bin/check-module.php` пока не существует: его контракт и реализация относятся к этапу 03. Нельзя включать несуществующую команду в заявляемый пройденным gate.
 
 UI-изменения дополнительно проверяются в реальном браузере на 390×844 и desktop. Платежи — только sandbox fixtures до отдельного production gate.
 

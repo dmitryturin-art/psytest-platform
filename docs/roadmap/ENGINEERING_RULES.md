@@ -88,10 +88,12 @@ composer test
 composer analyse
 composer lint
 php bin/check-architecture.php
-php bin/check-module.php --all
+composer baseline:check
 ```
 
 Не все команды сейчас исправны; этап 00 фиксирует baseline, а этап 01 чинит gate. До этого каждый отчёт явно разделяет старые поломки и новые регрессии.
+
+`bin/check-module.php --all` не является текущей командой: скрипта в репозитории нет. Его нужно создать только вместе с модульным контрактом в этапе 03, а до этого не выдавать такой gate за рабочий.
 
 ### По типу риска
 

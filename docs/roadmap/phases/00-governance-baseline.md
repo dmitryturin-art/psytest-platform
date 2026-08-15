@@ -22,6 +22,8 @@
 - Починить неверный project root в architecture checker тестом на запуск из корня.
 - Зафиксировать PHPStan baseline 149 и запретить рост в CI.
 
+Состояние: architecture checker исправлен и проверяет все пять имеющихся модулей; добавлен локальный guard `composer baseline:check` на 149 baseline entries. Подключение этого guard в CI переносится в 00D после безопасного обновления зависимостей.
+
 ### 00C. Честная документация и GitHub README
 
 - Сверить `README.md`, `DEVELOPMENT.md`, `ARCHITECTURE.md` с кодом; желаемое состояние вынести в roadmap.

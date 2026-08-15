@@ -19,6 +19,17 @@
 
 ## 2026-08-15
 
+### 00B — воспроизводимый quality baseline
+
+- Этап / ветка / commit: этап 00B, `codex/00-reproducible-baseline`, commit pending.
+- Цель: сделать локальные проверки честными и исполнимыми, не меняя расчёты тестов или пользовательский flow.
+- Сделано: `bin/check-architecture.php` использует корень проекта, а не каталог `bin/`; checker теперь проверяет также модуль Лазаруса, возвращает ненулевой exit code при найденной ошибке и ловит `Throwable`. Добавлены regression-тест checker-а и `composer baseline:check`, который допускает ровно 149 целых PHPStan baseline entries.
+- Решения: несуществующая команда `bin/check-module.php --all` удалена из объявленного общего gate; её можно вводить только вместе с модульным контрактом в этапе 03. CI не добавлялся до исправления dependency audit, чтобы не создать формально зелёную, но неполную проверку.
+- Проверки и evidence: PHP 8.5.3; `composer validate --strict --no-check-publish` — exit 0; `php bin/check-architecture.php` — exit 0 (SMIL, BAI, BDI, HADS, Лазарус); architecture regression запускает checker из системного temp-каталога, а не из repository cwd; `composer baseline:check` — exit 0, 149/149; `vendor/bin/phpunit tests/ArchitectureCheckTest.php tests/PhpStanBaselineCheckTest.php` — 2 tests, 9 assertions, exit 0; `composer analyse` — exit 0; `composer lint` — exit 0; `git diff --check` — exit 0.
+- Известные ограничения: полный `composer test` в sandbox завершается с 3 integration errors подключения к локальной MySQL (`Operation not permitted`); это не считается pass. `composer lint` прошёл только после разрешённого локального запуска вне sandbox (нужен loopback TCP); `composer audit` остаётся красным из-за Dompdf 3.1.5.
+- Изменённые файлы: `bin/check-architecture.php`, `bin/check-phpstan-baseline.php`, тесты architecture/baseline, `composer.json`, текущие roadmap rules/status/traceability.
+- Следующий шаг: review + commit этого узкого work package; затем отдельная ветка security update Dompdf.
+
 ### Продуктовое направление: лендинг и необязательный аккаунт
 
 - Этап / ветка / commit: этапы 04/09, `codex/00-product-landing-account`, commit pending.

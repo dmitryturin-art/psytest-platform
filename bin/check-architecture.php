@@ -6,6 +6,9 @@
 
 declare(strict_types=1);
 
+$projectRoot = dirname(__DIR__);
+$hasFailures = false;
+
 echo "===========================================\n";
 echo "PsyTest Platform - Проверка архитектуры\n";
 echo "===========================================\n\n";
@@ -30,6 +33,7 @@ $requiredFiles = [
     'modules/beck-anxiety/BeckAnxietyModule.php',
     'modules/beck-depression/BeckDepressionModule.php',
     'modules/hads/HadsModule.php',
+    'modules/lazarus/LazarusModule.php',
     'controllers/HomeController.php',
     'controllers/TestController.php',
     'controllers/ResultController.php',
@@ -45,7 +49,7 @@ $requiredFiles = [
 
 $missingFiles = [];
 foreach ($requiredFiles as $file) {
-    if (!file_exists(__DIR__ . '/' . $file)) {
+    if (!file_exists($projectRoot . '/' . $file)) {
         $missingFiles[] = $file;
     }
 }
@@ -53,6 +57,7 @@ foreach ($requiredFiles as $file) {
 if (empty($missingFiles)) {
     echo "   ✓ Все файлы на месте\n";
 } else {
+    $hasFailures = true;
     echo "   ✗ Отсутствуют файлы:\n";
     foreach ($missingFiles as $file) {
         echo "     - $file\n";
@@ -74,7 +79,7 @@ $phpFiles = [
 
 $syntaxErrors = [];
 foreach ($phpFiles as $file) {
-    $filepath = __DIR__ . '/' . $file;
+    $filepath = $projectRoot . '/' . $file;
     exec("php -l " . escapeshellarg($filepath) . " 2>&1", $output, $returnCode);
     if ($returnCode !== 0) {
         $syntaxErrors[] = $file;
@@ -85,6 +90,7 @@ foreach ($phpFiles as $file) {
 if (empty($syntaxErrors)) {
     echo "   ✓ Синтаксических ошибок нет\n";
 } else {
+    $hasFailures = true;
     echo "   ✗ Ошибки синтаксиса в:\n";
     foreach ($syntaxErrors as $file) {
         echo "     - $file\n";
@@ -94,32 +100,41 @@ if (empty($syntaxErrors)) {
 // 3. Проверка конфигурации
 echo "\n3. Проверка конфигурации...\n";
 
-if (file_exists(__DIR__ . '/.env')) {
+if (file_exists($projectRoot . '/.env')) {
     echo "   ✓ Файл .env существует\n";
 } else {
     echo "   ⚠ Файл .env отсутствует (скопируйте из .env.example)\n";
 }
 
-$config = require __DIR__ . '/config.php';
-if ($config) {
-    echo "   ✓ config.php загружается\n";
-    echo "   - APP_NAME: " . $config->appName() . "\n";
-    echo "   - APP_ENV: " . $config->getString('APP_ENV') . "\n";
-    echo "   - APP_DEBUG: " . ($config->isDebug() ? 'true' : 'false') . "\n";
+$configPath = $projectRoot . '/config.php';
+if (!is_file($configPath)) {
+    $hasFailures = true;
+    echo "   ✗ config.php отсутствует\n";
+} else {
+    try {
+        $config = require $configPath;
+        echo "   ✓ config.php загружается\n";
+        echo "   - APP_NAME: " . $config->appName() . "\n";
+        echo "   - APP_ENV: " . $config->getString('APP_ENV') . "\n";
+        echo "   - APP_DEBUG: " . ($config->isDebug() ? 'true' : 'false') . "\n";
+    } catch (\Throwable $e) {
+        $hasFailures = true;
+        echo "   ✗ Не удалось загрузить config.php: " . $e->getMessage() . "\n";
+    }
 }
 
 // 4. Проверка модуля СМИЛ
 echo "\n4. Проверка модуля СМИЛ...\n";
 
-if (file_exists(__DIR__ . '/modules/smil/SmilModule.php')) {
-    require_once __DIR__ . '/modules/TestModuleInterface.php';
-    require_once __DIR__ . '/modules/BaseTestModule.php';
-    require_once __DIR__ . '/modules/ResultSection.php';
-    require_once __DIR__ . '/modules/smil/Scoring/RawScoreCalculator.php';
-    require_once __DIR__ . '/modules/smil/Scoring/TScoreCalculator.php';
-    require_once __DIR__ . '/modules/smil/Scoring/ValidityAssessor.php';
-    require_once __DIR__ . '/modules/smil/Scoring/AdditionalScalesCalculator.php';
-    require_once __DIR__ . '/modules/smil/SmilModule.php';
+if (file_exists($projectRoot . '/modules/smil/SmilModule.php')) {
+    require_once $projectRoot . '/modules/TestModuleInterface.php';
+    require_once $projectRoot . '/modules/BaseTestModule.php';
+    require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/modules/smil/Scoring/RawScoreCalculator.php';
+    require_once $projectRoot . '/modules/smil/Scoring/TScoreCalculator.php';
+    require_once $projectRoot . '/modules/smil/Scoring/ValidityAssessor.php';
+    require_once $projectRoot . '/modules/smil/Scoring/AdditionalScalesCalculator.php';
+    require_once $projectRoot . '/modules/smil/SmilModule.php';
     
     try {
         $module = new \PsyTest\Modules\Smil\SmilModule();
@@ -155,7 +170,8 @@ if (file_exists(__DIR__ . '/modules/smil/SmilModule.php')) {
         $sections = $module->buildSections($results);
         echo "   ✓ Секции рендеринга работают (количество: " . count($sections) . ")\n";
         
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
+        $hasFailures = true;
         echo "   ✗ Ошибка: " . $e->getMessage() . "\n";
     }
 }
@@ -163,11 +179,11 @@ if (file_exists(__DIR__ . '/modules/smil/SmilModule.php')) {
 // 5. Проверка модуля BAI
 echo "\n5. Проверка модуля BAI...\n";
 
-if (file_exists(__DIR__ . '/modules/beck-anxiety/BeckAnxietyModule.php')) {
-    require_once __DIR__ . '/modules/TestModuleInterface.php';
-    require_once __DIR__ . '/modules/BaseTestModule.php';
-    require_once __DIR__ . '/modules/ResultSection.php';
-    require_once __DIR__ . '/modules/beck-anxiety/BeckAnxietyModule.php';
+if (file_exists($projectRoot . '/modules/beck-anxiety/BeckAnxietyModule.php')) {
+    require_once $projectRoot . '/modules/TestModuleInterface.php';
+    require_once $projectRoot . '/modules/BaseTestModule.php';
+    require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/modules/beck-anxiety/BeckAnxietyModule.php';
     
     try {
         $module = new \PsyTest\Modules\BeckAnxiety\BeckAnxietyModule();
@@ -196,7 +212,8 @@ if (file_exists(__DIR__ . '/modules/beck-anxiety/BeckAnxietyModule.php')) {
         $sections = $module->buildSections($results);
         echo "   ✓ Секции рендеринга работают (количество: " . count($sections) . ")\n";
         
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
+        $hasFailures = true;
         echo "   ✗ Ошибка: " . $e->getMessage() . "\n";
     }
 }
@@ -204,11 +221,11 @@ if (file_exists(__DIR__ . '/modules/beck-anxiety/BeckAnxietyModule.php')) {
 // 6. Проверка модуля BDI
 echo "\n6. Проверка модуля BDI...\n";
 
-if (file_exists(__DIR__ . '/modules/beck-depression/BeckDepressionModule.php')) {
-    require_once __DIR__ . '/modules/TestModuleInterface.php';
-    require_once __DIR__ . '/modules/BaseTestModule.php';
-    require_once __DIR__ . '/modules/ResultSection.php';
-    require_once __DIR__ . '/modules/beck-depression/BeckDepressionModule.php';
+if (file_exists($projectRoot . '/modules/beck-depression/BeckDepressionModule.php')) {
+    require_once $projectRoot . '/modules/TestModuleInterface.php';
+    require_once $projectRoot . '/modules/BaseTestModule.php';
+    require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/modules/beck-depression/BeckDepressionModule.php';
     
     try {
         $module = new \PsyTest\Modules\BeckDepression\BeckDepressionModule();
@@ -237,7 +254,8 @@ if (file_exists(__DIR__ . '/modules/beck-depression/BeckDepressionModule.php')) 
         $sections = $module->buildSections($results);
         echo "   ✓ Секции рендеринга работают (количество: " . count($sections) . ")\n";
         
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
+        $hasFailures = true;
         echo "   ✗ Ошибка: " . $e->getMessage() . "\n";
     }
 }
@@ -245,11 +263,11 @@ if (file_exists(__DIR__ . '/modules/beck-depression/BeckDepressionModule.php')) 
 // 7. Проверка модуля HADS
 echo "\n7. Проверка модуля HADS...\n";
 
-if (file_exists(__DIR__ . '/modules/hads/HadsModule.php')) {
-    require_once __DIR__ . '/modules/TestModuleInterface.php';
-    require_once __DIR__ . '/modules/BaseTestModule.php';
-    require_once __DIR__ . '/modules/ResultSection.php';
-    require_once __DIR__ . '/modules/hads/HadsModule.php';
+if (file_exists($projectRoot . '/modules/hads/HadsModule.php')) {
+    require_once $projectRoot . '/modules/TestModuleInterface.php';
+    require_once $projectRoot . '/modules/BaseTestModule.php';
+    require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/modules/hads/HadsModule.php';
     
     try {
         $module = new \PsyTest\Modules\Hads\HadsModule();
@@ -278,13 +296,46 @@ if (file_exists(__DIR__ . '/modules/hads/HadsModule.php')) {
         $sections = $module->buildSections($results);
         echo "   ✓ Секции рендеринга работают (количество: " . count($sections) . ")\n";
         
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
+        $hasFailures = true;
         echo "   ✗ Ошибка: " . $e->getMessage() . "\n";
     }
 }
 
-// 8. Проверка шаблонов
-echo "\n8. Проверка Twig шаблонов...\n";
+// 8. Проверка модуля Лазаруса
+echo "\n8. Проверка модуля Лазаруса...\n";
+
+if (file_exists($projectRoot . '/modules/lazarus/LazarusModule.php')) {
+    require_once $projectRoot . '/modules/lazarus/LazarusModule.php';
+
+    try {
+        $module = new \PsyTest\Modules\Lazarus\LazarusModule();
+        $metadata = $module->getMetadata();
+        $questions = $module->getQuestions();
+        $testAnswers = [];
+
+        foreach ($questions as $question) {
+            $testAnswers[$question['id'] . '_self'] = 5;
+            $testAnswers[$question['id'] . '_partner'] = 5;
+        }
+
+        $results = $module->calculateResults($testAnswers);
+        $interpretation = $module->generateInterpretation($results);
+        $sections = $module->buildSections($results);
+
+        echo "   ✓ Модуль загружается\n";
+        echo "   - Название: " . $metadata['name'] . "\n";
+        echo "   - Загружено вопросов: " . count($questions) . "\n";
+        echo "   ✓ Расчёт результатов, интерпретация и секции работают (" . count($sections) . ")\n";
+        echo "   - Summary: " . (isset($interpretation['summary']) ? 'есть' : 'нет') . "\n";
+    } catch (\Throwable $e) {
+        $hasFailures = true;
+        echo "   ✗ Ошибка: " . $e->getMessage() . "\n";
+    }
+}
+
+// 9. Проверка шаблонов
+echo "\n9. Проверка Twig шаблонов...\n";
 
 $templateFiles = [
     'templates/layout.twig',
@@ -294,16 +345,17 @@ $templateFiles = [
 ];
 
 foreach ($templateFiles as $file) {
-    if (file_exists(__DIR__ . '/' . $file)) {
-        $size = filesize(__DIR__ . '/' . $file);
+    if (file_exists($projectRoot . '/' . $file)) {
+        $size = filesize($projectRoot . '/' . $file);
         echo "   ✓ $file ($size байт)\n";
     } else {
+        $hasFailures = true;
         echo "   ✗ $file отсутствует\n";
     }
 }
 
-// 9. Проверка CSS/JS
-echo "\n9. Проверка статики...\n";
+// 10. Проверка CSS/JS
+echo "\n10. Проверка статики...\n";
 
 $staticFiles = [
     'public/css/main.css' => 'CSS стили',
@@ -313,20 +365,21 @@ $staticFiles = [
 ];
 
 foreach ($staticFiles as $file => $desc) {
-    if (file_exists(__DIR__ . '/' . $file)) {
-        $size = filesize(__DIR__ . '/' . $file);
+    if (file_exists($projectRoot . '/' . $file)) {
+        $size = filesize($projectRoot . '/' . $file);
         echo "   ✓ $desc: $file (" . round($size / 1024, 2) . " KB)\n";
     } else {
+        $hasFailures = true;
         echo "   ✗ $desc отсутствует\n";
     }
 }
 
-// 10. Проверка прав доступа
-echo "\n10. Проверка прав доступа...\n";
+// 11. Проверка прав доступа
+echo "\n11. Проверка прав доступа...\n";
 
 $dirs = ['storage', 'storage/pdfs', 'storage/logs', 'storage/cache'];
 foreach ($dirs as $dir) {
-    $path = __DIR__ . '/' . $dir;
+    $path = $projectRoot . '/' . $dir;
     if (is_dir($path)) {
         if (is_writable($path)) {
             echo "   ✓ $dir - записываемый\n";
@@ -352,3 +405,5 @@ echo "5. Запустите встроенный сервер: php -S localhost:
 echo "6. Откройте: http://localhost:8000/tests\n\n";
 
 echo "Подробная инструкция в файле QUICKSTART.md\n";
+
+exit($hasFailures ? 1 : 0);
