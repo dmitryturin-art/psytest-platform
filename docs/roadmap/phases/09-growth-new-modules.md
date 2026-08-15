@@ -13,8 +13,9 @@
 3. **Offering governance.** Платный разбор включается только при реальной интерпретационной ценности; отсутствие CTA — нормальная capability.
 4. **Privacy-safe analytics.** Воронка catalog→start→complete→optional purchase без ответов, crisis signals и полного IP; consent и retention.
 5. **Эксперименты.** Цена/копирайт/пакеты — только с guardrails, заранее определённой метрикой и возможностью выключить; никаких dark patterns.
-6. **Quality budget.** PHPStan baseline, flaky tests, latency, accessibility, dependency age и incident rate не ухудшаются ради скорости добавления каталога.
-7. **Feedback loop.** Обратная связь владельца/клиентов превращается в issue, решение или lesson; изменения клинического смысла проходят профессиональную проверку.
+6. **Необязательный личный кабинет.** Account/identity/recovery/session security, dashboard истории, явная привязка анонимных результатов, export/delete и privacy lifecycle. Вводится только после threat model и usability-прототипа этапа 04.
+7. **Quality budget.** PHPStan baseline, flaky tests, latency, accessibility, dependency age и incident rate не ухудшаются ради скорости добавления каталога.
+8. **Feedback loop.** Обратная связь владельца/клиентов превращается в issue, решение или lesson; изменения клинического смысла проходят профессиональную проверку.
 
 ## Проверка и exit criteria каждого нового модуля
 

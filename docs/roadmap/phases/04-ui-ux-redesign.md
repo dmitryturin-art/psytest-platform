@@ -8,19 +8,21 @@
 
 ## Контрольная точка владельца
 
-До массовой CSS/шаблонной работы показать 2–3 направления на ключевых экранах: каталог, прохождение, простой результат, SMIL result, checkout. Владелец выбирает направление и отдельно подтверждает, что SMIL-профиль не искажён.
+До массовой CSS/шаблонной работы показать 2–3 направления на ключевых экранах: лендинг, каталог, прохождение, простой результат, SMIL result, checkout. Владелец выбирает направление и отдельно подтверждает, что SMIL-профиль не искажён.
 
 ## Work packages
 
 1. Карта пользовательских путей и content hierarchy; убрать длинные вступления из критического пути, оставив раскрываемые подробности.
-2. Tokens: typography, spacing, color, elevation, radius, focus, states; WCAG contrast и reduced motion.
-3. App shell/navigation без пустой sticky области; ясная позиция в процессе и возвращение к результату.
-4. Questionnaire components: прогресс 1…N без off-by-one, touch targets, keyboard, autosave/recovery и validation message.
-5. Result components: бесплатный итог первый, платный CTA только у capabilities, без манипулятивного текста.
-6. Lazarus individual/pair UX: различимые респонденты, доступные legend/labels, mobile графики/таблицы.
-7. SMIL protected polish: окружение, типографика, раскрытие шкал, print/PDF; геометрия и разрыв графика неизменны.
-8. Разделить глобальный CSS и route-specific assets; Chart.js загружать только где нужен.
-9. SEO policy: приватные/результатные страницы `noindex`; публичный каталог и landing — по явному решению.
+2. Публичный лендинг: ценностное предложение, каталог, прозрачная граница «бесплатный результат / дополнительный разбор», демонстрационные обезличенные примеры отчёта, FAQ и скромный footer-link на 23time.ru.
+3. Спецификация необязательного аккаунта: пути «без регистрации» и «сохранить в аккаунт», dashboard/history wireframes, consent/deletion states. Реализация аккаунта не входит в этот этап.
+4. Tokens: typography, spacing, color, elevation, radius, focus, states; WCAG contrast и reduced motion.
+5. App shell/navigation без пустой sticky области; ясная позиция в процессе и возвращение к результату.
+6. Questionnaire components: прогресс 1…N без off-by-one, touch targets, keyboard, autosave/recovery и validation message.
+7. Result components: бесплатный итог первый, платный CTA только у capabilities, без манипулятивного текста.
+8. Lazarus individual/pair UX: различимые респонденты, доступные legend/labels, mobile графики/таблицы.
+9. SMIL protected polish: окружение, типографика, раскрытие шкал, print/PDF; геометрия и разрыв графика неизменны.
+10. Разделить глобальный CSS и route-specific assets; Chart.js загружать только где нужен.
+11. SEO policy: приватные/результатные страницы `noindex`; публичные лендинг/каталог индексируются только после content, privacy и legal review.
 
 ## Проверка
 
