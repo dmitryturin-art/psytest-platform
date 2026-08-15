@@ -7,7 +7,7 @@
 - Проект: PsyTest Platform.
 - Активный этап: 01 — containment и безопасность.
 - Последний принятый package опубликован в `main` на GitHub до `ed3d896`.
-- Текущий локально проверенный security package: 01.4 на `codex/01-token-boundaries`; commit и GitHub CI ожидаются. Формулы тестов и пользовательский flow не менялись.
+- Последний security package: 01.4 token boundaries, `0d6a947` в `main`. GitHub Actions для этого commit выполняется: [run 31904747962](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31904747962). Формулы тестов и пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
 ## Что уже сделано
@@ -26,11 +26,11 @@
 - Воспроизводимый baseline завершён: architecture checker починен, PHPStan baseline capped at 148, evidence — в `WORKLOG.md`.
 - Dependency safety завершён: Dompdf 3.1.6, composer audit clean, composer.lock теперь отслеживается и разрешается для PHP 8.3.
 - Legacy payment CTA/endpoints safely retired; CSRF middleware введён для browser mutations.
-- 01.4 разделяет result-access token и pair-reference: lookup результата использует только `session_token`.
+- 01.4 разделяет result-access token и pair-reference: lookup результата использует только `session_token`; локальные проверки зелёные, внешний CI ещё не финализирован.
 
 ## Ближайшие действия
 
-1. Commit и GitHub Actions для 01.4.
+1. Дождаться результата GitHub Actions для `0d6a947`; при failure сначала исправить его в отдельной ветке.
 2. 01.5: route/session integrity и server-side validation как отдельные пакеты.
 3. Закрыть web-root hygiene и pair boundaries до выхода из этапа 01.
 4. Затем перейти к privacy/crisis BDI flow этапа 02.
@@ -48,6 +48,13 @@
 ## Что спросить у владельца сейчас
 
 Ничего: этап 00 можно завершить без новых продуктовых решений. Следующий обязательный пакет вопросов предусмотрен в этапе 02; визуальное интервью — в этапе 04.
+
+## Пауза по запросу владельца
+
+- Время фиксации: 2026-08-15, Europe/Moscow.
+- Состояние Git: `main` содержит `0d6a947`; checkpoint оформляется в отдельной documentation-ветке и затем будет fast-forward опубликован.
+- Незакоммиченных изменений до checkpoint не было.
+- Без нового сообщения владельца работа после этого ответа не продолжается автоматически.
 
 ## Протокол команды «сделай checkpoint»
 

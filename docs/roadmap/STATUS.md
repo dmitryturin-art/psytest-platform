@@ -5,19 +5,19 @@
 ## Сейчас
 
 - Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
-- Активная package-ветка: `codex/01-token-boundaries`.
-- Последняя принятая package-ветка: `codex/00-quiet-agent-status`; опубликована в GitHub через `main` до `ed3d896`.
+- Активная package-ветка: checkpoint-пакет `codex/00-checkpoint-pause`; разработка поставлена на паузу по запросу владельца.
+- Последняя принятая security-ветка: `codex/01-token-boundaries`; опубликована в GitHub через `main` до `0d6a947`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
-- В текущей ветке проверен 01.4: lookup результата разделён с pair-reference; commit и реальный CI ещё ожидаются.
+- 01.4 принят в `main`: lookup результата разделён с pair-reference; GitHub Actions [31904747962](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31904747962) ещё выполняется.
 
 ## Готовность этапов
 
 | Этап | Состояние | Прогресс/условие перехода |
 |---|---|---|
 | 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
-| 01 | В работе | 01.1–01.3 завершены; 01.4 token boundaries проверен локально и ожидает интеграции/CI |
+| 01 | Пауза | 01.1–01.4 завершены локально и интегрированы; для 01.4 ожидается GitHub CI |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
@@ -48,7 +48,7 @@
 
 ## Следующие пять действий
 
-1. Интегрировать 01.4 token boundaries и подтвердить GitHub Actions.
+1. Подтвердить GitHub Actions для 01.4 token boundaries.
 2. 01.5: проверить slug/session integrity и обязательную серверную validation.
 3. Закрывать оставшиеся security findings отдельными regression-тестами до UI-редизайна.
 4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
