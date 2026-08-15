@@ -19,6 +19,14 @@
 
 ## 2026-08-15
 
+### 01 — containment legacy платного пути
+
+- Этап / ветка / commit: этап 01, `codex/01-disable-broken-paid-flow`, commit pending.
+- Цель: исключить сломанную оплату и legacy YooMoney/AI side effects, пока новый YooKassa-flow не спроектирован и не проверен.
+- Сделано: CTA расширенного разбора снят с обеих result templates; legacy GET/POST interpretation routes и YooMoney webhook переведены на stateless `RetiredPaymentController`. Все три endpoint отвечают `410 Gone`, не подключаются к базе, не создают заказ, не вызывают AI и не принимают webhook payload.
+- Проверки и evidence: `vendor/bin/phpunit tests/RetiredPaymentControllerTest.php tests/LegacyPaidFlowContainmentTest.php` — 4 tests, 15 assertions, exit 0; PHP syntax — pass; `composer analyse` — exit 0; `composer lint` — exit 0; `git diff --check` — exit 0.
+- Следующий шаг: review + commit этого containment package; затем CI или отдельные CSRF/token work packages.
+
 ### 01 — dependency safety: Dompdf
 
 - Этап / ветка / commit: этап 01, `codex/01-dompdf-security`, `7272e51`.

@@ -17,10 +17,6 @@
     <div class="results-actions">
         <a href="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/pdf"
            class="btn btn-secondary" target="_blank">📄 Скачать PDF</a>
-        {% if ai_interpretation_available %}
-        <a href="{{ basePath }}/interpretation/{{ session.session_token }}"
-           class="btn btn-primary">✨ AI-интерпретация</a>
-        {% endif %}
         <button class="btn btn-outline" onclick="copyResultLink()">🔗 Копировать ссылку</button>
         <button class="btn btn-outline" onclick="openDeleteModal()">🗑️ Удалить данные</button>
     </div>

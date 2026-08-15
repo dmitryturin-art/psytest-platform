@@ -23,9 +23,9 @@
 | ID | Finding | Риск | Этап | Требуемое доказательство | Статус |
 |---|---|---|---|---|---|
 | DEP-01 | `dompdf` 3.1.5 имеет advisories | P0 | 01 | `7272e51`: `composer audit` clean, full tests 88/1112 и in-memory PDF smoke | Закрыто |
-| PAY-01 | Route вызывает отсутствующий `initiatePayment` | P0 | 01/06 | CTA скрыт до реализации; затем end-to-end sandbox test | Запланировано |
-| PAY-02 | Отсутствует payment template | P0 | 01/06 | нет broken route; затем browser checkout flow | Запланировано |
-| PAY-03 | Смешаны YooMoney и YooKassa | P0 | 01/06 | legacy path недоступен; одна YooKassa state machine | Запланировано |
+| PAY-01 | Route вызывает отсутствующий `initiatePayment` | P0 | 01/06 | CTA скрыт и legacy endpoint отвечает 410; затем end-to-end YooKassa sandbox test | В работе |
+| PAY-02 | Отсутствует payment template | P0 | 01/06 | legacy payment page недоступна (410); затем browser checkout flow | В работе |
+| PAY-03 | Смешаны YooMoney и YooKassa | P0 | 01/06 | legacy YooMoney path отвечает 410; затем одна YooKassa state machine | В работе |
 | PAY-04 | Цена 499 ₽ захардкожена | P1 | 06 | backend setting 120 ₽ + immutable order snapshot tests | Запланировано |
 | AI-01 | Универсальный flow фактически SMIL-specific | P1 | 07 | prompt registry по test/audience/report, eval fixtures | Запланировано |
 

@@ -51,12 +51,6 @@ class ResultController extends BaseController
         // Get results
         $results = $session['calculated_results'];
 
-        // Check for AI interpretation
-        $aiInterpretation = $this->db->selectOne(
-            'SELECT * FROM ai_interpretations WHERE session_id = ? AND payment_status = "completed"',
-            [$session['id']]
-        );
-
         // Attach pair comparison data (if any) so buildSections can render it.
         $this->enrichWithPairComparison($results, $session, $module);
 
@@ -67,7 +61,6 @@ class ResultController extends BaseController
             'session' => $session,
             'sections' => $sections,
             'results' => $results,
-            'ai_interpretation_available' => !$aiInterpretation,
         ]);
     }
 

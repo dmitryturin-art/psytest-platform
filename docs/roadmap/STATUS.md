@@ -5,10 +5,10 @@
 ## Сейчас
 
 - Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
-- Последний завершённый package: `codex/01-dompdf-security` (`7272e51`).
+- Активная package-ветка: `codex/01-disable-broken-paid-flow`.
 - Последняя принятая package-ветка: `codex/governance-roadmap`; опубликована в GitHub через `main` до `c7bb44e`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
-- Состояние продукта: quality gates и dependency safety улучшены; публичный платный путь не готов к запуску.
+- Состояние продукта: quality gates и dependency safety улучшены; legacy платный путь закрывается, публичная продажа пока не готова к запуску.
 - Завершённый work package: канонический roadmap, GitHub README, правила, решения, фазы, журналы, трассировка аудита и repository hygiene (`0943c80`, `0866ae0`).
 - Завершённый work package: `codex/00-reproducible-baseline` (`b6756dd`) — architecture checker починен и покрыт regression-тестом; PHPStan baseline capped at 149.
 

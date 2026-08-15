@@ -28,6 +28,7 @@ use PsyTest\Controllers\HomeController;
 use PsyTest\Controllers\TestController;
 use PsyTest\Controllers\ResultController;
 use PsyTest\Controllers\ApiController;
+use PsyTest\Controllers\RetiredPaymentController;
 
 // Initialize core components
 $db = Database::getInstance();
@@ -69,12 +70,12 @@ $router->post('/result/{token}/delete', [ResultController::class, 'delete']);
 $router->get('/pair/{id}', [ResultController::class, 'pairShow']);
 $router->get('/pair/{id}/pdf', [ResultController::class, 'pairPdf']);
 
-// AI Interpretation
-$router->get('/interpretation/{token}', [ResultController::class, 'interpretation']);
-$router->post('/interpretation/{token}/pay', [ResultController::class, 'initiatePayment']);
+// Legacy payment/AI routes are intentionally retired until the new YooKassa flow is ready.
+$router->get('/interpretation/{token}', [RetiredPaymentController::class, 'interpretation']);
+$router->post('/interpretation/{token}/pay', [RetiredPaymentController::class, 'payment']);
 
-// Payment webhook
-$router->post('/webhook/yoomoney', [ApiController::class, 'yoomoneyWebhook']);
+// Retire the legacy YooMoney webhook without accepting or processing payloads.
+$router->post('/webhook/yoomoney', [RetiredPaymentController::class, 'yoomoneyWebhook']);
 
 // API endpoints
 $router->get('/api/health', [ApiController::class, 'health']);
