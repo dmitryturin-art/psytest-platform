@@ -6,7 +6,7 @@
 
 - Проект: PsyTest Platform.
 - Активный этап: 00 — управление и baseline.
-- Package-ветка `codex/governance-roadmap` fast-forward интегрирована в локальный `main` до `0dad917`; remote ещё на baseline `6c51cc3`.
+- Governance package опубликован в `main` на GitHub до `c7bb44e`.
 - Функциональный код: не изменён.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -22,16 +22,16 @@
 ## Что сейчас в работе
 
 - Governance package локально завершён и проверен тремя независимыми reviews.
-- Остался GitHub publication handoff.
-- GitHub publication заблокирован только недействительным `gh` token.
+- Governance publication завершена.
+- Следующая задача — воспроизводимый baseline и dependency security на Terra.
 
 ## Ближайшие действия
 
-1. Выполнить `gh auth login -h github.com`.
-2. Определить visibility и решить вопрос старой PDF history до push.
-3. Отправить безопасный `main` в GitHub.
-4. Переключить основную задачу на Terra.
-5. В новой ветке начать reproducible baseline и обновление Dompdf, не UI и не payment implementation.
+1. Переключить основную задачу на Terra.
+2. В новой ветке начать reproducible baseline и обновление Dompdf, не UI и не payment implementation.
+3. Перед обновлением Dompdf прочитать active phase, audit traceability и сделать PDF regression fixtures.
+4. После безопасного dependency update начать отслеживать `composer.lock`.
+5. Затем перейти к containment сломанного платного пути.
 
 ## Известные блокеры и риски
 
@@ -42,8 +42,7 @@
 - dompdf требует обновления.
 - Документация расходится с кодом.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
-- В Git history уже присутствовали два PDF с индивидуальными результатами; локальные файлы нужно вывести из индекса, а необходимость очистки истории оценить отдельно.
-- `gh` установлен, но текущий GitHub token недействителен; push/PR невозможны до `gh auth login -h github.com`.
+- Два старых PDF остаются только в истории; владелец подтвердил их обезличенность и отказался от history rewrite. Новые generated PDF игнорируются и не попадают в Git.
 
 ## Что спросить у владельца сейчас
 

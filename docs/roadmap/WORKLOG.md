@@ -19,6 +19,15 @@
 
 ## 2026-08-15
 
+### Публикация governance package
+
+- Этап / ветка / commit: local `main` → `origin/main`, `c7bb44e`.
+- Цель: опубликовать проверенный roadmap, честный README и repository hygiene в публичном GitHub-репозитории.
+- Сделано: GitHub auth восстановлена; четыре локальных commits отправлены в `main`.
+- Решения: владелец подтвердил, что два старых PDF обезличены; history rewrite и force-push не нужны.
+- Проверки и evidence: `gh auth status` — authenticated; repository visibility — public; `git push origin main` прошёл с `6c51cc3..c7bb44e`.
+- Следующий шаг: переключить основную задачу на Terra и начать `codex/00-reproducible-baseline`.
+
 ### Локальная интеграция governance
 
 - Этап / ветка / commit: этап 00, `codex/governance-roadmap` → local `main`, fast-forward до `0dad917`.
