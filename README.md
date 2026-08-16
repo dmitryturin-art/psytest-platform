@@ -15,7 +15,7 @@
 - классический профиль СМИЛ с L/F/K, разрывом и шкалами 1–9/0;
 - индивидуальный и парный сценарий Lazarus;
 - PDF/print-вывод результатов;
-- 88 автоматических тестов и 1112 assertions в текущем full gate.
+- автоматический quality gate на PHP 8.3/MySQL, включая миграции, тесты, PHPStan, форматирование и архитектурную проверку.
 
 ## Куда развивается продукт
 
@@ -119,7 +119,7 @@ composer lint
 php bin/check-architecture.php
 ```
 
-На baseline аудита PHPUnit проходил при доступной тестовой MySQL, но PHPStan использует baseline из 149 подавленных сообщений, architecture checker требует исправления, а зафиксированная версия Dompdf содержит advisories. Поэтому badge или один зелёный вывод не равны production readiness; актуальные результаты публикуются в [STATUS.md](docs/roadmap/STATUS.md) и [WORKLOG.md](docs/roadmap/WORKLOG.md).
+PHPStan пока использует ограниченный baseline из 148 исторических сообщений — его рост запрещён отдельной проверкой. `composer audit`, architecture checker и GitHub quality gate сейчас проходят; это всё равно не означает production readiness без следующих privacy, payment, UX и deployment gates. Актуальные evidence публикуются в [STATUS.md](docs/roadmap/STATUS.md) и [WORKLOG.md](docs/roadmap/WORKLOG.md).
 
 ## Добавление теста
 

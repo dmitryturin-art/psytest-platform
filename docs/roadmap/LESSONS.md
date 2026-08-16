@@ -14,6 +14,14 @@
 - Защита: documentation truthfulness checklist в каждом work package; DOC-01 в traceability.
 - Статус: действует.
 
+## L-014 — Публичные privacy-claims требуют такого же regression, как границы доступа
+
+- Наблюдение: публичная страница одновременно обещала шифрование, отсутствие передачи третьим лицам и полное удаление, хотя код этого не обеспечивал, а будущий AI/payment flow предполагает получателей.
+- Риск: посетитель принимает решение на ложной информации, а команда ошибочно считает незавершённую privacy-работу готовой.
+- Правило: current-state page описывает только доказанное поведение; будущие providers, consent и legal wording не подменяются общим обещанием.
+- Защита: `PrivacyClaimsTruthfulnessTest` запрещает эти claims и требует видимых границ для disabled AI/payment, bearer result link и soft-delete. При включении AI/payment/шифрования тест и data map меняются в том же work package.
+- Статус: действует с 02.4A.
+
 ## L-002 — Зелёный инструмент может скрывать долг
 
 - Наблюдение: PHPStan сообщает `No errors`, но baseline подавляет 149 сообщений; architecture check падает из-за неверного root.

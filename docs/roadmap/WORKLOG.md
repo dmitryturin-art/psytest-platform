@@ -19,6 +19,17 @@
 
 ## 2026-08-16
 
+### 02.4A — truthfulness of public privacy and deletion claims
+
+- Этап / ветка / commit: этап 02, `codex/02-privacy-claims-truthfulness`, commit ожидается.
+- Цель: убрать с публичных страниц обещания, которых текущий код не подтверждает, не меняя clinical scoring, retention semantics или будущий payment/AI design.
+- Сделано: privacy page теперь описывает фактическую обработку answers/results, optional name/email и автоматически записываемых IP/user-agent; bearer-like result link; soft-delete boundary и отдельный lifecycle. AI interpretation/payment прямо обозначены как выключенные. Delete modal больше не обещает мгновенное физическое удаление файлов/технических записей. Обновлены factual data map, retention policy, architecture/routes, README и warning для legacy DEVELOPMENT. Добавлен regression `PrivacyClaimsTruthfulnessTest`.
+- Решения: это не legal privacy policy и не новый consent. Срок 180 дней описан как настроенная policy, а production scheduler требует отдельного подтверждения. Mobile navigation, не видимая на 390×844, записана как UX-01 для этапа 04 и не менялась в этом privacy package.
+- Проверки и evidence: RED — новый source-level test ловил прежние ложные claims; GREEN — 3 tests/16 assertions. Browser QA `/privacy`: desktop и 390×844 показывают весь новый текст, нет horizontal overflow и console errors. Полный local gate: `composer validate`, `composer audit`, PHPUnit 134 tests/1264 assertions, PHPStan, lint, architecture check, baseline 148 и `git diff --check` — pass. PHPStan/PHP-CS-Fixer предупредили, что локальный runtime 8.5.3 выше target 8.3; compatibility остаётся покрыта GitHub CI после publication.
+- Изменённые файлы: `HomeController`, delete-copy templates, `PrivacyClaimsTruthfulnessTest`, public/current-state docs и `CHANGELOG`.
+- Не сделано / риски: нет encryption-at-rest, legal review, production scheduler monitoring, technical metadata minimization, therapist manual delete или AI consent/provider boundary. Ничего из этого не заявляется как готовое.
+- Следующий шаг: staged review, commit, fast-forward merge/push и CI evidence.
+
 ### 02.3B — fail-closed crisis resource registry foundation
 
 - Этап / ветка / commit: этап 02, `codex/02-crisis-resource-registry-foundation` → `main`, `50794fa`.

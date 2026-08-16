@@ -13,7 +13,7 @@ PsyTest Platform — веб-платформа для проведения и о
 | БД | MySQL | 8.x |
 | Frontend графика | Chart.js | 4.4 (CDN) |
 | Тестирование | PHPUnit | 10.5 |
-| AI-интерпретации | OpenRouter / DeepSeek | API |
+| AI-интерпретации | Legacy OpenRouter / DeepSeek code | Public routes retired |
 
 Архитектура — собственный MVC без использования фреймворков. Паттерны: Singleton (Database, View), Factory (LoggerFactory), Strategy (модули тестов), VO (ResultSection).
 
@@ -79,7 +79,7 @@ Controller::action()
     ├── ModuleLoader::load($slug) — если нужен модуль
     ├── Business logic
     │   ├── TestModule::calculateResults()
-    │   ├── AIInterpretationService (опционально)
+    │   ├── Legacy AI/payment services (не вызываются публичными маршрутами)
     │   └── PDFGenerator (опционально)
     │
     ▼
@@ -117,14 +117,14 @@ SmilModule       BeckDepression   HadsModule   BeckAnxiety
 | 7 | POST | `/test/{slug}/pair/submit` | TestController::pairSubmit | Парный режим: сабмит |
 | 8 | GET | `/result/{slug}/{token}` | ResultController::show | Просмотр результатов |
 | 9 | GET | `/result/{slug}/{token}/pdf` | ResultController::pdf | Генерация PDF |
-| 10 | POST | `/result/{token}/delete` | ResultController::delete | Удаление (GDPR soft-delete) |
+| 10 | POST | `/result/{token}/delete` | ResultController::delete | Soft-delete: отключает доступ и очищает clinical-поля сессии |
 | 11 | GET | `/pair/{id}` | ResultController::pairShow | Парное сравнение |
 | 12 | GET | `/pair/{id}/pdf` | ResultController::pairPdf | PDF парного сравнения |
-| 13 | GET | `/interpretation/{token}` | ResultController::interpretation | AI-интерпретация (платная) |
-| 14 | POST | `/interpretation/{token}/pay` | ResultController::initiatePayment | Инициировать оплату интерпретации |
-| 15 | POST | `/webhook/yoomoney` | ApiController::yoomoneyWebhook | Webhook оплаты YooMoney |
+| 13 | GET | `/interpretation/{token}` | RetiredPaymentController::interpretation | `410 Gone`, legacy AI flow отключён |
+| 14 | POST | `/interpretation/{token}/pay` | RetiredPaymentController::payment | `410 Gone`, legacy payment flow отключён |
+| 15 | POST | `/webhook/yoomoney` | RetiredPaymentController::yoomoneyWebhook | `410 Gone`, payload не обрабатывается |
 | 16 | GET | `/api/health` | ApiController::health | Health-check (JSON) |
-| 17 | GET | `/privacy` | HomeController::privacy | Политика конфиденциальности |
+| 17 | GET | `/privacy` | HomeController::privacy | Фактическая информация об обработке данных |
 | 18 | GET | `/terms` | HomeController::terms | Условия использования |
 | 19 | GET | `/deleted` | HomeController::deleted | Страница «данные удалены» |
 | 20 | GET | `/error/{code}` | HomeController::error | Страница ошибки |
@@ -346,7 +346,7 @@ class ResultController extends BaseController
 }
 ```
 
-Доступ по публичному `session_token` (VARCHAR(64)) — не требует авторизации. Это единственный URL-токен результата: `partner_token` не может открыть, скачать, изменить или удалить чужой результат. GDPR soft-delete через `delete()` (меняет `status` на `deleted`).
+Доступ по публичному `session_token` (VARCHAR(64)) — не требует авторизации. Это единственный URL-токен результата: `partner_token` не может открыть, скачать, изменить или удалить чужой результат. Public delete — soft-delete: меняет `status` на `deleted` и очищает clinical-поля сессии; физический lifecycle cleanup — отдельный процесс.
 
 Для PDF профиль-чарт (Chart.js canvas) заменяется статичным HTML bar-chart (`renderProfileChartHtml`), потому что DomPDF не исполняет JavaScript.
 
@@ -375,13 +375,13 @@ class ApiController extends BaseController
 }
 ```
 
-Webhook YooMoney: валидация подписи (SHA-256 + WebhookSecret), проверка payment_status, обновление `payment_transactions`.
+Legacy YooMoney webhook-код остаётся в исходниках как исторический долг, но публичный маршрут направлен в `RetiredPaymentController` и всегда отвечает `410` без обработки payload.
 
 ---
 
 ## 7. Сервисы
 
-### AIInterpretationService — `services/AIInterpretationService.php` (~272 строки)
+### AIInterpretationService — `services/AIInterpretationService.php` (legacy, не подключён к публичным маршрутам)
 
 ```php
 class AIInterpretationService
@@ -398,9 +398,9 @@ class AIInterpretationService
 }
 ```
 
-Провайдер: OpenRouter API. Модель: DeepSeek. Промпт формируется на основе результатов теста с инструкциями на русском языке.
+Историческая реализация использует OpenRouter/DeepSeek. Новый AI flow ещё не спроектирован: до него не определены provider allowlist, consent record, prompt registry и контролируемая выдача.
 
-### PaymentService — `services/PaymentService.php` (~256 строк)
+### PaymentService — `services/PaymentService.php` (legacy, не подключён к публичным маршрутам)
 
 ```php
 class PaymentService
@@ -417,7 +417,7 @@ class PaymentService
 }
 ```
 
-Интеграция с YooMoney: создание платежа, верификация вебхуков, проверка статуса.
+Историческая интеграция с YooMoney не является рабочим платёжным контуром. Новый YooKassa flow относится к этапу 06 и будет строиться независимо от legacy tables/services.
 
 ### EmailService — `services/EmailService.php` (~200 строк)
 
@@ -698,9 +698,9 @@ T_final = clamp(T_corrected, 20, 100)
 
 ## 13. База данных
 
-### Схема: 6 таблиц
+### Схема: 7 таблиц
 
-Актуальный DDL — в `database/schema.sql` (MySQL 5.7+/MariaDB 10.2+). Ниже ключевые поля. ID сессий и интерпретаций — CHAR(36) UUID.
+Актуальный DDL — в `database/schema.sql` (target: MySQL 8). Ниже ключевые поля. ID сессий и интерпретаций — CHAR(36) UUID.
 
 ```sql
 CREATE TABLE tests (
@@ -790,7 +790,7 @@ CREATE TABLE payment_transactions (
 - `id` сессий — CHAR(36) UUID; `id` логов и транзакций — автоинкрементные
 - `status` — enum жизненного цикла сессии (`partial` → `completed` / `expired` / `deleted`); GDPR soft-delete = `status='deleted'`
 - `demographics`, `answers`, `calculated_results`, `comparison_data`, `details`, `raw_payload` — JSON-столбцы
-- Актуальный DDL — в `database/schema.sql`. Миграций Phinx пока нет (создание БД — `php bin/install-db.php`)
+- Актуальный DDL — в `database/schema.sql`; source of truth для развёртывания — versioned Phinx migrations через `composer migrate`.
 
 ---
 
