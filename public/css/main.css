@@ -556,6 +556,28 @@ body {
     margin-bottom: var(--spacing-xl);
 }
 
+.clinical-safety-notice {
+    margin: 0 0 var(--spacing-xl);
+    padding: var(--spacing-lg);
+    color: #7c2d12;
+    background: #fff7ed;
+    border: 2px solid #c2410c;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.clinical-safety-notice__title {
+    margin: 0 0 var(--spacing-sm);
+    color: inherit;
+    font-size: 1.25rem;
+}
+
+.clinical-safety-notice__message {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
 .results-title {
     font-size: var(--font-size-3xl);
     margin-bottom: var(--spacing-sm);

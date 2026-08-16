@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
+use PsyTest\Core\AnswerMerger;
 use PsyTest\Core\AnswerValidator;
 use PsyTest\Modules\TestModuleInterface;
 use Ramsey\Uuid\Uuid;
@@ -126,7 +127,7 @@ class TestController extends BaseController
         }
 
         // Merge with previously saved answers
-        $allAnswers = array_merge($session['answers'], $normalizedAnswers);
+        $allAnswers = AnswerMerger::overlay($session['answers'], $normalizedAnswers);
 
         // Merge demographics from form into answers (for calculateResults)
         $formDemographics = $_POST['demographics'] ?? [];
@@ -135,11 +136,11 @@ class TestController extends BaseController
         }
         // Also merge demographics from session (saved via AJAX)
         if (!empty($session['demographics'])) {
-            $allAnswers = array_merge($allAnswers, $session['demographics']);
+            $allAnswers = AnswerMerger::overlay($allAnswers, $session['demographics']);
         }
         // Form demographics take precedence over AJAX-saved ones
         if (!empty($formDemographics)) {
-            $allAnswers = array_merge($allAnswers, $formDemographics);
+            $allAnswers = AnswerMerger::overlay($allAnswers, $formDemographics);
         }
 
         if (AnswerValidator::validate($module, $allAnswers, true) !== []) {
@@ -277,16 +278,16 @@ class TestController extends BaseController
             }
         }
 
-        $allAnswers = array_merge($session['answers'], $normalizedAnswers);
+        $allAnswers = AnswerMerger::overlay($session['answers'], $normalizedAnswers);
         $formDemographics = $_POST['demographics'] ?? [];
         if (!empty($formDemographics)) {
             $this->sessionManager->saveDemographics($sessionId, $formDemographics);
         }
         if (!empty($session['demographics'])) {
-            $allAnswers = array_merge($allAnswers, $session['demographics']);
+            $allAnswers = AnswerMerger::overlay($allAnswers, $session['demographics']);
         }
         if (!empty($formDemographics)) {
-            $allAnswers = array_merge($allAnswers, $formDemographics);
+            $allAnswers = AnswerMerger::overlay($allAnswers, $formDemographics);
         }
         if (AnswerValidator::validate($module, $allAnswers, true) !== []) {
             $this->errorResponse('Invalid or incomplete answers', 422);

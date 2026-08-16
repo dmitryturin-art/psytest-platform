@@ -8,16 +8,16 @@
 
 ## Контрольная точка владельца
 
-До публикации согласовать: кризисный текст, начальные страны/ресурсы, роли доступа и список допустимых внешних AI-провайдеров. Срок хранения принят: anonymous — 180 дней; therapist-режим — бессрочно с ручным удалением. Отдельное AI-consent обязательно при checkout интерпретации. IP не считается подтверждённой страной.
+До публикации BDI safety-flow согласован только кризисный текст. Он не включает страны, номера, ссылки или каталог ресурсов. Срок хранения принят: anonymous — 180 дней; therapist-режим — бессрочно с ручным удалением. Отдельное AI-consent обязательно при checkout интерпретации. IP не используется для кризисного flow.
 
 Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../DATA_MAP_CURRENT.md).
 
 ## Work packages
 
 1. **BDI safety signal.** 02.2A: сервер извлекает item 9 из валидированных ответов независимо от total score и сохраняет machine-readable severity 1–3. Не превращает это в диагноз и не добавляет клиентский текст; Crisis UI остаётся отдельным пакетом.
-2. **Crisis UI.** Показывать заметный спокойный action block сразу после ответа/submit, не прятать под CTA. При непосредственной опасности — местная экстренная помощь, доверенный человек, не оставаться одному.
-3. **CountryResolver.** 02.3A реализует pure resolver с приоритетом: ручной выбор → session choice → явно переданный доверенный proxy/local GeoIP hint → unknown. Он не читает IP/HTTP-заголовки и не вызывает внешние API. В UI всегда доступно исправление и международный fallback; их подключение остаётся следующим пакетом.
-4. **Resource registry.** 02.3B foundation добавляет пустую fail-closed таблицу: страна, язык, тип, контакт/URL, официальный источник, дата проверки, проверивший, `active = 0` по умолчанию. Нет seed-контактов, связей с сессиями и public reader. Устаревшие ресурсы автоматически не публикуются после отдельного owner-approved срока актуальности и query policy.
+2. **Crisis UI.** 02.2B локально проверен: при item 9 > 0 заметный спокойный action block показан сразу после submit, перед CTA: «Ваш ответ на этот пункт может означать, что сейчас вам особенно нужна поддержка. Если есть риск причинить себе вред или вы не уверены, что сможете оставаться в безопасности, пожалуйста, не оставайтесь один: свяжитесь с близким человеком и обратитесь в местную экстренную или кризисную службу.» Никаких номеров, URL, страны или дополнительных действий. Publication/CI и automated browser coverage остаются до закрытия package.
+3. **CountryResolver.** 02.3A остаётся pure, не подключённой доменной заготовкой. Страна, IP/GeoIP и ручной selector не входят в этот safety-flow без нового решения владельца.
+4. **Resource registry.** 02.3B остаётся пустой fail-closed таблицей без seed data и public reader. Никакие contacts/URLs не публикуются без нового решения владельца.
 5. **Data map и consent.** 02.4A `a14f5eb` исправляет публичный current-state текст и delete copy: они не обещают шифрование, отсутствие будущих получателей или мгновенное физическое удаление; GitHub Actions [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — success. Regression-test защищает эти границы. Остаются legal review, minimization технических данных и отдельное согласие на AI до его включения.
 6. **Lifecycle/delete.** 02.1 в работе: `anonymous`-класс, 180-day cron lifecycle, session-bound logs и известные result/AI/pair PDFs покрыты integration tests. Остались явное защищённое назначение/удаление therapist-case, будущие AI jobs/consents и финансовое разделение. Каждое новое правило доказывается integration test.
 7. **Методики и лицензии.** 02.5A `7240d3b` создаёт versioned registry текущих модулей: factual evidence, gaps и release gates; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success. Пока право конкретной формы не подтверждено, не добавлять новый public content и не включать paid interpretation; существующие scoring core и бесплатный flow не меняются.
@@ -31,7 +31,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 
 ## Проверка и exit criteria
 
-- Unit/HTTP/browser tests: item 9 > 0 при низком total, unknown country, неверный GeoIP, ручная смена, устаревший ресурс.
+- Unit/HTTP/browser tests: item 9 > 0 при низком total показывает утверждённый block; item 9 = 0 и другие методики его не показывают; UI не содержит country/resource/IP/GeoIP controls.
 - Data deletion integration test перечисляет и удаляет каждую связанную сущность.
 - Владелец утвердил клинический текст; privacy copy соответствует data map.
 - Закрытый бесплатный пилот не выявил P0/P1 без зарегистрированного решения.

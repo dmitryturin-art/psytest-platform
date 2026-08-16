@@ -14,6 +14,10 @@
         </div>
     </div>
 
+    {% if clinical_safety_notice %}
+        {{ include('blocks/clinical-safety-notice.twig', clinical_safety_notice) }}
+    {% endif %}
+
     <div class="results-actions">
         <a href="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/pdf"
            class="btn btn-secondary" target="_blank">📄 Скачать PDF</a>

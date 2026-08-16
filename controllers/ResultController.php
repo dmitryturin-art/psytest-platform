@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
+use PsyTest\Core\ClinicalSafetyNotice;
 use PsyTest\Core\PDFGenerator;
 use PsyTest\Modules\ResultSection;
 
@@ -62,6 +63,7 @@ class ResultController extends BaseController
             'session' => $session,
             'sections' => $sections,
             'results' => $results,
+            'clinical_safety_notice' => ClinicalSafetyNotice::fromResults($results),
         ]);
     }
 

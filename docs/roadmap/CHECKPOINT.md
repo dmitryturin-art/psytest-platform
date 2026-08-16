@@ -6,7 +6,7 @@
 
 - Проект: PsyTest Platform.
 - Активный этап: 02 — клиническая безопасность, privacy и бесплатный пилот.
-- Последний опубликованный code package: `7240d3b` в `main`; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — **success** на PHP 8.3/MySQL. 02.5A methodology registry опубликован и подтверждён.
+- Последний опубликованный code package: `d4a4e23` в `main` (current-state developer docs); последний подтверждённый PHP 8.3/MySQL code gate — 02.5A `7240d3b`, GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — **success**.
 - 01.5A (`92bf5e6`) связывает route slug с test session; 01.5B (`2cc5321`, форматирование `e8f1f53`) добавляет серверную validation ответов; 01.5C (`52883c9`) устраняет дублирующий index в migration chain. Формулы тестов и корректный пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -43,12 +43,12 @@
 - 02.4A `a14f5eb` приводит public privacy/delete copy и актуальные docs к реальному поведению: нет claims о шифровании, отсутствии будущих получателей или мгновенном физическом удалении. Есть source-level regression test, browser QA `/privacy` на desktop/390×844, полный local gate (134 tests/1264 assertions) и GitHub CI [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — success.
 - 02.5A `7240d3b` создаёт factual registry всех пяти модулей и contract test. Scoring/вопросы не меняются; registry фиксирует закрытые release gates для paid interpretation и нового public content, пока owner не приложит evidence конкретной формы. Полный local gate: 138 tests/1387 assertions; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success на PHP 8.3/MySQL.
 - 00C в `codex/00-current-state-docs` заменяет устаревшие ARCHITECTURE/DEVELOPMENT current-state документами, помечает старый module guide как historical и добавляет contract test routes/legacy commands/local links. Product code и psychometrics не меняются; publication — следующий шаг.
+- 02.2B в `codex/02-bdi-crisis-notice`: локально реализован approved generic BDI notice без country/resource strategy. Во время проверки найден и устранён submit-регресс: `array_merge()` перенумеровывал числовые question IDs, поэтому заполненный BDI отклонялся `422`. Новый answer overlay сохраняет IDs; HTTP fixture с 21 ответом возвращает result redirect. Полный gate, browser QA, commit и CI ещё впереди.
 
 ## Ближайшие действия
 
-1. Получить owner-approved Crisis UI text/resources и freshness threshold для 02.2B/02.3C.
-2. После утверждения текста и регионального strategy реализовать deterministic item-9 safety flow и public reader.
-3. Добавить browser cases и закрытый бесплатный pilot только после проверенного end-to-end flow.
+1. Завершить 02.2B: full quality gate, browser cases и publication/CI approved generic BDI notice.
+2. Добавить browser cases и закрытый бесплатный pilot только после проверенного end-to-end flow.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
 5. Для снятия METH-01 собрать version/edition/pages, источник русской формы и условия/permission на online/commercial use по каждой методике.
 6. Опубликовать 00C только после полного local quality gate; затем сохранить ссылку на CI в DOC-01.
@@ -57,7 +57,7 @@
 
 - Новый платный flow пока не существует: legacy endpoints намеренно retired до проектирования YooKassa/AI orders.
 - `therapist_case`, production scheduler для 180-day cleanup, protected delete UX и AI-consent пока не реализованы; public copy теперь явно отделяет current state от будущего flow.
-- BDI item 9 имеет server-side signal, но ещё не имеет самостоятельного пользовательского safety-flow, утверждённого текста или resource registry.
+- BDI item 9 safety-flow находится в незакоммиченном пакете: утверждённый текст реализован локально, но ещё требует полного gate, browser QA и CI. Конкретные ресурсы намеренно не публикуются по D-026.
 - Полная документация ещё содержит legacy-слои; 02.4A исправляет privacy/routes точечно, а DOC-01 остаётся в работе.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
 - Права на конкретные формы методик пока не документированы; [METHODOLOGY_REGISTRY.md](METHODOLOGY_REGISTRY.md) — единственная current-state точка для этого риска.
@@ -65,11 +65,11 @@
 
 ## Что спросить у владельца сейчас
 
-Перед публикацией BDI safety-flow понадобится утверждение кризисного текста и начальных ресурсов; визуальное интервью — в этапе 04.
+Кризисный текст утверждён; новых решений владельца для 02.2B не требуется. Визуальное интервью — в этапе 04.
 
 ## Возобновление
 
-- 2026-08-16: владелец принял D-024/D-025: 180-day anonymous retention, бессрочный явный therapist-case с ручным удалением и отдельный AI-consent в checkout. Добавлена целевая [RETENTION_POLICY.md](RETENTION_POLICY.md); следующий шаг — 02.1 lifecycle/classification design.
+- 2026-08-16: владелец принял D-026: BDI item 9 > 0 показывает только нейтральный текст без country/IP/resource directory. В `codex/02-bdi-crisis-notice` одновременно исправлен обнаруженный HTTP-regression BDI submit: numeric IDs больше не перенумеровываются. Следующий шаг — full gate, browser QA, commit/push/CI.
 
 ## Протокол команды «сделай checkpoint»
 
