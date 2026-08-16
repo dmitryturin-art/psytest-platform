@@ -19,6 +19,14 @@
 
 ## 2026-08-16
 
+### SEC-05 — production web-root hygiene
+
+- Этап / ветка / commit: этап 01, `codex/01-web-root-hygiene` → `main`, `21c77c7`.
+- Цель: исключить доступ к diagnostic pages, ложным legacy claims и небезопасному test-session generator из production document root, не меняя SMIL scoring или result chart.
+- Сделано: удалены `public/demo.php` и `public/test-smil.php`; `PublicWebRootTest` разрешает в `public/` только `index.php` как PHP entrypoint. Front controller удаляет `X-Powered-By`, задаёт Referrer-Policy и Permissions-Policy, а production error path теперь ловит `Throwable`. Apache policy распространяет заголовки также на error responses.
+- Проверки и evidence: RED — test фиксировал три публичных PHP-файла; GREEN — 2 tests/9 assertions. Browser/HTTP QA: оба прежних URL вернули 404; `/api/health` вернул security headers без `X-Powered-By`. Полный локальный gate — 110 tests/1178 assertions, PHPStan/lint/architecture/diff check pass. GitHub Actions [31940056207](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940056207) — success.
+- Следующий шаг: PAIR-02 — связать `session_id` второго партнёра с invite token и покрыть negative cross-session case.
+
 ### 01.5C — repair duplicate pair-invite migration
 
 - Этап / ветка / commit: этап 01, `codex/01-pair-migration-repair` → `main`, `52883c9`.

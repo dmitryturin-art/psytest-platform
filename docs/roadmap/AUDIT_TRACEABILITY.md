@@ -12,11 +12,11 @@
 | SEC-02 | Token lookup использует `session OR partner` | P0 | 01 | `0d6a947`: `getSessionByResultToken()` lookup только `session_token`; pair reference больше не credential; Lazarus E2E regression; GitHub Actions `31904747962` — success | Закрыто |
 | SEC-03 | Route slug не сверяется с session module | P0 | 01 | `92bf5e6`: shared `SessionTestIntegrity`, guards и mismatch regression; GitHub Actions `31933655096` — success | Закрыто |
 | SEC-04 | Нет обязательной серверной module validation | P0 | 01/03 | `2cc5321`: type/allowed-values/completeness checks для текущих модулей; full PHP 8.3/MySQL gate `31939695568` — success | Закрыто |
-| SEC-05 | Публичные debug/test files | P0 | 01 | web-root inventory и HTTP 404/deny tests | Запланировано |
+| SEC-05 | Публичные debug/test files | P0 | 01 | `21c77c7`: public PHP allowlist, removed demo/test harnesses, headers и `PublicWebRootTest`; GitHub Actions `31940056207` — success | Закрыто |
 | CLIN-01 | BDI item 9 не создаёт самостоятельный crisis signal | P0 | 02 | unit/HTTP/browser cases при низком total и item 9 > 0 | Запланировано |
 | DATA-01 | Privacy claims расходятся с plaintext/внешним AI | P0 | 02/07 | точная data map, consent, minimization и проверенные тексты | Запланировано |
 | DATA-02 | Удаление данных неполное | P1 | 02 | lifecycle/delete integration tests по всем связанным сущностям | Запланировано |
-| PAIR-01 | Границы доступа к приглашению пары недостаточны | P1 | 01 | `46dade6`: one-use check + DB unique intent; `52883c9` repair + CI `31939695568` подтверждают migration chain. Ownership/expiry/cross-session cases остаются | В работе |
+| PAIR-01 | Границы доступа к приглашению пары недостаточны | P1 | 01 | `46dade6`: one-use check + DB unique intent; `52883c9` repair + CI `31939695568` подтверждают migration chain. PAIR-02 должен bind-ить submitted session к invite; expiry/cross-session cases остаются | В работе |
 
 ## Dependencies, payment и AI
 

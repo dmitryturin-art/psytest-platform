@@ -5,8 +5,8 @@
 ## Сейчас
 
 - Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
-- Состояние: этап 01 продолжается. Следующая package-ветка: `SEC-05 web-root hygiene`.
-- Последний опубликованный commit: `52883c9` в `main`; GitHub Actions [31939695568](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31939695568) — success, включая чистую MySQL migration chain.
+- Состояние: этап 01 продолжается. Следующая package-ветка: `PAIR-02 bind pair submit`.
+- Последний опубликованный commit: `21c77c7` в `main`; GitHub Actions [31940056207](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940056207) — success, включая SEC-05 web-root regression.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -17,7 +17,7 @@
 | Этап | Состояние | Прогресс/условие перехода |
 |---|---|---|
 | 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
-| 01 | В работе | 01.1–01.5C и SEC-04 подтверждены CI; следующая P0-задача — SEC-05 web-root hygiene |
+| 01 | В работе | 01.1–01.5C, SEC-04 и SEC-05 подтверждены CI; следующий пакет — P1 PAIR-02 |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
@@ -37,7 +37,7 @@
 
 ## Активные риски
 
-1. В web root находятся `public/demo.php` и `public/test-smil.php`; их нельзя оставлять доступными на production.
+1. `pairSubmit` ещё не подтверждает, что session второго партнёра создана именно для переданного invite token.
 2. Legacy payment endpoints безопасно retired, но новый YooKassa/AI flow ещё не спроектирован и не реализован.
 3. BDI item 9 не создаёт независимый кризисный signal.
 4. Документация местами ещё обещает свойства, которых фактический код не обеспечивает.
@@ -48,8 +48,8 @@
 
 ## Следующие пять действий
 
-1. Убрать public-доступ к demo/test harnesses и проверить HTTP 404/deny, headers и stack traces.
-2. Закрыть P1 access boundaries для парного приглашения отдельными regression-тестами.
+1. PAIR-02: bind `session_id` второго партнёра к source invite token до сохранения/расчёта.
+2. Закрыть P1 expiry/ownership boundaries для парного приглашения отдельными regression-тестами.
 3. Закрывать оставшиеся security findings отдельными regression-тестами до UI-редизайна.
 4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
 5. После выхода из этапа 01 перейти к privacy и кризисному BDI flow этапа 02.
@@ -60,4 +60,4 @@
 
 ## Последняя контрольная точка
 
-[CHECKPOINT.md](CHECKPOINT.md) — текущее состояние после зелёного migration-fix и следующий P0 package.
+[CHECKPOINT.md](CHECKPOINT.md) — текущее состояние после закрытия SEC-05 и следующий pair-boundary package.

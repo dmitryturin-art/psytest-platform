@@ -1,6 +1,6 @@
 # Этап 01 — containment и безопасность
 
-Статус: **В работе**. Пакеты containment, dependency safety, CSRF, 01.4–01.5C и server-side validation выполнены и подтверждены GitHub CI; следующий P0 — SEC-05 web-root hygiene. До выхода из этапа платный CTA скрыт.
+Статус: **В работе**. Пакеты containment, dependency safety, CSRF, 01.4–01.5C, server-side validation и SEC-05 выполнены и подтверждены GitHub CI; следующий пакет — P1 PAIR-02. До выхода из этапа платный CTA скрыт.
 
 ## Цель
 
@@ -17,7 +17,7 @@
 5. **Route/session integrity.** 01.5A сверяет `slug` с `test_id` сохранённой session для result/PDF/status/autosave/submit/pair-flow; unknown и подменённые slug отклоняются до scoring. Подтверждено CI.
 6. **Server-side validation.** 01.5B добавил обязательные полнота/тип/диапазон/allowed-values checks для текущих модулей; подтверждено GitHub CI `31939695568`.
 7. **Pair boundaries.** PAIR-01 добавил single-use приглашения, а 01.5C восстановил clean migration path. До закрытия P1 остаются ownership/expiry/cross-session regression-cases.
-8. **Web-root hygiene.** Удалить/переместить debug, dumps и тестовые файлы; проверить HTTP-доступ, cookies, security headers и отсутствие stack traces.
+8. **Web-root hygiene.** `21c77c7` удалил debug/test entrypoints, добавил public PHP allowlist, response hardening и HTTP/browser evidence; SEC-05 закрыт.
 
 Каждый пункт выполняется отдельным небольшим work package/коммитом; dependency, auth и payment containment не смешиваются.
 

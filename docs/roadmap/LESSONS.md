@@ -88,6 +88,14 @@
 - Защита: перед публикацией schema package запускать чистые migrations и иметь regression, который проходит весь chain; GitHub migration step остаётся release gate.
 - Статус: действует; исправление и regression запланированы как 01.5C.
 
+## L-011 — Web root требует allowlist, а не надежды на «служебный» файл
+
+- Наблюдение: `public/demo.php` раскрывал версию PHP и устаревшие claims, а `public/test-smil.php` создавал тестовые sessions без нормального production flow.
+- Риск: диагностическая страница становится публичной surface и обходит бизнес-ограничения, даже если основной router безопасен.
+- Правило: единственный PHP-entrypoint production web root — front controller; diagnostic harness не должен находиться в `public/`.
+- Защита: `PublicWebRootTest`, HTTP/browser regression 404 и проверенный deployment document root.
+- Статус: действует с `21c77c7`.
+
 ## Как добавлять урок
 
 Добавить запись, если произошло хотя бы одно:
