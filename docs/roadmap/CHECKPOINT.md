@@ -6,7 +6,7 @@
 
 - Проект: PsyTest Platform.
 - Активный этап: 02 — клиническая безопасность, privacy и бесплатный пилот.
-- Последний опубликованный code package: `50794fa` в `main`; GitHub Actions [31948774257](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948774257) — **success** на PHP 8.3/MySQL. 02.4A privacy truthfulness готов локально в `codex/02-privacy-claims-truthfulness`, до commit/push.
+- Последний опубликованный code package: `a14f5eb` в `main`; GitHub Actions [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — **success** на PHP 8.3/MySQL. 02.4A privacy truthfulness опубликован и подтверждён.
 - 01.5A (`92bf5e6`) связывает route slug с test session; 01.5B (`2cc5321`, форматирование `e8f1f53`) добавляет серверную validation ответов; 01.5C (`52883c9`) устраняет дублирующий index в migration chain. Формулы тестов и корректный пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -40,7 +40,7 @@
 - 02.2A опубликован в `main` как `16c4730`; GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success. UI, клинический текст, country/resource registry не начаты и требуют решения владельца.
 - 02.3A `5942587` добавляет pure `CountryResolver`: ручной выбор страны имеет приоритет над session choice, затем над подготовленной trusted подсказкой; некорректные значения приводят к `unknown`. Он не читает IP/HTTP-заголовки, не делает GeoIP-запросов и не сохраняет IP. Локальный full gate: 130 tests/1232 assertions, PHPStan, lint, architecture и baseline — pass; GitHub Actions `31948360267` — success на PHP 8.3/MySQL.
 - 02.3B `50794fa` создаёт пустой fail-closed registry: контакт/URL, официальный источник, дата/автор проверки и `active = 0`. Реестр не связан с результатами или IP, не содержит seed-контактов и ещё не имеет reader/UI или срока актуальности. Локальная migration и full gate прошли (131 tests/1248 assertions); GitHub Actions `31948774257` — success на PHP 8.3/MySQL.
-- 02.4A приводит public privacy/delete copy и актуальные docs к реальному поведению: нет claims о шифровании, отсутствии будущих получателей или мгновенном физическом удалении. Есть source-level regression test, browser QA `/privacy` на desktop/390×844 и полный local gate (134 tests/1264 assertions); публикация — следующий шаг пакета.
+- 02.4A `a14f5eb` приводит public privacy/delete copy и актуальные docs к реальному поведению: нет claims о шифровании, отсутствии будущих получателей или мгновенном физическом удалении. Есть source-level regression test, browser QA `/privacy` на desktop/390×844, полный local gate (134 tests/1264 assertions) и GitHub CI [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — success.
 
 ## Ближайшие действия
 
