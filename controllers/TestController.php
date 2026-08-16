@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace PsyTest\Controllers;
 
 use PsyTest\Modules\TestModuleInterface;
+use PsyTest\Core\AnswerValidator;
 use Ramsey\Uuid\Uuid;
 
 class TestController extends BaseController
@@ -72,6 +73,11 @@ class TestController extends BaseController
 
         // Save answers
         $answers = $input['answers'] ?? [];
+        if (!is_array($answers) || AnswerValidator::validate($this->getModuleOrFail($slug), $answers, false) !== []) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'error' => 'Invalid answers']);
+            return;
+        }
         $this->sessionManager->saveAnswers($session['id'], $answers);
 
         // Save demographics if provided
@@ -134,6 +140,10 @@ class TestController extends BaseController
         // Form demographics take precedence over AJAX-saved ones
         if (!empty($formDemographics)) {
             $allAnswers = array_merge($allAnswers, $formDemographics);
+        }
+
+        if (AnswerValidator::validate($module, $allAnswers, true) !== []) {
+            $this->errorResponse('Invalid or incomplete answers', 422);
         }
 
         // Save final answers
@@ -265,6 +275,9 @@ class TestController extends BaseController
         }
         if (!empty($formDemographics)) {
             $allAnswers = array_merge($allAnswers, $formDemographics);
+        }
+        if (AnswerValidator::validate($module, $allAnswers, true) !== []) {
+            $this->errorResponse('Invalid or incomplete answers', 422);
         }
         $this->sessionManager->saveAnswers($sessionId, $allAnswers);
 
