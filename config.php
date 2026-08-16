@@ -98,6 +98,10 @@ return new class {
     public function sessionTtlDays(): int {
         return $this->getInt('SESSION_TTL_DAYS', 30);
     }
+
+    public function anonymousRetentionDays(): int {
+        return $this->getInt('ANONYMOUS_RETENTION_DAYS', 180);
+    }
     
     public function sessionTokenLength(): int {
         return $this->getInt('SESSION_TOKEN_LENGTH', 32);

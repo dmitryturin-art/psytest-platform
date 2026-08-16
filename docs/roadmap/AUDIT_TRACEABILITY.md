@@ -15,7 +15,7 @@
 | SEC-05 | Публичные debug/test files | P0 | 01 | `21c77c7`: public PHP allowlist, removed demo/test harnesses, headers и `PublicWebRootTest`; GitHub Actions `31940056207` — success | Закрыто |
 | CLIN-01 | BDI item 9 не создаёт самостоятельный crisis signal | P0 | 02 | unit/HTTP/browser cases при низком total и item 9 > 0 | Запланировано |
 | DATA-01 | Privacy claims расходятся с plaintext/внешним AI | P0 | 02/07 | точная data map, consent, minimization и проверенные тексты | Запланировано |
-| DATA-02 | Удаление данных неполное | P1 | 02 | lifecycle/delete integration tests по всем связанным сущностям | Запланировано |
+| DATA-02 | Удаление данных неполное | P1 | 02 | В работе: `SessionLifecycleService`, миграция retention class и integration cases для 180-day boundary, therapist exclusion, activity/PDF/pair cleanup; ручное therapist-delete, будущие AI/jobs и financial separation остаются следующими пакетами | В работе |
 | PAIR-01 | Границы доступа к приглашению пары недостаточны | P1 | 01 | one-use `46dade6`, migration chain `52883c9`, exact binding `1cc772e`, expiry regression `897b29b`, atomic race handling `af48b61`; GitHub Actions `31940661228` — success | Закрыто |
 
 ## Dependencies, payment и AI

@@ -195,9 +195,18 @@
 - Следующий шаг: определить visibility remote после `gh auth login`, затем выбрать обычное удаление или отдельную sanitization-процедуру истории.
 ### 02.0 — решения владельца о хранении и AI-consent
 
-- Этап / ветка / commit: этап 02.0, `codex/02-retention-consent-decisions`, commit pending.
+- Этап / ветка / commit: этап 02.0, `codex/02-retention-consent-decisions` → `main`, `6d8fd58`.
 - Цель: превратить ответ владельца в однозначные product и implementation constraints до изменения schema или public privacy copy.
 - Решения: anonymous clinical-данные — 180 календарных дней с `created_at`; `therapist_case` — бессрочно только при явном назначении, с ручным удалением; отдельное не-предвыбранное согласие на external AI нужно только при заказе расширенной интерпретации.
 - Сделано: решения записаны как D-024/D-025; добавлена целевая [RETENTION_POLICY.md](RETENTION_POLICY.md), обновлены product rules, factual data map, status, phase 02 и checkpoint. Правовая оговорка отделяет продуктовый срок от обязательных финансовых сроков и требует профессиональной проверки до production.
 - Проверки и evidence: проверены cross-links документации и актуальный Git diff; функциональный PHP-код и scoring не менялись.
 - Следующий шаг: 02.1 — спроектировать явную data-classification/schema и idempotent lifecycle cleanup, затем реализовать отдельным тестируемым package.
+
+### 02.1 — anonymous lifecycle и artifact cleanup
+
+- Этап / ветка / commit: этап 02.1, `codex/02-lifecycle-classification`, commit pending.
+- Цель: заменить ошибочную очистку «30 дней TTL + 7 дней» на принятое правило 180 дней для anonymous-данных, не удаляя therapist-case автоматически.
+- Сделано: добавлены `RetentionPolicy` и `SessionLifecycleService`; migration/schema вводят явный `retention_class` с безопасным default `anonymous`; cron удаляет только anonymous rows на/после 180-го дня, известные result/AI/pair PDF и session-bound activity logs. Связанные pair/legacy DB rows очищаются внешними ключами. `therapist_case` исключён из автоматической очистки.
+- Проверки и evidence: `composer migrate` применил `20260816010000`; узко 6 tests/22 assertions; полный gate: Composer validate/audit clean, PHPUnit 122 tests/1215 assertions, PHPStan/lint/architecture/baseline — pass. Ранний sandbox run не имел loopback/network, проверки повторены с локальным разрешённым доступом.
+- Сознательно не сделано: защищённое назначение и ручное удаление therapist-case, новые AI jobs/consents и financial retention — следующие отдельные пакеты. Legacy payment data не объявляются финансовым архивом.
+- Следующий шаг: review staged diff, commit, fast-forward merge, push и CI; затем 02.2 BDI safety signal.

@@ -45,6 +45,7 @@ final class InitSchema extends AbstractMigration
               `answers` JSON NOT NULL COMMENT 'User answers',
               `calculated_results` JSON NOT NULL COMMENT 'Calculated scores',
               `status` ENUM('partial', 'completed', 'expired', 'deleted') DEFAULT 'partial',
+              `retention_class` VARCHAR(32) NOT NULL DEFAULT 'anonymous' COMMENT 'Lifecycle classification',
               `ip_address` VARCHAR(45) DEFAULT NULL COMMENT 'For audit purposes',
               `user_agent` VARCHAR(500) DEFAULT NULL COMMENT 'For audit purposes',
               `completed_at` TIMESTAMP NULL DEFAULT NULL,
@@ -55,6 +56,7 @@ final class InitSchema extends AbstractMigration
               INDEX `idx_partner_token` (`partner_token`),
               INDEX `idx_status` (`status`),
               INDEX `idx_expires` (`expires_at`),
+              INDEX `idx_retention_created` (`retention_class`, `created_at`),
               INDEX `idx_test_status` (`test_id`, `status`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");

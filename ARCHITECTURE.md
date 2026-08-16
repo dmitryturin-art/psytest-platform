@@ -222,6 +222,12 @@ class SessionManager
 
 `session_token` — единственный публичный ключ доступа к результату. `partner_token` не является ключом доступа: он хранит связь второй парной анкеты с первой и не участвует в lookup результата.
 
+Новая сессия получает явный `retention_class = anonymous`. Класс `therapist_case` не назначается по email, IP или token и пока ожидает защищённый кабинет владельца. Access TTL (`expires_at`) остаётся отдельным от срока физического хранения.
+
+### SessionLifecycleService — `core/SessionLifecycleService.php`
+
+Плановый lifecycle-сервис выбирает только `anonymous`-сессии старше срока policy (180 дней по умолчанию), перед удалением очищает известные файлы `result_{session}`, `interpretation_{session}` и `pair_{comparison}` строго внутри `storage/pdfs`, затем удаляет session-bound activity records и саму сессию. Внешние ключи каскадно очищают pair/legacy dependent rows. `therapist_case` автоматической очистке не подлежит.
+
 ### Security — `core/Security.php` (~334 строки)
 
 Все методы статические — утилитарный класс.

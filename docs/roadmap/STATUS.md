@@ -5,7 +5,7 @@
 ## Сейчас
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим) и отдельный AI-consent. Начинается проектирование lifecycle.
+- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим) и отдельный AI-consent. 02.1 реализует anonymous lifecycle и проходит локальный gate; package ожидает commit/CI.
 - Последний опубликованный commit: `196b3ff` в `main`; GitHub Actions для последнего code package [31940661228](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940661228) — success, включая PAIR-04 race handling.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
@@ -18,7 +18,7 @@
 |---|---|---|
 | 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | retention и AI-consent приняты; следующий пакет — lifecycle policy/data classification |
+| 02 | В работе | 02.1: явный anonymous retention class, 180-day lifecycle и artifact cleanup; manual therapist deletion/AI consent record ещё впереди |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
@@ -48,7 +48,7 @@
 
 ## Следующие пять действий
 
-1. Утвердить и реализовать data classification/lifecycle согласно 180 дням и therapist-режиму.
+1. Завершить и опубликовать 02.1 lifecycle/data classification; затем подтвердить CI.
 2. Реализовать BDI item-9 safety flow по утверждённому тексту и country strategy.
 3. Закрывать privacy findings отдельными regression-тестами до UI-редизайна.
 4. Не начинать UI-редизайн до закрытия P0 security/payment containment.

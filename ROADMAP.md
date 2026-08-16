@@ -35,8 +35,8 @@
 | Этап | Назначение | Статус | Главный результат |
 |---|---|---|---|
 | [00](docs/roadmap/phases/00-governance-baseline.md) | Управление и baseline | В работе | единые правила, воспроизводимая точка отсчёта |
-| [01](docs/roadmap/phases/01-containment-security.md) | Containment и безопасность | Не начат | закрыты P0-дефекты и сломанный платный путь |
-| [02](docs/roadmap/phases/02-clinical-privacy-pilot.md) | Клиническая безопасность и бесплатный пилот | Не начат | безопасный закрытый бесплатный пилот |
+| [01](docs/roadmap/phases/01-containment-security.md) | Containment и безопасность | Завершён | закрыты P0-дефекты и сломанный платный путь |
+| [02](docs/roadmap/phases/02-clinical-privacy-pilot.md) | Клиническая безопасность и бесплатный пилот | В работе | безопасный закрытый бесплатный пилот |
 | [03](docs/roadmap/phases/03-module-api-v2.md) | Module API v2 | Не начат | новые типы тестов без slug-ветвлений в ядре |
 | [04](docs/roadmap/phases/04-ui-ux-redesign.md) | UI/UX и дизайн-система | Не начат | современный, удобный и профессиональный интерфейс |
 | [05](docs/roadmap/phases/05-smil-professional-parity.md) | Профессиональная комплектация SMIL | Не начат | канонический профиль и проверенные дополнительные шкалы |

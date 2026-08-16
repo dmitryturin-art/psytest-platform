@@ -35,10 +35,11 @@
 - PAIR-02 подтверждает, что submitted session второго партнёра связана именно с source invite token до записи ответов и расчёта.
 - PAIR-03 подтверждает expiry boundaries; PAIR-04 переводит конкурентный duplicate invite в `409`, а DB-логи больше не включают driver messages с bound values.
 - Составлен factual data map текущего кода и приняты owner-решения: `anonymous` clinical-данные — 180 дней, явный `therapist_case` — бессрочно с ручным удалением; AI-передача требует отдельного consent только при заказе расширенного разбора.
+- 02.1 в branch `codex/02-lifecycle-classification`: migration добавляет явный `retention_class`; lifecycle очистка удаляет anonymous сессии в 180-дневной границе, known PDFs, pair records и session-bound logs. Пакет ещё не опубликован.
 
 ## Ближайшие действия
 
-1. **02.1 — lifecycle policy и classification:** закрепить явную модель классов данных, подготовить schema/cleanup design и integration-contract до кода.
+1. Завершить интеграцию 02.1, подтвердить CI и только затем переходить к 02.2.
 2. **02.2 — BDI safety:** после утверждения текста и регионального strategy реализовать deterministic item-9 safety flow.
 3. Затем перейти к privacy/crisis BDI flow этапа 02.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.

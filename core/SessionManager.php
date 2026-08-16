@@ -58,6 +58,7 @@ class SessionManager
             'answers' => json_encode([]),
             'calculated_results' => json_encode([]),
             'status' => 'partial',
+            'retention_class' => RetentionPolicy::ANONYMOUS,
             'ip_address' => $options['ip_address'] ?? $this->getClientIp(),
             'user_agent' => $options['user_agent'] ?? $this->getUserAgent(),
             'created_at' => date('Y-m-d H:i:s'),
@@ -76,6 +77,7 @@ class SessionManager
             'test_id' => $testId,
             'session_token' => $sessionToken,
             'partner_token' => $partnerToken,
+            'retention_class' => RetentionPolicy::ANONYMOUS,
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
     }

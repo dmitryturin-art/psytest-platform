@@ -29,8 +29,8 @@
 | Этап | Статус | Назначение | Файл |
 |---|---|---|---|
 | 00 | В работе | правила, память проекта и воспроизводимый baseline | [Открыть](phases/00-governance-baseline.md) |
-| 01 | Не начат | containment сломанного платного пути и P0-security | [Открыть](phases/01-containment-security.md) |
-| 02 | Не начат | crisis flow, privacy, lifecycle и бесплатный пилот | [Открыть](phases/02-clinical-privacy-pilot.md) |
+| 01 | Завершён | containment сломанного платного пути и P0-security | [Открыть](phases/01-containment-security.md) |
+| 02 | В работе | crisis flow, privacy, lifecycle и бесплатный пилот | [Открыть](phases/02-clinical-privacy-pilot.md) |
 | 03 | Не начат | единый модульный контракт для разных типов тестов | [Открыть](phases/03-module-api-v2.md) |
 | 04 | Не начат | современный UI/UX без повреждения SMIL-профиля | [Открыть](phases/04-ui-ux-redesign.md) |
 | 05 | Не начат | проверенные дополнительные шкалы и профессиональный SMIL | [Открыть](phases/05-smil-professional-parity.md) |

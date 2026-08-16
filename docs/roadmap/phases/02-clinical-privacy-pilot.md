@@ -19,7 +19,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 3. **CountryResolver.** Приоритет: ручной выбор → session choice → доверенный proxy/local GeoIP hint → unknown. Всегда доступно исправление и международный fallback.
 4. **Resource registry.** Страна, язык, тип, контакт/URL, официальный источник, дата проверки, проверивший, active. Устаревшие ресурсы автоматически не публиковать.
 5. **Data map и consent.** Описать поля, цели, сроки, получателей, cookies и внешние передачи честно по фактическому коду. Разделить согласие на тест и на AI.
-6. **Lifecycle/delete.** Реализовать каскадное удаление/анонимизацию anonymous-данных через 180 дней, явный therapist-режим с ручным удалением, а также охват ответов, результатов, pair data, jobs, отчётов и operational logs. Каждое правило доказывается integration test.
+6. **Lifecycle/delete.** 02.1 в работе: `anonymous`-класс, 180-day cron lifecycle, session-bound logs и известные result/AI/pair PDFs покрыты integration tests. Остались явное защищённое назначение/удаление therapist-case, будущие AI jobs/consents и финансовое разделение. Каждое новое правило доказывается integration test.
 7. **Методики и лицензии.** Реестр источников/прав использования; сомнительные тексты не добавлять в public catalog.
 8. **Закрытый бесплатный пилот.** Небольшая группа, anonymized issue log, support path, никаких платежей/AI.
 
