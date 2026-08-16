@@ -10,13 +10,13 @@
 |---|---|---|---|---|---|
 | SEC-01 | CSRF генерируется, но не enforced | P0 | 01 | `e42eb89`: middleware + missing/invalid/valid/reused tests; GitHub Actions `31904136305` — success | Закрыто |
 | SEC-02 | Token lookup использует `session OR partner` | P0 | 01 | `0d6a947`: `getSessionByResultToken()` lookup только `session_token`; pair reference больше не credential; Lazarus E2E regression; GitHub Actions `31904747962` — success | Закрыто |
-| SEC-03 | Route slug не сверяется с session module | P0 | 01 | 01.5: shared `SessionTestIntegrity`, result/PDF/pair-status/autosave/submit/pair flow guards и mismatch regression; ждёт GitHub CI | В работе |
-| SEC-04 | Нет обязательной серверной module validation | P0 | 01/03 | schema/range/completeness tests для каждого модуля | Запланировано |
+| SEC-03 | Route slug не сверяется с session module | P0 | 01 | `92bf5e6`: shared `SessionTestIntegrity`, guards и mismatch regression; GitHub Actions `31933655096` — success | Закрыто |
+| SEC-04 | Нет обязательной серверной module validation | P0 | 01/03 | `2cc5321`: type/allowed-values/completeness checks для текущих модулей; локально pass, GitHub gate blocked migration error `uq_partner_token` | В работе |
 | SEC-05 | Публичные debug/test files | P0 | 01 | web-root inventory и HTTP 404/deny tests | Запланировано |
 | CLIN-01 | BDI item 9 не создаёт самостоятельный crisis signal | P0 | 02 | unit/HTTP/browser cases при низком total и item 9 > 0 | Запланировано |
 | DATA-01 | Privacy claims расходятся с plaintext/внешним AI | P0 | 02/07 | точная data map, consent, minimization и проверенные тексты | Запланировано |
 | DATA-02 | Удаление данных неполное | P1 | 02 | lifecycle/delete integration tests по всем связанным сущностям | Запланировано |
-| PAIR-01 | Границы доступа к приглашению пары недостаточны | P1 | 01 | ownership/expiry/single-use/cross-session tests | Запланировано |
+| PAIR-01 | Границы доступа к приглашению пары недостаточны | P1 | 01 | `46dade6`: one-use check + DB unique intent; CI clean migration fails because index already exists in init schema. Нужен 01.5C и green CI | В работе |
 
 ## Dependencies, payment и AI
 

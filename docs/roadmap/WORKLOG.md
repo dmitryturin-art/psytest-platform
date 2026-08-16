@@ -19,6 +19,16 @@
 
 ## 2026-08-16
 
+### Checkpoint — пауза перед исправлением pair-invite migration
+
+- Этап / ветка / commit: этап 01, `codex/checkpoint-pair-migration-20260816`, documentation checkpoint (commit будет создан отдельно); product code остаётся на `main` до `e8f1f53`.
+- Цель: сохранить честное состояние после публикации 01.5A, 01.5B и PAIR-01, не продолжая новые функции при красном release gate.
+- Сделано: зафиксированы published commits `92bf5e6` (route/session integrity), `2cc5321`/`e8f1f53` (server-side answer validation) и `46dade6` (single-use pair invite). Формулы и presentation SMIL не менялись.
+- Проверки и evidence: перед публикацией — `composer test` 107 tests/1163 assertions, PHPStan и lint pass. GitHub Actions [31933926559](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31933926559) failed в шаге migration: `InitSchema` уже создаёт `uq_partner_token`, затем `20260816000000_add_pair_invite_uniqueness.php` получает MySQL 1061 при повторном `ADD UNIQUE KEY`.
+- Не сделано / риски: release/deploy запрещён до исправления. SEC-04 и PAIR-01 не переводятся в «Закрыто», поскольку внешний full gate не дошёл до тестов.
+- Следующий шаг: **01.5C — migration repair**: выбрать единственный корректный путь создания индекса, добавить regression чистой миграции, затем повторить полный локальный и GitHub gate.
+- Состояние: **остановлено по запросу владельца**.
+
 ### 01.5A — integrity route slug и test session
 
 - Этап / ветка / commit: этап 01.5A, `codex/01-route-session-integrity`, commit pending.
