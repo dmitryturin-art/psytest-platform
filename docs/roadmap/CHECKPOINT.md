@@ -37,10 +37,11 @@
 - Составлен factual data map текущего кода и приняты owner-решения: `anonymous` clinical-данные — 180 дней, явный `therapist_case` — бессрочно с ручным удалением; AI-передача требует отдельного consent только при заказе расширенного разбора.
 - 02.1 опубликован в `main`: `87925ba` реализует lifecycle, а `6152177` исправляет clean migration chain. GitHub Actions [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success на PHP 8.3/MySQL.
 - 02.2A в `codex/02-bdi-safety-signal`: validated BDI item 9 с оценкой 1–3 создаёт структурированный safety signal, независимый от total; локальный gate зелёный, UI/текст/ресурсы не начаты.
+- 02.2A опубликован в `main` как `16c4730`; GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success. UI, клинический текст, country/resource registry не начаты и требуют решения владельца.
 
 ## Ближайшие действия
 
-1. Завершить интеграцию 02.2A и подтвердить CI; затем запросить owner-approved Crisis UI text/resources.
+1. Получить owner-approved Crisis UI text/resources и перейти к 02.2B.
 2. **02.2 — BDI safety:** после утверждения текста и регионального strategy реализовать deterministic item-9 safety flow.
 3. Затем перейти к privacy/crisis BDI flow этапа 02.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.

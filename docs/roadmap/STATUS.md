@@ -5,8 +5,8 @@
 ## Сейчас
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим) и отдельный AI-consent. 02.1 подтверждён CI; 02.2A добавляет server-side BDI safety signal и ожидает commit/CI.
-- Последний опубликованный commit: `6152177` в `main`; GitHub Actions [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success, включая чистую migration chain для retention lifecycle.
+- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим) и отдельный AI-consent. 02.1 и 02.2A подтверждены GitHub CI; следующий пакет — Crisis UI/text/resources.
+- Последний опубликованный commit: `16c4730` в `main`; GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success, включая BDI server-side safety signal.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -18,7 +18,7 @@
 |---|---|---|
 | 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | 02.1 lifecycle подтверждён; 02.2A server-side BDI signal готов локально, Crisis UI/text/resources ещё впереди |
+| 02 | В работе | 02.1 lifecycle и 02.2A server-side BDI signal подтверждены CI; Crisis UI/text/resources, therapist-delete и AI consent record ещё впереди |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
@@ -48,7 +48,7 @@
 
 ## Следующие пять действий
 
-1. Завершить и опубликовать 02.2A server-side BDI signal; затем подтвердить CI.
+1. Утвердить Crisis UI text и начальный country/resource baseline для BDI safety-flow.
 2. Реализовать Crisis UI и country/resource strategy по утверждённому тексту.
 3. Закрывать privacy findings отдельными regression-тестами до UI-редизайна.
 4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
