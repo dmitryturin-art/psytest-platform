@@ -46,4 +46,18 @@ final class SessionTestIntegrityTest extends TestCase
         );
         self::assertStringNotContainsString('isPairSessionBoundToSourceToken', $normalSubmit);
     }
+
+    public function testPairStartTranslatesInviteRaceIntoConflict(): void
+    {
+        $testController = (string) file_get_contents(dirname(__DIR__) . '/controllers/TestController.php');
+        $pairStart = substr(
+            $testController,
+            (int) strpos($testController, 'public function pairStart'),
+            (int) strpos($testController, 'public function pairSubmit') - (int) strpos($testController, 'public function pairStart'),
+        );
+
+        self::assertIsString($pairStart);
+        self::assertStringContainsString('createPairSession($test[\'id\'], $partnerToken)', $pairStart);
+        self::assertStringContainsString('http_response_code(409)', $pairStart);
+    }
 }

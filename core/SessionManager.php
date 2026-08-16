@@ -12,6 +12,7 @@ namespace PsyTest\Core;
 
 use DateTime;
 use DateTimeImmutable;
+use PDOException;
 use Ramsey\Uuid\Uuid;
 
 class SessionManager
@@ -269,6 +270,28 @@ class SessionManager
              AND status NOT IN ('expired', 'deleted')",
             ['token' => $token],
         ) !== null;
+    }
+
+    /**
+     * Atomically create the second partner's session.
+     *
+     * The preflight check makes the normal case clear to a visitor. The
+     * database unique constraint remains authoritative when two requests race.
+     * A duplicate returns null so the controller can answer with HTTP 409.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function createPairSession(int $testId, string $sourceToken): ?array
+    {
+        try {
+            return $this->createSession($testId, ['partner_token' => $sourceToken]);
+        } catch (PDOException $exception) {
+            if ($exception->getCode() === '23000') {
+                return null;
+            }
+
+            throw $exception;
+        }
     }
 
     /**

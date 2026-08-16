@@ -210,10 +210,13 @@ class TestController extends BaseController
 
         $metadata = $module->getMetadata();
 
-        // Create new session with partner token
-        $session = $this->sessionManager->createSession($test['id'], [
-            'partner_token' => $partnerToken,
-        ]);
+        // The database uniqueness constraint resolves concurrent attempts.
+        $session = $this->sessionManager->createPairSession($test['id'], $partnerToken);
+        if ($session === null) {
+            http_response_code(409);
+            echo 'Partner invite has already been used';
+            return;
+        }
 
         $questions = $module->getQuestions();
 

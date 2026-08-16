@@ -68,7 +68,7 @@ class Database
             $this->connection->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         } catch (PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
+            error_log('Database connection failed [' . $e->getCode() . ']');
             throw new PDOException("Database connection failed");
         }
     }
@@ -122,7 +122,7 @@ class Database
             $stmt->execute($params);
             return $stmt;
         } catch (PDOException $e) {
-            error_log("Database query failed: " . $e->getMessage());
+            error_log('Database query failed [' . $e->getCode() . ']');
             throw $e;
         }
     }

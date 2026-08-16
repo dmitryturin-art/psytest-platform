@@ -232,6 +232,17 @@ final class LazarusE2ETest extends TestCase
         self::assertFalse($this->sm->isPairSessionBoundToSourceToken($expiredPair['id'], $source['session_token']));
     }
 
+    public function testConcurrentPairInviteAttemptReturnsNoSecondSession(): void
+    {
+        $source = $this->sm->createSession($this->testId);
+
+        $first = $this->sm->createPairSession($this->testId, $source['session_token']);
+        $second = $this->sm->createPairSession($this->testId, $source['session_token']);
+
+        self::assertNotNull($first);
+        self::assertNull($second);
+    }
+
     /**
      * @return array<string, int>
      */
