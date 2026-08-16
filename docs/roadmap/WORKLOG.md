@@ -19,6 +19,17 @@
 
 ## 2026-08-16
 
+### 02.3A — manual-first CountryResolver boundary
+
+- Этап / ветка / commit: этап 02, `codex/02-country-resolver`, commit pending.
+- Цель: подготовить безопасную, не зависящую от IP доменную границу для будущего выбора кризисных ресурсов, не добавляя пока публичный Crisis UI, контакты или GeoIP-инфраструктуру.
+- Сделано: добавлены immutable `CountryResolution` и pure `CountryResolver`. Приоритет строго такой: ручной ISO-код → выбор текущей сессии → явно переданная доверенная server-side подсказка → `unknown`. Невалидные значения отклоняются; класс не читает `$_SERVER`, не разбирает IP и не вызывает внешние API.
+- Решения: текущие `X-Forwarded-For`/Cloudflare-заголовки не имеют trusted-proxy boundary и не используются для кризисной географии. HTTP/proxy adapter, хранение ручного выбора и resource registry остаются следующими изолированными пакетами.
+- Проверки и evidence: RED — 4 теста не находили отсутствующий `CountryResolver`; GREEN — 4 теста/4 assertions. Полный локальный gate: `composer validate`, `composer audit`, PHPUnit 130 tests/1232 assertions, PHPStan, lint, architecture check, baseline 148 и `git diff --check` — pass. PHPStan/lint выполнялись на PHP 8.5.3 при target PHP 8.3; CI ещё ожидается.
+- Изменённые файлы: `core/CountryResolution.php`, `core/CountryResolver.php`, `tests/CountryResolverTest.php`, `ARCHITECTURE.md`, phase/status/traceability docs.
+- Не сделано / риски: не создаётся и не публикуется ни один кризисный контакт; browser UI, подтверждённый текст, session persistence, trusted proxy/local GeoIP integration и registry намеренно не реализованы без утверждённого product baseline.
+- Следующий шаг: review diff, commit, fast-forward merge/push и дождаться CI; после этого — запросить owner-approved кризисный текст и стартовые ресурсы для 02.2B/02.3B.
+
 ### PAIR-03/04 — expiry boundaries, invite race и safe DB error logging
 
 - Этап / ветка / commit: этап 01, `codex/01-pair-expiry-boundaries` → `main`, `897b29b`; `codex/01-pair-invite-race` → `main`, `af48b61`.

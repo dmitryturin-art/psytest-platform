@@ -232,6 +232,10 @@ class SessionManager
 
 Для BDI после успешной validation извлекает строго машинный сигнал из пункта 9: code, исходный пункт и значение `1–3` как severity. Он не меняет total score/level, не формирует диагноз, не содержит клиентского текста и не выбирает кризисные контакты. `BeckDepressionModule` сохраняет его в `calculated_results.safety_signals`; UI и country/resource flow остаются отдельным work package.
 
+### CountryResolver — `core/CountryResolver.php`
+
+Чистый доменный слой для будущего выбора кризисных ресурсов. Он принимает только подготовленные значения и выбирает страну в порядке: ручной ISO-код пользователя, ISO-код текущей сессии, явно переданная доверенная server-side подсказка, затем `unknown`. `CountryResolver` не читает `$_SERVER`, не разбирает IP, не вызывает внешние GeoIP API и не сохраняет точный IP. Проверка доверенности reverse proxy или локальной GeoIP-базы остаётся обязанностью будущего HTTP/infrastructure adapter.
+
 ### Security — `core/Security.php` (~334 строки)
 
 Все методы статические — утилитарный класс.

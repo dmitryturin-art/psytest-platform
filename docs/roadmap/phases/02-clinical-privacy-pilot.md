@@ -16,7 +16,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 
 1. **BDI safety signal.** 02.2A: сервер извлекает item 9 из валидированных ответов независимо от total score и сохраняет machine-readable severity 1–3. Не превращает это в диагноз и не добавляет клиентский текст; Crisis UI остаётся отдельным пакетом.
 2. **Crisis UI.** Показывать заметный спокойный action block сразу после ответа/submit, не прятать под CTA. При непосредственной опасности — местная экстренная помощь, доверенный человек, не оставаться одному.
-3. **CountryResolver.** Приоритет: ручной выбор → session choice → доверенный proxy/local GeoIP hint → unknown. Всегда доступно исправление и международный fallback.
+3. **CountryResolver.** 02.3A реализует pure resolver с приоритетом: ручной выбор → session choice → явно переданный доверенный proxy/local GeoIP hint → unknown. Он не читает IP/HTTP-заголовки и не вызывает внешние API. В UI всегда доступно исправление и международный fallback; их подключение остаётся следующим пакетом.
 4. **Resource registry.** Страна, язык, тип, контакт/URL, официальный источник, дата проверки, проверивший, active. Устаревшие ресурсы автоматически не публиковать.
 5. **Data map и consent.** Описать поля, цели, сроки, получателей, cookies и внешние передачи честно по фактическому коду. Разделить согласие на тест и на AI.
 6. **Lifecycle/delete.** 02.1 в работе: `anonymous`-класс, 180-day cron lifecycle, session-bound logs и известные result/AI/pair PDFs покрыты integration tests. Остались явное защищённое назначение/удаление therapist-case, будущие AI jobs/consents и финансовое разделение. Каждое новое правило доказывается integration test.

@@ -6,7 +6,7 @@
 
 - Проект: PsyTest Platform.
 - Активный этап: 02 — клиническая безопасность, privacy и бесплатный пилот.
-- Последний опубликованный package: `196b3ff` в `main`; последний code package `af48b61`, GitHub Actions [31940661228](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940661228) — **success**. PAIR-01 boundaries и privacy-safe DB logging подтверждены на PHP 8.3/MySQL.
+- Последний опубликованный commit: `a995a5b` в `main`; последний code package `16c4730`, GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — **success**. 02.3A находится в проверенной локально ветке `codex/02-country-resolver` и ещё не опубликован.
 - 01.5A (`92bf5e6`) связывает route slug с test session; 01.5B (`2cc5321`, форматирование `e8f1f53`) добавляет серверную validation ответов; 01.5C (`52883c9`) устраняет дублирующий index в migration chain. Формулы тестов и корректный пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -38,26 +38,27 @@
 - 02.1 опубликован в `main`: `87925ba` реализует lifecycle, а `6152177` исправляет clean migration chain. GitHub Actions [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success на PHP 8.3/MySQL.
 - 02.2A в `codex/02-bdi-safety-signal`: validated BDI item 9 с оценкой 1–3 создаёт структурированный safety signal, независимый от total; локальный gate зелёный, UI/текст/ресурсы не начаты.
 - 02.2A опубликован в `main` как `16c4730`; GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success. UI, клинический текст, country/resource registry не начаты и требуют решения владельца.
+- 02.3A добавляет pure `CountryResolver`: ручной выбор страны имеет приоритет над session choice, затем над подготовленной trusted подсказкой; некорректные значения приводят к `unknown`. Он не читает IP/HTTP-заголовки, не делает GeoIP-запросов и не сохраняет IP. Локальный full gate: 130 tests/1232 assertions, PHPStan, lint, architecture и baseline — pass; commit/CI ещё впереди.
 
 ## Ближайшие действия
 
-1. Получить owner-approved Crisis UI text/resources и перейти к 02.2B.
-2. **02.2 — BDI safety:** после утверждения текста и регионального strategy реализовать deterministic item-9 safety flow.
-3. Затем перейти к privacy/crisis BDI flow этапа 02.
+1. Завершить публикацию 02.3A и подтвердить CI.
+2. Получить owner-approved Crisis UI text/resources и перейти к 02.2B/02.3B.
+3. После утверждения текста и регионального strategy реализовать deterministic item-9 safety flow.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
 
 ## Известные блокеры и риски
 
 - Новый платный flow пока не существует: legacy endpoints намеренно retired до проектирования YooKassa/AI orders.
 - `therapist_case`, 180-day cleanup, deletion UX и AI-consent пока не реализованы: public privacy copy не меняется до подтверждённого поведения.
-- BDI item 9 не имеет самостоятельного safety-flow.
+- BDI item 9 имеет server-side signal, но ещё не имеет самостоятельного пользовательского safety-flow, утверждённого текста или resource registry.
 - Документация расходится с кодом.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
 - Два старых PDF остаются только в истории; владелец подтвердил их обезличенность и отказался от history rewrite. Новые generated PDF игнорируются и не попадают в Git.
 
 ## Что спросить у владельца сейчас
 
-Ничего для 02.1. Перед публикацией BDI safety-flow понадобится утверждение кризисного текста и начальных ресурсов; визуальное интервью — в этапе 04.
+Перед публикацией BDI safety-flow понадобится утверждение кризисного текста и начальных ресурсов; визуальное интервью — в этапе 04.
 
 ## Возобновление
 
