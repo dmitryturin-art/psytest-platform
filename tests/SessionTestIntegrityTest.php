@@ -31,4 +31,19 @@ final class SessionTestIntegrityTest extends TestCase
         self::assertSame(5, substr_count($testController, 'getSessionTestForRoute('));
         self::assertStringContainsString('getSessionTestForRoute($partnerSession, $slug)', $testController);
     }
+
+    public function testPairSubmitBindsTheSecondSessionToItsInvite(): void
+    {
+        $testController = (string) file_get_contents(dirname(__DIR__) . '/controllers/TestController.php');
+        $normalSubmit = substr($testController, 0, (int) strpos($testController, 'public function pairStart'));
+        $pairSubmit = substr($testController, (int) strpos($testController, 'public function pairSubmit'));
+
+        self::assertIsString($normalSubmit);
+        self::assertIsString($pairSubmit);
+        self::assertStringContainsString(
+            'isPairSessionBoundToSourceToken($sessionId, $partnerToken)',
+            $pairSubmit,
+        );
+        self::assertStringNotContainsString('isPairSessionBoundToSourceToken', $normalSubmit);
+    }
 }

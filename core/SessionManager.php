@@ -272,6 +272,26 @@ class SessionManager
     }
 
     /**
+     * Confirm that the second partner's session was created from this exact
+     * source invite. A pair submission must not combine an arbitrary session
+     * id with another person's result-access token.
+     */
+    public function isPairSessionBoundToSourceToken(string $sessionId, string $token): bool
+    {
+        return $this->db->selectOne(
+            "SELECT id FROM test_sessions
+             WHERE id = :session_id
+             AND partner_token = :token
+             AND expires_at > NOW()
+             AND status NOT IN ('expired', 'deleted')",
+            [
+                'session_id' => $sessionId,
+                'token' => $token,
+            ],
+        ) !== null;
+    }
+
+    /**
      * Generate a pair comparison record
      *
      * @param int $testId Test ID

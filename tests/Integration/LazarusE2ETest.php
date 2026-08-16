@@ -198,6 +198,16 @@ final class LazarusE2ETest extends TestCase
         self::assertTrue($this->sm->hasPairSessionForSourceToken($p1['session_token']));
     }
 
+    public function testPairSessionMustBeBoundToTheSubmittedSourceToken(): void
+    {
+        $source = $this->sm->createSession($this->testId);
+        $pair = $this->sm->createSession($this->testId, ['partner_token' => $source['session_token']]);
+        $unrelated = $this->sm->createSession($this->testId);
+
+        self::assertTrue($this->sm->isPairSessionBoundToSourceToken($pair['id'], $source['session_token']));
+        self::assertFalse($this->sm->isPairSessionBoundToSourceToken($pair['id'], $unrelated['session_token']));
+    }
+
     /**
      * @return array<string, int>
      */

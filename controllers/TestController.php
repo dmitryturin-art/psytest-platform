@@ -253,9 +253,13 @@ class TestController extends BaseController
         }
 
         $session = $this->sessionManager->getSessionById($sessionId);
-        if (!$session || !$this->getSessionTestForRoute($session, $slug)) {
+        if (
+            !$session
+            || !$this->getSessionTestForRoute($session, $slug)
+            || !$this->sessionManager->isPairSessionBoundToSourceToken($sessionId, $partnerToken)
+        ) {
             http_response_code(404);
-            echo 'Session not found';
+            echo 'Pair session not found';
             return;
         }
 
