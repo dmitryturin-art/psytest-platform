@@ -5,19 +5,19 @@
 ## Сейчас
 
 - Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
-- Состояние: работа поставлена на паузу после checkpoint. Следующая package-ветка: `01.5C migration repair`.
-- Последний опубликованный commit: `e8f1f53` в `main`; выпускной GitHub Actions [31933926559](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31933926559) завершился ошибкой миграции и не даёт разрешения на деплой.
+- Состояние: этап 01 продолжается. Следующая package-ветка: `SEC-05 web-root hygiene`.
+- Последний опубликованный commit: `52883c9` в `main`; GitHub Actions [31939695568](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31939695568) — success, включая чистую MySQL migration chain.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
-- 01.4 принят в `main`: lookup результата разделён с pair-reference; GitHub Actions [31904747962](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31904747962) — success. 01.5A route/session integrity также подтверждён CI. 01.5B validation и PAIR-01 опубликованы, но release gate красный: `uq_partner_token` создан и в initial schema, и в отдельной миграции.
+- 01.4 принят в `main`: lookup результата разделён с pair-reference; GitHub Actions [31904747962](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31904747962) — success. 01.5A route/session integrity и 01.5B server validation подтверждены CI. 01.5C устранил конфликт `uq_partner_token`; release gate снова зелёный.
 
 ## Готовность этапов
 
 | Этап | Состояние | Прогресс/условие перехода |
 |---|---|---|
 | 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
-| 01 | Приостановлен | 01.1–01.5A подтверждены CI; 01.5B/PAIR-01 требуют migration repair и нового зелёного CI |
+| 01 | В работе | 01.1–01.5C и SEC-04 подтверждены CI; следующая P0-задача — SEC-05 web-root hygiene |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
@@ -37,7 +37,7 @@
 
 ## Активные риски
 
-1. CI не проходит чистую миграцию: `uq_partner_token` повторно добавляется в `20260816000000_add_pair_invite_uniqueness.php`.
+1. В web root находятся `public/demo.php` и `public/test-smil.php`; их нельзя оставлять доступными на production.
 2. Legacy payment endpoints безопасно retired, но новый YooKassa/AI flow ещё не спроектирован и не реализован.
 3. BDI item 9 не создаёт независимый кризисный signal.
 4. Документация местами ещё обещает свойства, которых фактический код не обеспечивает.
@@ -48,8 +48,8 @@
 
 ## Следующие пять действий
 
-1. 01.5C: исправить дублирование pair-invite migration и добавить regression на чистую миграцию.
-2. Подтвердить 01.5B/PAIR-01 полным зелёным GitHub Actions.
+1. Убрать public-доступ к demo/test harnesses и проверить HTTP 404/deny, headers и stack traces.
+2. Закрыть P1 access boundaries для парного приглашения отдельными regression-тестами.
 3. Закрывать оставшиеся security findings отдельными regression-тестами до UI-редизайна.
 4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
 5. После выхода из этапа 01 перейти к privacy и кризисному BDI flow этапа 02.
@@ -60,4 +60,4 @@
 
 ## Последняя контрольная точка
 
-[CHECKPOINT.md](CHECKPOINT.md) — точное состояние паузы: опубликованный код, красный CI и первый шаг возобновления.
+[CHECKPOINT.md](CHECKPOINT.md) — текущее состояние после зелёного migration-fix и следующий P0 package.

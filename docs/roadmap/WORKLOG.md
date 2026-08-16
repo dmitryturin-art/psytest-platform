@@ -19,6 +19,15 @@
 
 ## 2026-08-16
 
+### 01.5C — repair duplicate pair-invite migration
+
+- Этап / ветка / commit: этап 01, `codex/01-pair-migration-repair` → `main`, `52883c9`.
+- Цель: восстановить deployable migration chain после того, как GitHub MySQL выявил повторное создание `uq_partner_token`, не меняя бизнес-логику парного теста или расчёты.
+- Сделано: bootstrap migration возвращена к исторической схеме без нового index; `20260816000000_add_pair_invite_uniqueness.php` остаётся единственным инкрементальным созданием уникальности для уже существующих баз; актуальный `database/schema.sql` продолжает описывать итоговую схему. Добавлен `PairInviteMigrationContractTest`, который не допускает повторного DDL.
+- Проверки и evidence: RED — contract-test падал на дублирующем index; GREEN — 1 test/6 assertions. Полный локальный gate — 108 tests/1169 assertions, `composer migrate`, PHPStan, lint, architecture и diff check — pass. GitHub Actions [31939695568](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31939695568) — success на PHP 8.3 и чистой MySQL migration chain.
+- Не сделано / риски: PAIR-01 не закрывается целиком этим пакетом: одноразовость готова, но оставшиеся P1 access-boundary cases будут отдельной работой.
+- Следующий шаг: SEC-05 — убрать production-доступ к demo/test files, покрыть HTTP-границу и проверить headers/stack traces.
+
 ### Checkpoint — пауза перед исправлением pair-invite migration
 
 - Этап / ветка / commit: этап 01, `codex/checkpoint-pair-migration-20260816`, documentation checkpoint (commit будет создан отдельно); product code остаётся на `main` до `e8f1f53`.
@@ -27,16 +36,17 @@
 - Проверки и evidence: перед публикацией — `composer test` 107 tests/1163 assertions, PHPStan и lint pass. GitHub Actions [31933926559](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31933926559) failed в шаге migration: `InitSchema` уже создаёт `uq_partner_token`, затем `20260816000000_add_pair_invite_uniqueness.php` получает MySQL 1061 при повторном `ADD UNIQUE KEY`.
 - Не сделано / риски: release/deploy запрещён до исправления. SEC-04 и PAIR-01 не переводятся в «Закрыто», поскольку внешний full gate не дошёл до тестов.
 - Следующий шаг: **01.5C — migration repair**: выбрать единственный корректный путь создания индекса, добавить regression чистой миграции, затем повторить полный локальный и GitHub gate.
-- Состояние: **остановлено по запросу владельца**.
+- Состояние: закрыто `52883c9`; продолжение — SEC-05.
 
 ### 01.5A — integrity route slug и test session
 
-- Этап / ветка / commit: этап 01.5A, `codex/01-route-session-integrity`, commit pending.
+- Этап / ветка / commit: этап 01.5A, `codex/01-route-session-integrity` → `main`, `92bf5e6`.
 - Цель: запретить replay public result token под чужим test slug и смешивание разных тестов в pair flow, не меняя вычисления и доступ по корректной ссылке.
 - Сделано: `SessionTestIntegrity` сравнивает `test_id` session с test row. Shared route guard добавлен в result, PDF, pair-status, autosave, submit, pair start и pair submit. Уже созданные результаты отключённого теста сохраняют доступ по корректному slug; старт нового теста по-прежнему требует active test.
 - Проверки и evidence: unit/static negative coverage — 3 tests/7 assertions; вместе с Lazarus E2E — 6 tests/30 assertions; полный `composer test` — 103 tests/1153 assertions; PHPStan, lint, architecture check и diff check — pass.
-- Не сделано / риски: полноценная server-side validation значений и completion — следующий отдельный package; GitHub CI для 01.5 ещё не запускался.
-- Следующий шаг: commit, fast-forward merge, push и GitHub Actions; затем validation package.
+- Проверки и evidence: GitHub Actions [31933655096](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31933655096) — success.
+- Follow-up: server-side validation реализована отдельным 01.5B и подтверждена CI `31939695568`; не относится к этому уже закрытому package.
+- Следующий шаг: завершён; текущий следующий P0 отмечен в `STATUS.md`.
 
 ## 2026-08-15
 

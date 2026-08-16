@@ -1,6 +1,6 @@
 # Этап 01 — containment и безопасность
 
-Статус: **Приостановлен по checkpoint**. Пакеты containment, dependency safety, CSRF, 01.4 и 01.5A выполнены; 01.5B/PAIR-01 локально проверены, но GitHub CI остановился на дублирующем `uq_partner_token` в migration chain. До выхода из этапа платный CTA скрыт.
+Статус: **В работе**. Пакеты containment, dependency safety, CSRF, 01.4–01.5C и server-side validation выполнены и подтверждены GitHub CI; следующий P0 — SEC-05 web-root hygiene. До выхода из этапа платный CTA скрыт.
 
 ## Цель
 
@@ -15,8 +15,8 @@
 3. **CSRF enforcement.** Инвентаризировать mutating routes, добавить единый middleware/guard, проверить missing/invalid/reused token и совместимость форм.
 4. **Типизированные ссылки.** 01.4 устранил `OR`-lookup: публичный доступ к результату разрешён только через `session_token`, а `partner_token` остаётся ссылкой пары. Отдельно остаются purpose/admin tokens, pair invite single-use и более точная expiry/revocation policy.
 5. **Route/session integrity.** 01.5A сверяет `slug` с `test_id` сохранённой session для result/PDF/status/autosave/submit/pair-flow; unknown и подменённые slug отклоняются до scoring. Подтверждено CI.
-6. **Server-side validation.** 01.5B добавил обязательные полнота/тип/диапазон/allowed-values checks для текущих модулей; требуется зелёный CI после 01.5C migration repair.
-7. **Pair boundaries.** PAIR-01 добавил single-use приглашения; перед закрытием нужно устранить дублирование schema/migration index, затем подтвердить clean migration и CI.
+6. **Server-side validation.** 01.5B добавил обязательные полнота/тип/диапазон/allowed-values checks для текущих модулей; подтверждено GitHub CI `31939695568`.
+7. **Pair boundaries.** PAIR-01 добавил single-use приглашения, а 01.5C восстановил clean migration path. До закрытия P1 остаются ownership/expiry/cross-session regression-cases.
 8. **Web-root hygiene.** Удалить/переместить debug, dumps и тестовые файлы; проверить HTTP-доступ, cookies, security headers и отсутствие stack traces.
 
 Каждый пункт выполняется отдельным небольшим work package/коммитом; dependency, auth и payment containment не смешиваются.
