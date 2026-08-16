@@ -65,7 +65,7 @@ class TestController extends BaseController
 
         // Verify session
         $session = $this->sessionManager->getSessionByResultToken($input['session_token']);
-        if (!$session) {
+        if (!$session || !$this->getSessionTestForRoute($session, $slug)) {
             echo json_encode(['success' => false, 'error' => 'Session not found']);
             return;
         }
@@ -99,7 +99,7 @@ class TestController extends BaseController
         }
 
         $session = $this->sessionManager->getSessionById($sessionId);
-        if (!$session || $session['test_id'] !== $this->getTestIdBySlug($slug)) {
+        if (!$session || !$this->getSessionTestForRoute($session, $slug)) {
             http_response_code(404);
             echo 'Session not found';
             return;
@@ -176,6 +176,15 @@ class TestController extends BaseController
             return;
         }
 
+        // Get test from DB before accepting an invite so a token for one test
+        // cannot create a pair session for another.
+        $test = $this->getTestOrFail($slug);
+        if (!$this->getSessionTestForRoute($partnerSession, $slug)) {
+            http_response_code(404);
+            echo 'Partner session not found';
+            return;
+        }
+
         // Get module
         $module = $this->getModuleOrFail($slug);
         if (!$module->supportsPairMode()) {
@@ -185,9 +194,6 @@ class TestController extends BaseController
         }
 
         $metadata = $module->getMetadata();
-
-        // Get test from DB
-        $test = $this->getTestOrFail($slug);
 
         // Create new session with partner token
         $session = $this->sessionManager->createSession($test['id'], [
@@ -232,7 +238,7 @@ class TestController extends BaseController
         }
 
         $session = $this->sessionManager->getSessionById($sessionId);
-        if (!$session || $session['test_id'] !== $this->getTestIdBySlug($slug)) {
+        if (!$session || !$this->getSessionTestForRoute($session, $slug)) {
             http_response_code(404);
             echo 'Session not found';
             return;
@@ -273,7 +279,11 @@ class TestController extends BaseController
         // Resolve the first partner by their own result-access token. A
         // partner_token is a relationship reference, never an access token.
         $partnerSession = $this->sessionManager->getSessionByResultToken($partnerToken);
-        if (!$partnerSession || empty($partnerSession['calculated_results'])) {
+        if (
+            !$partnerSession
+            || !$this->getSessionTestForRoute($partnerSession, $slug)
+            || empty($partnerSession['calculated_results'])
+        ) {
             // First partner hasn't completed yet — redirect to own result page.
             header('Location: /result/' . $slug . '/' . $session['session_token']);
             exit;
@@ -297,14 +307,5 @@ class TestController extends BaseController
         // No separate /pair/{id} page is needed for the normal flow.
         header('Location: /result/' . $slug . '/' . $session['session_token']);
         exit;
-    }
-
-    /**
-     * Get test ID by slug
-     */
-    private function getTestIdBySlug(string $slug): int
-    {
-        $test = $this->db->selectOne('SELECT id FROM tests WHERE slug = ?', [$slug]);
-        return $test['id'] ?? 0;
     }
 }

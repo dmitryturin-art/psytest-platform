@@ -9,8 +9,8 @@
 | ID | Finding | Риск | Этап | Требуемое доказательство | Статус |
 |---|---|---|---|---|---|
 | SEC-01 | CSRF генерируется, но не enforced | P0 | 01 | `e42eb89`: middleware + missing/invalid/valid/reused tests; GitHub Actions `31904136305` — success | Закрыто |
-| SEC-02 | Token lookup использует `session OR partner` | P0 | 01 | 01.4: `getSessionByResultToken()` lookup только `session_token`; pair reference больше не credential; Lazarus E2E regression и PHPStan baseline 148; ждёт GitHub CI | В работе |
-| SEC-03 | Route slug не сверяется с session module | P0 | 01 | mismatch возвращает безопасный отказ; regression test | Запланировано |
+| SEC-02 | Token lookup использует `session OR partner` | P0 | 01 | `0d6a947`: `getSessionByResultToken()` lookup только `session_token`; pair reference больше не credential; Lazarus E2E regression; GitHub Actions `31904747962` — success | Закрыто |
+| SEC-03 | Route slug не сверяется с session module | P0 | 01 | 01.5: shared `SessionTestIntegrity`, result/PDF/pair-status/autosave/submit/pair flow guards и mismatch regression; ждёт GitHub CI | В работе |
 | SEC-04 | Нет обязательной серверной module validation | P0 | 01/03 | schema/range/completeness tests для каждого модуля | Запланировано |
 | SEC-05 | Публичные debug/test files | P0 | 01 | web-root inventory и HTTP 404/deny tests | Запланировано |
 | CLIN-01 | BDI item 9 не создаёт самостоятельный crisis signal | P0 | 02 | unit/HTTP/browser cases при низком total и item 9 > 0 | Запланировано |
@@ -38,7 +38,7 @@
 | UX-02 | BDI progress заканчивается на 20/21 | P1 | 04 | browser/state regression test | Запланировано |
 | UX-03 | Lazarus legends/touch/accessibility неудобны | P1 | 04 | mobile interaction + screen-reader labels + contrast test | Запланировано |
 | DOC-01 | README/ARCHITECTURE/DEVELOPMENT расходятся с кодом | P1 | 00/01/08 | claim-to-code review, links, актуальные команды и deployment runbook | В работе |
-| CODE-01 | PHPStan baseline подавляет 149 сообщений | P1 | 00/03 | `composer baseline:check` фиксирует 149 entries; далее baseline уменьшается пакетами | В работе |
+| CODE-01 | PHPStan baseline подавляет исторические сообщения | P1 | 00/03 | `composer baseline:check` фиксирует 148 entries; далее baseline уменьшается пакетами | В работе |
 
 ## Сквозные наблюдения без отдельного audit ID
 

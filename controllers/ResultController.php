@@ -37,8 +37,9 @@ class ResultController extends BaseController
             return;
         }
 
-        // Get test
-        $test = $this->db->selectOne('SELECT * FROM tests WHERE slug = ?', [$slug]);
+        // A result token is bound to one test and cannot be replayed under
+        // another route slug.
+        $test = $this->getSessionTestForRoute($session, $slug);
         if (!$test) {
             http_response_code(404);
             echo $this->view->render('error-page');
@@ -82,6 +83,12 @@ class ResultController extends BaseController
             return;
         }
 
+        if (!$this->getSessionTestForRoute($session, $slug)) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Session not found']);
+            return;
+        }
+
         $comparison = $this->sessionManager->getPairComparisonBySession($session['id']);
         echo json_encode([
             'has_comparison' => $comparison !== null,
@@ -103,8 +110,9 @@ class ResultController extends BaseController
             return;
         }
 
-        // Get test
-        $test = $this->db->selectOne('SELECT * FROM tests WHERE slug = ?', [$slug]);
+        // A result token is bound to one test and cannot be replayed under
+        // another route slug.
+        $test = $this->getSessionTestForRoute($session, $slug);
         if (!$test) {
             http_response_code(404);
             echo 'Test not found';

@@ -271,21 +271,26 @@ class PDFGenerator
 
 ## 6. Контроллеры
 
-### BaseController — `controllers/BaseController.php` (~93 строки)
+### BaseController — `controllers/BaseController.php`
 
 ```php
 abstract class BaseController
 {
     protected Database $db;
     protected View $view;
-    protected SessionManager $session;
+    protected ModuleLoader $moduleLoader;
+    protected SessionManager $sessionManager;
 
     public function __construct();
-    protected function json(array $data, int $code = 200): void;
-    protected function redirect(string $url): void;
-    protected function render(string $template, array $data = []): void;
+    protected function getModuleOrFail(string $slug): TestModuleInterface;
+    protected function getTestOrFail(string $slug): array;
+    protected function getSessionTestForRoute(array $session, string $slug): ?array;
+    protected function jsonResponse(array $data, int $statusCode = 200): void;
+    protected function errorResponse(string $message, int $statusCode = 400): void;
 }
 ```
+
+`getSessionTestForRoute()` связывает публичный result token с `test_id` хранимой сессии: тот же токен нельзя открыть, сохранить, скачать PDF или использовать в парном flow под чужим `slug`.
 
 ### TestController — `controllers/TestController.php`
 

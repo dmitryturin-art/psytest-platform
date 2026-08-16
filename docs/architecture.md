@@ -449,7 +449,7 @@ validateAnswers(array $answers, array $questions): bool
 
 ### Controller Layer
 
-#### BaseController (планируется)
+#### BaseController
 
 **Назначение:** Общая логика для всех контроллеров
 
@@ -457,9 +457,12 @@ validateAnswers(array $answers, array $questions): bool
 ```php
 getModuleOrFail(string $slug): TestModuleInterface
 getTestOrFail(string $slug): array
+getSessionTestForRoute(array $session, string $slug): ?array
 jsonResponse(array $data, int $statusCode): void
 errorResponse(string $message, int $statusCode): void
 ```
+
+`getSessionTestForRoute()` проверяет, что route slug описывает именно тест, которому принадлежит сохранённая session. Для уже созданного результата отключённый тест остаётся доступным по корректной ссылке; создание нового теста по-прежнему требует `is_active = 1`.
 
 ---
 

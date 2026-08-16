@@ -1,30 +1,30 @@
 # Текущий статус программы
 
-Обновлён: 2026-08-15. Это оперативная панель; краткое состояние для паузы находится в [CHECKPOINT.md](CHECKPOINT.md).
+Обновлён: 2026-08-16. Это оперативная панель; краткое состояние для паузы находится в [CHECKPOINT.md](CHECKPOINT.md).
 
 ## Сейчас
 
 - Активный этап: [01 — containment и безопасность](phases/01-containment-security.md).
-- Активная package-ветка: checkpoint-пакет `codex/00-checkpoint-pause`; разработка поставлена на паузу по запросу владельца.
+- Активная package-ветка: `codex/01-route-session-integrity`.
 - Последняя принятая security-ветка: `codex/01-token-boundaries`; опубликована в GitHub через `main` до `0d6a947`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
-- 01.4 принят в `main`: lookup результата разделён с pair-reference; GitHub Actions [31904747962](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31904747962) ещё выполняется.
+- 01.4 принят в `main`: lookup результата разделён с pair-reference; GitHub Actions [31904747962](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31904747962) — success. 01.5 локально проверен и ожидает commit/CI.
 
 ## Готовность этапов
 
 | Этап | Состояние | Прогресс/условие перехода |
 |---|---|---|
 | 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
-| 01 | Пауза | 01.1–01.4 завершены локально и интегрированы; для 01.4 ожидается GitHub CI |
+| 01 | В работе | 01.1–01.4 завершены и подтверждены CI; 01.5 route/session integrity ждёт интеграции/CI |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
 
 | Проверка | Результат на 2026-08-15 | Интерпретация |
 |---|---|---|
-| PHPUnit | 100 tests, 1146 assertions — pass | Полезная база; security packages добавляют целевые регрессии, browser flow ещё не покрыт полностью |
+| PHPUnit | 103 tests, 1153 assertions — pass | Полезная база; security packages добавляют целевые регрессии, browser flow ещё не покрыт полностью |
 | Composer validate | pass | `composer.json` синтаксически корректен |
 | PHP syntax/style | pass | Не доказывает корректность поведения |
 | PHPStan | pass, baseline 148 | Новые ошибки запрещены; baseline нужно постепенно уменьшать |
@@ -37,7 +37,7 @@
 
 ## Активные риски
 
-1. Сервер не гарантирует модульную валидацию ответов и согласованность slug.
+1. Сервер не гарантирует обязательную module validation ответов.
 2. Legacy payment endpoints безопасно retired, но новый YooKassa/AI flow ещё не спроектирован и не реализован.
 3. BDI item 9 не создаёт независимый кризисный signal.
 4. Документация местами ещё обещает свойства, которых фактический код не обеспечивает.
@@ -48,8 +48,8 @@
 
 ## Следующие пять действий
 
-1. Подтвердить GitHub Actions для 01.4 token boundaries.
-2. 01.5: проверить slug/session integrity и обязательную серверную validation.
+1. Интегрировать 01.5 route/session integrity и подтвердить GitHub Actions.
+2. Отдельным work package внедрить обязательную серверную validation для текущих модулей.
 3. Закрывать оставшиеся security findings отдельными regression-тестами до UI-редизайна.
 4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
 5. После выхода из этапа 01 перейти к privacy и кризисному BDI flow этапа 02.
@@ -60,4 +60,4 @@
 
 ## Последняя контрольная точка
 
-[CHECKPOINT.md](CHECKPOINT.md) — состояние во время локально проверенного 01.4, перед commit/CI.
+[CHECKPOINT.md](CHECKPOINT.md) — состояние во время локально проверенного 01.5, перед commit/CI.

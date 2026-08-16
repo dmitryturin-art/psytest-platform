@@ -13,6 +13,7 @@ namespace PsyTest\Controllers;
 use PsyTest\Core\Database;
 use PsyTest\Core\ModuleLoader;
 use PsyTest\Core\SessionManager;
+use PsyTest\Core\SessionTestIntegrity;
 use PsyTest\Core\View;
 use PsyTest\Modules\TestModuleInterface;
 
@@ -67,6 +68,27 @@ abstract class BaseController
                 'message' => "Test '{$slug}' is not available."
             ]);
             exit;
+        }
+
+        return $test;
+    }
+
+    /**
+     * Find the test named in a route only when it owns the stored session.
+     *
+     * Result routes deliberately allow already-created sessions to be viewed
+     * after a test has been disabled, so this lookup does not filter
+     * `is_active`. Starting a new test still uses getTestOrFail().
+     *
+     * @param array<string, mixed> $session
+     * @return array<string, mixed>|null
+     */
+    protected function getSessionTestForRoute(array $session, string $slug): ?array
+    {
+        $test = $this->db->selectOne('SELECT * FROM tests WHERE slug = ?', [$slug]);
+
+        if (!$test || !SessionTestIntegrity::matches($session, $test)) {
+            return null;
         }
 
         return $test;

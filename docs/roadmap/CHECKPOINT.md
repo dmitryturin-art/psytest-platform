@@ -1,13 +1,13 @@
 # Текущий checkpoint
 
-Обновлён: 2026-08-15
+Обновлён: 2026-08-16
 
 ## Где мы
 
 - Проект: PsyTest Platform.
 - Активный этап: 01 — containment и безопасность.
-- Последний принятый package опубликован в `main` на GitHub до `ed3d896`.
-- Последний security package: 01.4 token boundaries, `0d6a947` в `main`. GitHub Actions для этого commit выполняется: [run 31904747962](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31904747962). Формулы тестов и пользовательский flow не менялись.
+- Последний принятый package опубликован в `main` на GitHub до `09834d7`.
+- 01.4 token boundaries, `0d6a947` в `main`, подтверждён [GitHub Actions 31904747962](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31904747962). Текущий 01.5 package: `codex/01-route-session-integrity`, commit pending. Формулы тестов и пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
 ## Что уже сделано
@@ -26,12 +26,13 @@
 - Воспроизводимый baseline завершён: architecture checker починен, PHPStan baseline capped at 148, evidence — в `WORKLOG.md`.
 - Dependency safety завершён: Dompdf 3.1.6, composer audit clean, composer.lock теперь отслеживается и разрешается для PHP 8.3.
 - Legacy payment CTA/endpoints safely retired; CSRF middleware введён для browser mutations.
-- 01.4 разделяет result-access token и pair-reference: lookup результата использует только `session_token`; локальные проверки зелёные, внешний CI ещё не финализирован.
+- 01.4 разделяет result-access token и pair-reference: lookup результата использует только `session_token`; локальные и GitHub CI проверки зелёные.
+- 01.5 связывает route slug с `test_id` session для result/PDF/status/autosave/submit/pair flow; локальный full gate — 103 tests/1153 assertions, commit/CI pending.
 
 ## Ближайшие действия
 
-1. Дождаться результата GitHub Actions для `0d6a947`; при failure сначала исправить его в отдельной ветке.
-2. 01.5: route/session integrity и server-side validation как отдельные пакеты.
+1. Commit и GitHub Actions для 01.5.
+2. Отдельный пакет server-side validation для всех текущих модулей.
 3. Закрыть web-root hygiene и pair boundaries до выхода из этапа 01.
 4. Затем перейти к privacy/crisis BDI flow этапа 02.
 5. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
@@ -39,7 +40,7 @@
 ## Известные блокеры и риски
 
 - Новый платный flow пока не существует: legacy endpoints намеренно retired до проектирования YooKassa/AI orders.
-- Route/session slug integrity и server-side ответная validation ещё не закрыты.
+- Server-side ответная validation ещё не закрыта; 01.5 route/session integrity ждёт внешнего CI.
 - BDI item 9 не имеет самостоятельного safety-flow.
 - Документация расходится с кодом.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
@@ -49,12 +50,9 @@
 
 Ничего: этап 00 можно завершить без новых продуктовых решений. Следующий обязательный пакет вопросов предусмотрен в этапе 02; визуальное интервью — в этапе 04.
 
-## Пауза по запросу владельца
+## Возобновление
 
-- Время фиксации: 2026-08-15, Europe/Moscow.
-- Состояние Git: `main` содержит `0d6a947`; checkpoint оформляется в отдельной documentation-ветке и затем будет fast-forward опубликован.
-- Незакоммиченных изменений до checkpoint не было.
-- Без нового сообщения владельца работа после этого ответа не продолжается автоматически.
+- 2026-08-16: работа продолжена с checkpoint; текущая незакоммиченная область — только 01.5 route/session integrity и синхронизация документации.
 
 ## Протокол команды «сделай checkpoint»
 

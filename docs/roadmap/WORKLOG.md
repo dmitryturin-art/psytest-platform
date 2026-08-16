@@ -17,6 +17,17 @@
 - Следующий шаг:
 ```
 
+## 2026-08-16
+
+### 01.5A — integrity route slug и test session
+
+- Этап / ветка / commit: этап 01.5A, `codex/01-route-session-integrity`, commit pending.
+- Цель: запретить replay public result token под чужим test slug и смешивание разных тестов в pair flow, не меняя вычисления и доступ по корректной ссылке.
+- Сделано: `SessionTestIntegrity` сравнивает `test_id` session с test row. Shared route guard добавлен в result, PDF, pair-status, autosave, submit, pair start и pair submit. Уже созданные результаты отключённого теста сохраняют доступ по корректному slug; старт нового теста по-прежнему требует active test.
+- Проверки и evidence: unit/static negative coverage — 3 tests/7 assertions; вместе с Lazarus E2E — 6 tests/30 assertions; полный `composer test` — 103 tests/1153 assertions; PHPStan, lint, architecture check и diff check — pass.
+- Не сделано / риски: полноценная server-side validation значений и completion — следующий отдельный package; GitHub CI для 01.5 ещё не запускался.
+- Следующий шаг: commit, fast-forward merge, push и GitHub Actions; затем validation package.
+
 ## 2026-08-15
 
 ### 01.4 — границы токенов результата и пары

@@ -397,7 +397,7 @@ echo "Проверка завершена!\n";
 echo "===========================================\n\n";
 
 echo "Следующие шаги:\n";
-echo "1. Установите PHP 8.1+ и Composer\n";
+echo "1. Установите PHP 8.3+ и Composer\n";
 echo "2. Запустите: composer install\n";
 echo "3. Настройте базу данных (MySQL/MariaDB)\n";
 echo "4. Запустите: php bin/install-db.php\n";
