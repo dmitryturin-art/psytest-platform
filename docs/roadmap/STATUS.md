@@ -5,7 +5,7 @@
 ## Сейчас
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим) и отдельный AI-consent. 02.1, 02.2A и 02.3A подтверждены GitHub CI; Crisis UI/text/resources остаются отдельным пакетом.
+- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим) и отдельный AI-consent. 02.1, 02.2A и 02.3A подтверждены GitHub CI; 02.3B строит пустой fail-closed фундамент resource registry, а Crisis UI/text/resources остаются отдельными пакетами.
 - Последний опубликованный code commit: `5942587` в `main`; GitHub Actions [31948360267](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948360267) — success, включая manual-first CountryResolver.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
@@ -18,7 +18,7 @@
 |---|---|---|
 | 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | 02.1 lifecycle, 02.2A server-side BDI signal и 02.3A CountryResolver подтверждены CI; Crisis UI/text/resources, therapist-delete и AI consent record ещё впереди |
+| 02 | В работе | 02.1 lifecycle, 02.2A server-side BDI signal и 02.3A CountryResolver подтверждены CI; 02.3B registry foundation проходит проверку. Crisis UI/text/resources, therapist-delete и AI consent record ещё впереди |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом

@@ -39,12 +39,13 @@
 - 02.2A в `codex/02-bdi-safety-signal`: validated BDI item 9 с оценкой 1–3 создаёт структурированный safety signal, независимый от total; локальный gate зелёный, UI/текст/ресурсы не начаты.
 - 02.2A опубликован в `main` как `16c4730`; GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success. UI, клинический текст, country/resource registry не начаты и требуют решения владельца.
 - 02.3A `5942587` добавляет pure `CountryResolver`: ручной выбор страны имеет приоритет над session choice, затем над подготовленной trusted подсказкой; некорректные значения приводят к `unknown`. Он не читает IP/HTTP-заголовки, не делает GeoIP-запросов и не сохраняет IP. Локальный full gate: 130 tests/1232 assertions, PHPStan, lint, architecture и baseline — pass; GitHub Actions `31948360267` — success на PHP 8.3/MySQL.
+- 02.3B в `codex/02-crisis-resource-registry-foundation` создаёт пустой fail-closed registry: контакт/URL, официальный источник, дата/автор проверки и `active = 0`. Реестр не связан с результатами или IP, не содержит seed-контактов и ещё не имеет reader/UI или срока актуальности. Локальная migration и full gate прошли (131 tests/1248 assertions); commit/CI впереди.
 
 ## Ближайшие действия
 
-1. Получить owner-approved Crisis UI text/resources и перейти к 02.2B/02.3B.
-2. После утверждения текста и регионального strategy реализовать deterministic item-9 safety flow.
-3. Затем создать versioned resource registry и browser cases.
+1. Завершить публикацию 02.3B registry foundation и подтвердить CI.
+2. Получить owner-approved Crisis UI text/resources и freshness threshold для 02.2B/02.3C.
+3. После утверждения текста и регионального strategy реализовать deterministic item-9 safety flow и public reader.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
 
 ## Известные блокеры и риски

@@ -19,6 +19,17 @@
 
 ## 2026-08-16
 
+### 02.3B — fail-closed crisis resource registry foundation
+
+- Этап / ветка / commit: этап 02, `codex/02-crisis-resource-registry-foundation`, commit pending.
+- Цель: подготовить deployable storage boundary для вручную проверяемых кризисных ресурсов, не публикуя ни один контакт и не создавая clinical UI.
+- Сделано: добавлена только incremental migration `crisis_resources` и синхронизированный schema snapshot. Каждая будущая запись имеет country/language/type, contact-or-URL, официальный source URL, дату/автора проверки и `active`; default `active = 0`. Реестр не имеет FK к session, не хранит IP и не получает seed data.
+- Решения: country может быть `NULL` только для международного fallback. Никакой ресурс не станет доступен без будущего reader/query policy, а срок актуальности не придумывается: автоматическое скрытие по `verified_at` ожидает owner-approved threshold.
+- Проверки и evidence: RED — migration contract не находил отсутствующую migration; GREEN — contract проверяет единственный incremental `CREATE`, все обязательные поля, индексы, snapshot и `down()`. Локальная `composer migrate` применила migration к development БД; полный gate: `composer validate`, `composer audit`, PHPUnit 131 tests/1248 assertions, PHPStan, lint, architecture check, baseline 148 и `git diff --check` — pass. CI pending.
+- Изменённые файлы: incremental migration, `database/schema.sql`, migration contract test, текущие architecture/roadmap docs.
+- Не сделано / риски: нет контактов, UI, resource reader, trusted GeoIP adapter, session choice persistence и freshness policy; это намеренная граница, а не готовый crisis-flow.
+- Следующий шаг: review/commit/fast-forward/push/CI; затем запросить owner-approved текст, ресурсы и freshness threshold.
+
 ### 02.3A — manual-first CountryResolver boundary
 
 - Этап / ветка / commit: этап 02, `codex/02-country-resolver` → `main`, `5942587`.
