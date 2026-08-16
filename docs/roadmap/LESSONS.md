@@ -117,3 +117,9 @@
 - владелец повторно исправил одно и то же понимание продукта.
 
 После записи обновить связанное правило/тест; один текст урока без профилактики не считается самообучением.
+# L-013 — bootstrap migration не дублирует более позднее DDL
+
+- Контекст: incremental migration обязана добавлять поле/index на уже развёрнутую базу, но bootstrap migration исполняется раньше неё на чистой БД.
+- Ошибка: добавление одного DDL и в bootstrap, и в incremental migration делает чистый CI-deploy невозможным из-за `Duplicate column`/`Duplicate key`.
+- Правило: initial migration отражает только исходное состояние; актуальный `database/schema.sql` может содержать итоговую схему. Для каждого нового DDL нужен contract-test, который различает bootstrap и incremental chain, плюс чистая migration проверка в CI.
+- Статус: действует с 2026-08-16; повторение 01.5C с `uq_partner_token` в retention-class migration обнаружено и исправлено CI.

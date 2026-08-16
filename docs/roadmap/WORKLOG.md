@@ -210,3 +210,10 @@
 - Проверки и evidence: `composer migrate` применил `20260816010000`; узко 6 tests/22 assertions; полный gate: Composer validate/audit clean, PHPUnit 122 tests/1215 assertions, PHPStan/lint/architecture/baseline — pass. Ранний sandbox run не имел loopback/network, проверки повторены с локальным разрешённым доступом.
 - Сознательно не сделано: защищённое назначение и ручное удаление therapist-case, новые AI jobs/consents и financial retention — следующие отдельные пакеты. Legacy payment data не объявляются финансовым архивом.
 - Следующий шаг: review staged diff, commit, fast-forward merge, push и CI; затем 02.2 BDI safety signal.
+
+### 02.1A — repair clean migration path
+
+- Этап / ветка / commit: этап 02.1A, `codex/02-fix-retention-migration-chain`, commit pending.
+- Причина: GitHub Actions `31947571377` применил чистую migration chain и обнаружил `Duplicate column retention_class`: bootstrap migration ошибочно содержала DDL из инкрементальной migration.
+- Исправление: из bootstrap удаляются только дублирующие column/index; итоговый `database/schema.sql` сохраняет полную актуальную схему, а `20260816010000` остаётся единственным источником upgrade для существующих и чистых баз.
+- Проверка: migration-contract сначала red на CI, затем должен пройти чистый GitHub/MySQL apply и полный gate.

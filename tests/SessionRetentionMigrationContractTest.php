@@ -8,12 +8,12 @@ use PHPUnit\Framework\TestCase;
 
 final class SessionRetentionMigrationContractTest extends TestCase
 {
-    public function testBootstrapSchemaCreatesTheRetentionClassAndSupportingIndex(): void
+    public function testBootstrapSchemaDoesNotDuplicateTheIncrementalRetentionMigration(): void
     {
         $schema = (string) file_get_contents(dirname(__DIR__) . '/database/migrations/20260708050511_init_schema.php');
 
-        self::assertStringContainsString("`retention_class` VARCHAR(32) NOT NULL DEFAULT 'anonymous'", $schema);
-        self::assertStringContainsString('INDEX `idx_retention_created` (`retention_class`, `created_at`)', $schema);
+        self::assertStringNotContainsString('`retention_class`', $schema);
+        self::assertStringNotContainsString('`idx_retention_created`', $schema);
     }
 
     public function testIncrementalMigrationAddsTheSameRetentionContract(): void
