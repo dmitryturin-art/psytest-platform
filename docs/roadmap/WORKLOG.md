@@ -19,6 +19,13 @@
 
 ## 2026-08-16
 
+### PAIR-03/04 — expiry boundaries, invite race и safe DB error logging
+
+- Этап / ветка / commit: этап 01, `codex/01-pair-expiry-boundaries` → `main`, `897b29b`; `codex/01-pair-invite-race` → `main`, `af48b61`.
+- Сделано: PAIR-03 покрывает истёкшие source invite и partner session. PAIR-04 использует DB unique constraint атомарно: конкурентная вторая пара не создаётся и route получает conflict вместо driver error. Database wrapper сохраняет только SQLSTATE-код, без raw driver text и bound token.
+- Проверки и evidence: локальный полный gate `af48b61` — 116 tests/1193 assertions, PHPStan/lint/baseline/architecture/diff check pass. GitHub Actions [31940661228](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940661228) — success.
+- Следующий шаг: 02.1 — owner-интервью по retention/consent; затем data map и BDI safety-flow.
+
 ### PAIR-02 — bind submitted pair session to source invite
 
 - Этап / ветка / commit: этап 01, `codex/01-pair-submit-binding` → `main`, `1cc772e`.
