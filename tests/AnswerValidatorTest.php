@@ -16,7 +16,9 @@ final class AnswerValidatorTest extends TestCase
     {
         $module = new SmilModule();
         $answers = [];
-        foreach ($module->getQuestions() as $question) { $answers[$question['id']] = 1; }
+        foreach ($module->getQuestions() as $question) {
+            $answers[$question['id']] = 1;
+        }
         $answers['gender'] = 'female';
 
         self::assertSame([], AnswerValidator::validate($module, $answers, true));
@@ -30,7 +32,9 @@ final class AnswerValidatorTest extends TestCase
     {
         $module = new BeckAnxietyModule();
         $answers = [];
-        foreach ($module->getQuestions() as $question) { $answers[$question['id']] = $question['options'][0]['value']; }
+        foreach ($module->getQuestions() as $question) {
+            $answers[$question['id']] = $question['options'][0]['value'];
+        }
 
         self::assertSame([], AnswerValidator::validate($module, $answers, true));
         $answers[1] = 99;

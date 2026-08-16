@@ -10,8 +10,8 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
-use PsyTest\Modules\TestModuleInterface;
 use PsyTest\Core\AnswerValidator;
+use PsyTest\Modules\TestModuleInterface;
 use Ramsey\Uuid\Uuid;
 
 class TestController extends BaseController
