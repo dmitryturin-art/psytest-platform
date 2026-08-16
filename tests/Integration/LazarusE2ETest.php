@@ -208,6 +208,30 @@ final class LazarusE2ETest extends TestCase
         self::assertFalse($this->sm->isPairSessionBoundToSourceToken($pair['id'], $unrelated['session_token']));
     }
 
+    public function testExpiredSourceInviteOrPairSessionCannotBeUsed(): void
+    {
+        $expiredSource = $this->sm->createSession($this->testId);
+        $this->db->update(
+            'test_sessions',
+            ['expires_at' => '2000-01-01 00:00:00'],
+            'id = ?',
+            [$expiredSource['id']],
+        );
+
+        self::assertNull($this->sm->getSessionByResultToken($expiredSource['session_token']));
+
+        $source = $this->sm->createSession($this->testId);
+        $expiredPair = $this->sm->createSession($this->testId, ['partner_token' => $source['session_token']]);
+        $this->db->update(
+            'test_sessions',
+            ['expires_at' => '2000-01-01 00:00:00'],
+            'id = ?',
+            [$expiredPair['id']],
+        );
+
+        self::assertFalse($this->sm->isPairSessionBoundToSourceToken($expiredPair['id'], $source['session_token']));
+    }
+
     /**
      * @return array<string, int>
      */
