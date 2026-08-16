@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 // Error reporting (disable in production)
 $configLoader = require __DIR__ . '/../config.php';
+header_remove('X-Powered-By');
 if ($configLoader->isDebug()) {
     error_reporting(E_ALL);
     ini_set('display_errors', '1');
@@ -104,6 +105,12 @@ $router->middleware(function($method, $uri, &$params) use ($configLoader) {
     // Content type sniffing prevention
     header('X-Content-Type-Options: nosniff');
 
+    // Keep external navigation from receiving sensitive result paths.
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+
+    // The application does not use browser location, camera, or microphone.
+    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+
     // HTTPS enforcement (in production)
     if ($configLoader->isProduction() && empty($_SERVER['HTTPS'])) {
         // Uncomment to enforce HTTPS
@@ -133,7 +140,7 @@ try {
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
     }
     
-} catch (\Exception $e) {
+} catch (\Throwable $e) {
     // Log error
     error_log("Application error: " . $e->getMessage());
     
