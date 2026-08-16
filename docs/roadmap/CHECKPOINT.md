@@ -42,6 +42,7 @@
 - 02.3B `50794fa` создаёт пустой fail-closed registry: контакт/URL, официальный источник, дата/автор проверки и `active = 0`. Реестр не связан с результатами или IP, не содержит seed-контактов и ещё не имеет reader/UI или срока актуальности. Локальная migration и full gate прошли (131 tests/1248 assertions); GitHub Actions `31948774257` — success на PHP 8.3/MySQL.
 - 02.4A `a14f5eb` приводит public privacy/delete copy и актуальные docs к реальному поведению: нет claims о шифровании, отсутствии будущих получателей или мгновенном физическом удалении. Есть source-level regression test, browser QA `/privacy` на desktop/390×844, полный local gate (134 tests/1264 assertions) и GitHub CI [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — success.
 - 02.5A `7240d3b` создаёт factual registry всех пяти модулей и contract test. Scoring/вопросы не меняются; registry фиксирует закрытые release gates для paid interpretation и нового public content, пока owner не приложит evidence конкретной формы. Полный local gate: 138 tests/1387 assertions; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success на PHP 8.3/MySQL.
+- 00C в `codex/00-current-state-docs` заменяет устаревшие ARCHITECTURE/DEVELOPMENT current-state документами, помечает старый module guide как historical и добавляет contract test routes/legacy commands/local links. Product code и psychometrics не меняются; publication — следующий шаг.
 
 ## Ближайшие действия
 
@@ -50,6 +51,7 @@
 3. Добавить browser cases и закрытый бесплатный pilot только после проверенного end-to-end flow.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
 5. Для снятия METH-01 собрать version/edition/pages, источник русской формы и условия/permission на online/commercial use по каждой методике.
+6. Опубликовать 00C только после полного local quality gate; затем сохранить ссылку на CI в DOC-01.
 
 ## Известные блокеры и риски
 

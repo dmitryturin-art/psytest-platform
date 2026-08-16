@@ -16,7 +16,7 @@
 
 | Этап | Состояние | Прогресс/условие перехода |
 |---|---|---|
-| 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
+| 00 | В работе | governance-каркас и baseline готовы; 00C current-state docs и documentation contract test готовы локально, ожидают publication/CI; production runbook относится к 08 |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
 | 02 | В работе | 02.1 lifecycle, 02.2A server-side BDI signal, 02.3A CountryResolver, 02.3B registry foundation, 02.4A truthfulness regression и 02.5A registry методик подтверждены CI; Crisis UI/text/resources, therapist-delete и AI consent record ещё впереди |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
@@ -40,7 +40,7 @@
 
 1. Legacy payment endpoints безопасно retired, но новый YooKassa/AI flow ещё не спроектирован и не реализован.
 3. BDI item 9 создаёт server-side signal, но public Crisis UI, country/resource reader и browser cases ещё не реализованы.
-4. 02.4A устраняет ложные public privacy/delete claims; полный DOC-01 и legal review ещё не завершены.
+4. 02.4A устраняет ложные public privacy/delete claims; 00C приводит local developer docs к коду, но production runbook и legal review ещё не завершены.
 5. Дополнительные шкалы SMIL: заявлено 200, фактически найдено 23; часть норм противоречива.
 6. Происхождение, version и права конкретных русских форм всех пяти методик не подтверждены документами в репозитории; это блокирует paid interpretation до отдельной проверки.
 7. Два PDF результатов присутствуют в старой Git history; в актуальной ветке они не отслеживаются. Владелец подтвердил, что они обезличены, и решил не переписывать историю.

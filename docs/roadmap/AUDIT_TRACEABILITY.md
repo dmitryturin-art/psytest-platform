@@ -38,7 +38,7 @@
 | UX-01 | Пустая sticky navigation | P1 | 04 | responsive browser snapshots и keyboard test; 02.4A повторно подтвердил: на 390×844 navigation не видна, хотя privacy content не переполняется | Запланировано |
 | UX-02 | BDI progress заканчивается на 20/21 | P1 | 04 | browser/state regression test | Запланировано |
 | UX-03 | Lazarus legends/touch/accessibility неудобны | P1 | 04 | mobile interaction + screen-reader labels + contrast test | Запланировано |
-| DOC-01 | README/ARCHITECTURE/DEVELOPMENT расходятся с кодом | P1 | 00/01/08 | claim-to-code review, links, актуальные команды и deployment runbook | В работе |
+| DOC-01 | README/ARCHITECTURE/DEVELOPMENT расходятся с кодом | P1 | 00/01/08 | 00C: current-state rewrite, route/legacy-command contract test и local-link check готовы локально; для полного закрытия нужны publication/CI, затем production runbook в 08 | В работе |
 | CODE-01 | PHPStan baseline подавляет исторические сообщения | P1 | 00/03 | `composer baseline:check` фиксирует 148 entries; далее baseline уменьшается пакетами | В работе |
 
 ## Сквозные наблюдения без отдельного audit ID

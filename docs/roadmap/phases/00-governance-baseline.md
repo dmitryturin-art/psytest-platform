@@ -31,6 +31,8 @@
 - Добавить локальный quick start, проверки, security/reporting note, ссылки на архитектуру и roadmap.
 - Проверить все относительные Markdown-ссылки.
 
+Состояние: **current-state rewrite готов локально, publication/CI — следующий шаг**. `DocumentationCurrentStateTest` сверяет все registered public routes с `ARCHITECTURE.md`, запрещает устаревшие команды и проверяет локальные ссылки в README, DEVELOPMENT и ARCHITECTURE. Production runbook и фактическая production-конфигурация остаются этапом 08.
+
 ### 00D. Минимальный CI gate
 
 - Настроить повторяемые lint/test/analyse/dependency checks без ложнозелёных scripts.

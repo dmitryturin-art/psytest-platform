@@ -400,13 +400,13 @@ echo "Проверка завершена!\n";
 echo "===========================================\n\n";
 
 echo "Следующие шаги:\n";
-echo "1. Установите PHP 8.3+ и Composer\n";
+echo "1. Установите PHP 8.3+, Composer и MySQL 8\n";
 echo "2. Запустите: composer install\n";
-echo "3. Настройте базу данных (MySQL/MariaDB)\n";
-echo "4. Запустите: php bin/install-db.php\n";
-echo "5. Запустите встроенный сервер: php -S localhost:8000 -t public\n";
-echo "6. Откройте: http://localhost:8000/tests\n\n";
+echo "3. Скопируйте .env.example в .env и настройте DB_*\n";
+echo "4. Запустите: composer migrate\n";
+echo "5. Для локальной разработки: php -S 127.0.0.1:8000 -t public\n";
+echo "6. Откройте: http://127.0.0.1:8000/tests\n\n";
 
-echo "Подробная инструкция в файле QUICKSTART.md\n";
+echo "Подробная инструкция: DEVELOPMENT.md\n";
 
 exit($hasFailures ? 1 : 0);

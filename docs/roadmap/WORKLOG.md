@@ -19,6 +19,15 @@
 
 ## 2026-08-16
 
+### 00C — current-state developer documentation
+
+- Этап / ветка / commit: этап 00, `codex/00-current-state-docs`, commit ожидается.
+- Цель: убрать из developer-facing current-state документов исполнимые legacy YooMoney/OpenRouter инструкции, неверные маршруты, несуществующие команды и устаревшую структуру без изменения продукта.
+- Сделано: `ARCHITECTURE.md` и `DEVELOPMENT.md` переписаны по `public/index.php`, module/session/lifecycle code и roadmap. Старый guide создания модуля получил заметную historical-пометку до этапа 03. `.env.example` поясняет, что legacy credentials не включают public payment/AI и что `ENCRYPTION_KEY` сам по себе не шифрует clinical data. Добавлен `DocumentationCurrentStateTest`.
+- Проверки и evidence: RED — test первоначально запрещал даже верное утверждение, что `/api/yoomoney/webhook` отсутствует; GREEN — теперь он проверяет отсутствие registration в коде и явную пометку в docs. Полный local gate: `composer validate`, `composer audit`, PHPUnit 141 tests/1483 assertions, PHPStan, lint, architecture check, baseline 148 и `git diff --check` — pass. Локальный runtime 8.5.3 выше target PHP 8.3; совместимость подтвердит CI после publication.
+- Не сделано / риски: production runbook, deployment facts и legal review не подменяются локальной документацией; они остаются этапом 08/02. Создание новой методики не разрешено историческим guide до Module API v2.
+- Следующий шаг: staged review, commit, fast-forward merge/push и CI.
+
 ### 02.5A — methodology provenance and rights registry
 
 - Этап / ветка / commit: этап 02, `codex/02-methodology-provenance-registry` → `main`, `7240d3b`.
