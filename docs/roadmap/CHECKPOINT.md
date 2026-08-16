@@ -35,7 +35,7 @@
 - PAIR-02 подтверждает, что submitted session второго партнёра связана именно с source invite token до записи ответов и расчёта.
 - PAIR-03 подтверждает expiry boundaries; PAIR-04 переводит конкурентный duplicate invite в `409`, а DB-логи больше не включают driver messages с bound values.
 - Составлен factual data map текущего кода и приняты owner-решения: `anonymous` clinical-данные — 180 дней, явный `therapist_case` — бессрочно с ручным удалением; AI-передача требует отдельного consent только при заказе расширенного разбора.
-- 02.1 в branch `codex/02-lifecycle-classification`: migration добавляет явный `retention_class`; lifecycle очистка удаляет anonymous сессии в 180-дневной границе, known PDFs, pair records и session-bound logs. Пакет ещё не опубликован.
+- 02.1 опубликован в `main`: `87925ba` реализует lifecycle, а `6152177` исправляет clean migration chain. GitHub Actions [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success на PHP 8.3/MySQL.
 
 ## Ближайшие действия
 

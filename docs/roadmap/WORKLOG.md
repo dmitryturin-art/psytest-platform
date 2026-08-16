@@ -204,16 +204,17 @@
 
 ### 02.1 — anonymous lifecycle и artifact cleanup
 
-- Этап / ветка / commit: этап 02.1, `codex/02-lifecycle-classification`, commit pending.
+- Этап / ветка / commit: этап 02.1, `codex/02-lifecycle-classification` → `main`, `87925ba`; follow-up migration repair `6152177`.
 - Цель: заменить ошибочную очистку «30 дней TTL + 7 дней» на принятое правило 180 дней для anonymous-данных, не удаляя therapist-case автоматически.
 - Сделано: добавлены `RetentionPolicy` и `SessionLifecycleService`; migration/schema вводят явный `retention_class` с безопасным default `anonymous`; cron удаляет только anonymous rows на/после 180-го дня, известные result/AI/pair PDF и session-bound activity logs. Связанные pair/legacy DB rows очищаются внешними ключами. `therapist_case` исключён из автоматической очистки.
 - Проверки и evidence: `composer migrate` применил `20260816010000`; узко 6 tests/22 assertions; полный gate: Composer validate/audit clean, PHPUnit 122 tests/1215 assertions, PHPStan/lint/architecture/baseline — pass. Ранний sandbox run не имел loopback/network, проверки повторены с локальным разрешённым доступом.
 - Сознательно не сделано: защищённое назначение и ручное удаление therapist-case, новые AI jobs/consents и financial retention — следующие отдельные пакеты. Legacy payment data не объявляются финансовым архивом.
-- Следующий шаг: review staged diff, commit, fast-forward merge, push и CI; затем 02.2 BDI safety signal.
+- Проверки: GitHub Actions [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success на чистой PHP 8.3/MySQL migration chain; 122 tests/1215 assertions, audit, PHPStan, lint, architecture и baseline check прошли.
+- Следующий шаг: 02.2 BDI safety signal после утверждения владельцем кризисного текста и первого набора ресурсов.
 
 ### 02.1A — repair clean migration path
 
-- Этап / ветка / commit: этап 02.1A, `codex/02-fix-retention-migration-chain`, commit pending.
+- Этап / ветка / commit: этап 02.1A, `codex/02-fix-retention-migration-chain` → `main`, `6152177`.
 - Причина: GitHub Actions `31947571377` применил чистую migration chain и обнаружил `Duplicate column retention_class`: bootstrap migration ошибочно содержала DDL из инкрементальной migration.
 - Исправление: из bootstrap удаляются только дублирующие column/index; итоговый `database/schema.sql` сохраняет полную актуальную схему, а `20260816010000` остаётся единственным источником upgrade для существующих и чистых баз.
-- Проверка: migration-contract сначала red на CI, затем должен пройти чистый GitHub/MySQL apply и полный gate.
+- Проверка: GitHub Actions `31947571377` воспроизвёл defect; follow-up [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success на чистом MySQL и полном PHP 8.3 gate.
