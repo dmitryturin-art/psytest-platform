@@ -193,3 +193,11 @@
 - Проверки и evidence: PDF визуально проверены целиком — имени/email нет, но присутствуют score profile и session ID; поэтому принято консервативное решение не хранить их в Git. `composer validate` — pass; актуальный `composer audit` — 6 advisories для Dompdf 3.1.5, исправлены в 3.1.6.
 - Не сделано / риски: файлы остаются в старой Git history и, вероятно, в remote; history rewrite не выполнялся без отдельного решения.
 - Следующий шаг: определить visibility remote после `gh auth login`, затем выбрать обычное удаление или отдельную sanitization-процедуру истории.
+### 02.0 — решения владельца о хранении и AI-consent
+
+- Этап / ветка / commit: этап 02.0, `codex/02-retention-consent-decisions`, commit pending.
+- Цель: превратить ответ владельца в однозначные product и implementation constraints до изменения schema или public privacy copy.
+- Решения: anonymous clinical-данные — 180 календарных дней с `created_at`; `therapist_case` — бессрочно только при явном назначении, с ручным удалением; отдельное не-предвыбранное согласие на external AI нужно только при заказе расширенной интерпретации.
+- Сделано: решения записаны как D-024/D-025; добавлена целевая [RETENTION_POLICY.md](RETENTION_POLICY.md), обновлены product rules, factual data map, status, phase 02 и checkpoint. Правовая оговорка отделяет продуктовый срок от обязательных финансовых сроков и требует профессиональной проверки до production.
+- Проверки и evidence: проверены cross-links документации и актуальный Git diff; функциональный PHP-код и scoring не менялись.
+- Следующий шаг: 02.1 — спроектировать явную data-classification/schema и idempotent lifecycle cleanup, затем реализовать отдельным тестируемым package.

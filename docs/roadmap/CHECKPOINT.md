@@ -5,8 +5,8 @@
 ## Где мы
 
 - Проект: PsyTest Platform.
-- Активный этап: 01 — containment и безопасность.
-- Последний опубликованный package: `af48b61` в `main`, GitHub Actions [31940661228](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940661228) — **success**. PAIR-01 boundaries и privacy-safe DB logging подтверждены на PHP 8.3/MySQL.
+- Активный этап: 02 — клиническая безопасность, privacy и бесплатный пилот.
+- Последний опубликованный package: `196b3ff` в `main`; последний code package `af48b61`, GitHub Actions [31940661228](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940661228) — **success**. PAIR-01 boundaries и privacy-safe DB logging подтверждены на PHP 8.3/MySQL.
 - 01.5A (`92bf5e6`) связывает route slug с test session; 01.5B (`2cc5321`, форматирование `e8f1f53`) добавляет серверную validation ответов; 01.5C (`52883c9`) устраняет дублирующий index в migration chain. Формулы тестов и корректный пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -34,10 +34,11 @@
 - SEC-05 удалил публичные dev-harness, оставил только `public/index.php` как PHP front controller, ввёл response hardening и regression-тесты. Локальная browser/HTTP QA подтвердила 404 у прежних diagnostic routes.
 - PAIR-02 подтверждает, что submitted session второго партнёра связана именно с source invite token до записи ответов и расчёта.
 - PAIR-03 подтверждает expiry boundaries; PAIR-04 переводит конкурентный duplicate invite в `409`, а DB-логи больше не включают driver messages с bound values.
+- Составлен factual data map текущего кода и приняты owner-решения: `anonymous` clinical-данные — 180 дней, явный `therapist_case` — бессрочно с ручным удалением; AI-передача требует отдельного consent только при заказе расширенного разбора.
 
 ## Ближайшие действия
 
-1. **02.1 — data map:** составить фактическую карту данных, current retention и external recipients; затем согласовать с владельцем целевое хранение и consent.
+1. **02.1 — lifecycle policy и classification:** закрепить явную модель классов данных, подготовить schema/cleanup design и integration-contract до кода.
 2. **02.2 — BDI safety:** после утверждения текста и регионального strategy реализовать deterministic item-9 safety flow.
 3. Затем перейти к privacy/crisis BDI flow этапа 02.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
@@ -45,7 +46,7 @@
 ## Известные блокеры и риски
 
 - Новый платный flow пока не существует: legacy endpoints намеренно retired до проектирования YooKassa/AI orders.
-- Следующее действие требует решения владельца: сроки хранения ответов/результатов и модель consent для будущего AI; без этого нельзя честно переписать privacy copy и lifecycle.
+- `therapist_case`, 180-day cleanup, deletion UX и AI-consent пока не реализованы: public privacy copy не меняется до подтверждённого поведения.
 - BDI item 9 не имеет самостоятельного safety-flow.
 - Документация расходится с кодом.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
@@ -53,11 +54,11 @@
 
 ## Что спросить у владельца сейчас
 
-Ничего: этап 00 можно завершить без новых продуктовых решений. Следующий обязательный пакет вопросов предусмотрен в этапе 02; визуальное интервью — в этапе 04.
+Ничего для 02.1. Перед публикацией BDI safety-flow понадобится утверждение кризисного текста и начальных ресурсов; визуальное интервью — в этапе 04.
 
 ## Возобновление
 
-- 2026-08-16: PAIR-01 закрыт в `af48b61`: локально 116 tests/1193 assertions, PHPStan/lint/architecture pass; GitHub CI `31940661228` — success. Следующий шаг — интервью 02.1.
+- 2026-08-16: владелец принял D-024/D-025: 180-day anonymous retention, бессрочный явный therapist-case с ручным удалением и отдельный AI-consent в checkout. Добавлена целевая [RETENTION_POLICY.md](RETENTION_POLICY.md); следующий шаг — 02.1 lifecycle/classification design.
 
 ## Протокол команды «сделай checkpoint»
 
