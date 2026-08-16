@@ -19,6 +19,14 @@
 
 ## 2026-08-16
 
+### PAIR-02 — bind submitted pair session to source invite
+
+- Этап / ветка / commit: этап 01, `codex/01-pair-submit-binding` → `main`, `1cc772e`.
+- Цель: не допустить, чтобы `pairSubmit` связал произвольную session второго партнёра с чужим source invite token.
+- Сделано: `SessionManager::isPairSessionBoundToSourceToken()` проверяет exact session/token pair и active expiry/status; `TestController::pairSubmit()` делает проверку до сохранения answers и scoring. Нормальный `submit()` не менялся.
+- Проверки и evidence: RED — controller contract отсутствовал; GREEN — controller placement regression. Lazarus integration доказывает true для правильной пары и false для unrelated source token. Полный локальный gate — 112 tests/1184 assertions, PHPStan/lint/architecture/diff check pass. GitHub Actions [31940284833](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940284833) — success.
+- Следующий шаг: PAIR-03 — expiry negative cases, затем честно закрыть либо оставить PAIR-01.
+
 ### SEC-05 — production web-root hygiene
 
 - Этап / ветка / commit: этап 01, `codex/01-web-root-hygiene` → `main`, `21c77c7`.

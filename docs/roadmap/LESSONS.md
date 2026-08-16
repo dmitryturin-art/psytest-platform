@@ -96,6 +96,14 @@
 - Защита: `PublicWebRootTest`, HTTP/browser regression 404 и проверенный deployment document root.
 - Статус: действует с `21c77c7`.
 
+## L-012 — Regression должен проверять место security-guard, а не только его наличие
+
+- Наблюдение: первая версия PAIR-02 test проверяла наличие вызова, но не его scope; guard оказался в обычном `submit` и был пойман до commit.
+- Риск: «зелёный» source-level test подтверждает текст, но пропускает поломку соседнего flow.
+- Правило: для route-specific security guard тест обязан ограничить ожидаемый метод/flow и явно исключить соседний.
+- Защита: `SessionTestIntegrityTest` проверяет наличие binding в `pairSubmit` и отсутствие в normal `submit`; полный test gate перед публикацией.
+- Статус: действует с `1cc772e`.
+
 ## Как добавлять урок
 
 Добавить запись, если произошло хотя бы одно:

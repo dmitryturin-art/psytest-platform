@@ -16,7 +16,7 @@
 | CLIN-01 | BDI item 9 не создаёт самостоятельный crisis signal | P0 | 02 | unit/HTTP/browser cases при низком total и item 9 > 0 | Запланировано |
 | DATA-01 | Privacy claims расходятся с plaintext/внешним AI | P0 | 02/07 | точная data map, consent, minimization и проверенные тексты | Запланировано |
 | DATA-02 | Удаление данных неполное | P1 | 02 | lifecycle/delete integration tests по всем связанным сущностям | Запланировано |
-| PAIR-01 | Границы доступа к приглашению пары недостаточны | P1 | 01 | `46dade6`: one-use check + DB unique intent; `52883c9` repair + CI `31939695568` подтверждают migration chain. PAIR-02 должен bind-ить submitted session к invite; expiry/cross-session cases остаются | В работе |
+| PAIR-01 | Границы доступа к приглашению пары недостаточны | P1 | 01 | one-use `46dade6`, migration chain `52883c9`, exact submit binding `1cc772e` + CI `31940284833`. Expiry negative cases остаются в PAIR-03 | В работе |
 
 ## Dependencies, payment и AI
 

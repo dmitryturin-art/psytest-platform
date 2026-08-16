@@ -6,7 +6,7 @@
 
 - Проект: PsyTest Platform.
 - Активный этап: 01 — containment и безопасность.
-- Последний опубликованный package: `21c77c7` в `main`, GitHub Actions [31940056207](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940056207) — **success**. Цепочка миграций и SEC-05 web-root hygiene подтверждены на PHP 8.3/MySQL.
+- Последний опубликованный package: `1cc772e` в `main`, GitHub Actions [31940284833](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31940284833) — **success**. PAIR-02 server binding подтверждён на PHP 8.3/MySQL.
 - 01.5A (`92bf5e6`) связывает route slug с test session; 01.5B (`2cc5321`, форматирование `e8f1f53`) добавляет серверную validation ответов; 01.5C (`52883c9`) устраняет дублирующий index в migration chain. Формулы тестов и корректный пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -32,18 +32,19 @@
 - PAIR-01 уже запрещает повторное создание приглашения; его остальные access-boundary checks остаются отдельным P1-пакетом.
 - 01.5C оставляет `uq_partner_token` в инкрементальной миграции для существующих баз, но не дублирует DDL в bootstrap schema. Contract-test и GitHub CI подтверждают чистый deployment path.
 - SEC-05 удалил публичные dev-harness, оставил только `public/index.php` как PHP front controller, ввёл response hardening и regression-тесты. Локальная browser/HTTP QA подтвердила 404 у прежних diagnostic routes.
+- PAIR-02 подтверждает, что submitted session второго партнёра связана именно с source invite token до записи ответов и расчёта.
 
 ## Ближайшие действия
 
-1. **PAIR-02 — bind pair submit:** серверно подтвердить, что `session_id` второго партнёра связан с переданным source invite token; покрыть cross-session negative case.
-2. Закрыть оставшиеся PAIR-01 expiry/ownership access-boundary cases отдельными regression-тестами.
+1. **PAIR-03 — expiry boundaries:** добавить отрицательные cases для истёкшего source invite и истёкшей partner session; подтвердить, что они не участвуют в сравнении.
+2. После PAIR-03 принять решение о закрытии PAIR-01 или зафиксировать оставшийся ownership-risk.
 3. Затем перейти к privacy/crisis BDI flow этапа 02.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
 
 ## Известные блокеры и риски
 
 - Новый платный flow пока не существует: legacy endpoints намеренно retired до проектирования YooKassa/AI orders.
-- PAIR-01 частично закрыт: одноразовость доказана, но ownership/cross-session/expiry boundaries ещё требуют отдельного P1 evidence. Анализ выявил прямой следующий fix: `pairSubmit` должен bind-ить `session_id` к invite token.
+- PAIR-01 частично закрыт: одноразовость и cross-session binding доказаны, но expiry boundaries ещё требуют отдельного P1 evidence.
 - BDI item 9 не имеет самостоятельного safety-flow.
 - Документация расходится с кодом.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
@@ -55,7 +56,7 @@
 
 ## Возобновление
 
-- 2026-08-16: SEC-05 завершён в `21c77c7`: локально 110 tests/1178 assertions, browser/HTTP 404 и headers QA; GitHub CI `31940056207` — success. Активный следующий шаг — PAIR-02.
+- 2026-08-16: PAIR-02 завершён в `1cc772e`: локально 112 tests/1184 assertions, PHPStan/lint/architecture pass; GitHub CI `31940284833` — success. Активный следующий шаг — PAIR-03.
 
 ## Протокол команды «сделай checkpoint»
 
