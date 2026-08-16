@@ -258,6 +258,20 @@ class SessionManager
     }
 
     /**
+     * A source result token can be used to create at most one pair session.
+     */
+    public function hasPairSessionForSourceToken(string $token): bool
+    {
+        return $this->db->selectOne(
+            "SELECT id FROM test_sessions
+             WHERE partner_token = :token
+             AND expires_at > NOW()
+             AND status NOT IN ('expired', 'deleted')",
+            ['token' => $token],
+        ) !== null;
+    }
+
+    /**
      * Generate a pair comparison record
      *
      * @param int $testId Test ID

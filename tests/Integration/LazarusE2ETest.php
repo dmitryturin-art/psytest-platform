@@ -188,6 +188,16 @@ final class LazarusE2ETest extends TestCase
         $this->assertNotNull($after, 'Comparison exists after P2 completes');
     }
 
+    public function testSourceTokenCanHaveOnlyOnePairSession(): void
+    {
+        $p1 = $this->sm->createSession($this->testId);
+        self::assertFalse($this->sm->hasPairSessionForSourceToken($p1['session_token']));
+
+        $this->sm->createSession($this->testId, ['partner_token' => $p1['session_token']]);
+
+        self::assertTrue($this->sm->hasPairSessionForSourceToken($p1['session_token']));
+    }
+
     /**
      * @return array<string, int>
      */

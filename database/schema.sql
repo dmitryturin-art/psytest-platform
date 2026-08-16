@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS `test_sessions` (
   FOREIGN KEY (`test_id`) REFERENCES `tests`(`id`) ON DELETE CASCADE,
   INDEX `idx_session_token` (`session_token`),
   INDEX `idx_partner_token` (`partner_token`),
+  UNIQUE KEY `uq_partner_token` (`partner_token`),
   INDEX `idx_status` (`status`),
   INDEX `idx_expires` (`expires_at`),
   INDEX `idx_test_status` (`test_id`, `status`)

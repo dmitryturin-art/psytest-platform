@@ -194,6 +194,11 @@ class TestController extends BaseController
             echo 'Partner session not found';
             return;
         }
+        if ($this->sessionManager->hasPairSessionForSourceToken($partnerToken)) {
+            http_response_code(409);
+            echo 'Partner invite has already been used';
+            return;
+        }
 
         // Get module
         $module = $this->getModuleOrFail($slug);
