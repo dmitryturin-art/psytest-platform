@@ -7,8 +7,9 @@ use Phinx\Migration\AbstractMigration;
 /**
  * Initial schema: 6 tables + seed of the 4 tests (SMIL, BDI, HADS, BAI).
  *
- * Mirrors database/schema.sql. Replaces the previous ad-hoc setup
- * (bin/install-db.php). Run via `composer migrate` (= `phinx migrate`).
+ * Bootstrap schema. `database/schema.sql` reflects the latest schema after
+ * later migrations too. Replaces the previous ad-hoc setup (bin/install-db.php).
+ * Run via `composer migrate` (= `phinx migrate`).
  */
 final class InitSchema extends AbstractMigration
 {
@@ -52,7 +53,6 @@ final class InitSchema extends AbstractMigration
               FOREIGN KEY (`test_id`) REFERENCES `tests`(`id`) ON DELETE CASCADE,
               INDEX `idx_session_token` (`session_token`),
               INDEX `idx_partner_token` (`partner_token`),
-              UNIQUE KEY `uq_partner_token` (`partner_token`),
               INDEX `idx_status` (`status`),
               INDEX `idx_expires` (`expires_at`),
               INDEX `idx_test_status` (`test_id`, `status`)
