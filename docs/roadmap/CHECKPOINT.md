@@ -41,6 +41,7 @@
 - 02.3A `5942587` добавляет pure `CountryResolver`: ручной выбор страны имеет приоритет над session choice, затем над подготовленной trusted подсказкой; некорректные значения приводят к `unknown`. Он не читает IP/HTTP-заголовки, не делает GeoIP-запросов и не сохраняет IP. Локальный full gate: 130 tests/1232 assertions, PHPStan, lint, architecture и baseline — pass; GitHub Actions `31948360267` — success на PHP 8.3/MySQL.
 - 02.3B `50794fa` создаёт пустой fail-closed registry: контакт/URL, официальный источник, дата/автор проверки и `active = 0`. Реестр не связан с результатами или IP, не содержит seed-контактов и ещё не имеет reader/UI или срока актуальности. Локальная migration и full gate прошли (131 tests/1248 assertions); GitHub Actions `31948774257` — success на PHP 8.3/MySQL.
 - 02.4A `a14f5eb` приводит public privacy/delete copy и актуальные docs к реальному поведению: нет claims о шифровании, отсутствии будущих получателей или мгновенном физическом удалении. Есть source-level regression test, browser QA `/privacy` на desktop/390×844, полный local gate (134 tests/1264 assertions) и GitHub CI [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — success.
+- 02.5A в `codex/02-methodology-provenance-registry` создаёт factual registry всех пяти модулей и contract test. Scoring/вопросы не меняются; registry удерживает paid interpretation и новый public content закрытыми, пока owner не приложит evidence конкретной формы. Полный local gate проходит: 138 tests/1387 assertions; publication — следующий шаг.
 
 ## Ближайшие действия
 
@@ -48,6 +49,7 @@
 2. После утверждения текста и регионального strategy реализовать deterministic item-9 safety flow и public reader.
 3. Добавить browser cases и закрытый бесплатный pilot только после проверенного end-to-end flow.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
+5. Для снятия METH-01 собрать version/edition/pages, источник русской формы и условия/permission на online/commercial use по каждой методике.
 
 ## Известные блокеры и риски
 
@@ -56,6 +58,7 @@
 - BDI item 9 имеет server-side signal, но ещё не имеет самостоятельного пользовательского safety-flow, утверждённого текста или resource registry.
 - Полная документация ещё содержит legacy-слои; 02.4A исправляет privacy/routes точечно, а DOC-01 остаётся в работе.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
+- Права на конкретные формы методик пока не документированы; [METHODOLOGY_REGISTRY.md](METHODOLOGY_REGISTRY.md) — единственная current-state точка для этого риска.
 - Два старых PDF остаются только в истории; владелец подтвердил их обезличенность и отказался от history rewrite. Новые generated PDF игнорируются и не попадают в Git.
 
 ## Что спросить у владельца сейчас

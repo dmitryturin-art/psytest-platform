@@ -19,6 +19,17 @@
 
 ## 2026-08-16
 
+### 02.5A — methodology provenance and rights registry
+
+- Этап / ветка / commit: этап 02, `codex/02-methodology-provenance-registry`, commit ожидается.
+- Цель: заменить неявные имена авторов в metadata на честную, проверяемую инвентаризацию доказательств и release gates, не редактируя вопросы, формулы, нормы или SMIL chart.
+- Сделано: добавлены human-readable и machine-readable registry для всех пяти текущих модулей; каждому зафиксированы implementation paths, count, фактические bibliography/source hints, пробелы и required evidence. `MethodologyRegistryContractTest` сверяет registry с фактическими module metadata и запрещает в самом registry считать paid interpretation/new public content допустимыми при `rights.status = unverified`. Исправлены current-state docs: в архитектуре отражён Lazarus как пятый модуль.
+- Решения: `unverified` — не обвинение в нарушении и не юридический вывод. Это правило доказательности: code repository не содержит достаточных документов для claim о правах конкретной русской формы. Existing free flows, scoring core и current public wording не менялись.
+- Проверки и evidence: RED — contract обнаружил, что directory `beck-depression` и actual metadata slug `bdi` различаются; GREEN — проверка использует canonical metadata slug, 4 tests/123 assertions. Полный local gate: `composer validate`, `composer audit`, PHPUnit 138 tests/1387 assertions, PHPStan, lint, architecture check, baseline 148, JSON parse и `git diff --check` — pass. PHPStan/PHP-CS-Fixer предупредили, что локальный runtime 8.5.3 выше target 8.3; совместимость подтверждается CI после publication.
+- Изменённые файлы: registry docs/JSON, contract test, roadmap/status/traceability/checkpoint и current-state architecture/README/changelog.
+- Не сделано / риски: не проведена правовая или clinical review и не подтверждён ни один licence/permission; SMIL additional scales остаются отдельным этапом 05.
+- Следующий шаг: full gate, commit, fast-forward merge/push, CI; затем продолжить следующий безопасный package или запросить клинический crisis baseline.
+
 ### 02.4A — truthfulness of public privacy and deletion claims
 
 - Этап / ветка / commit: этап 02, `codex/02-privacy-claims-truthfulness` → `main`, `a14f5eb`.

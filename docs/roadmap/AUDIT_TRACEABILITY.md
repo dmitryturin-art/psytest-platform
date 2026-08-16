@@ -34,6 +34,7 @@
 | ID | Finding | Риск | Этап | Требуемое доказательство | Статус |
 |---|---|---|---|---|---|
 | SMIL-ADD-01 | 200 metadata против 23 фактических шкал; R/Es/Do сомнительны | P0 для проф. продукта | 05 | source registry, invariants, независимые fixtures, owner batch approval | Запланировано |
+| METH-01 | Нет документального подтверждения происхождения/прав конкретных русских форм методик | P0 для публичной платной интерпретации | 02/05/06 | 02.5A factual registry + contract test фиксируют gaps и fail-closed release gate; для снятия нужны version/edition/pages, условия или permission и owner review по каждой форме | В работе |
 | UX-01 | Пустая sticky navigation | P1 | 04 | responsive browser snapshots и keyboard test; 02.4A повторно подтвердил: на 390×844 navigation не видна, хотя privacy content не переполняется | Запланировано |
 | UX-02 | BDI progress заканчивается на 20/21 | P1 | 04 | browser/state regression test | Запланировано |
 | UX-03 | Lazarus legends/touch/accessibility неудобны | P1 | 04 | mobile interaction + screen-reader labels + contrast test | Запланировано |

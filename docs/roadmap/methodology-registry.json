@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "purpose": "Factual inventory of current module provenance and release gates. This is not a legal opinion, a licence, or clinical validation.",
+  "methodologies": [
+    {
+      "slug": "beck-anxiety",
+      "display_name": "Шкала тревоги Бека (BAI)",
+      "implementation": {
+        "metadata": "modules/beck-anxiety/metadata.json",
+        "questions": "modules/beck-anxiety/questions.json",
+        "question_count": 21
+      },
+      "provenance": {
+        "status": "partial",
+        "evidence": [
+          "metadata attributes the method to Aaron T. Beck and says only 'Русская адаптация'",
+          "modules/beck-anxiety/BeckAnxietyModule.php repeats the author in its header"
+        ],
+        "missing": [
+          "identified Russian adaptation and edition",
+          "source pages for the question wording and score bands"
+        ]
+      },
+      "rights": {
+        "status": "unverified",
+        "required_evidence": [
+          "documented terms or permission for the selected Russian form and its online use",
+          "owner review of commercial-use scope before any paid interpretation"
+        ]
+      },
+      "release_gate": {
+        "paid_interpretation": "blocked",
+        "public_new_content": "blocked"
+      }
+    },
+    {
+      "slug": "bdi",
+      "display_name": "Шкала депрессии Бека (BDI)",
+      "implementation": {
+        "metadata": "modules/beck-depression/metadata.json",
+        "questions": "modules/beck-depression/questions.json",
+        "question_count": 21
+      },
+      "provenance": {
+        "status": "partial",
+        "evidence": [
+          "metadata and PHP header name Aaron T. Beck and Н.В. Тарабрина (2001)"
+        ],
+        "missing": [
+          "edition and page range for the adaptation",
+          "source for the stored wording and score bands"
+        ]
+      },
+      "rights": {
+        "status": "unverified",
+        "required_evidence": [
+          "documented terms or permission for the selected Russian form and its online use",
+          "owner review before any change to public wording"
+        ]
+      },
+      "release_gate": {
+        "paid_interpretation": "blocked",
+        "public_new_content": "blocked"
+      }
+    },
+    {
+      "slug": "hads",
+      "display_name": "Госпитальная шкала тревоги и депрессии (HADS)",
+      "implementation": {
+        "metadata": "modules/hads/metadata.json",
+        "questions": "modules/hads/questions.json",
+        "question_count": 14
+      },
+      "provenance": {
+        "status": "partial",
+        "evidence": [
+          "metadata and PHP header name A.S. Zigmond and R.P. Snaith (1983)",
+          "metadata says only 'Русская адаптация'"
+        ],
+        "missing": [
+          "identified Russian adaptation and edition",
+          "source pages for the question wording and score bands"
+        ]
+      },
+      "rights": {
+        "status": "unverified",
+        "required_evidence": [
+          "documented terms or permission for the selected Russian form and its online use",
+          "owner review before any change to public wording"
+        ]
+      },
+      "release_gate": {
+        "paid_interpretation": "blocked",
+        "public_new_content": "blocked"
+      }
+    },
+    {
+      "slug": "lazarus",
+      "display_name": "Опросник супружеской удовлетворённости (Лазарус)",
+      "implementation": {
+        "metadata": "modules/lazarus/metadata.json",
+        "questions": "modules/lazarus/questions.json",
+        "question_count": 16
+      },
+      "provenance": {
+        "status": "partial",
+        "evidence": [
+          "metadata and PHP header attribute the method to Arnold Lazarus (1997)",
+          "metadata says only 'Русская адаптация'"
+        ],
+        "missing": [
+          "publication title, edition and page range",
+          "identified Russian adaptation",
+          "source for the stored wording, cut-off and pair comparison semantics"
+        ]
+      },
+      "rights": {
+        "status": "unverified",
+        "required_evidence": [
+          "documented terms or permission for the selected Russian form and its online use",
+          "owner review before enabling a paid individual or pair interpretation"
+        ]
+      },
+      "release_gate": {
+        "paid_interpretation": "blocked",
+        "public_new_content": "blocked"
+      }
+    },
+    {
+      "slug": "smil",
+      "display_name": "СМИЛ (адаптация MMPI)",
+      "implementation": {
+        "metadata": "modules/smil/metadata.json",
+        "questions": "modules/smil/questions-566-full.json",
+        "question_count": 566
+      },
+      "provenance": {
+        "status": "partial",
+        "evidence": [
+          "questions-566-full.json attributes the scoring key to И.Л. Соломин, pp. 63–68",
+          "basic_scales_norms.json attributes basic norms to Л.Н. Собчик (2003)",
+          "docs/smil-keys-reference.md records the Solomin/Sobchik cross-check and unresolved F-scale discrepancy"
+        ],
+        "missing": [
+          "documented provenance for the stored question wording",
+          "resolved author-name inconsistency: Ф.Б. Собчик in metadata/module versus Л.Н. Собчик in sources",
+          "verified source, formula and norms for each additional scale before publication"
+        ]
+      },
+      "rights": {
+        "status": "unverified",
+        "required_evidence": [
+          "documented terms or permission for the selected Russian form, question wording and norms",
+          "owner review before any paid interpretation or additional-scale publication"
+        ]
+      },
+      "release_gate": {
+        "paid_interpretation": "blocked",
+        "public_new_content": "blocked"
+      }
+    }
+  ]
+}
