@@ -5,8 +5,8 @@
 ## Сейчас
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим) и отдельный AI-consent. 02.1, 02.2A, 02.3A, 02.3B и 02.4A подтверждены GitHub CI. 02.5A factual registry методик готов локально и ожидает publication. Crisis UI/text/resources остаются отдельными пакетами.
-- Последний опубликованный code commit: `a14f5eb` в `main`; GitHub Actions [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — success, включая чистую MySQL migration цепочку и PHP 8.3 quality gate privacy truthfulness.
+- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим) и отдельный AI-consent. 02.1, 02.2A, 02.3A, 02.3B, 02.4A и 02.5A подтверждены GitHub CI. Crisis UI/text/resources остаются отдельными пакетами.
+- Последний опубликованный code commit: `7240d3b` в `main`; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success, включая чистую MySQL migration цепочку и PHP 8.3 quality gate реестра методик.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -18,7 +18,7 @@
 |---|---|---|
 | 00 | В работе | governance-каркас и базовый quality gate готовы; требуется отдельная документационная hygiene-проверка |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | 02.1 lifecycle, 02.2A server-side BDI signal, 02.3A CountryResolver, 02.3B registry foundation и 02.4A truthfulness regression подтверждены CI; 02.5A registry методик готов локально. Crisis UI/text/resources, therapist-delete и AI consent record ещё впереди |
+| 02 | В работе | 02.1 lifecycle, 02.2A server-side BDI signal, 02.3A CountryResolver, 02.3B registry foundation, 02.4A truthfulness regression и 02.5A registry методик подтверждены CI; Crisis UI/text/resources, therapist-delete и AI consent record ещё впереди |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
