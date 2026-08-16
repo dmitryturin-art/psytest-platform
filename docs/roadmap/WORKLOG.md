@@ -218,3 +218,11 @@
 - Причина: GitHub Actions `31947571377` применил чистую migration chain и обнаружил `Duplicate column retention_class`: bootstrap migration ошибочно содержала DDL из инкрементальной migration.
 - Исправление: из bootstrap удаляются только дублирующие column/index; итоговый `database/schema.sql` сохраняет полную актуальную схему, а `20260816010000` остаётся единственным источником upgrade для существующих и чистых баз.
 - Проверка: GitHub Actions `31947571377` воспроизвёл defect; follow-up [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success на чистом MySQL и полном PHP 8.3 gate.
+
+### 02.2A — BDI server-side safety signal
+
+- Этап / ветка / commit: этап 02.2A, `codex/02-bdi-safety-signal`, commit pending.
+- Цель: не дать положительному item 9 потеряться в общем BDI total, но не менять clinical score, существующие рекомендации или неутверждённый пользовательский текст.
+- Сделано: `ClinicalSafetySignal` создаёт строго структурированный сигнал `bdi_item_9` только для validated значений 1–3 с source question/value и числовой severity; `BeckDepressionModule` сохраняет `safety_signals`. При 0 или некорректном входе сигнал отсутствует. UI, country, IP/GeoIP и contacts не затронуты.
+- Проверки и evidence: сначала RED — отсутствующий class и ожидаемый result key; затем unit/module contracts, полный local gate: Composer audit clean, PHPUnit 126 tests/1228 assertions, PHPStan/lint/architecture/baseline/manifest pass. Architecture checker был дополнен явным dependency requirement, иначе его standalone execution не видел новый core-class.
+- Следующий шаг: commit, fast-forward/push, GitHub CI; после него для Crisis UI потребуется owner-approved текст и начальные ресурсы.

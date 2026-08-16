@@ -228,6 +228,10 @@ class SessionManager
 
 Плановый lifecycle-сервис выбирает только `anonymous`-сессии старше срока policy (180 дней по умолчанию), перед удалением очищает известные файлы `result_{session}`, `interpretation_{session}` и `pair_{comparison}` строго внутри `storage/pdfs`, затем удаляет session-bound activity records и саму сессию. Внешние ключи каскадно очищают pair/legacy dependent rows. `therapist_case` автоматической очистке не подлежит.
 
+### ClinicalSafetySignal — `core/ClinicalSafetySignal.php`
+
+Для BDI после успешной validation извлекает строго машинный сигнал из пункта 9: code, исходный пункт и значение `1–3` как severity. Он не меняет total score/level, не формирует диагноз, не содержит клиентского текста и не выбирает кризисные контакты. `BeckDepressionModule` сохраняет его в `calculated_results.safety_signals`; UI и country/resource flow остаются отдельным work package.
+
 ### Security — `core/Security.php` (~334 строки)
 
 Все методы статические — утилитарный класс.

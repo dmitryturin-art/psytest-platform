@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace PsyTest\Modules\BeckDepression;
 
+use PsyTest\Core\ClinicalSafetySignal;
 use PsyTest\Modules\BaseTestModule;
 use PsyTest\Modules\ResultSection;
 
@@ -135,6 +136,7 @@ class BeckDepressionModule extends BaseTestModule
         $interpretation = self::INTERPRETATIONS[$level] ?? '';
 
         $maxScore = 63;
+        $safetySignal = ClinicalSafetySignal::fromBdiAnswers($answers);
 
         return [
             'total_score' => $totalScore,
@@ -147,6 +149,7 @@ class BeckDepressionModule extends BaseTestModule
             'total_questions' => 21,
             'symptom_scores' => $symptomScores,
             'recommendations' => self::RECOMMENDATIONS[$level] ?? [],
+            'safety_signals' => $safetySignal === null ? [] : [$safetySignal->toArray()],
         ];
     }
 

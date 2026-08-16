@@ -51,6 +51,23 @@ final class BeckDepressionModuleTest extends TestCase
         $this->assertSame('Минимальная депрессия', $results['level_name']);
     }
 
+    public function testItemNineSafetySignalIsIndependentFromTheTotalScore(): void
+    {
+        $module = new BeckDepressionModule();
+        $answers = array_fill(1, 21, 0);
+        $answers[9] = 1;
+
+        $results = $module->calculateResults($answers);
+
+        self::assertSame(1, $results['total_score']);
+        self::assertSame('minimal', $results['level']);
+        self::assertSame([[
+            'code' => 'bdi_item_9',
+            'severity' => 1,
+            'source' => ['question_id' => 9, 'value' => 1],
+        ]], $results['safety_signals']);
+    }
+
     public function testCalculateResultsMildScore(): void
     {
         $module = new BeckDepressionModule();

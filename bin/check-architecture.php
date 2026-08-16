@@ -27,6 +27,7 @@ $requiredFiles = [
     'core/PDFGenerator.php',
     'core/View.php',
     'core/Security.php',
+    'core/ClinicalSafetySignal.php',
     'modules/TestModuleInterface.php',
     'modules/BaseTestModule.php',
     'modules/smil/SmilModule.php',
@@ -72,6 +73,7 @@ $phpFiles = [
     'core/Database.php',
     'core/Router.php',
     'core/SessionManager.php',
+    'core/ClinicalSafetySignal.php',
     'modules/TestModuleInterface.php',
     'modules/BaseTestModule.php',
     'modules/smil/SmilModule.php',
@@ -225,6 +227,7 @@ if (file_exists($projectRoot . '/modules/beck-depression/BeckDepressionModule.ph
     require_once $projectRoot . '/modules/TestModuleInterface.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/core/ClinicalSafetySignal.php';
     require_once $projectRoot . '/modules/beck-depression/BeckDepressionModule.php';
     
     try {
