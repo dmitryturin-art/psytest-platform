@@ -1,6 +1,6 @@
 # Архитектура PsyTest Platform
 
-Статус: **фактическое состояние на 2026-08-16**. Здесь описан работающий код, а будущие AI, YooKassa, кабинет терапевта, UI redesign и Module API v2 — в [ROADMAP.md](ROADMAP.md).
+Статус: **фактическое состояние на 2026-08-21**. Здесь описан работающий код, а будущие AI, YooKassa, кабинет терапевта, UI redesign и Module API v2 — в [ROADMAP.md](ROADMAP.md).
 
 ## Обзор
 

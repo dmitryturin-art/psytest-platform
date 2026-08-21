@@ -5,8 +5,8 @@
 ## Сейчас
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим), отдельный AI-consent и нейтральный BDI crisis text без ресурсов. 02.1, 02.2A, 02.3A, 02.3B, 02.4A и 02.5A подтверждены GitHub CI. 02.2B `788e590` содержит generic crisis notice и исправление BDI submit, локально проверен; ожидает publication/CI.
-- Последний опубликованный commit: `d4a4e23` в `main` (current-state developer docs); последний подтверждённый PHP 8.3/MySQL code gate — `7240d3b`, GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success, включая чистую MySQL migration цепочку и PHP 8.3 quality gate реестра методик.
+- Состояние: этап 01 завершён; для этапа 02 приняты retention (180 дней / бессрочный therapist-режим), отдельный AI-consent и нейтральный BDI crisis text без ресурсов. 02.1, 02.2A, 02.3A, 02.3B, 02.4A, 02.5A и 02.2B подтверждены GitHub CI. 02.2B `788e590` содержит generic crisis notice и исправление BDI submit; [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32503879209) — success.
+- Последний опубликованный функциональный package: 02.2B `788e590`; GitHub Actions [32503879209](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32503879209) — success, включая чистую MySQL migration цепочку и полный PHP 8.3 quality gate.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -18,7 +18,7 @@
 |---|---|---|
 | 00 | В работе | governance-каркас и baseline готовы; 00C current-state docs и documentation contract test опубликованы как `d4a4e23`; production runbook относится к 08 |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | 02.1 lifecycle, 02.2A server-side BDI signal, 02.3A CountryResolver, 02.3B registry foundation, 02.4A truthfulness regression и 02.5A registry методик подтверждены CI; 02.2B generic crisis notice и BDI submit fix проверены локально, без resources/country/IP, publication/CI впереди. Therapist-delete и AI consent record ещё впереди |
+| 02 | В работе | 02.1 lifecycle, 02.2A server-side BDI signal, 02.3A CountryResolver, 02.3B registry foundation, 02.4A truthfulness regression, 02.5A registry методик и 02.2B generic crisis notice/BDI submit fix подтверждены CI; flow не использует resources/country/IP. Therapist-delete и AI consent record ещё впереди |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
@@ -39,7 +39,7 @@
 ## Активные риски
 
 1. Legacy payment endpoints безопасно retired, но новый YooKassa/AI flow ещё не спроектирован и не реализован.
-3. BDI item 9 создаёт server-side signal; 02.2B локально реализует public generic notice без country/resource reader. Desktop/mobile browser QA пройдены локально; publication/CI ещё впереди.
+3. BDI item 9 создаёт server-side signal; 02.2B публикует generic notice без country/resource reader. Desktop/mobile browser QA и PHP 8.3/MySQL CI пройдены; automated browser coverage остаётся отдельным пакетом.
 4. 02.4A устраняет ложные public privacy/delete claims; 00C приводит local developer docs к коду, но production runbook и legal review ещё не завершены.
 5. Дополнительные шкалы SMIL: заявлено 200, фактически найдено 23; часть норм противоречива.
 6. Происхождение, version и права конкретных русских форм всех пяти методик не подтверждены документами в репозитории; это блокирует paid interpretation до отдельной проверки.
@@ -49,8 +49,8 @@
 
 ## Следующие пять действий
 
-1. Опубликовать проверенный пакет 02.2B и получить CI PHP 8.3/MySQL.
-2. Добавить автоматизированное browser coverage для notice на desktop и mobile.
+1. Добавить автоматизированное browser coverage для notice на desktop и mobile.
+2. Продолжить privacy work packages: защищённое назначение и ручное удаление `therapist_case`.
 3. Закрывать privacy findings отдельными regression-тестами до UI-редизайна.
 4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
 5. Спроектировать consent record и provider boundary до возврата AI-функций.
