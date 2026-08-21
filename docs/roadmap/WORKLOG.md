@@ -17,6 +17,18 @@
 - Следующий шаг:
 ```
 
+## 2026-08-21
+
+### 02.4B — protected owner therapist-case lifecycle
+
+- Этап / ветка / commit: этап 02, `codex/02-owner-mini-cabinet`, commit ожидается.
+- Цель: реализовать выбранный владельцем минимальный кабинет без публичных аккаунтов: явное назначение completed session в `therapist_case` и полное ручное удаление.
+- Сделано: добавлены `/admin/login`, `/admin`, POST lookup/assign/delete. Dashboard fail-closed без `OWNER_DASHBOARD_PASSWORD_HASH` Argon2id; session имеет HttpOnly/Strict cookie (Secure при HTTPS), regeneration и TTL, а неудачные входы глобально ограничены без записи IP, user-agent или client identifier. Lookup принимает token только в POST, не показывает token и не использует его в URL. `TherapistCaseService` допускает assignment только completed anonymous session; manual delete использует lifecycle service для known artifacts и сохраняет только identifier-free owner audit event.
+- Проверки и evidence: targeted PHPUnit 6 tests / 45 assertions — pass. Full local gate: PHPUnit 154 tests / 1554 assertions, PHPStan, lint, architecture check, PHPStan baseline 148 и diff check — pass. HTTP smoke: login `303`, authenticated `/admin` `200`. Browser QA login page: desktop и 390×844, без horizontal overflow. Local runtime 8.5.3; CI на target PHP 8.3 ожидается после публикации.
+- Изменённые файлы: owner controller/templates/CSS, authenticator/case lifecycle services, login-attempt migration/schema, env example, tests и current-state docs.
+- Не сделано / риски: это не полный кабинет терапевта, нет AI report viewer/editor, coupons, payment controls, TOTP, user accounts или production setup. Глобальный login limit не хранит IP, поэтому защищает от перебора ценой возможного краткого общего lockout.
+- Следующий шаг: review, commit, merge/push и PHP 8.3/MySQL CI; затем закрытый бесплатный pilot preparation или отдельный BDI browser-coverage package.
+
 ## 2026-08-16
 
 ### 02.2B — approved BDI safety notice and numeric answer-ID regression

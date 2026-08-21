@@ -135,6 +135,19 @@ CREATE TABLE IF NOT EXISTS `activity_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
+-- OWNER DASHBOARD LOGIN ATTEMPTS
+-- ============================================
+-- Deliberately contains no credential, IP address, user-agent or clinical
+-- identifier. It supports a small global brute-force limit for the single
+-- owner account and is pruned on each login attempt.
+CREATE TABLE IF NOT EXISTS `owner_login_attempts` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `was_successful` TINYINT(1) NOT NULL DEFAULT 0,
+  `attempted_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_owner_login_attempted_at` (`attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- PAYMENT TRANSACTIONS LOG
 -- ============================================
 CREATE TABLE IF NOT EXISTS `payment_transactions` (

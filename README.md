@@ -43,7 +43,7 @@
 | Происхождение и права методик | [реестр создан](docs/roadmap/METHODOLOGY_REGISTRY.md); для всех текущих форм статус пока unverified |
 | Платная интерпретация | legacy-flow отключается и будет заменён |
 | YooKassa и чеки | запланированы; старый YooMoney-код не считается рабочей интеграцией |
-| AI-отчёты и кабинет терапевта | запланированы |
+| Кабинет владельца и lifecycle кейсов | реализован минимальный защищённый `/admin`; AI-отчёты и полный кабинет терапевта запланированы |
 | Production deployment | не выполнен; предусмотрены staging, backup и rollback gates |
 
 Известные security/privacy/payment проблемы не скрываются: они перечислены в [техническом аудите](docs/audit/2026-08-15-agent-implementation-plan.md) и [матрице закрытия](docs/roadmap/AUDIT_TRACEABILITY.md).

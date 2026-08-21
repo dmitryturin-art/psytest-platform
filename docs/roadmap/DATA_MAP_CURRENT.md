@@ -10,12 +10,12 @@
 
 | Данные | Текущее место | Текущая цель/flow | Доступ/передача | Удаление и известный долг |
 |---|---|---|---|---|
-| Ответы, рассчитанные результаты, пол/возраст | `test_sessions.answers`, `calculated_results`, `demographics` | Бесплатный результат, PDF, сравнение пары | Доступ по bearer result token; PDF создаётся локально | Public `deleteSession()` — soft-delete и очистка clinical-полей. Плановый `SessionLifecycleService` физически удаляет 180-day anonymous session, pair-данные, известные PDF и session-bound activity records; это покрыто integration test. |
+| Ответы, рассчитанные результаты, пол/возраст | `test_sessions.answers`, `calculated_results`, `demographics` | Бесплатный результат, PDF, сравнение пары; явно назначенный therapist-case | Доступ по bearer result token; минимальный `/admin` owner lookup принимает token только в POST и не выводит его в URL | Public `deleteSession()` — soft-delete и очистка clinical-полей. Плановый `SessionLifecycleService` физически удаляет 180-day anonymous session, pair-данные, известные PDF и session-bound activity records; owner может физически удалить therapist-case с подтверждением. |
 | Result token / partner token | `test_sessions.session_token`, `partner_token` | Уникальная ссылка на результат / relation для пары | Token не должен попадать в logs/analytics; partner token не credential | Сессия перестаёт быть доступна после `expires_at`/soft-delete. Anonymous lifecycle удаляет строку после 180 дней при настроенном cleanup scheduler; therapist-case flow ещё не реализован. |
 | Email и имя | `test_sessions.user_email`, `user_name` | Опциональная будущая выдача отчёта | Legacy API/email code существует, но payment/AI routes retired | `deleteSession()` обнуляет поля. Нельзя публиковать обещание email delivery до нового delivery flow. |
 | IP и user-agent | `test_sessions`, `activity_log` | Сейчас записываются автоматически как технические метаданные | Внешнему AI не должны передаваться | Не очищаются `deleteSession()` и точный срок не определён. Это расходится с целевым принципом минимизации и требует решения/рефакторинга 02. |
 | Pair comparison | `pair_comparisons.comparison_data` и ссылки на две sessions | Завершённый парный результат Лазаруса | Показывается через result flow | При 180-day physical cleanup сессии FK удаляет связанные rows, а lifecycle заранее удаляет известный pair PDF. Public soft-delete пока не равен physical cleanup. |
-| Activity records | `activity_log` | Технический audit: создание, сохранение, завершение, удаление | Локальная БД | После удаления session остаётся с `session_id = NULL`; IP/user-agent сохраняются. Нужен отдельный retention и minimization policy. |
+| Activity records | `activity_log` | Технический audit: создание, сохранение, завершение, удаление | Локальная БД | После удаления session остаётся с `session_id = NULL`; IP/user-agent сохраняются. Owner assignment/delete добавляет лишь обезличенный event без session/test/token/IP/user-agent. Нужен отдельный retention и minimization policy для остальных technical records. |
 | PDF | `storage/pdfs`, path в legacy `ai_interpretations` | Бесплатный PDF результата и будущая выдача отчёта | Локальная файловая система; generated files игнорируются Git | Плановый anonymous lifecycle удаляет известные result/interpretation/pair PDFs. Public soft-delete не удаляет файл немедленно. |
 | Payment/AI record | legacy `ai_interpretations`, `payment_transactions` | Legacy model; production routes retired | Новый YooKassa/AI flow ещё не существует | Будущая модель обязана отделить фискальные записи от clinical answers и вводить explicit AI consent. |
 
@@ -29,7 +29,7 @@
 
 ## Принятые целевые решения
 
-1. Anonymous-данные хранятся 180 календарных дней по реализованной lifecycle-policy; `therapist_case` определён в schema/policy, но его защищённое назначение и ручное удаление ещё не реализованы.
+1. Anonymous-данные хранятся 180 календарных дней по реализованной lifecycle-policy; завершённый `therapist_case` владелец явно назначает и удаляет через минимальный защищённый `/admin`.
 2. Передача данных внешнему AI требует отдельного consent при checkout расширенной интерпретации. Для этого ещё нет нового AI flow, consent record или approved provider list.
 
 ## Решения владельца, необходимые до реализации

@@ -61,6 +61,8 @@ HTTP request
 | GET | `/result/{slug}/{token}/pdf` | `ResultController::pdf` | PDF результата |
 | GET | `/result/{slug}/{token}/pair-status` | `ResultController::pairStatus` | polling pair flow |
 | POST | `/result/{token}/delete` | `ResultController::delete` | отдельный delete route; token без slug |
+| GET/POST | `/admin/login`, `/admin` | `OwnerController` | один защищённый owner dashboard; выключен без Argon2id hash в server env |
+| POST | `/admin/case/lookup`, `/assign`, `/delete` | `OwnerController` | явное назначение завершённого кейса и полное ручное удаление |
 | GET | `/pair/{id}` | `ResultController::pairShow` | сравнение пары |
 | GET | `/pair/{id}/pdf` | `ResultController::pairPdf` | PDF сравнения |
 | GET | `/api/health` | `ApiController::health` | health check |
@@ -112,7 +114,7 @@ interface TestModuleInterface
 
 Новая session получает `retention_class = anonymous`. Независимо существуют access TTL (`expires_at`), срок physical retention 180 дней от `created_at`, public soft-delete и плановый `SessionLifecycleService`, физически удаляющий просроченные anonymous sessions и известные artifacts.
 
-`therapist_case` предусмотрен policy и schema, но защищённое назначение и ручное удаление не реализованы. Фактические границы — в [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md), целевая policy — в [RETENTION_POLICY.md](docs/roadmap/RETENTION_POLICY.md).
+`therapist_case` назначается только владельцем через минимальный `/admin`, защищённый Argon2id password, session, CSRF и глобальным лимитом неудачных входов. Dashboard принимает result token только в POST lookup, не помещает его в URL или audit details; назначить можно лишь завершённую anonymous-сессию. Ручное удаление физически очищает session и известные artifacts, затем оставляет только обезличенное operational событие без идентификаторов кейса. Полный кабинет с отчётами относится к этапу 07. Фактические границы — в [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md), policy — в [RETENTION_POLICY.md](docs/roadmap/RETENTION_POLICY.md).
 
 ## Безопасность и privacy границы
 

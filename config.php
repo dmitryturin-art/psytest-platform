@@ -111,6 +111,28 @@ return new class {
     public function csrfEnabled(): bool {
         return $this->getBool('CSRF_ENABLED', true);
     }
+
+    /**
+     * The owner dashboard is intentionally disabled until deployment provides
+     * an Argon2id hash. A plain-text password is never accepted here.
+     */
+    public function ownerDashboardPasswordHash(): string {
+        return $this->getString('OWNER_DASHBOARD_PASSWORD_HASH');
+    }
+
+    public function ownerDashboardSessionTtlSeconds(): int {
+        $minutes = $this->getInt('OWNER_DASHBOARD_SESSION_TTL_MINUTES', 120);
+
+        return max(5, min($minutes, 720)) * 60;
+    }
+
+    public function ownerDashboardLoginMaxAttempts(): int {
+        return max(3, min($this->getInt('OWNER_DASHBOARD_LOGIN_MAX_ATTEMPTS', 10), 30));
+    }
+
+    public function ownerDashboardLoginWindowSeconds(): int {
+        return max(60, min($this->getInt('OWNER_DASHBOARD_LOGIN_WINDOW_MINUTES', 15), 60)) * 60;
+    }
     
     public function encryptionKey(): string {
         $key = $this->getString('ENCRYPTION_KEY');

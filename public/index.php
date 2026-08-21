@@ -30,6 +30,7 @@ use PsyTest\Controllers\HomeController;
 use PsyTest\Controllers\TestController;
 use PsyTest\Controllers\ResultController;
 use PsyTest\Controllers\ApiController;
+use PsyTest\Controllers\OwnerController;
 use PsyTest\Controllers\RetiredPaymentController;
 
 // Initialize core components
@@ -67,6 +68,16 @@ $router->get('/result/{slug}/{token}', [ResultController::class, 'show']);
 $router->get('/result/{slug}/{token}/pdf', [ResultController::class, 'pdf']);
 $router->get('/result/{slug}/{token}/pair-status', [ResultController::class, 'pairStatus']);
 $router->post('/result/{token}/delete', [ResultController::class, 'delete']);
+
+// Owner-only clinical lifecycle controls. The routes fail closed until an
+// Argon2id password hash is configured outside Git.
+$router->get('/admin/login', [OwnerController::class, 'login']);
+$router->post('/admin/login', [OwnerController::class, 'authenticate']);
+$router->post('/admin/logout', [OwnerController::class, 'logout']);
+$router->get('/admin', [OwnerController::class, 'dashboard']);
+$router->post('/admin/case/lookup', [OwnerController::class, 'lookupCase']);
+$router->post('/admin/case/assign', [OwnerController::class, 'assignCase']);
+$router->post('/admin/case/delete', [OwnerController::class, 'deleteCase']);
 
 // Pair comparison results
 $router->get('/pair/{id}', [ResultController::class, 'pairShow']);

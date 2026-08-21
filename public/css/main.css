@@ -223,6 +223,124 @@ body {
     width: 100%;
 }
 
+/* Owner dashboard: intentionally small and separate from the public catalog. */
+.owner-panel {
+    max-width: 720px;
+    margin: var(--spacing-xl) auto;
+    padding: var(--spacing-xl);
+    background: var(--color-bg-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.owner-login-panel {
+    max-width: 440px;
+}
+
+.owner-panel-eyebrow {
+    margin: 0 0 var(--spacing-xs);
+    color: var(--color-primary);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.owner-panel h1,
+.owner-panel h2 {
+    margin-top: 0;
+}
+
+.owner-panel-intro,
+.owner-help {
+    color: var(--color-text-light);
+    line-height: 1.6;
+}
+
+.owner-form,
+.owner-action-form {
+    display: grid;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+}
+
+.owner-form label,
+.owner-delete-form label {
+    font-weight: 600;
+}
+
+.owner-form input[type="text"],
+.owner-form input[type="password"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font: inherit;
+}
+
+.owner-notice {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-sm);
+    line-height: 1.5;
+}
+
+.owner-notice--success {
+    background: #edf8f1;
+    color: #17693a;
+}
+
+.owner-notice--error {
+    background: #fff0f0;
+    color: #a32929;
+}
+
+.owner-case {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.owner-case-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+}
+
+.owner-case-details div {
+    min-width: 0;
+}
+
+.owner-case-details dt {
+    color: var(--color-text-light);
+    font-size: 0.875rem;
+}
+
+.owner-case-details dd {
+    margin: 0.25rem 0 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.owner-logout {
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .owner-panel {
+        margin: var(--spacing-md) 0;
+        padding: var(--spacing-lg);
+    }
+
+    .owner-case-details {
+        grid-template-columns: 1fr;
+    }
+}
+
 .btn-sm {
     padding: var(--spacing-xs) var(--spacing-md);
     font-size: var(--font-size-sm);

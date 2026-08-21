@@ -30,7 +30,7 @@ php -S 127.0.0.1:8000 -t public
 
 Откройте `http://127.0.0.1:8000/tests`. В production не используйте встроенный server и не направляйте document root в корень репозитория.
 
-`config.php` читает `.env` и environment variables. `DB_*`, `APP_*`, `SESSION_TTL_DAYS`, `ANONYMOUS_RETENTION_DAYS`, `CSRF_ENABLED`, `PDF_STORAGE_PATH` и logging configuration имеют текущий смысл. Legacy `YOOMONEY_*` и `OPENROUTER_*` не включают payment или AI: public routes retired, новый YooKassa/AI design не реализован.
+`config.php` читает `.env` и environment variables. `DB_*`, `APP_*`, `SESSION_TTL_DAYS`, `ANONYMOUS_RETENTION_DAYS`, `CSRF_ENABLED`, `PDF_STORAGE_PATH` и logging configuration имеют текущий смысл. Мини-кабинет владельца остаётся выключенным, пока server environment не задаст `OWNER_DASHBOARD_PASSWORD_HASH` как Argon2id hash; пароль или hash не попадают в Git. Legacy `YOOMONEY_*` и `OPENROUTER_*` не включают payment или AI: public routes retired, новый YooKassa/AI design не реализован.
 
 ## Полный quality gate
 
@@ -79,7 +79,7 @@ Result token — bearer credential. Не логируйте его и не ис�
 
 ## Данные, удаление и кризисный signal
 
-Current data map: [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md). Anonymous clinical sessions удаляются lifecycle job после 180 дней от `created_at`; public delete — soft-delete, а не обещание немедленного уничтожения всех artifacts. `therapist_case` не имеет защищённого assignment/delete flow.
+Current data map: [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md). Anonymous clinical sessions удаляются lifecycle job после 180 дней от `created_at`; public delete — soft-delete, а не обещание немедленного уничтожения всех artifacts. Завершённую anonymous session владелец может явно назначить в `/admin` как `therapist_case`; такой кейс удаляется там же физически с подтверждением. Полный кабинет терапевта и AI-отчёты всё ещё не реализованы.
 
 BDI item 9 формирует machine-readable `ClinicalSafetySignal`; при значении выше нуля результат показывает утверждённое generic-сообщение без телефонов, ссылок, страны, country resources или IP/GeoIP. Не расширяйте этот flow конкретными ресурсами или географией без нового решения владельца и отдельной проверки источников.
 

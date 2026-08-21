@@ -1,0 +1,63 @@
+{% extends "layout.twig" %}
+
+{% block title %}Кабинет владельца — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}
+<form method="post" action="{{ basePath }}/admin/logout">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="nav-link owner-logout">Выйти</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-dashboard-title">
+    <p class="owner-panel-eyebrow">Технический доступ</p>
+    <h1 id="owner-dashboard-title">Кабинет владельца</h1>
+    <p class="owner-panel-intro">Найдите результат по полной ссылке или токену. Токен не попадает в адрес страницы и не сохраняется в журнале кабинета.</p>
+
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
+    {% if lookup_error %}
+        <p class="owner-notice owner-notice--error" role="alert">{{ lookup_error }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ basePath }}/admin/case/lookup" class="owner-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="result-reference">Ссылка на результат или токен</label>
+        <input id="result-reference" name="result_reference" type="text" inputmode="url" autocomplete="off" required>
+        <button type="submit" class="btn btn-primary">Найти сессию</button>
+    </form>
+
+    {% if case %}
+        <section class="owner-case" aria-labelledby="owner-case-title">
+            <h2 id="owner-case-title">Найденная сессия</h2>
+            <dl class="owner-case-details">
+                <div><dt>Методика</dt><dd>{{ case.test_name }}</dd></div>
+                <div><dt>Создана</dt><dd>{{ case.created_at|date("d.m.Y H:i") }}</dd></div>
+                <div><dt>Статус</dt><dd>{{ case.status }}</dd></div>
+                <div><dt>Режим хранения</dt><dd>{{ case.retention_class }}</dd></div>
+            </dl>
+
+            {% if case.retention_class == 'anonymous' and case.status == 'completed' %}
+                <form method="post" action="{{ basePath }}/admin/case/assign" class="owner-action-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="session_id" value="{{ case.id }}">
+                    <button type="submit" class="btn btn-success">Назначить как кейс клиента</button>
+                </form>
+                <p class="owner-help">После назначения эта сессия перестанет участвовать в автоматической 180-дневной очистке.</p>
+            {% elseif case.retention_class == 'therapist_case' %}
+                <p class="owner-notice owner-notice--success">Это уже кейс клиента терапевта. Он хранится, пока вы не удалите его вручную.</p>
+                <form method="post" action="{{ basePath }}/admin/case/delete" class="owner-action-form owner-delete-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="session_id" value="{{ case.id }}">
+                    <label><input type="checkbox" name="confirm_delete" value="delete" required> Я понимаю, что удаление необратимо.</label>
+                    <button type="submit" class="btn btn-danger">Удалить кейс полностью</button>
+                </form>
+            {% else %}
+                <p class="owner-notice owner-notice--error">Назначить можно только завершённую анонимную сессию.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+</section>
+{% endblock %}

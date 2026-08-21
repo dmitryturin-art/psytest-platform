@@ -1,0 +1,24 @@
+{% extends "layout.twig" %}
+
+{% block title %}Вход владельца — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}{% endblock %}
+
+{% block content %}
+<section class="owner-panel owner-login-panel" aria-labelledby="owner-login-title">
+    <p class="owner-panel-eyebrow">Технический доступ</p>
+    <h1 id="owner-login-title">Кабинет владельца</h1>
+    <p class="owner-panel-intro">Управление назначенными кейсами клиентов. Доступ только для владельца платформы.</p>
+
+    {% if error %}
+        <p class="owner-notice owner-notice--error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ basePath }}/admin/login" class="owner-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="owner-password">Пароль</label>
+        <input id="owner-password" name="password" type="password" autocomplete="current-password" required autofocus>
+        <button type="submit" class="btn btn-primary">Войти</button>
+    </form>
+</section>
+{% endblock %}
