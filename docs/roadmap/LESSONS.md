@@ -131,3 +131,11 @@
 - Ошибка: добавление одного DDL и в bootstrap, и в incremental migration делает чистый CI-deploy невозможным из-за `Duplicate column`/`Duplicate key`.
 - Правило: initial migration отражает только исходное состояние; актуальный `database/schema.sql` может содержать итоговую схему. Для каждого нового DDL нужен contract-test, который различает bootstrap и incremental chain, плюс чистая migration проверка в CI.
 - Статус: действует с 2026-08-16; повторение 01.5C с `uq_partner_token` в retention-class migration обнаружено и исправлено CI.
+
+# L-014 — Нельзя объединять ответы с числовыми ID через `array_merge()`
+
+- Контекст: question IDs методик — числовые ключи (например, BDI 1–21), а часть ответов уже может быть сохранена autosave.
+- Ошибка: `array_merge()` перенумеровывает integer keys в 0…N. Поэтому полностью заполненная BDI-форма превращалась в набор ключей 0–20 и server-side validation справедливо отвечал `422 Invalid or incomplete answers`.
+- Правило: для overlay saved/form answers и присоединения demographics использовать `AnswerMerger::overlay()` на базе `array_replace()`, а не `array_merge()`. `array_merge()` допустим только там, где массивы имеют семантически нечисловые ключи или нужны именно списки.
+- Защита: `tests/AnswerMergerTest.php` проверяет ключи 1–21 и complete validation BDI; HTTP fixture подтверждает redirect после 21 ответов. Обычный и pair submit используют один механизм.
+- Статус: действует с `788e590`.

@@ -81,7 +81,7 @@ Result token — bearer credential. Не логируйте его и не ис�
 
 Current data map: [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md). Anonymous clinical sessions удаляются lifecycle job после 180 дней от `created_at`; public delete — soft-delete, а не обещание немедленного уничтожения всех artifacts. `therapist_case` не имеет защищённого assignment/delete flow.
 
-BDI item 9 формирует только machine-readable `ClinicalSafetySignal`. Не добавляйте crisis copy, country resources или IP/GeoIP логику без owner-approved текста, проверяемых ресурсов и срока актуальности.
+BDI item 9 формирует machine-readable `ClinicalSafetySignal`; при значении выше нуля результат показывает утверждённое generic-сообщение без телефонов, ссылок, страны, country resources или IP/GeoIP. Не расширяйте этот flow конкретными ресурсами или географией без нового решения владельца и отдельной проверки источников.
 
 ## Legacy integrations
 

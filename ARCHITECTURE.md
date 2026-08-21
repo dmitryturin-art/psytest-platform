@@ -99,7 +99,7 @@ interface TestModuleInterface
 | Модуль | Каталог | Вопросов | Особенность |
 |---|---|---:|---|
 | СМИЛ | `modules/smil/` | 566 | protected канонический profile chart и базовый scoring |
-| BDI | `modules/beck-depression/` | 21 | machine-readable item-9 safety signal после validation |
+| BDI | `modules/beck-depression/` | 21 | machine-readable item-9 safety signal и утверждённое generic notice после валидированного положительного ответа |
 | HADS | `modules/hads/` | 14 | две подшкалы |
 | BAI | `modules/beck-anxiety/` | 21 | суммарная шкала |
 | Lazarus | `modules/lazarus/` | 16 | одиночный и pair flow |
@@ -123,7 +123,7 @@ interface TestModuleInterface
 - точный IP и user-agent пока собираются и требуют отдельной minimization policy;
 - public privacy text не заявляет encryption, отсутствие будущих third parties или немедленное полное физическое удаление.
 
-`ClinicalSafetySignal` извлекает machine-readable BDI item-9 signal, а `CountryResolver` чисто выбирает country hint. Public crisis text, resources reader и browser flow не готовы: их нельзя подменять произвольным текстом или контактами.
+`ClinicalSafetySignal` извлекает machine-readable BDI item-9 signal. `ResultController` показывает утверждённый generic notice только при этом сигнале, без контактов, URL, страны или IP/GeoIP. `CountryResolver` остаётся чистой неподключённой заготовкой; resource reader не реализован и не должен добавляться без нового решения владельца.
 
 ## Legacy integrations и целевой контур
 

@@ -7,6 +7,7 @@
 - Проект: PsyTest Platform.
 - Активный этап: 02 — клиническая безопасность, privacy и бесплатный пилот.
 - Последний опубликованный code package: `d4a4e23` в `main` (current-state developer docs); последний подтверждённый PHP 8.3/MySQL code gate — 02.5A `7240d3b`, GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — **success**.
+- Текущая ветка: `codex/02-bdi-crisis-notice`, последний локальный commit `788e590` (`fix(bdi): preserve answer IDs and show safety notice`). Он не merged/pushed и не имеет GitHub CI; после checkpoint ниже останутся только документационные изменения checkpoint-протокола.
 - 01.5A (`92bf5e6`) связывает route slug с test session; 01.5B (`2cc5321`, форматирование `e8f1f53`) добавляет серверную validation ответов; 01.5C (`52883c9`) устраняет дублирующий index в migration chain. Формулы тестов и корректный пользовательский flow не менялись.
 - Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
 
@@ -36,19 +37,19 @@
 - PAIR-03 подтверждает expiry boundaries; PAIR-04 переводит конкурентный duplicate invite в `409`, а DB-логи больше не включают driver messages с bound values.
 - Составлен factual data map текущего кода и приняты owner-решения: `anonymous` clinical-данные — 180 дней, явный `therapist_case` — бессрочно с ручным удалением; AI-передача требует отдельного consent только при заказе расширенного разбора.
 - 02.1 опубликован в `main`: `87925ba` реализует lifecycle, а `6152177` исправляет clean migration chain. GitHub Actions [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success на PHP 8.3/MySQL.
-- 02.2A в `codex/02-bdi-safety-signal`: validated BDI item 9 с оценкой 1–3 создаёт структурированный safety signal, независимый от total; локальный gate зелёный, UI/текст/ресурсы не начаты.
-- 02.2A опубликован в `main` как `16c4730`; GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success. UI, клинический текст, country/resource registry не начаты и требуют решения владельца.
+- 02.2A в `codex/02-bdi-safety-signal`: validated BDI item 9 с оценкой 1–3 создаёт структурированный safety signal, независимый от total; на момент завершения 02.2A UI/текст/ресурсы намеренно не начинались.
+- 02.2A опубликован в `main` как `16c4730`; GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success. На момент публикации UI, клинический текст, country/resource registry не начинались; это состояние изменено 02.2B по D-026.
 - 02.3A `5942587` добавляет pure `CountryResolver`: ручной выбор страны имеет приоритет над session choice, затем над подготовленной trusted подсказкой; некорректные значения приводят к `unknown`. Он не читает IP/HTTP-заголовки, не делает GeoIP-запросов и не сохраняет IP. Локальный full gate: 130 tests/1232 assertions, PHPStan, lint, architecture и baseline — pass; GitHub Actions `31948360267` — success на PHP 8.3/MySQL.
 - 02.3B `50794fa` создаёт пустой fail-closed registry: контакт/URL, официальный источник, дата/автор проверки и `active = 0`. Реестр не связан с результатами или IP, не содержит seed-контактов и ещё не имеет reader/UI или срока актуальности. Локальная migration и full gate прошли (131 tests/1248 assertions); GitHub Actions `31948774257` — success на PHP 8.3/MySQL.
 - 02.4A `a14f5eb` приводит public privacy/delete copy и актуальные docs к реальному поведению: нет claims о шифровании, отсутствии будущих получателей или мгновенном физическом удалении. Есть source-level regression test, browser QA `/privacy` на desktop/390×844, полный local gate (134 tests/1264 assertions) и GitHub CI [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — success.
 - 02.5A `7240d3b` создаёт factual registry всех пяти модулей и contract test. Scoring/вопросы не меняются; registry фиксирует закрытые release gates для paid interpretation и нового public content, пока owner не приложит evidence конкретной формы. Полный local gate: 138 tests/1387 assertions; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success на PHP 8.3/MySQL.
 - 00C в `codex/00-current-state-docs` заменяет устаревшие ARCHITECTURE/DEVELOPMENT current-state документами, помечает старый module guide как historical и добавляет contract test routes/legacy commands/local links. Product code и psychometrics не меняются; publication — следующий шаг.
-- 02.2B в `codex/02-bdi-crisis-notice`: локально реализован approved generic BDI notice без country/resource strategy. Во время проверки найден и устранён submit-регресс: `array_merge()` перенумеровывал числовые question IDs, поэтому заполненный BDI отклонялся `422`. Новый answer overlay сохраняет IDs; HTTP fixture с 21 ответом возвращает result redirect. Полный gate, browser QA, commit и CI ещё впереди.
+- 02.2B `788e590`: реализован approved generic BDI notice без country/resource strategy. Во время проверки найден и устранён submit-регресс: `array_merge()` перенумеровывал числовые question IDs, поэтому заполненный BDI отклонялся `422`. Новый answer overlay сохраняет IDs; HTTP fixture с 21 ответом возвращает result redirect. Full local gate и browser QA на desktop/mobile пройдены; merge/push и CI ещё впереди.
 
 ## Ближайшие действия
 
-1. Завершить 02.2B: full quality gate, browser cases и publication/CI approved generic BDI notice.
-2. Добавить browser cases и закрытый бесплатный pilot только после проверенного end-to-end flow.
+1. Review ветки `codex/02-bdi-crisis-notice`, fast-forward merge/push `788e590` и дождаться CI PHP 8.3/MySQL.
+2. Отдельным work package добавить automated browser cases для BDI notice, затем продолжать закрытый бесплатный pilot.
 4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
 5. Для снятия METH-01 собрать version/edition/pages, источник русской формы и условия/permission на online/commercial use по каждой методике.
 6. Опубликовать 00C только после полного local quality gate; затем сохранить ссылку на CI в DOC-01.
@@ -57,7 +58,7 @@
 
 - Новый платный flow пока не существует: legacy endpoints намеренно retired до проектирования YooKassa/AI orders.
 - `therapist_case`, production scheduler для 180-day cleanup, protected delete UX и AI-consent пока не реализованы; public copy теперь явно отделяет current state от будущего flow.
-- BDI item 9 safety-flow находится в незакоммиченном пакете: утверждённый текст реализован локально, но ещё требует полного gate, browser QA и CI. Конкретные ресурсы намеренно не публикуются по D-026.
+- BDI item 9 safety-flow реализован и зафиксирован локальным commit `788e590`, но не прошёл GitHub CI. Конкретные ресурсы намеренно не публикуются по D-026.
 - Полная документация ещё содержит legacy-слои; 02.4A исправляет privacy/routes точечно, а DOC-01 остаётся в работе.
 - Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
 - Права на конкретные формы методик пока не документированы; [METHODOLOGY_REGISTRY.md](METHODOLOGY_REGISTRY.md) — единственная current-state точка для этого риска.
@@ -67,9 +68,16 @@
 
 Кризисный текст утверждён; новых решений владельца для 02.2B не требуется. Визуальное интервью — в этапе 04.
 
+## Точное состояние после checkpoint
+
+- Ветка: `codex/02-bdi-crisis-notice`; HEAD: `788e590`.
+- Незакоммичены только записи текущего checkpoint-протокола: `docs/roadmap/AUDIT_TRACEABILITY.md`, `docs/roadmap/CHECKPOINT.md`, `docs/roadmap/LESSONS.md`, `docs/roadmap/STATUS.md`, `docs/roadmap/WORKLOG.md`.
+- Staged, untracked, generated или секретных файлов нет. `git diff --check` завершён без ошибок.
+- Локальный PHP preview-сервер остановлен; при следующем UI-check его нужно запускать явно. Он не является deployment и не входит в Git.
+
 ## Возобновление
 
-- 2026-08-16: владелец принял D-026: BDI item 9 > 0 показывает только нейтральный текст без country/IP/resource directory. В `codex/02-bdi-crisis-notice` одновременно исправлен обнаруженный HTTP-regression BDI submit: numeric IDs больше не перенумеровываются. Следующий шаг — full gate, browser QA, commit/push/CI.
+- 2026-08-16: владелец принял D-026: BDI item 9 > 0 показывает только нейтральный текст без country/IP/resource directory. В `codex/02-bdi-crisis-notice` commit `788e590` одновременно исправил обнаруженный HTTP-regression BDI submit: numeric IDs больше не перенумеровываются. Full local gate и browser QA пройдены. Следующий шаг — review, merge/push и CI.
 
 ## Протокол команды «сделай checkpoint»
 
