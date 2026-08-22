@@ -19,6 +19,17 @@
 
 ## 2026-08-22
 
+### 00E — актуальность локального Graphify
+
+- Этап / ветка / commit: этап 00, `codex/00-graphify-freshness`, commit ожидается.
+- Цель: исключить использование устаревшей локальной карты кода между пакетами и сессиями без неконтролируемого расхода внешних AI-ключей.
+- Сделано: добавлен `bin/check-graphify-freshness.php`; он сравнивает checkout с Graphify manifest и возвращает `CURRENT`, `STALE` или `UNKNOWN`. Правила старта сессии и завершения work package теперь требуют проверку, обновление stale-графа или честно зафиксированное исключение. Обновлённый локальный граф подтвердил `CURRENT`.
+- Решения: D-030. `graphify-out/` остаётся ignored navigation artifact; проверка автоматизирована, semantic extraction не вызывает внешнего провайдера автоматически.
+- Проверки и evidence: `php -l bin/check-graphify-freshness.php` — pass; `php bin/check-graphify-freshness.php` — `CURRENT`. Инкрементно обработано 77 code и 38 document изменений; AST — 597 nodes/886 edges, semantic fragments — 55 nodes/53 edges. Инструмент сообщил историческое warning об одном старом edge с lowercase confidence `explicit`; это не влияет на свежесть и требует отдельной диагностики качества Graphify.
+- Изменённые файлы: freshness script, `AGENTS.md`, engineering/governance/status/decision records.
+- Не сделано / риски: обновлённый граф технически свеж, но его русскоязычный semantic query пока может выбирать архивные узлы. Он используется как навигация, а факты по-прежнему подтверждаются исходным кодом.
+- Следующий шаг: вернуться к 04.0B и внедрить выбранное владельцем направление A только для публичной главной/каталога.
+
 ### 04.0A — три визуальных направления
 
 - Этап / ветка / commit: этап 04, `codex/04-visual-directions`, commit ожидается.
