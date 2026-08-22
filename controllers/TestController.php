@@ -31,10 +31,7 @@ class TestController extends BaseController
         $test = $this->getTestOrFail($slug);
 
         // Create new session
-        $session = $this->sessionManager->createSession($test['id'], [
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
-        ]);
+        $session = $this->sessionManager->createSession($test['id']);
 
         // Get questions
         $questions = $module->getQuestions();

@@ -16,6 +16,8 @@ final class PrivacyClaimsTruthfulnessTest extends TestCase
         self::assertStringNotContainsString('Мы не передаём ваши персональные данные третьим лицам', $contents);
         self::assertStringContainsString('расширенная AI-интерпретация и оплата отключены', $contents);
         self::assertStringContainsString('Уникальная ссылка на результат действует как ключ доступа', $contents);
+        self::assertStringContainsString('без IP-адреса и сведений о браузере', $contents);
+        self::assertStringNotContainsString('IP-адрес и user agent, которые записываются автоматически', $contents);
     }
 
     public function testPublicDeleteCopyDescribesTheCurrentSoftDeleteBoundary(): void

@@ -232,25 +232,6 @@ class Security
     }
 
     /**
-     * Get client IP (with proxy handling)
-     */
-    public static function getClientIp(): string
-    {
-        $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ??
-              $_SERVER['HTTP_X_FORWARDED_FOR'] ??
-              $_SERVER['HTTP_X_REAL_IP'] ??
-              $_SERVER['REMOTE_ADDR'] ??
-              '0.0.0.0';
-
-        // Handle multiple IPs in X-Forwarded-For
-        if (str_contains($ip, ',')) {
-            $ip = trim(explode(',', $ip)[0]);
-        }
-
-        return $ip;
-    }
-
-    /**
      * Validate UUID
      */
     public static function isValidUuid(string $uuid): bool

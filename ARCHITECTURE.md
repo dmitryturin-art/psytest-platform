@@ -1,6 +1,6 @@
 # Архитектура PsyTest Platform
 
-Статус: **фактическое состояние на 2026-08-21**. Здесь описан работающий код, а будущие AI, YooKassa, кабинет терапевта, UI redesign и Module API v2 — в [ROADMAP.md](ROADMAP.md).
+Статус: **фактическое состояние на 2026-08-22**. Здесь описан работающий код, а будущие AI, YooKassa, кабинет терапевта, UI redesign и Module API v2 — в [ROADMAP.md](ROADMAP.md).
 
 ## Обзор
 
@@ -122,7 +122,7 @@ interface TestModuleInterface
 - production web root допускает только `public/index.php` как PHP entry point;
 - result token, ответы, отчёты и секреты не должны попадать в логи, fixtures или Git;
 - приложение не использует IP как достоверную страну и не вызывает GeoIP API;
-- точный IP и user-agent пока собираются и требуют отдельной minimization policy;
+- новые test sessions и activity records не сохраняют IP или user-agent; nullable legacy-колонки пока остаются в схеме для совместимости;
 - public privacy text не заявляет encryption, отсутствие будущих third parties или немедленное полное физическое удаление.
 
 `ClinicalSafetySignal` извлекает machine-readable BDI item-9 signal. `ResultController` показывает утверждённый generic notice только при этом сигнале, без контактов, URL, страны или IP/GeoIP. `CountryResolver` остаётся чистой неподключённой заготовкой; resource reader не реализован и не должен добавляться без нового решения владельца.

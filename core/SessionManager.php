@@ -59,8 +59,8 @@ class SessionManager
             'calculated_results' => json_encode([]),
             'status' => 'partial',
             'retention_class' => RetentionPolicy::ANONYMOUS,
-            'ip_address' => $options['ip_address'] ?? $this->getClientIp(),
-            'user_agent' => $options['user_agent'] ?? $this->getUserAgent(),
+            'ip_address' => null,
+            'user_agent' => null,
             'created_at' => date('Y-m-d H:i:s'),
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
@@ -419,8 +419,8 @@ class SessionManager
                 'test_id' => $testId,
                 'action' => $action,
                 'details' => json_encode($details),
-                'ip_address' => $this->getClientIp(),
-                'user_agent' => $this->getUserAgent(),
+                'ip_address' => null,
+                'user_agent' => null,
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
         } catch (\Exception $e) {
@@ -429,30 +429,4 @@ class SessionManager
         }
     }
 
-    /**
-     * Get client IP address
-     */
-    private function getClientIp(): string
-    {
-        $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ??
-              $_SERVER['HTTP_X_FORWARDED_FOR'] ??
-              $_SERVER['HTTP_X_REAL_IP'] ??
-              $_SERVER['REMOTE_ADDR'] ??
-              '0.0.0.0';
-
-        // Take first IP if multiple (X-Forwarded-For can contain chain)
-        if (str_contains($ip, ',')) {
-            $ip = explode(',', $ip)[0];
-        }
-
-        return trim($ip);
-    }
-
-    /**
-     * Get user agent
-     */
-    private function getUserAgent(): string
-    {
-        return substr($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown', 0, 500);
-    }
 }
