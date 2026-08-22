@@ -19,6 +19,16 @@
 
 ## 2026-08-22
 
+### 08.1D — production artifact и predeploy backup
+
+- Этап / ветка / PR: этап 08, `codex/08-beget-staging-artifact`, [PR #2](https://github.com/dmitryturin-art/psytest-platform/pull/2).
+- Цель: подготовить rollback до первого переключения и загрузить проверяемый release вне web root.
+- Сборка: Phinx перенесён в production dependencies, чтобы migrations были доступны без PHPUnit/PHPStan. Архив собран из `e2113ab` с `composer install --no-dev --classmap-authoritative`; `.env` отсутствует, `vendor/bin/phinx` присутствует, checksum `2c5d055c…d5a30`.
+- Проверки: contract/docs tests — 5 tests / 102 assertions; analyse/lint/baseline pass; [CI PR #2](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32584034083) — success на MySQL 5.7 и 8.0.
+- Сервер: `public_html` заархивирован до изменений; release распакован в `releases/e2113ab` и повторно проверен по checksum/allowlist. Исходный публичный `index.php` сохранил checksum `816e5c7c…45c94`; приложение не активировано, DB и SSL не изменялись.
+- Урок сборки: архив с macOS xattrs безопасно распаковался, но создал шумные tar warnings; следующие архивы собирать с отключённым AppleDouble/xattr metadata.
+- Следующий шаг: 08.1E после HTTPS — server `.env`, migrations, Basic Auth и atomic web-root switch со smoke/rollback gate.
+
 ### 08.1C — MySQL 5.7/8.0 compatibility gate
 
 - Этап / ветка / PR: этап 08, `codex/08-mysql57-compatibility`, [PR #1](https://github.com/dmitryturin-art/psytest-platform/pull/1).
