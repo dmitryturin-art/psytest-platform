@@ -338,6 +338,7 @@
 
         const value = input.value; // Keep as string (0,1,2,3)
         answers[questionId[1]] = value;
+        updateProgress();
 
         // Visual feedback
         const card = input.closest('.question-card');
