@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Три визуальных направления для PsyTest">
+  <title>PsyTest — выбор визуального направления</title>
+  <link rel="stylesheet" href="prototype.css">
+</head>
+<body data-theme="editorial">
+  <aside class="theme-switcher" aria-label="Выбор визуального направления">
+    <div class="switcher-copy">
+      <strong>Прототип 04.0A</strong>
+      <span id="theme-note">A · Тёплая редакционная</span>
+    </div>
+    <div class="theme-options" role="group" aria-label="Направления">
+      <button class="theme-button is-active" type="button" data-set-theme="editorial" aria-pressed="true">A</button>
+      <button class="theme-button" type="button" data-set-theme="calm" aria-pressed="false">B</button>
+      <button class="theme-button" type="button" data-set-theme="studio" aria-pressed="false">C</button>
+    </div>
+  </aside>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="PsyTest — на главную">
+      <span class="brand-mark" aria-hidden="true">P</span>
+      <span>PsyTest</span>
+    </a>
+    <nav class="site-nav" aria-label="Основная навигация">
+      <a href="#catalog">Тесты</a>
+      <a href="#result-example">Как выглядит результат</a>
+      <a href="#principles">О сервисе</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero section-shell" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Психологические методики без лишнего шума</p>
+        <h1 id="hero-title">Результат, который можно не только получить, но и понять</h1>
+        <p class="hero-lead">Проходите тесты бесплатно и сразу получайте базовый результат. Для сложных методик позже можно будет заказать отдельный подробный разбор.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#catalog">Выбрать тест</a>
+          <a class="button button-secondary" href="#result-example">Посмотреть пример</a>
+        </div>
+        <ul class="trust-list" aria-label="Основные условия">
+          <li>Без обязательной регистрации</li>
+          <li>Базовый результат бесплатный</li>
+          <li>Доступ по уникальной ссылке</li>
+        </ul>
+      </div>
+      <div class="hero-visual" aria-label="Схематичный пример результата">
+        <div class="visual-orbit orbit-one"></div>
+        <div class="visual-orbit orbit-two"></div>
+        <article class="result-preview-card">
+          <div class="preview-topline"><span>Ваш результат</span><span>Готов</span></div>
+          <strong>Профиль по шкалам</strong>
+          <div class="mini-chart" aria-hidden="true">
+            <i style="--bar:42%"></i><i style="--bar:68%"></i><i style="--bar:54%"></i><i style="--bar:76%"></i><i style="--bar:61%"></i>
+          </div>
+          <p>Баллы, пояснения и рекомендации собраны на одной странице.</p>
+        </article>
+        <div class="floating-note"><span>21</span> вопрос<br><small>≈ 5 минут</small></div>
+      </div>
+    </section>
+
+    <section class="principles section-shell" id="principles" aria-labelledby="principles-title">
+      <div class="section-heading compact-heading">
+        <p class="eyebrow">Сначала польза</p>
+        <h2 id="principles-title">Никаких платных баллов и скрытых результатов</h2>
+      </div>
+      <div class="principle-grid">
+        <article><span>01</span><h3>Прохождение бесплатно</h3><p>Любую доступную методику можно завершить без оплаты.</p></article>
+        <article><span>02</span><h3>Результат сразу</h3><p>Основные шкалы, показатели и базовые пояснения доступны по ссылке.</p></article>
+        <article><span>03</span><h3>Разбор — отдельно</h3><p>Только там, где сложность методики действительно оправдывает подробный анализ.</p></article>
+      </div>
+    </section>
+
+    <section class="catalog section-shell" id="catalog" aria-labelledby="catalog-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">Каталог</p><h2 id="catalog-title">Выберите подходящую методику</h2></div>
+        <p>От короткого скрининга состояния до развёрнутого исследования личности и отношений.</p>
+      </div>
+      <div class="filter-row" aria-label="Фильтр-пример">
+        <button class="filter is-active" type="button" data-filter="all" aria-pressed="true">Все тесты</button>
+        <button class="filter" type="button" data-filter="state" aria-pressed="false">Состояние</button>
+        <button class="filter" type="button" data-filter="personality" aria-pressed="false">Личность</button>
+        <button class="filter" type="button" data-filter="relations" aria-pressed="false">Отношения</button>
+      </div>
+      <div class="test-grid">
+        <article class="test-card test-card-featured" data-category="personality">
+          <div class="card-topline"><span class="category">Личность</span><span class="access-badge">Бесплатно</span></div>
+          <h3>СМИЛ <small>адаптация MMPI</small></h3>
+          <p>Многофакторное исследование личности с профессиональным профилем по основным шкалам.</p>
+          <div class="card-meta"><span>566 вопросов</span><span>≈ 45 минут</span></div>
+          <div class="card-extra">Подробный разбор будет доступен позже</div>
+          <a href="#prototype-only" class="card-link">Открыть тест <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="test-card" data-category="state">
+          <div class="card-topline"><span class="category">Состояние</span><span class="access-badge">Бесплатно</span></div>
+          <h3>Шкала депрессии Бека <small>BDI</small></h3>
+          <p>Оценка выраженности симптомов депрессии по 21 группе утверждений.</p>
+          <div class="card-meta"><span>21 вопрос</span><span>≈ 5 минут</span></div>
+          <a href="#prototype-only" class="card-link">Открыть тест <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="test-card" data-category="state">
+          <div class="card-topline"><span class="category">Состояние</span><span class="access-badge">Бесплатно</span></div>
+          <h3>Шкала тревоги Бека <small>BAI</small></h3>
+          <p>Короткий опросник для оценки выраженности физических и эмоциональных симптомов тревоги.</p>
+          <div class="card-meta"><span>21 вопрос</span><span>≈ 5 минут</span></div>
+          <a href="#prototype-only" class="card-link">Открыть тест <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="test-card" data-category="state">
+          <div class="card-topline"><span class="category">Состояние</span><span class="access-badge">Бесплатно</span></div>
+          <h3>Шкала HADS</h3>
+          <p>Скрининг тревоги и депрессии по двум отдельным подшкалам.</p>
+          <div class="card-meta"><span>14 вопросов</span><span>≈ 3 минуты</span></div>
+          <a href="#prototype-only" class="card-link">Открыть тест <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="test-card test-card-wide" data-category="relations">
+          <div class="card-topline"><span class="category">Отношения</span><span class="access-badge">Бесплатно</span></div>
+          <h3>Супружеская удовлетворённость <small>Лазарус</small></h3>
+          <p>Оценка разных сторон отношений индивидуально или в парном режиме с сопоставлением ответов.</p>
+          <div class="card-meta"><span>16 пунктов</span><span>≈ 10 минут</span><span>Есть парный режим</span></div>
+          <div class="card-extra">Подробный разбор будет доступен позже</div>
+          <a href="#prototype-only" class="card-link">Открыть тест <span aria-hidden="true">→</span></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="result-example section-shell" id="result-example" aria-labelledby="result-title">
+      <div class="example-copy">
+        <p class="eyebrow">Что вы получите</p>
+        <h2 id="result-title">Базовый результат остаётся полноценным и бесплатным</h2>
+        <p>Сразу после завершения доступны итоговый показатель, шкалы, пояснения и PDF. Дополнительный разбор не открывает скрытые баллы — он помогает связать сложный профиль в общую картину.</p>
+        <div class="result-choice">
+          <button class="result-tab is-active" type="button" data-result-tab="basic" aria-pressed="true">Базовый результат</button>
+          <button class="result-tab" type="button" data-result-tab="extended" aria-pressed="false">Пример разбора</button>
+        </div>
+        <p class="future-note">Демонстрационный пример. Расширенные разборы пока не включены на тестовом стенде.</p>
+      </div>
+      <div class="report-sheet" data-report-panel="basic">
+        <div class="sheet-kicker">Пример · BDI</div><h3>Минимальная выраженность симптомов</h3>
+        <div class="score-line"><strong>8</strong><span>из 63 баллов</span></div>
+        <div class="range-track"><i></i></div>
+        <h4>Что означает результат</h4><p>Полученный показатель находится в минимальном диапазоне шкалы. Сохраните ссылку, если хотите вернуться к результату позже.</p>
+      </div>
+      <div class="report-sheet is-hidden" data-report-panel="extended">
+        <div class="sheet-kicker">Демонстрация · СМИЛ</div><h3>Структура подробного разбора</h3>
+        <ol class="report-outline"><li>Качество и достоверность профиля</li><li>Ведущие тенденции и сочетания шкал</li><li>Ресурсы и возможные зоны напряжения</li><li>Вопросы для обсуждения со специалистом</li></ol>
+        <p class="redacted-lines" aria-label="Обезличенный фрагмент текста"><span></span><span></span><span></span></p>
+      </div>
+    </section>
+
+    <section class="closing section-shell">
+      <p class="eyebrow">Можно начать без регистрации</p>
+      <h2>Выберите тест и получите результат в своём темпе</h2>
+      <a class="button button-primary" href="#catalog">Перейти к каталогу</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div><strong>PsyTest</strong><p>Психологические методики и понятные результаты.</p></div>
+    <div class="footer-links"><a href="#prototype-only">Конфиденциальность</a><a href="#prototype-only">Условия</a><a href="https://hypnocorrection.ru/">О специалисте</a></div>
+    <small>Прототип интерфейса · 2026</small>
+  </footer>
+  <script src="prototype.js"></script>
+</body>
+</html>
