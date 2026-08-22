@@ -26,6 +26,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 10. **Questionnaire navigation.** 02.6B `0954117`: пустая sticky-панель скрыта на первом вопросе и появляется только при доступном действии «Назад» или «Завершить». Desktop/mobile browser QA пройдены.
 11. **Technical metadata minimization.** 02.7A `73ed294`: новые test sessions и activity records больше не собирают IP/User-Agent; legacy-колонки остаются nullable для совместимости. Старые значения массово не удаляются без отдельного решения.
 12. **AI consent boundary.** 02.7B `b5fc7d9`: отдельный immutable consent snapshot привязан к completed session и конкретному checkout-reference, версии notice, provider, report kind и разрешённым категориям данных. Запись отзывается и каскадно удаляется с session; public capture, checkout и AI-вызовы остаются выключены.
+13. **Rendered BDI notice regression.** 02.8B: автоматический Twig/DOM-тест проверяет фактически отрендеренный BDI result в positive и negative вариантах: единственный `role=alert`, точный утверждённый текст, отсутствие ссылок и положение до result actions. Отдельный Node/Playwright stack ради одного кейса не добавляется; responsive browser smoke остаётся в pilot checklist.
 
 ## Privacy-инварианты
 
@@ -35,7 +36,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 
 ## Проверка и exit criteria
 
-- Unit/HTTP/browser tests: item 9 > 0 при низком total показывает утверждённый block; item 9 = 0 и другие методики его не показывают; UI не содержит country/resource/IP/GeoIP controls.
+- Unit/HTTP/rendered-result/browser tests: item 9 > 0 при низком total показывает утверждённый block; item 9 = 0 и другие методики его не показывают; UI не содержит country/resource/IP/GeoIP controls.
 - Data deletion integration test перечисляет и удаляет каждую связанную сущность.
 - Владелец утвердил клинический текст; privacy copy соответствует data map.
 - Закрытый бесплатный пилот не выявил P0/P1 без зарегистрированного решения.

@@ -19,16 +19,27 @@
 
 ## 2026-08-22
 
+### 02.8B — rendered BDI safety notice regression
+
+- Этап / ветка / commit: этап 02, `codex/02-bdi-rendered-notice-regression`, commit после проверок.
+- Цель: автоматически проверить не только source-template и domain mapping, но и итоговый HTML результата BDI без подключения тяжёлого E2E-стека.
+- Сделано: Twig рендерится с synthetic session для positive/negative notice; DOM assertions проверяют один `role=alert`, точный утверждённый текст, отсутствие links и положение до result actions.
+- Решения: Node/Playwright не добавляется ради одного кейса. Desktop/390×844 остаются обязательными staging smoke; общий E2E stack выбирается, когда сможет покрыть несколько критичных flow.
+- Проверки и evidence: targeted 7 tests / 34 assertions — pass. Full local gate: Composer validate/audit, PHPUnit 162 tests / 1594 assertions, PHPStan, sequential PHP-CS-Fixer, architecture и baseline 148 — pass.
+- Изменённые файлы: новый rendered-result regression test, active phase, status, traceability, worklog и человеческий changelog.
+- Не сделано / риски: тест не заменяет реальный responsive browser smoke и не меняет scoring/клинический текст/UI.
+- Следующий шаг: полный local gate, публикация и GitHub PHP 8.3/MySQL CI; затем закрытый staging требует инфраструктурного решения владельца этапа 08.
+
 ### 02.8A — closed free pilot runbook
 
-- Этап / ветка / commit: этап 02, `codex/02-closed-pilot-runbook`, commit после проверок.
+- Этап / ветка / commit: этап 02, `codex/02-closed-pilot-runbook` → `main`, `289d00c`.
 - Цель: подготовить минимальный и понятный порядок закрытого бесплатного пилота без преждевременного production deployment.
 - Сделано: определены включённые бесплатные сценарии, staging prerequisites, desktop/mobile smoke-check, две небольшие волны, обезличенный issue log, severity/stop rules и критерии завершения. Оплата, AI, аккаунты и public production явно исключены.
 - Решения: поддержка в пилоте идёт через личный канал приглашения владельца; реальные ответы, result tokens и PDF не копируются в журнал замечаний.
-- Проверки и evidence: targeted documentation/privacy/notice — 8 tests / 126 assertions. Full local gate — Composer validate/audit, PHPUnit 160 tests / 1583 assertions, PHPStan, sequential PHP-CS-Fixer, architecture и baseline 148 — pass. Первый sandbox-run ожидаемо не видел локальную MySQL/Packagist и не мог открыть formatter worker socket; повтор с разрешённым localhost/network и sequential mode прошёл без изменений кода.
+- Проверки и evidence: targeted documentation/privacy/notice — 8 tests / 126 assertions. Full local gate — Composer validate/audit, PHPUnit 160 tests / 1583 assertions, PHPStan, sequential PHP-CS-Fixer, architecture и baseline 148 — pass. Первый sandbox-run ожидаемо не видел локальную MySQL/Packagist и не мог открыть formatter worker socket; повтор с разрешённым localhost/network и sequential mode прошёл без изменений кода. [GitHub Actions 32581166614](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32581166614) — success на PHP 8.3/MySQL.
 - Изменённые файлы: `docs/roadmap/PILOT_RUNBOOK.md`, индекс, active phase, status, traceability, worklog и человеческий changelog.
 - Не сделано / риски: staging не создавался, участники не приглашались, automated BDI browser coverage остаётся отдельным пакетом.
-- Следующий шаг: проверить документацию и полный gate, опубликовать пакет; затем 02.8B — лёгкое автоматизированное BDI browser coverage.
+- Следующий шаг: 02.8B — лёгкая автоматизированная проверка фактически отрендерированного BDI result без отдельного тяжёлого browser stack.
 
 ### 02.7B — checkout-bound AI consent boundary
 
