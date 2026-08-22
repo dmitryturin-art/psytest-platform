@@ -21,14 +21,14 @@
 
 ### 02.8B — rendered BDI safety notice regression
 
-- Этап / ветка / commit: этап 02, `codex/02-bdi-rendered-notice-regression`, commit после проверок.
+- Этап / ветка / commit: этап 02, `codex/02-bdi-rendered-notice-regression` → `main`, `3670c6b`.
 - Цель: автоматически проверить не только source-template и domain mapping, но и итоговый HTML результата BDI без подключения тяжёлого E2E-стека.
 - Сделано: Twig рендерится с synthetic session для positive/negative notice; DOM assertions проверяют один `role=alert`, точный утверждённый текст, отсутствие links и положение до result actions.
 - Решения: Node/Playwright не добавляется ради одного кейса. Desktop/390×844 остаются обязательными staging smoke; общий E2E stack выбирается, когда сможет покрыть несколько критичных flow.
-- Проверки и evidence: targeted 7 tests / 34 assertions — pass. Full local gate: Composer validate/audit, PHPUnit 162 tests / 1594 assertions, PHPStan, sequential PHP-CS-Fixer, architecture и baseline 148 — pass.
+- Проверки и evidence: targeted 7 tests / 34 assertions — pass. Full local gate: Composer validate/audit, PHPUnit 162 tests / 1594 assertions, PHPStan, sequential PHP-CS-Fixer, architecture и baseline 148 — pass. [GitHub Actions 32581403763](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32581403763) — success на PHP 8.3/MySQL.
 - Изменённые файлы: новый rendered-result regression test, active phase, status, traceability, worklog и человеческий changelog.
 - Не сделано / риски: тест не заменяет реальный responsive browser smoke и не меняет scoring/клинический текст/UI.
-- Следующий шаг: полный local gate, публикация и GitHub PHP 8.3/MySQL CI; затем закрытый staging требует инфраструктурного решения владельца этапа 08.
+- Следующий шаг: закрытый staging по `PILOT_RUNBOOK.md`; перед изменениями сервера нужны точный target/domain и read-only инфраструктурное обследование этапа 08.
 
 ### 02.8A — closed free pilot runbook
 

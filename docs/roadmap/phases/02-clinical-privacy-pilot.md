@@ -26,7 +26,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 10. **Questionnaire navigation.** 02.6B `0954117`: пустая sticky-панель скрыта на первом вопросе и появляется только при доступном действии «Назад» или «Завершить». Desktop/mobile browser QA пройдены.
 11. **Technical metadata minimization.** 02.7A `73ed294`: новые test sessions и activity records больше не собирают IP/User-Agent; legacy-колонки остаются nullable для совместимости. Старые значения массово не удаляются без отдельного решения.
 12. **AI consent boundary.** 02.7B `b5fc7d9`: отдельный immutable consent snapshot привязан к completed session и конкретному checkout-reference, версии notice, provider, report kind и разрешённым категориям данных. Запись отзывается и каскадно удаляется с session; public capture, checkout и AI-вызовы остаются выключены.
-13. **Rendered BDI notice regression.** 02.8B: автоматический Twig/DOM-тест проверяет фактически отрендеренный BDI result в positive и negative вариантах: единственный `role=alert`, точный утверждённый текст, отсутствие ссылок и положение до result actions. Отдельный Node/Playwright stack ради одного кейса не добавляется; responsive browser smoke остаётся в pilot checklist.
+13. **Rendered BDI notice regression.** 02.8B `3670c6b`: автоматический Twig/DOM-тест проверяет фактически отрендеренный BDI result в positive и negative вариантах: единственный `role=alert`, точный утверждённый текст, отсутствие ссылок и положение до result actions. Отдельный Node/Playwright stack ради одного кейса не добавляется; responsive browser smoke остаётся в pilot checklist. [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32581403763) — success.
 
 ## Privacy-инварианты
 

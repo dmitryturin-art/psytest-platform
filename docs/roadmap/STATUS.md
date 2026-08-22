@@ -6,7 +6,7 @@
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
 - Состояние: этап 01 завершён; этап 02 движется к закрытому бесплатному пилоту. 02.8A подготовил операционный checklist, а 02.8B защищает фактически отрендерированный BDI notice; фактический запуск ждёт отдельного staging.
-- Последний пакет: 02.8B — rendered-result regression для BDI notice; локальный полный gate — 162 tests / 1594 assertions. 02.8A опубликован как `289d00c`; [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32581166614) — success.
+- Последний пакет: 02.8B `3670c6b` — rendered-result regression для BDI notice; локальный полный gate — 162 tests / 1594 assertions; [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32581403763) — success. 02.8A опубликован как `289d00c`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
