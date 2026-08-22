@@ -19,6 +19,16 @@
 
 ## 2026-08-22
 
+### 08.1F — staging cookie и header hardening
+
+- Этап / ветка / PR: этап 08, `codex/08-staging-cookie-hardening`, [PR #4](https://github.com/dmitryturin-art/psytest-platform/pull/4), release `398ca23`.
+- Цель: устранить небезопасные параметры обычной PHP-сессии и дублирование response headers без изменения тестов, scoring, UI, payment или AI.
+- Сделано: все runtime session starts сведены к `Security::startSession()`; production/HTTPS cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`, path `/`. Security headers задаются один раз в Apache `.htaccess`; старый дублирующий Router middleware удалён. Архитектура синхронизирована с кодом.
+- Проверки: RED/GREEN session/header regressions; targeted PHPUnit — 15 tests / 51 assertions; validate/audit, sequential lint/PHPStan, architecture и baseline — pass. [CI 32588895557](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32588895557) — success на PHP 8.3 с MySQL 5.7 и 8.0.
+- Deployment evidence: artifact checksum `40177947…ddc0`; PHP 8.3.20 и 7 migrations `up`; `public_html` атомарно переключён с `2f8f821` на `398ca23`. Внешний smoke: HTTPS `/tests` `200`, HTTP `301`, health `ok`, cookie содержит все три флага, каждый dynamic security header встречается один раз, `/admin/login` `404`, retired interpretation `410`. Старый release сохранён для rollback.
+- Ограничение: nginx Beget обслуживает static assets до Apache и не добавляет к ним `.htaccess` headers; это не дублирование и не затрагивает HTML/result responses. Server-wide nginx policy на shared hosting отдельно не настраивалась.
+- Следующий шаг: 08.2 — owner acceptance, credential rotation и retention cron; затем короткий бесплатный пилот. Production не активирован.
+
 ### 08.1E — HTTPS staging activation
 
 - Этап / ветка / PR: этап 08, `codex/08-beget-staging-activation`, [PR #3](https://github.com/dmitryturin-art/psytest-platform/pull/3).
