@@ -18,7 +18,8 @@
     RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
-# Security headers
+# Apply response hardening once at the web-server boundary, including static
+# files and Apache-generated error responses.
 <IfModule mod_headers.c>
     Header always unset X-Powered-By
     Header always set X-Frame-Options "SAMEORIGIN"

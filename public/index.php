@@ -105,33 +105,6 @@ $router->get('/error/{code}', [HomeController::class, 'error']);
 // Global Middleware
 // ============================================
 
-// Security headers
-$router->middleware(function($method, $uri, &$params) use ($configLoader) {
-    // Prevent clickjacking
-    header('X-Frame-Options: SAMEORIGIN');
-
-    // XSS protection
-    header('X-XSS-Protection: 1; mode=block');
-
-    // Content type sniffing prevention
-    header('X-Content-Type-Options: nosniff');
-
-    // Keep external navigation from receiving sensitive result paths.
-    header('Referrer-Policy: strict-origin-when-cross-origin');
-
-    // The application does not use browser location, camera, or microphone.
-    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
-
-    // HTTPS enforcement (in production)
-    if ($configLoader->isProduction() && empty($_SERVER['HTTPS'])) {
-        // Uncomment to enforce HTTPS
-        // header('Location: https://' . $_SERVER['HTTP_HOST'] . $uri, true, 301);
-        // exit;
-    }
-
-    return null; // Continue to route
-});
-
 // All browser state-changing routes require a session-bound token. The retired
 // legacy YooMoney webhook is explicitly exempt because it processes no payload
 // and always returns 410; a future provider webhook needs provider validation.

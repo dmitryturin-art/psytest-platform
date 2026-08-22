@@ -35,8 +35,9 @@ docs/roadmap/ product rules, phases, status, data map и worklog
 
 ```text
 HTTP request
+  -> public/.htaccess (HTTPS redirect + security headers)
   -> public/index.php
-  -> Router + security headers + CsrfMiddleware
+  -> Router + CsrfMiddleware
   -> controller
   -> ModuleLoader / SessionManager / domain service
   -> Twig HTML, JSON или PDF
@@ -111,6 +112,8 @@ interface TestModuleInterface
 ## Сессии, доступ и удаление
 
 `test_sessions.session_token` — bearer credential результата. Он открывает только свою сессию: `getSessionTestForRoute()` связывает token с тестом из route. `partner_token` — reference приглашения пары, не альтернативный credential.
+
+Браузерная PHP-сессия запускается только через `Security::startSession()`: cookie имеет `HttpOnly`, `SameSite=Lax`, общий path `/` и обязательный `Secure` в production (а также при HTTPS в development). Заголовки безопасности задаются один раз в `public/.htaccess`, включая ответы Apache и статические файлы.
 
 Новая session получает `retention_class = anonymous`. Независимо существуют access TTL (`expires_at`), срок physical retention 180 дней от `created_at`, public soft-delete и плановый `SessionLifecycleService`, физически удаляющий просроченные anonymous sessions и известные artifacts.
 
