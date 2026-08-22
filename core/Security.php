@@ -129,13 +129,29 @@ class Security
     }
 
     /**
+     * Start the shared browser session with one fail-closed cookie policy.
+     */
+    public static function startSession(): void
+    {
+        if (session_status() !== PHP_SESSION_NONE) {
+            return;
+        }
+
+        session_set_cookie_params([
+            'path' => '/',
+            'secure' => getenv('APP_ENV') === 'production' || self::isHttps(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        session_start();
+    }
+
+    /**
      * Generate CSRF token
      */
     public static function generateCsrfToken(): string
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        self::startSession();
 
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -149,9 +165,7 @@ class Security
      */
     public static function verifyCsrfToken(?string $token): bool
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        self::startSession();
 
         if (empty($_SESSION['csrf_token']) || empty($token)) {
             return false;
@@ -186,9 +200,7 @@ class Security
      */
     public static function rateLimit(string $key, int $maxRequests, int $timeWindow): bool
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        self::startSession();
 
         $rateKey = 'rate_' . $key;
         $now = time();

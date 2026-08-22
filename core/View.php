@@ -136,9 +136,7 @@ class View
      */
     public function generateCsrfToken(): string
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Security::startSession();
 
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -152,9 +150,7 @@ class View
      */
     public function verifyCsrfToken(?string $token): bool
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Security::startSession();
 
         if (empty($_SESSION['csrf_token']) || empty($token)) {
             return false;

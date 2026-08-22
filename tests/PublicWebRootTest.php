@@ -25,9 +25,25 @@ final class PublicWebRootTest extends TestCase
 
         self::assertIsString($entryPoint);
         self::assertStringContainsString("header_remove('X-Powered-By');", $entryPoint);
-        self::assertStringContainsString("Referrer-Policy: strict-origin-when-cross-origin", $entryPoint);
-        self::assertStringContainsString("Permissions-Policy: geolocation=(), camera=(), microphone=()", $entryPoint);
         self::assertStringContainsString('catch (\\Throwable $e)', $entryPoint);
+    }
+
+    public function testApacheIsTheSingleSourceOfSecurityHeaders(): void
+    {
+        $entryPoint = (string) file_get_contents(dirname(__DIR__) . '/public/index.php');
+        $htaccess = (string) file_get_contents(dirname(__DIR__) . '/public/.htaccess');
+        $headers = [
+            'X-Frame-Options',
+            'X-XSS-Protection',
+            'X-Content-Type-Options',
+            'Referrer-Policy',
+            'Permissions-Policy',
+        ];
+
+        foreach ($headers as $header) {
+            self::assertStringContainsString($header, $htaccess);
+            self::assertStringNotContainsString($header, $entryPoint);
+        }
     }
 
     public function testHtaccessRoutesMissingResourcesToFrontControllerInPublicRoot(): void

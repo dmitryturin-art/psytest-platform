@@ -95,15 +95,6 @@ final class OwnerDashboardAuthenticator
 
     private static function startSession(): void
     {
-        if (session_status() !== PHP_SESSION_NONE) {
-            return;
-        }
-
-        session_set_cookie_params([
-            'httponly' => true,
-            'secure' => Security::isHttps(),
-            'samesite' => 'Strict',
-        ]);
-        session_start();
+        Security::startSession();
     }
 }
