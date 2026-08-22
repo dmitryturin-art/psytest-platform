@@ -292,14 +292,22 @@
 
         const prevBtn = document.getElementById('prevBtn');
         const submitBtn = document.getElementById('submitBtn');
+        const testNavigation = document.getElementById('testNavigation');
+        const hasPreviousAction = currentQuestionIndex > 0;
+        const hasSubmitAction = currentQuestionIndex >= questions.length - 1;
+        const hasVisibleAction = hasPreviousAction || hasSubmitAction;
 
         if (prevBtn) {
-            prevBtn.style.visibility = currentQuestionIndex > 0 ? 'visible' : 'hidden';
+            prevBtn.style.visibility = hasPreviousAction ? 'visible' : 'hidden';
         }
 
         // Submit button only visible on the last question
         if (submitBtn) {
-            submitBtn.style.display = currentQuestionIndex >= questions.length - 1 ? 'inline-flex' : 'none';
+            submitBtn.style.display = hasSubmitAction ? 'inline-flex' : 'none';
+        }
+
+        if (testNavigation) {
+            testNavigation.style.display = hasVisibleAction ? 'flex' : 'none';
         }
     }
 
