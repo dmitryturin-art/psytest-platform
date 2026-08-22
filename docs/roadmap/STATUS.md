@@ -5,8 +5,8 @@
 ## Сейчас
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; этап 02 движется небольшими пакетами к закрытому бесплатному пилоту. 02.6A исправил BDI progress, а 02.6B `0954117` убирает пустую sticky-панель на первом вопросе.
-- Последний функциональный package: 02.6B `0954117`; локальный полный gate и browser QA на desktop/390×844 пройдены. 02.6A подтверждён [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32574951654).
+- Состояние: этап 01 завершён; этап 02 движется к закрытому бесплатному пилоту. 02.7A `73ed294` прекращает автоматический сбор IP/User-Agent для новых test sessions и activity records.
+- Последний функциональный package: 02.7A `73ed294`; локальный полный gate и privacy browser QA на desktop/390×844 пройдены. 02.6B подтверждён [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32575185532).
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -18,7 +18,7 @@
 |---|---|---|
 | 00 | В работе | governance-каркас и baseline готовы; 00C current-state docs и documentation contract test опубликованы как `d4a4e23`; production runbook относится к 08 |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и минимальный owner dashboard реализованы; 02.6A закрывает BDI progress 20/21. Flow не использует resources/country/IP. AI consent record и закрытый pilot ещё впереди |
+| 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и минимальный owner dashboard реализованы; BDI UX исправлен, сбор IP/User-Agent для новых записей прекращён. AI consent record и закрытый pilot ещё впереди |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом

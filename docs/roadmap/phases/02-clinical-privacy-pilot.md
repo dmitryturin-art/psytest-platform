@@ -24,6 +24,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 8. **Закрытый бесплатный пилот.** Небольшая группа, anonymized issue log, support path, никаких платежей/AI.
 9. **Pilot questionnaire UX.** 02.6A `89a5e5a`: сохранение последнего ответа сразу обновляет общий progress, поэтому BDI завершается на `21 / 21` и `100%`, даже когда перехода к следующему вопросу уже нет. Scoring и submit flow не изменены; regression contract и desktop/mobile browser QA пройдены.
 10. **Questionnaire navigation.** 02.6B `0954117`: пустая sticky-панель скрыта на первом вопросе и появляется только при доступном действии «Назад» или «Завершить». Desktop/mobile browser QA пройдены.
+11. **Technical metadata minimization.** 02.7A `73ed294`: новые test sessions и activity records больше не собирают IP/User-Agent; legacy-колонки остаются nullable для совместимости. Старые значения массово не удаляются без отдельного решения.
 
 ## Privacy-инварианты
 

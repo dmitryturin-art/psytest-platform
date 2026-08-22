@@ -19,6 +19,15 @@
 
 ## 2026-08-22
 
+### 02.7A — technical metadata minimization
+
+- Этап / ветка / commit: этап 02, `codex/02-technical-metadata-minimization`, `73ed294`.
+- Цель: не собирать точный IP и User-Agent без действующей продуктовой цели перед закрытым пилотом.
+- Сделано: новые test sessions и все обычные activity events записывают nullable legacy-поля как `NULL`; удалены неиспользуемые header/IP readers. Публичная privacy-страница и current-state data map синхронизированы с кодом.
+- Проверки и evidence: RED — integration test получил переданные fixture IP/User-Agent; GREEN — session и `session_created` event содержат четыре `NULL`. Targeted 8 tests / 120 assertions. Full gate: 158 tests / 1564 assertions, Composer audit, PHPStan, lint, architecture, baseline — pass. Browser QA `/privacy` на 1280×900 и 390×844: новый текст виден, старый отсутствует, overflow/errors нет.
+- Не сделано / риски: nullable колонки не удалены; старые значения массово не очищались; срок хранения обезличенных operational records ещё предстоит определить.
+- Следующий шаг: 02.7B — явная модель AI consent без включения внешнего AI, либо подготовка закрытого pilot checklist.
+
 ### 02.6B — hide empty questionnaire navigation
 
 - Этап / ветка / commit: этап 02, `codex/02-empty-test-navigation`, `0954117`.
