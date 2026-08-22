@@ -145,9 +145,10 @@ PsyTest — русскоязычная модульная платформа п�
 
 ## 13. Развёртывание
 
-- Сначала local, затем закрытый staging, затем production.
+- Сначала local, затем тестовый staging, затем production. По D-029 текущий staging не требует Basic Auth.
 - Закрытый staging размещается отдельным приложением `test.23time.ru` на shared hosting Beget; интеграция внутрь WordPress не требуется.
 - Read-only survey подтвердил PHP 8.3 и отдельный `public_html`; до активации нужны HTTPS и проверка приложения на фактическом MySQL 5.7.
+- Staging без Basic Auth не включает payment, AI или owner dashboard и не отменяет обязательный HTTPS.
 - Production требует backup, restore drill, rollback и минимально необходимый SSH-доступ.
 
 ## 14. Изменение правил

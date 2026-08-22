@@ -2,7 +2,7 @@
 
 Статус: **release подготовлен вне web root 2026-08-22; публичная заглушка не переключена**.
 
-Цель — закрытый бесплатный пилот PsyTest на `test.23time.ru`. Платежи, внешний AI, купоны и пользовательские аккаунты не включаются.
+Цель — бесплатный тестовый запуск PsyTest на `test.23time.ru`. По D-029 Basic Auth не используется; платежи, внешний AI, купоны и пользовательские аккаунты не включаются.
 
 ## Проверенные факты
 
@@ -46,7 +46,7 @@ bootstrap-адаптера. Приложение не встраивается �
 3. ~~Исправить `.htaccess` для прямого document root.~~ Выполнено в 08.1B и защищено regression-тестом.
 4. ~~Подготовить artifact с production dependencies.~~ 08.1D: архив собран локально из lockfile, checksum совпал после загрузки; Phinx включён, dev tools и `.env` отсутствуют.
 5. Создать server `.env` вне Git с `APP_ENV=production`, `APP_DEBUG=false`, HTTPS URL, staging DB и Argon2id hash владельца.
-6. До приглашения участников установить Basic Auth поверх HTTPS; файл паролей хранить рядом с `public_html`, не внутри него.
+6. ~~Установить Basic Auth.~~ Владелец отменил это требование для текущего staging (D-029); HTTPS остаётся обязательным.
 7. Настроить ежедневный cleanup через панель Beget с явным `/usr/local/bin/php8.3`.
 
 ## Запреты до снятия блокеров
@@ -62,8 +62,7 @@ bootstrap-адаптера. Приложение не встраивается �
 
 1. Создать `releases/e2113ab/.env` с mode `600`: production/debug false, staging DB, пустые payment/AI credentials; owner dashboard остаётся выключенным без отдельного Argon2id hash.
 2. Проверить config и DB connection через `/usr/local/bin/php8.3`, затем применить migrations из release.
-3. Настроить Basic Auth только поверх HTTPS, сохранив password file вне release/public.
-4. Переключить `public_html` на `releases/e2113ab/public`, выполнить health/tests/result smoke на desktop и mobile.
-5. При failed smoke вернуть исходный `public_html` из predeploy backup; release и пустую/тестовую DB не выдавать за production.
+3. Переключить `public_html` на `releases/e2113ab/public`, выполнить health/tests/result smoke на desktop и mobile.
+4. При failed smoke вернуть исходный `public_html` из predeploy backup; release и тестовую DB не выдавать за production.
 
 Следующий безопасный пакет: 08.1E — server config, migration и закрытая активация после подтверждения HTTPS.
