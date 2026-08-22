@@ -1,0 +1,80 @@
+{% extends "layout.twig" %}
+
+{% block title %}{{ appName }} — психологические тесты онлайн{% endblock %}
+{% block description %}Бесплатные психологические тесты с базовыми результатами по уникальной ссылке.{% endblock %}
+{% block body_class %}editorial-home-page{% endblock %}
+{% block main_class %}editorial-main{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ basePath }}/css/editorial-catalog.css">
+{% endblock %}
+
+{% block main_content %}
+<section class="editorial-hero">
+    <div class="editorial-shell editorial-hero__grid">
+        <div>
+            <p class="editorial-eyebrow">Психологические методики без лишнего шума</p>
+            <h1>Результат, который можно не только получить, но и понять</h1>
+            <p class="editorial-hero__lead">Проходите тесты бесплатно и сразу получайте базовый результат. Для сложных методик в будущем будет доступен отдельный подробный разбор.</p>
+            <div class="editorial-actions">
+                <a class="editorial-button editorial-button--primary" href="#catalog">Выбрать тест</a>
+                <a class="editorial-button editorial-button--secondary" href="#how-it-works">Как это работает</a>
+            </div>
+            <ul class="editorial-trust-list">
+                <li>Без обязательной регистрации</li>
+                <li>Базовый результат бесплатный</li>
+                <li>Доступ по уникальной ссылке</li>
+            </ul>
+        </div>
+        <div class="editorial-preview" aria-label="Пример структуры результата">
+            <article class="editorial-preview-card">
+                <div><span>Ваш результат</span><strong>Готов</strong></div>
+                <h2>Профиль по шкалам</h2>
+                <div class="editorial-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+                <p>Баллы, пояснения и рекомендации собраны на одной странице.</p>
+            </article>
+            <span class="editorial-preview-note"><b>21</b> вопрос<br><small>≈ 5 минут</small></span>
+        </div>
+    </div>
+</section>
+
+<section class="editorial-principles" id="how-it-works">
+    <div class="editorial-shell">
+        <p class="editorial-eyebrow">Сначала польза</p>
+        <h2>Никаких платных баллов и скрытых результатов</h2>
+        <div class="editorial-principles__grid">
+            <article><span>01</span><h3>Прохождение бесплатно</h3><p>Любую доступную методику можно завершить без оплаты.</p></article>
+            <article><span>02</span><h3>Результат сразу</h3><p>Основные шкалы, показатели и базовые пояснения доступны по ссылке.</p></article>
+            <article><span>03</span><h3>Разбор — отдельно</h3><p>Только там, где сложность методики действительно оправдывает подробный анализ.</p></article>
+        </div>
+    </div>
+</section>
+
+<section class="editorial-catalog-section" id="catalog">
+    <div class="editorial-shell">
+        <div class="editorial-section-heading">
+            <div><p class="editorial-eyebrow">Каталог</p><h2>Выберите подходящую методику</h2></div>
+            <p>От короткого скрининга состояния до развёрнутого исследования личности и отношений.</p>
+        </div>
+        <div class="editorial-test-grid">
+            {% for test in tests %}
+            <article class="editorial-test-card {% if test.slug == 'smil' %}editorial-test-card--featured{% endif %}">
+                <div class="editorial-card-topline"><span>{% if test.slug == 'smil' %}Личность{% elseif test.slug == 'lazarus' %}Отношения{% else %}Состояние{% endif %}</span><strong>Бесплатно</strong></div>
+                <h3>{{ test.name }}</h3>
+                <p>{{ test.description|slice(0, 170) }}{% if test.description|length > 170 %}…{% endif %}</p>
+                <div class="editorial-card-meta"><span>{{ test.question_count }} вопросов</span><span>≈ {{ test.estimated_time }} мин</span>{% if test.slug == 'lazarus' %}<span>есть парный режим</span>{% endif %}</div>
+                <a href="{{ basePath }}/test/{{ test.slug }}" class="editorial-card-link">Открыть тест <span aria-hidden="true">→</span></a>
+            </article>
+            {% endfor %}
+        </div>
+        <p class="editorial-catalog-more"><a href="{{ basePath }}/tests">Открыть полный каталог тестов <span aria-hidden="true">→</span></a></p>
+    </div>
+</section>
+
+<section class="editorial-result-note">
+    <div class="editorial-shell editorial-result-note__grid">
+        <div><p class="editorial-eyebrow">Что вы получите</p><h2>Базовый результат остаётся полноценным и бесплатным</h2><p>Сразу после завершения доступны итоговый показатель, шкалы, пояснения и PDF. Дополнительный разбор не открывает скрытые баллы — он помогает связать сложный профиль в общую картину.</p><small>Расширенные разборы пока не включены на тестовом стенде.</small></div>
+        <article class="editorial-report-sheet"><span>Пример · BDI</span><h3>Минимальная выраженность симптомов</h3><b>8 <small>из 63 баллов</small></b><i></i><h4>Что означает результат</h4><p>Полученный показатель находится в минимальном диапазоне шкалы. Сохраните ссылку, если хотите вернуться к результату позже.</p></article>
+    </div>
+</section>
+{% endblock %}

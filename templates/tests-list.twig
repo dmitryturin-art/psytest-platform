@@ -4,45 +4,34 @@
 
 {% block body_class %}tests-list-page{% endblock %}
 
-{% block content %}
-<div class="tests-list-wrapper">
-    <div class="page-header">
-        <h1 class="page-title">Психологические тесты</h1>
-        <p class="page-description">
-            Выберите тест для прохождения. Все тесты анонимны, результаты сохраняются по уникальной ссылке.
-        </p>
-    </div>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ basePath }}/css/editorial-catalog.css">
+{% endblock %}
 
-    <div class="tests-grid">
+{% block content %}
+<div class="editorial-catalog">
+    <header class="editorial-page-heading">
+        <p class="editorial-eyebrow">Каталог методик</p>
+        <h1>Выберите подходящий тест</h1>
+        <p>Все доступные тесты и базовые результаты бесплатны. Регистрация не нужна: ссылка на результат остаётся только у вас.</p>
+    </header>
+
+    <div class="editorial-test-grid">
         {% for test in tests %}
-        <div class="test-card">
-            <div class="test-card-header">
-                <h2 class="test-card-title">{{ test.name }}</h2>
+        <article class="editorial-test-card {% if test.slug == 'smil' %}editorial-test-card--featured{% endif %}">
+            <div class="editorial-card-topline">
+                <span>{% if test.slug == 'smil' %}Личность{% elseif test.slug == 'lazarus' %}Отношения{% else %}Состояние{% endif %}</span>
+                <strong>Бесплатно</strong>
             </div>
-            <div class="test-card-body">
-                <p class="test-card-description">{{ test.description|slice(0, 150) }}{% if test.description|length > 150 %}...{% endif %}</p>
-                
-                <div class="test-card-meta">
-                    <span class="meta-badge">
-                        📝 {{ test.question_count }} вопросов
-                    </span>
-                    <span class="meta-badge">
-                        ⏱️ ~{{ test.estimated_time }} мин
-                    </span>
-                </div>
-                
-                {% if test.scales %}
-                <div class="test-card-scales">
-                    <small>Шкалы: {% for scale in test.scales %}{{ scale.name }}{% if not loop.last %}, {% endif %}{% endfor %}</small>
-                </div>
-                {% endif %}
+            <h2>{{ test.name }}</h2>
+            <p>{{ test.description|slice(0, 170) }}{% if test.description|length > 170 %}…{% endif %}</p>
+            <div class="editorial-card-meta">
+                <span>{{ test.question_count }} вопросов</span>
+                <span>≈ {{ test.estimated_time }} мин</span>
+                {% if test.slug == 'lazarus' %}<span>есть парный режим</span>{% endif %}
             </div>
-            <div class="test-card-footer">
-                <a href="{{ basePath }}/test/{{ test.slug }}" class="btn btn-primary btn-block">
-                    Пройти тест
-                </a>
-            </div>
-        </div>
+            <a href="{{ basePath }}/test/{{ test.slug }}" class="editorial-card-link">Открыть тест <span aria-hidden="true">→</span></a>
+        </article>
         {% endfor %}
     </div>
 

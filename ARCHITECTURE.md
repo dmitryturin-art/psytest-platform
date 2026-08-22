@@ -51,7 +51,7 @@ HTTP request
 
 | Метод | Маршрут | Обработчик | Состояние |
 |---|---|---|---|
-| GET | `/` | `HomeController::index` | каталог / redirect |
+| GET | `/` | `HomeController::index` | публичный лендинг с каталогом доступных методик; пока `noindex` по общей policy |
 | GET | `/tests` | `HomeController::tests` | каталог |
 | GET | `/test/{slug}` | `TestController::start` | начало теста |
 | POST | `/test/{slug}/save` | `TestController::save` | autosave |

@@ -19,6 +19,17 @@
 
 ## 2026-08-22
 
+### 04.0B — editorial landing и каталог
+
+- Этап / ветка / commit: этап 04, `codex/04-editorial-catalog`, commit ожидается.
+- Цель: применить выбранное владельцем направление A к публичной точке входа и каталогу, не меняя прохождение, результаты, scoring, payment/AI или канонический SMIL-график.
+- Сделано: `/` вместо redirect теперь рендерит самостоятельный лендинг с реальным каталогом пяти методик; `/tests` получил компактный редакционный каталог. Вынесен отдельный `editorial-catalog.css`, который действует только на эти две public pages. В footer добавлена скромная ссылка «О специалисте» на `hypnocorrection.ru`.
+- Решения: D-031. SEO policy не менялась: общий `noindex` остаётся до отдельной content/privacy/legal проверки. Обещание «бесплатный базовый результат» сохранено; расширенный разбор прямо обозначен как будущая отключённая функция.
+- Проверки и evidence: targeted PHPUnit — 7 tests / 112 assertions; PHP syntax и `git diff --check` — pass. Browser QA: `/` и `/tests` имеют по 5 методик, console errors/warnings отсутствуют; 390×844 и 1440×1000 — `scrollWidth = innerWidth`. В mobile catalog найден и исправлен overflow: более специфичный featured selector СМИЛ создавал implicit grid columns.
+- Изменённые файлы: `HomeController`, layout/public templates, route-specific CSS, landing regression test, current-state/product/phase records.
+- Не сделано / риски: staging не обновлялся; прохождение теста, result pages, PDF/print, Lazarus pair UX, account, checkout и AI не стилизовались. SMIL graph не открывался и не менялся.
+- Следующий шаг: owner visual acceptance; затем отдельный staging deployment package либо 04.0C questionnaire components после подтверждения.
+
 ### 00E — актуальность локального Graphify
 
 - Этап / ветка / commit: этап 00, `codex/00-graphify-freshness`, commit ожидается.
