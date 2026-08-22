@@ -90,4 +90,14 @@ final class DocumentationCurrentStateTest extends TestCase
             }
         }
     }
+
+    public function testQualityGateCoversBegetAndCurrentMysqlVersions(): void
+    {
+        $workflow = (string) file_get_contents(dirname(__DIR__) . '/.github/workflows/quality.yml');
+
+        self::assertStringContainsString("mysql: ['5.7', '8.0']", $workflow);
+        self::assertStringContainsString('image: mysql:${{ matrix.mysql }}', $workflow);
+        self::assertStringContainsString('run: composer migrate', $workflow);
+        self::assertStringContainsString('run: composer test', $workflow);
+    }
 }
