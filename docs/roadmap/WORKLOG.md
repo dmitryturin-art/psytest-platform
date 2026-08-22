@@ -19,6 +19,15 @@
 
 ## 2026-08-22
 
+### 08.2 — staging deployment editorial landing/catalog
+
+- Этап / ветка / commit: этап 08, `codex/08-staging-editorial-ui`, release `1559188`; документационный commit ожидается.
+- Цель: выложить уже проверенную 04.0B главную и каталог на `test.23time.ru` без изменения прохождения, результатов, scoring, payment/AI или SMIL-графика.
+- Сделано: production-артефакт собран из `1559188` с `composer install --no-dev --classmap-authoritative`, без `.env`, с `vendor/bin/phinx`; checksum `403a9fab…f11f2` совпал до и после загрузки. Конфигурация с правами `600` перенесена из текущего release, все 7 migrations подтверждены `up`. `public_html` атомарно переключён с `398ca23/public` на `1559188/public`; прежний release сохранён для rollback.
+- Проверки и evidence: синтаксис entrypoint и HomeController на server PHP 8.3 — pass; Phinx status — 7 migrations `up`; внешний smoke — `/`, `/tests`, `/api/health`, `/test/bdi`, `/test/smil` дают `200`, health возвращает `ok`, HTTP `/tests` возвращает `301` на HTTPS. HTML подтверждает новые editorial classes на главной и каталоге. Server architecture script загрузил все пять модулей и их расчёты, но его PHP syntax subsection ложноположительно использует default CLI PHP 5.6 вместо обязательного `/usr/local/bin/php8.3`; это известное ограничение скрипта, не regression релиза.
+- Не сделано / риски: нет новых migrations и не выполнялись реальные ответы, PDF или payment/AI flows. В unpack output возникли шумные macOS xattr warnings; release распакован полностью, checksum и smoke успешны. Улучшить способ сборки archive без metadata отдельно, не смешивая с UI.
+- Следующий шаг: владелец визуально принимает staging; затем 04.0C отдельно улучшает questionnaire components, не трогая scoring и SMIL chart.
+
 ### 04.0B — editorial landing и каталог
 
 - Этап / ветка / commit: этап 04, `codex/04-editorial-catalog`, commit ожидается.
@@ -27,8 +36,8 @@
 - Решения: D-031. SEO policy не менялась: общий `noindex` остаётся до отдельной content/privacy/legal проверки. Обещание «бесплатный базовый результат» сохранено; расширенный разбор прямо обозначен как будущая отключённая функция.
 - Проверки и evidence: targeted PHPUnit — 7 tests / 112 assertions; PHP syntax и `git diff --check` — pass. Browser QA: `/` и `/tests` имеют по 5 методик, console errors/warnings отсутствуют; 390×844 и 1440×1000 — `scrollWidth = innerWidth`. В mobile catalog найден и исправлен overflow: более специфичный featured selector СМИЛ создавал implicit grid columns.
 - Изменённые файлы: `HomeController`, layout/public templates, route-specific CSS, landing regression test, current-state/product/phase records.
-- Не сделано / риски: staging не обновлялся; прохождение теста, result pages, PDF/print, Lazarus pair UX, account, checkout и AI не стилизовались. SMIL graph не открывался и не менялся.
-- Следующий шаг: owner visual acceptance; затем отдельный staging deployment package либо 04.0C questionnaire components после подтверждения.
+- Не сделано / риски: прохождение теста, result pages, PDF/print, Lazarus pair UX, account, checkout и AI не стилизовались. SMIL graph не открывался и не менялся.
+- Следующий шаг: owner visual acceptance staging; затем 04.0C questionnaire components после подтверждения.
 
 ### 00E — актуальность локального Graphify
 

@@ -17,10 +17,10 @@
 | Composer | системный Composer 1; deployment artifact должен включать локально собранный `vendor/` |
 | Инструменты | Git 2.42, `tar`, `unzip` и `rsync` доступны |
 | Cron | `crontab` в SSH shell отсутствует; retention job настраивается через панель/Beget API |
-| Web root сейчас | symlink на `releases/398ca23/public`; release `2f8f821` сохранён для rollback |
+| Web root сейчас | symlink на `releases/1559188/public`; release `398ca23` сохранён для rollback |
 | HTTPS | Let's Encrypt активен; HTTP получает `301` на HTTPS через versioned `.htaccess` |
 | Права | отдельный SSH account имеет read/write ACL на каталог сайта |
-| Активный release | `releases/398ca23`, production dependencies без dev tools; archive checksum `40177947…ddc0` |
+| Активный release | `releases/1559188`, production dependencies без dev tools; archive checksum `403a9fab…f11f2` |
 | Rollback evidence | исходный `public_html` сохранён каталогом и архивом `backups/public-html-predeploy-20260822.tar.gz` |
 
 SSH/DB логины, пароли и другие секреты намеренно не записываются в этот документ.
@@ -64,5 +64,6 @@ bootstrap-адаптера. Приложение не встраивается �
 4. HTTP/HTTPS/health/routes/security headers и desktop/mobile layout проверены.
 5. Synthetic BDI на mobile прошёл 21/21 и сформировал бесплатный результат `0/63`; нет validation error, horizontal overflow или console errors.
 6. 08.1F атомарно переключил staging на `398ca23`: `/tests` — `200`, HTTP — `301`, health — `ok`; `Set-Cookie` содержит `Secure`, `HttpOnly`, `SameSite=Lax`, а каждый dynamic security header приходит один раз. Static assets обслуживает внешний nginx Beget: он отдаёт корректный MIME/cache, но не применяет Apache `.htaccess` headers к статике.
+7. 08.2 атомарно переключил staging на `1559188`: новая главная и каталог отвечают `200`, health — `200`/`ok`, HTTP сохраняет `301` на HTTPS; начальные страницы BDI и СМИЛ также отвечают `200`. Расчёты, страницы результатов, PDF и сам SMIL-график этим release не менялись.
 
-Rollback текущего релиза: атомарно направить `public_html` обратно на `releases/2f8f821/public`; исходная Beget-заглушка и DB dump дополнительно находятся в `backups/`. Следующий шаг — проверка владельца и короткий пилот.
+Rollback текущего релиза: атомарно направить `public_html` обратно на `releases/398ca23/public`; исходная Beget-заглушка и DB dump дополнительно находятся в `backups/`. Следующий шаг — проверка владельца и короткий пилот.
