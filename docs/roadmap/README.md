@@ -13,6 +13,7 @@
 - [Трассировка аудита](AUDIT_TRACEABILITY.md) — finding → этап → доказательство закрытия.
 - [Реестр методик](METHODOLOGY_REGISTRY.md) — фактические источники, пробелы и release gates по формам тестов.
 - [Закрытый бесплатный пилот](PILOT_RUNBOOK.md) — границы, smoke-check, журнал замечаний и stop/go правила.
+- [Beget staging](BEGET_STAGING.md) — проверенная конфигурация хостинга, блокеры и deployment boundaries.
 
 ## Правила
 
@@ -38,7 +39,7 @@
 | 05 | Не начат | проверенные дополнительные шкалы и профессиональный SMIL | [Открыть](phases/05-smil-professional-parity.md) |
 | 06 | Не начат | заказы, 100%-ные купоны, YooKassa и чеки | [Открыть](phases/06-orders-coupons-yookassa.md) |
 | 07 | Не начат | AI reports, редакции и кабинет терапевта | [Открыть](phases/07-ai-reports-therapist-office.md) |
-| 08 | Не начат | staging, production, backup, monitoring и rollback | [Открыть](phases/08-production-deployment.md) |
+| 08 | В работе (staging) | Beget survey, staging, затем backup/monitoring/production | [Открыть](phases/08-production-deployment.md) |
 | 09 | Не начат | новые модули и контролируемый рост | [Открыть](phases/09-growth-new-modules.md) |
 
 `ROADMAP.md` — управленческий индекс верхнего уровня; эта таблица — файловый индекс реализации. Фактический активный статус всегда сверяется с `STATUS.md`.

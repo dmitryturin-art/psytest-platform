@@ -42,7 +42,7 @@
 | [05](docs/roadmap/phases/05-smil-professional-parity.md) | Профессиональная комплектация SMIL | Не начат | канонический профиль и проверенные дополнительные шкалы |
 | [06](docs/roadmap/phases/06-orders-coupons-yookassa.md) | Заказы, купоны и YooKassa | Не начат | идемпотентная оплата и чеки |
 | [07](docs/roadmap/phases/07-ai-reports-therapist-office.md) | ИИ-отчёты и кабинет терапевта | Не начат | два вида отчётов, редактор и контролируемая выдача |
-| [08](docs/roadmap/phases/08-production-deployment.md) | Staging и production | Не начат | проверенное размещение на инфраструктуре 23time.ru |
+| [08](docs/roadmap/phases/08-production-deployment.md) | Staging и production | В работе (staging) | проверенное размещение на `test.23time.ru`; production отдельно |
 | [09](docs/roadmap/phases/09-growth-new-modules.md) | Рост и новые модули | Не начат | управляемое расширение после стабильного запуска |
 
 Статусы: `Не начат` → `В работе` → `На проверке владельца` → `Завершён`. `Заблокирован` используется только с записанной причиной и условием разблокировки.

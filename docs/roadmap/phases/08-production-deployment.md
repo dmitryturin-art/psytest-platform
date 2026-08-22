@@ -1,6 +1,6 @@
 # Этап 08 — staging и production
 
-Статус: **Не начат**. Доступ к серверу запрашивается только здесь и сначала используется read-only обследование.
+Статус: **В работе для закрытого staging**. 08.1A read-only survey Beget завершён; production go-live не начат.
 
 ## Цель
 
@@ -8,8 +8,8 @@
 
 ## Work packages
 
-1. **Read-only hosting survey.** PHP/extensions, DB, web server, document roots, cron/queue, disk, backups, DNS/SSL, ограничения процессов; никаких изменений на первом проходе.
-2. **Topology decision.** Подтвердить `test.23time.ru` или иной route, изоляцию от WordPress/WooCommerce, общий/отдельный YooKassa shop и сетевые webhook paths.
+1. **Read-only hosting survey.** 08.1A: [inventory Beget](../BEGET_STAGING.md) подтверждает web/CLI PHP 8.3, пустую staging DB, public root и ACL. Выявлены блокеры: HTTPS недоступен, DB работает на MySQL 5.7, cron управляется не через SSH shell, системный Composer устарел.
+2. **Topology decision.** D-028: `test.23time.ru`, отдельное приложение и отдельная staging DB; WordPress не затрагивается. YooKassa/webhook не входят в бесплатный staging.
 3. **Staging.** Отдельные database/secrets/provider sandbox, anonymized fixtures, HTTP auth/access restriction и deployment artifact.
 4. **Configuration/secrets.** Environment matrix, rotation, least privilege, production debug off, writable paths вне public root.
 5. **Database release.** Проверяемые migrations, preflight, backup, restore и rollback/forward-fix procedure.

@@ -4,8 +4,8 @@
 
 ## Сейчас
 
-- Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; этап 02 движется к закрытому бесплатному пилоту. 02.8A подготовил операционный checklist, а 02.8B защищает фактически отрендерированный BDI notice; фактический запуск ждёт отдельного staging.
+- Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [08 — подготовка закрытого staging](phases/08-production-deployment.md).
+- Состояние: 08.1A read-only survey подтвердил Beget/PHP 8.3/public root и пустую DB для `test.23time.ru`. Приложение не выкладывалось: сначала нужны HTTPS, public-root rewrite и MySQL 5.7 compatibility gate.
 - Последний пакет: 02.8B `3670c6b` — rendered-result regression для BDI notice; локальный полный gate — 162 tests / 1594 assertions; [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32581403763) — success. 02.8A опубликован как `289d00c`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
@@ -19,7 +19,8 @@
 | 00 | В работе | governance-каркас и baseline готовы; 00C current-state docs и documentation contract test опубликованы как `d4a4e23`; production runbook относится к 08 |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
 | 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record и runbook закрытого пилота готовы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
-| 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
+| 03–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
+| 08 | В работе (staging) | read-only Beget survey завершён; HTTPS и проверка MySQL 5.7 блокируют активацию, production не начат |
 
 ## Baseline, обнаруженный аудитом
 
@@ -44,20 +45,22 @@
 5. Дополнительные шкалы SMIL: заявлено 200, фактически найдено 23; часть норм противоречива.
 6. Происхождение, version и права конкретных русских форм всех пяти методик не подтверждены документами в репозитории; это блокирует paid interpretation до отдельной проверки.
 7. Два PDF результатов присутствуют в старой Git history; в актуальной ветке они не отслеживаются. Владелец подтвердил, что они обезличены, и решил не переписывать историю.
+8. `test.23time.ru` пока доступен только по HTTP; Basic Auth и работа с тестовыми данными до TLS запрещены.
+9. Staging DB работает на MySQL 5.7.21, а текущий CI — на MySQL 8; migrations не запускаются до отдельного compatibility gate.
 
 Полный список и владельцы закрытия: [AUDIT_TRACEABILITY.md](AUDIT_TRACEABILITY.md).
 
 ## Следующие пять действий
 
-1. Подготовить закрытый staging по `PILOT_RUNBOOK.md`, затем провести первую волну на искусственных данных.
-2. На staging повторить BDI notice smoke на desktop и mobile; отдельную общую E2E-инфраструктуру выбрать на этапе Module API/UI, когда она покроет несколько критичных flow.
-3. Закрывать privacy findings отдельными regression-тестами до UI-редизайна.
-4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
-5. Спроектировать consent record и provider boundary до возврата AI-функций.
+1. 08.1B: исправить public-root rewrite и защитить regression-тестом.
+2. Добавить MySQL 5.7 compatibility gate и прогнать чистую migration chain без staging-секретов.
+3. Выпустить HTTPS для `test.23time.ru` в панели Beget.
+4. Собрать deployment artifact с `vendor/`, backup и rollback procedure.
+5. Активировать Basic-Auth staging и выполнить `PILOT_RUNBOOK.md` на desktop/mobile.
 
 ## Решения владельца, нужные сейчас
 
-Нет. Кризисный текст утверждён; никаких ресурсов для публикации не требуется. Если в ходе этапа 02 обнаружится изменение клинических расчётов, работа останавливается до согласования.
+Для staging владелец выпускает Let's Encrypt для `test.23time.ru`. Остальные безопасные подготовительные пакеты агент выполняет самостоятельно; scoring и клинический текст не меняются.
 
 ## Последняя контрольная точка
 

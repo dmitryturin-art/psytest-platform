@@ -19,6 +19,17 @@
 
 ## 2026-08-22
 
+### 08.1A — read-only Beget staging survey
+
+- Этап / ветка / commit: этап 08 (staging preparation), `codex/08-beget-hosting-survey`, commit после проверок.
+- Цель: проверить реальную инфраструктуру до первой записи на shared hosting и подтвердить topology D-028.
+- Сделано: по read-only SSH/HTTP/DB проверены web root, web/CLI PHP, extensions, пустая database, MySQL server version, Git/archive tools, ACL, cron availability и HTTP/HTTPS. Сервер и БД не изменялись; Beget-заглушка сохранена.
+- Решения: target — `test.23time.ru`, отдельное приложение и DB; WordPress, YooKassa и AI не затрагиваются. Artifact включает локально собранный `vendor/`, потому что системный Composer 1 не является build path.
+- Проверки и evidence: HTTP отвечает Beget-заглушкой на PHP 8.3.20; `/usr/local/bin/php8.3` и extensions доступны; HTTPS connection refused; MySQL 5.7.21 принимает read-only login, DB пуста; `public_html` содержит только исходную заглушку и доступен по ACL.
+- Изменённые файлы: Beget inventory, product/decision/status/phase/index/traceability docs и человеческий changelog.
+- Не сделано / риски: не создавались файлы/tables/cron/SSL, приложение не активировалось, секреты не сохранялись. Требуются Let's Encrypt и MySQL 5.7 compatibility gate.
+- Следующий шаг: 08.1B public-root rewrite regression; затем MySQL 5.7 gate до migrations на staging.
+
 ### 02.8B — rendered BDI safety notice regression
 
 - Этап / ветка / commit: этап 02, `codex/02-bdi-rendered-notice-regression` → `main`, `3670c6b`.
