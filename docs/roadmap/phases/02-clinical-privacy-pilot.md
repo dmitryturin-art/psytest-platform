@@ -25,6 +25,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 9. **Pilot questionnaire UX.** 02.6A `89a5e5a`: сохранение последнего ответа сразу обновляет общий progress, поэтому BDI завершается на `21 / 21` и `100%`, даже когда перехода к следующему вопросу уже нет. Scoring и submit flow не изменены; regression contract и desktop/mobile browser QA пройдены.
 10. **Questionnaire navigation.** 02.6B `0954117`: пустая sticky-панель скрыта на первом вопросе и появляется только при доступном действии «Назад» или «Завершить». Desktop/mobile browser QA пройдены.
 11. **Technical metadata minimization.** 02.7A `73ed294`: новые test sessions и activity records больше не собирают IP/User-Agent; legacy-колонки остаются nullable для совместимости. Старые значения массово не удаляются без отдельного решения.
+12. **AI consent boundary.** 02.7B `b5fc7d9`: отдельный immutable consent snapshot привязан к completed session и конкретному checkout-reference, версии notice, provider, report kind и разрешённым категориям данных. Запись отзывается и каскадно удаляется с session; public capture, checkout и AI-вызовы остаются выключены.
 
 ## Privacy-инварианты
 

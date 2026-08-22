@@ -19,6 +19,15 @@
 
 ## 2026-08-22
 
+### 02.7B — checkout-bound AI consent boundary
+
+- Этап / ветка / commit: этап 02, `codex/02-ai-consent-boundary`, `b5fc7d9`.
+- Цель: технически отделить бесплатное прохождение от явного разрешения на будущую передачу структурированных данных AI-провайдеру.
+- Сделано: immutable consent snapshot требует completed session и уникальный checkout-reference; сохраняет purpose, notice version, provider, report kind и whitelist разрешённых data scopes. Повтор идентичного запроса идемпотентен, конфликтующий snapshot запрещён, отзыв закрывает проверку разрешения, FK удаляет запись вместе с session.
+- Проверки и evidence: RED — migration contract не находил таблицу; первый integration-run выявил текстовое сравнение JSON и был исправлен на семантическое. Targeted 3 tests / 30 assertions. Full gate: 160 tests / 1583 assertions, Composer audit, PHPStan, lint, architecture, baseline — pass; локальная migration применена.
+- Не сделано / риски: нет public consent checkbox/text, approved provider list, checkout/order FK, внешнего AI-вызова или оплаты. `checkout_reference` станет order reference на этапе 06; до этого service не подключён к маршрутам.
+- Следующий шаг: закрытый бесплатный pilot checklist и проверка exit criteria этапа 02; legal/provider решения не угадывать.
+
 ### 02.7A — technical metadata minimization
 
 - Этап / ветка / commit: этап 02, `codex/02-technical-metadata-minimization`, `73ed294`.
