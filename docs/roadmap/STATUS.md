@@ -5,7 +5,7 @@
 ## Сейчас
 
 - Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [08 — подготовка закрытого staging](phases/08-production-deployment.md).
-- Состояние: 08.1A подтвердил Beget/PHP 8.3/public root и пустую DB для `test.23time.ru`; 08.1B исправил rewrite для прямого web root. Приложение не выкладывалось: сначала нужны HTTPS и MySQL 5.7 compatibility gate.
+- Состояние: 08.1A подтвердил Beget/PHP 8.3/public root и пустую DB; 08.1B исправил rewrite; 08.1C подтвердил полный gate на MySQL 5.7/8.0. Приложение не выкладывалось: перед активацией нужен HTTPS.
 - Последний пакет: 02.8B `3670c6b` — rendered-result regression для BDI notice; локальный полный gate — 162 tests / 1594 assertions; [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32581403763) — success. 02.8A опубликован как `289d00c`.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
@@ -20,7 +20,7 @@
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
 | 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record и runbook закрытого пилота готовы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
 | 03–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
-| 08 | В работе (staging) | survey и public-root regression завершены; HTTPS и проверка MySQL 5.7 блокируют активацию, production не начат |
+| 08 | В работе (staging) | survey, public-root regression и MySQL 5.7/8.0 gate завершены; HTTPS блокирует активацию, production не начат |
 
 ## Baseline, обнаруженный аудитом
 
@@ -46,15 +46,15 @@
 6. Происхождение, version и права конкретных русских форм всех пяти методик не подтверждены документами в репозитории; это блокирует paid interpretation до отдельной проверки.
 7. Два PDF результатов присутствуют в старой Git history; в актуальной ветке они не отслеживаются. Владелец подтвердил, что они обезличены, и решил не переписывать историю.
 8. `test.23time.ru` пока доступен только по HTTP; Basic Auth и работа с тестовыми данными до TLS запрещены.
-9. Staging DB работает на MySQL 5.7.21, а текущий CI — на MySQL 8; migrations не запускаются до отдельного compatibility gate.
+9. Staging DB работает на MySQL 5.7.21. 08.1C нашёл и устранил несовместимый implicit TIMESTAMP default; чистые MySQL 5.7 и 8.0 теперь обязательны в CI.
 
 Полный список и владельцы закрытия: [AUDIT_TRACEABILITY.md](AUDIT_TRACEABILITY.md).
 
 ## Следующие пять действий
 
-1. 08.1C: добавить MySQL 5.7 compatibility gate и прогнать чистую migration chain без staging-секретов.
+1. 08.1D: собрать deployment artifact с `vendor/`, backup и rollback procedure.
 2. Выпустить HTTPS для `test.23time.ru` в панели Beget.
-3. Собрать deployment artifact с `vendor/`, backup и rollback procedure.
+3. Подготовить server `.env` и Argon2id owner hash без записи секретов в Git.
 4. Активировать Basic-Auth staging и выполнить `PILOT_RUNBOOK.md` на desktop/mobile.
 5. Зафиксировать staging evidence и только затем обсуждать production.
 

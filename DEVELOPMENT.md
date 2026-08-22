@@ -13,7 +13,7 @@
 
 - PHP 8.3+ с расширениями, нужными Composer-зависимостям;
 - Composer 2;
-- MySQL 8 / InnoDB;
+- MySQL 5.7 или 8.0 / InnoDB;
 - web server с document root, указывающим **только** на `public/`.
 
 Локальный PHP может быть новее 8.3, но Composer lock и CI проверяются против PHP 8.3. Встроенный PHP server пригоден только для локальной разработки.

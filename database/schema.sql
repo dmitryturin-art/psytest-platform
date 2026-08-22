@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `test_sessions` (
   `user_agent` VARCHAR(500) DEFAULT NULL COMMENT 'For audit purposes',
   `completed_at` TIMESTAMP NULL DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `expires_at` TIMESTAMP NOT NULL COMMENT 'Session expiration',
+  `expires_at` DATETIME NOT NULL COMMENT 'Session expiration',
   
   FOREIGN KEY (`test_id`) REFERENCES `tests`(`id`) ON DELETE CASCADE,
   INDEX `idx_session_token` (`session_token`),
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS `pair_comparisons` (
   `session_2_id` CHAR(36) NOT NULL,
   `comparison_data` JSON NOT NULL COMMENT 'Comparison results',
   `generated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `expires_at` TIMESTAMP NOT NULL,
+  `expires_at` DATETIME NOT NULL,
   
   FOREIGN KEY (`test_id`) REFERENCES `tests`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`session_1_id`) REFERENCES `test_sessions`(`id`) ON DELETE CASCADE,

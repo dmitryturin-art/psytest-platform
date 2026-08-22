@@ -15,7 +15,7 @@
 - классический профиль СМИЛ с L/F/K, разрывом и шкалами 1–9/0;
 - индивидуальный и парный сценарий Lazarus;
 - PDF/print-вывод результатов;
-- автоматический quality gate на PHP 8.3/MySQL, включая миграции, тесты, PHPStan, форматирование и архитектурную проверку.
+- автоматический quality gate на PHP 8.3 с MySQL 5.7 и 8.0, включая миграции, тесты, PHPStan, форматирование и архитектурную проверку.
 
 ## Куда развивается продукт
 
@@ -51,7 +51,7 @@
 ## Технологии
 
 - PHP 8.3+, Twig 3;
-- MySQL 8/InnoDB (на него рассчитаны текущие migrations);
+- MySQL 5.7 или 8.0 / InnoDB (обе версии проверяются чистой цепочкой migrations в CI);
 - PDO, Monolog, Ramsey UUID;
 - Dompdf для PDF;
 - PHPUnit 10, PHPStan 1, PHP CS Fixer, Phinx.
@@ -79,7 +79,7 @@ docs/roadmap/          rules, phases, decisions, status and project memory
 
 - PHP 8.3 с расширениями, нужными Composer-зависимостям;
 - Composer;
-- MySQL 8;
+- MySQL 5.7 или 8.0;
 - Apache/Nginx либо встроенный PHP server для разработки.
 
 ### Установка
