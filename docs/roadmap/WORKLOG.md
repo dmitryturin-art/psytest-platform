@@ -19,6 +19,16 @@
 
 ## 2026-08-22
 
+### 08.1B — public-root rewrite
+
+- Этап / ветка / commit: этап 08, `codex/08-beget-public-root-rewrite`, commit после проверок.
+- Цель: сделать front-controller routing совместимым с выделенным `public_html`, куда переносится содержимое `project/public`.
+- RED: новый `PublicWebRootTest` воспроизвёл ошибочное направление в `public/index.php`.
+- GREEN: `.htaccess` направляет отсутствующие файлы/каталоги в локальный `index.php`; лишний `/public/` guard удалён; targeted/docs tests — 9 tests / 127 assertions; analyse, lint, architecture и baseline checks прошли.
+- Ограничение локального gate: полный PHPUnit потребовал остановленную локальную MySQL и завершился 13 connection errors; функциональный full gate проверяется в GitHub Actions с service DB. Это не продуктовая регрессия текущего пакета.
+- Сервер: без изменений; пакет меняет только репозиторий.
+- Следующий шаг: 08.1C — MySQL 5.7 compatibility gate до первой migration на staging.
+
 ### 08.1A — read-only Beget staging survey
 
 - Этап / ветка / commit: этап 08 (staging preparation), `codex/08-beget-hosting-survey`, commit после проверок.

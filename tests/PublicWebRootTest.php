@@ -29,4 +29,14 @@ final class PublicWebRootTest extends TestCase
         self::assertStringContainsString("Permissions-Policy: geolocation=(), camera=(), microphone=()", $entryPoint);
         self::assertStringContainsString('catch (\\Throwable $e)', $entryPoint);
     }
+
+    public function testHtaccessRoutesMissingResourcesToFrontControllerInPublicRoot(): void
+    {
+        $htaccess = file_get_contents(dirname(__DIR__) . '/public/.htaccess');
+
+        self::assertIsString($htaccess);
+        self::assertStringContainsString('RewriteRule ^ index.php [QSA,L]', $htaccess);
+        self::assertStringNotContainsString('public/index.php', $htaccess);
+        self::assertStringNotContainsString('RewriteCond %{REQUEST_URI} !^/public/', $htaccess);
+    }
 }

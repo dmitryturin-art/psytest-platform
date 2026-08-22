@@ -7,11 +7,10 @@
     # Set base directory
     RewriteBase /
     
-    # Redirect all requests to public/index.php
+    # Redirect missing resources to the front controller in this public root
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteRule ^(.*)$ public/index.php [QSA,L]
+    RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
 # Security headers

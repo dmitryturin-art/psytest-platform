@@ -41,7 +41,7 @@ bootstrap-адаптера. Приложение не встраивается �
 
 1. Выпустить для `test.23time.ru` бесплатный Let's Encrypt в панели Beget и проверить HTTPS.
 2. Проверить чистую migration chain и runtime tests на фактическом MySQL 5.7; до этого не менять пустую staging DB.
-3. Исправить `.htaccess`: при прямом document root на `public_html` rewrite должен вести на `index.php`, а не `public/index.php`.
+3. ~~Исправить `.htaccess` для прямого document root.~~ Выполнено в 08.1B и защищено regression-тестом.
 4. Подготовить artifact с production dependencies в `vendor/`; системный Composer 1 не использовать для сборки.
 5. Создать server `.env` вне Git с `APP_ENV=production`, `APP_DEBUG=false`, HTTPS URL, staging DB и Argon2id hash владельца.
 6. До приглашения участников установить Basic Auth поверх HTTPS; файл паролей хранить рядом с `public_html`, не внутри него.
@@ -58,4 +58,4 @@ bootstrap-адаптера. Приложение не встраивается �
 
 ## Следующий безопасный пакет
 
-08.1B: regression и минимальное исправление public-root rewrite. Затем отдельный MySQL 5.7 compatibility gate; только после зелёных проверок — backup заглушки и staging deployment.
+08.1C: отдельный MySQL 5.7 compatibility gate; только после зелёных проверок — backup заглушки и staging deployment.
