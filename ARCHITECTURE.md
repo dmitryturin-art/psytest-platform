@@ -129,7 +129,7 @@ interface TestModuleInterface
 
 ## Legacy integrations и целевой контур
 
-`AIInterpretationService`, `PaymentService`, legacy `ApiController` methods и старые AI/payment tables — исторические слои. Они не доказывают готовность оплаты или AI и не должны подключаться к новым public routes.
+`AIInterpretationService`, `PaymentService`, legacy `ApiController` methods и старые AI/payment tables — исторические слои. Они не доказывают готовность оплаты или AI и не должны подключаться к новым public routes. `AiProcessingConsentService` — отдельная не подключённая к public UI граница: она хранит immutable snapshot явного consent для конкретного checkout и не запускает AI-вызов.
 
 Новая YooKassa state machine относится к этапу 06. Новый AI flow с отдельным consent, provider boundary, versioned prompts, report audiences и кабинетом терапевта относится к этапу 07. Критерии и release gates — в [ROADMAP.md](ROADMAP.md).
 
@@ -137,7 +137,7 @@ interface TestModuleInterface
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, pair comparisons, activity log, legacy AI/payment records и `crisis_resources`. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, pair comparisons, activity log, checkout-bound `ai_processing_consents`, legacy AI/payment records и `crisis_resources`. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 
