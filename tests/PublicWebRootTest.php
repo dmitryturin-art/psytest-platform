@@ -39,4 +39,13 @@ final class PublicWebRootTest extends TestCase
         self::assertStringNotContainsString('public/index.php', $htaccess);
         self::assertStringNotContainsString('RewriteCond %{REQUEST_URI} !^/public/', $htaccess);
     }
+
+    public function testHtaccessEnforcesHttpsBehindHostingProxy(): void
+    {
+        $htaccess = (string) file_get_contents(dirname(__DIR__) . '/public/.htaccess');
+
+        self::assertStringContainsString('RewriteCond %{HTTPS} !=on', $htaccess);
+        self::assertStringContainsString('RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]', $htaccess);
+        self::assertStringContainsString('RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]', $htaccess);
+    }
 }
