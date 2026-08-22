@@ -17,6 +17,18 @@
 - Следующий шаг:
 ```
 
+## 2026-08-22
+
+### 02.6A — final-answer progress completion
+
+- Этап / ветка / commit: этап 02, `codex/02-bdi-progress-completion`, `89a5e5a`.
+- Цель: закрыть известный UX-дефект `UX-02`, при котором BDI после ответа на последний вопрос оставался на `20 / 21`.
+- Сделано: progress теперь обновляется непосредственно при сохранении каждого ответа, а не только при переходе к следующему вопросу. Поэтому последний вопрос показывает полное состояние без изменения вопросов, scoring, autosave payload или submit flow.
+- Проверки и evidence: RED — новый contract test падал, потому что `saveAnswer()` не обновлял progress; GREEN — 1 test / 1 assertion. Full local gate: Composer validate/audit, PHPUnit 155 tests / 1555 assertions, PHPStan, lint, architecture и baseline 148 — pass. Browser QA: BDI с 21 синтетическим ответом показывает `21 / 21`, `100%` и доступную кнопку завершения на desktop 1280×900 и mobile 390×844; horizontal overflow и console errors отсутствуют.
+- Изменённые файлы: `public/js/test-taking.js`, `tests/TestTakingProgressContractTest.php` и roadmap/changelog evidence.
+- Не сделано / риски: это не общий UI-редизайн и не automated end-to-end browser suite; внешний вид остальных экранов не менялся.
+- Следующий шаг: подготовить закрытый бесплатный pilot или отдельным пакетом добавить автоматизированную browser-проверку утверждённого BDI safety notice.
+
 ## 2026-08-21
 
 ### 02.4B — protected owner therapist-case lifecycle

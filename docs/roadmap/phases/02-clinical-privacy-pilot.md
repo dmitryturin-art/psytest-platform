@@ -22,6 +22,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 6. **Lifecycle/delete.** 02.1: `anonymous`-класс, 180-day cron lifecycle, session-bound logs и известные result/AI/pair PDFs покрыты integration tests. 02.4B `93a6bb1` добавляет минимальный защищённый `/admin`: один owner account, Argon2id configuration, secure session, CSRF, login limit; назначить можно лишь завершённую anonymous session, а therapist-case удаляется физически с подтверждением и обезличенным audit event. [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32506141069) — success. Будущие AI jobs/consents и финансовое разделение остаются отдельно. Каждое новое правило доказывается integration test.
 7. **Методики и лицензии.** 02.5A `7240d3b` создаёт versioned registry текущих модулей: factual evidence, gaps и release gates; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success. Пока право конкретной формы не подтверждено, не добавлять новый public content и не включать paid interpretation; существующие scoring core и бесплатный flow не меняются.
 8. **Закрытый бесплатный пилот.** Небольшая группа, anonymized issue log, support path, никаких платежей/AI.
+9. **Pilot questionnaire UX.** 02.6A `89a5e5a`: сохранение последнего ответа сразу обновляет общий progress, поэтому BDI завершается на `21 / 21` и `100%`, даже когда перехода к следующему вопросу уже нет. Scoring и submit flow не изменены; regression contract и desktop/mobile browser QA пройдены.
 
 ## Privacy-инварианты
 
