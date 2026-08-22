@@ -8,9 +8,9 @@
 
 ## Work packages
 
-1. **Read-only hosting survey.** 08.1A: [inventory Beget](../BEGET_STAGING.md) подтверждает web/CLI PHP 8.3, пустую staging DB, public root и ACL. Выявлены блокеры: HTTPS недоступен, DB работает на MySQL 5.7, cron управляется не через SSH shell, системный Composer устарел.
+1. **Read-only hosting survey.** 08.1A: [inventory Beget](../BEGET_STAGING.md) подтверждает web/CLI PHP 8.3, пустую staging DB, public root и ACL. HTTPS недоступен; DB работает на MySQL 5.7, cron управляется не через SSH shell, системный Composer устарел.
 2. **Topology decision.** D-028: `test.23time.ru`, отдельное приложение и отдельная staging DB; WordPress не затрагивается. YooKassa/webhook не входят в бесплатный staging.
-3. **Staging.** 08.1B исправил public-root rewrite с regression-тестом. Далее: отдельные database/secrets/provider sandbox, anonymized fixtures, HTTP auth/access restriction и deployment artifact.
+3. **Staging.** 08.1B исправил public-root rewrite. 08.1C добавил полный CI на MySQL 5.7/8.0 и устранил несовместимость expiry columns. Далее: deployment artifact, отдельные secrets, HTTPS и access restriction.
 4. **Configuration/secrets.** Environment matrix, rotation, least privilege, production debug off, writable paths вне public root.
 5. **Database release.** Проверяемые migrations, preflight, backup, restore и rollback/forward-fix procedure.
 6. **Deployment automation.** Repeatable build/install/cache/migrate/smoke steps; releases directory или эквивалентная атомарная смена версии.

@@ -10,7 +10,7 @@ PsyTest — PHP-приложение для бесплатного прохож�
 |---|---|
 | Runtime | PHP 8.3+ |
 | Шаблоны | Twig 3 |
-| Данные | MySQL 8 / InnoDB, Phinx migrations |
+| Данные | MySQL 5.7 или 8.0 / InnoDB, Phinx migrations; обе версии проходят CI |
 | PDF | Dompdf |
 | Проверки | PHPUnit 10, PHPStan, PHP-CS-Fixer |
 | График СМИЛ | Chart.js CDN и protected classic-profile JS |

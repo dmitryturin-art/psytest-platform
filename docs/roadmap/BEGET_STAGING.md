@@ -40,7 +40,7 @@ bootstrap-адаптера. Приложение не встраивается �
 ## Блокеры до активации
 
 1. Выпустить для `test.23time.ru` бесплатный Let's Encrypt в панели Beget и проверить HTTPS.
-2. Проверить чистую migration chain и runtime tests на фактическом MySQL 5.7; до этого не менять пустую staging DB.
+2. ~~Проверить migration chain и runtime tests на MySQL 5.7.~~ Выполнено в 08.1C: MySQL 5.7 и 8.0 проходят полный CI.
 3. ~~Исправить `.htaccess` для прямого document root.~~ Выполнено в 08.1B и защищено regression-тестом.
 4. Подготовить artifact с production dependencies в `vendor/`; системный Composer 1 не использовать для сборки.
 5. Создать server `.env` вне Git с `APP_ENV=production`, `APP_DEBUG=false`, HTTPS URL, staging DB и Argon2id hash владельца.
@@ -58,4 +58,4 @@ bootstrap-адаптера. Приложение не встраивается �
 
 ## Следующий безопасный пакет
 
-08.1C: отдельный MySQL 5.7 compatibility gate; только после зелёных проверок — backup заглушки и staging deployment.
+08.1D: deployment artifact, backup заглушки и rollback procedure. Активация — только после HTTPS.

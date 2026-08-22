@@ -19,6 +19,14 @@
 
 ## 2026-08-22
 
+### 08.1C — MySQL 5.7/8.0 compatibility gate
+
+- Этап / ветка / PR: этап 08, `codex/08-mysql57-compatibility`, [PR #1](https://github.com/dmitryturin-art/psytest-platform/pull/1).
+- Цель: до первой staging migration проверить фактическую версию DB Beget и не потерять совместимость с MySQL 8.0.
+- RED: первый matrix run обнаружил MySQL 5.7 error 1067 на `expires_at TIMESTAMP NOT NULL`; MySQL 8.0 прошёл.
+- GREEN: expiry columns, всегда задаваемые приложением явно, используют `DATETIME NOT NULL` в bootstrap и schema snapshot; regression защищает контракт. [Повторный CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32583695549) — success на MySQL 5.7 и 8.0, включая clean migrations, 165 tests, audit, analysis, lint, architecture и baseline.
+- Staging DB не изменялась и остаётся пустой. Следующий шаг: 08.1D artifact/backup/rollback; активация ждёт HTTPS.
+
 ### 08.1B — public-root rewrite
 
 - Этап / ветка / commit: этап 08, `codex/08-beget-public-root-rewrite`, commit после проверок.
