@@ -5,8 +5,8 @@
 ## Сейчас
 
 - Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
-- Состояние: `test.23time.ru` активирован на release `2f8f821`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Desktop/mobile и synthetic BDI 21/21 smoke прошли; rollback сохранён.
-- Последний пакет: 08.1E `2f8f821` + PR #3 — HTTPS staging activation и реальный BDI smoke; [PHP 8.3 / MySQL 5.7 и 8.0 CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32585270174) — success. Пакет 02.8B BDI notice остаётся последним clinical package.
+- Состояние: `test.23time.ru` работает на release `398ca23`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `2f8f821` сохранён.
+- Последний пакет: 08.1F `398ca23` + [PR #4](https://github.com/dmitryturin-art/psytest-platform/pull/4) — hardening cookie/headers; [PHP 8.3 / MySQL 5.7 и 8.0 CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32588895557) — success. Пакет 02.8B BDI notice остаётся последним clinical package.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -20,7 +20,7 @@
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
 | 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record и runbook закрытого пилота готовы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
 | 03–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
-| 08 | На проверке владельца (staging) | публичный HTTPS staging работает; payment/AI/admin выключены, rollback готов; production не начат |
+| 08 | На проверке владельца (staging) | публичный HTTPS staging работает; cookie/headers проверены внешним smoke, payment/AI/admin выключены, rollback готов; production не начат |
 
 ## Baseline, обнаруженный аудитом
 
