@@ -5,8 +5,8 @@
 ## Сейчас
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; этап 02 движется к закрытому бесплатному пилоту. 02.7B `b5fc7d9` добавляет серверную checkout-bound AI-consent запись без включения public AI/оплаты.
-- Последний функциональный package: 02.7B `b5fc7d9`; локальный полный gate — 160 tests / 1583 assertions. 02.7A подтверждён [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32579830531).
+- Состояние: этап 01 завершён; этап 02 движется к закрытому бесплатному пилоту. 02.8A подготовил операционный checklist пилота без включения public AI/оплаты; фактический запуск ждёт отдельного staging.
+- Последний функциональный package: 02.7B `b5fc7d9`; 02.8A — документационный pilot-runbook. Локальный полный gate для 02.7B — 160 tests / 1583 assertions; [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32580264332) — success.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -18,7 +18,7 @@
 |---|---|---|
 | 00 | В работе | governance-каркас и baseline готовы; 00C current-state docs и documentation contract test опубликованы как `d4a4e23`; production runbook относится к 08 |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record готов. Public consent UI/provider list, legal review и закрытый pilot ещё впереди |
+| 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record и runbook закрытого пилота готовы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
 | 02–09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 
 ## Baseline, обнаруженный аудитом
@@ -49,8 +49,8 @@
 
 ## Следующие пять действий
 
-1. Добавить автоматизированное browser coverage для notice на desktop и mobile.
-2. Подготовить закрытый бесплатный pilot и закрывать оставшиеся privacy findings отдельными небольшими пакетами.
+1. Добавить автоматизированное browser coverage для notice на desktop и mobile без внедрения тяжёлой общей E2E-инфраструктуры.
+2. Подготовить закрытый staging по `PILOT_RUNBOOK.md`, затем провести первую волну на искусственных данных.
 3. Закрывать privacy findings отдельными regression-тестами до UI-редизайна.
 4. Не начинать UI-редизайн до закрытия P0 security/payment containment.
 5. Спроектировать consent record и provider boundary до возврата AI-функций.

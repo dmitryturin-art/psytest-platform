@@ -19,6 +19,17 @@
 
 ## 2026-08-22
 
+### 02.8A — closed free pilot runbook
+
+- Этап / ветка / commit: этап 02, `codex/02-closed-pilot-runbook`, commit после проверок.
+- Цель: подготовить минимальный и понятный порядок закрытого бесплатного пилота без преждевременного production deployment.
+- Сделано: определены включённые бесплатные сценарии, staging prerequisites, desktop/mobile smoke-check, две небольшие волны, обезличенный issue log, severity/stop rules и критерии завершения. Оплата, AI, аккаунты и public production явно исключены.
+- Решения: поддержка в пилоте идёт через личный канал приглашения владельца; реальные ответы, result tokens и PDF не копируются в журнал замечаний.
+- Проверки и evidence: targeted documentation/privacy/notice — 8 tests / 126 assertions. Full local gate — Composer validate/audit, PHPUnit 160 tests / 1583 assertions, PHPStan, sequential PHP-CS-Fixer, architecture и baseline 148 — pass. Первый sandbox-run ожидаемо не видел локальную MySQL/Packagist и не мог открыть formatter worker socket; повтор с разрешённым localhost/network и sequential mode прошёл без изменений кода.
+- Изменённые файлы: `docs/roadmap/PILOT_RUNBOOK.md`, индекс, active phase, status, traceability, worklog и человеческий changelog.
+- Не сделано / риски: staging не создавался, участники не приглашались, automated BDI browser coverage остаётся отдельным пакетом.
+- Следующий шаг: проверить документацию и полный gate, опубликовать пакет; затем 02.8B — лёгкое автоматизированное BDI browser coverage.
+
 ### 02.7B — checkout-bound AI consent boundary
 
 - Этап / ветка / commit: этап 02, `codex/02-ai-consent-boundary`, `b5fc7d9`.
