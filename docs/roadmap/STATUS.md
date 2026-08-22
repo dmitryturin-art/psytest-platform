@@ -6,6 +6,7 @@
 
 - Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [04 — выбор визуального направления](phases/04-ui-ux-redesign.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
 - Состояние: `test.23time.ru` работает на release `398ca23`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `2f8f821` сохранён. Отдельные прототипы A/B/C не подключены к staging и ждут выбора владельца.
+- Управление знаниями: локальный Graphify обновлён до текущего checkout и теперь имеет обязательную freshness-проверку перед архитектурным query; артефакты остаются вне Git.
 - Последний пакет: 08.1F `398ca23` + [PR #4](https://github.com/dmitryturin-art/psytest-platform/pull/4) — hardening cookie/headers; [PHP 8.3 / MySQL 5.7 и 8.0 CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32588895557) — success. Пакет 02.8B BDI notice остаётся последним clinical package.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
