@@ -2,6 +2,8 @@
 
 Модульная PHP-платформа для психологического тестирования: прохождение без обязательной регистрации, бесплатный базовый результат, парные сценарии и печатные отчёты.
 
+Тестовый стенд: [test.23time.ru](https://test.23time.ru/tests). Оплата и AI-интерпретации на нём пока выключены.
+
 [![PHP 8.3+](https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php&logoColor=white)](https://www.php.net/)
 [![Status](https://img.shields.io/badge/status-active%20refactoring-D97706)](ROADMAP.md)
 [![License](https://img.shields.io/badge/license-proprietary-374151)](LICENSE)

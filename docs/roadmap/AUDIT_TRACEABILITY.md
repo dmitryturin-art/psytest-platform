@@ -38,7 +38,7 @@
 | UX-01 | Пустая sticky navigation | P1 | 02/04 | 02.6B `0954117`: панель имеет `display:none` и нулевую высоту без доступных действий, появляется со второго вопроса; contract и desktop/390×844 browser regression пройдены | Закрыто |
 | UX-02 | BDI progress заканчивается на 20/21 | P1 | 02/04 | 02.6A `89a5e5a`: progress обновляется при сохранении ответа; RED/GREEN contract test и реальный BDI flow подтверждают `21 / 21`, `100%`, видимую кнопку submit без overflow/errors на desktop и 390×844 | Закрыто |
 | UX-03 | Lazarus legends/touch/accessibility неудобны | P1 | 04 | mobile interaction + screen-reader labels + contrast test | Запланировано |
-| DOC-01 | README/ARCHITECTURE/DEVELOPMENT расходятся с кодом | P1 | 00/01/08 | 00C current-state docs опубликованы. 08.1A фиксирует проверенный Beget staging inventory без ложного deployment claim; для закрытия нужны фактические staging/production runbooks, restore и CI evidence | В работе |
+| DOC-01 | README/ARCHITECTURE/DEVELOPMENT расходятся с кодом | P1 | 00/01/08 | 00C current-state docs опубликованы. 08.1A–E фиксируют Beget inventory, MySQL 5.7/8.0 CI, artifact, backup, activation и browser smoke; production restore drill остаётся этапом 08 | В работе |
 | CODE-01 | PHPStan baseline подавляет исторические сообщения | P1 | 00/03 | `composer baseline:check` фиксирует 148 entries; далее baseline уменьшается пакетами | В работе |
 
 ## Сквозные наблюдения без отдельного audit ID

@@ -4,9 +4,9 @@
 
 ## Сейчас
 
-- Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [08 — подготовка закрытого staging](phases/08-production-deployment.md).
-- Состояние: 08.1A–C закрыли hosting/rewrite/MySQL gates. 08.1D загрузил проверенный release вне web root и сохранил predeploy backup; публичная заглушка не менялась. Перед активацией нужен HTTPS.
-- Последний пакет: 02.8B `3670c6b` — rendered-result regression для BDI notice; локальный полный gate — 162 tests / 1594 assertions; [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32581403763) — success. 02.8A опубликован как `289d00c`.
+- Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
+- Состояние: `test.23time.ru` активирован на release `2f8f821`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Desktop/mobile и synthetic BDI 21/21 smoke прошли; rollback сохранён.
+- Последний пакет: 08.1E `2f8f821` + PR #3 — HTTPS staging activation и реальный BDI smoke; [PHP 8.3 / MySQL 5.7 и 8.0 CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32585270174) — success. Пакет 02.8B BDI notice остаётся последним clinical package.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -20,7 +20,7 @@
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
 | 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record и runbook закрытого пилота готовы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
 | 03–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
-| 08 | В работе (staging) | release и rollback backup готовы вне web root; HTTPS блокирует server config/migrations/активацию, production не начат |
+| 08 | На проверке владельца (staging) | публичный HTTPS staging работает; payment/AI/admin выключены, rollback готов; production не начат |
 
 ## Baseline, обнаруженный аудитом
 
@@ -45,22 +45,22 @@
 5. Дополнительные шкалы SMIL: заявлено 200, фактически найдено 23; часть норм противоречива.
 6. Происхождение, version и права конкретных русских форм всех пяти методик не подтверждены документами в репозитории; это блокирует paid interpretation до отдельной проверки.
 7. Два PDF результатов присутствуют в старой Git history; в актуальной ветке они не отслеживаются. Владелец подтвердил, что они обезличены, и решил не переписывать историю.
-8. `test.23time.ru` пока доступен только по HTTP; Basic Auth и работа с тестовыми данными до TLS запрещены.
+8. `test.23time.ru` работает по HTTPS; Basic Auth не используется по D-029. До production используются только synthetic/добровольно введённые данные.
 9. Staging DB работает на MySQL 5.7.21. 08.1C нашёл и устранил несовместимый implicit TIMESTAMP default; чистые MySQL 5.7 и 8.0 теперь обязательны в CI.
 
 Полный список и владельцы закрытия: [AUDIT_TRACEABILITY.md](AUDIT_TRACEABILITY.md).
 
 ## Следующие пять действий
 
-1. Выпустить HTTPS для `test.23time.ru` в панели Beget.
-2. 08.1E: подготовить server `.env`; owner dashboard оставить выключенным без отдельного Argon2id hash.
-3. Применить clean migrations к пока пустой staging DB и проверить schema/version.
-4. Активировать Basic-Auth staging и выполнить `PILOT_RUNBOOK.md` на desktop/mobile.
-5. Зафиксировать staging evidence и только затем обсуждать production.
+1. Владелец проверяет внешний вид и основные тесты на [staging](https://test.23time.ru/tests).
+2. Сменить SSH/DB credentials после deployment-сессии; новые секреты не передавать в чат.
+3. Настроить ежедневный retention cleanup через панель Beget.
+4. Провести короткий пилот по `PILOT_RUNBOOK.md`, учитывая D-029 об открытом доступе.
+5. По итогам пилота выбрать следующий пакет: UI/UX polish либо оставшиеся P0/P1 перед production.
 
 ## Решения владельца, нужные сейчас
 
-Для staging владелец выпускает Let's Encrypt для `test.23time.ru`. Остальные безопасные подготовительные пакеты агент выполняет самостоятельно; scoring и клинический текст не меняются.
+Нужна визуальная и продуктовая приёмка владельца staging. Scoring и клинический текст в deployment не менялись.
 
 ## Последняя контрольная точка
 

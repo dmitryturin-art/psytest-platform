@@ -139,3 +139,11 @@
 - Правило: для overlay saved/form answers и присоединения demographics использовать `AnswerMerger::overlay()` на базе `array_replace()`, а не `array_merge()`. `array_merge()` допустим только там, где массивы имеют семантически нечисловые ключи или нужны именно списки.
 - Защита: `tests/AnswerMergerTest.php` проверяет ключи 1–21 и complete validation BDI; HTTP fixture подтверждает redirect после 21 ответов. Обычный и pair submit используют один механизм.
 - Статус: действует с `788e590`.
+
+# L-015 — Не передавать application secrets через интерактивный PTY
+
+- Контекст: SSH password prompt Beget скрывает ввод, но вложенный `read -s` внутри PTY неожиданно вернул введённую строку в tool output.
+- Риск: секрет не попадает в Git, но остаётся в истории агентской операции и требует ротации.
+- Правило: application/DB secrets владелец создаёт и меняет через hosting secret UI/file manager; агент не просит новые значения в чат и не вводит их через PTY. Deployment проверяет только факт наличия, mode и работоспособность без вывода значения.
+- Защита: обязательная ротация затронутых credentials после 08.1E; `.env` остаётся вне web root/Git с mode `600`.
+- Статус: действует с 2026-08-22.

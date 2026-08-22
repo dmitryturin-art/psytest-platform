@@ -19,6 +19,18 @@
 
 ## 2026-08-22
 
+### 08.1E — HTTPS staging activation
+
+- Этап / ветка / PR: этап 08, `codex/08-beget-staging-activation`, [PR #3](https://github.com/dmitryturin-art/psytest-platform/pull/3).
+- Решение владельца: Basic Auth не нужен для текущего staging (D-029). Payment, AI и owner dashboard остаются выключены.
+- Server config/DB: `.env` mode `600`, production/debug false; pre-migration dump сохранён; Phinx применил 7 migrations, итог — 10 tables на MySQL 5.7.21.
+- HTTPS: панельный redirect не проявился в повторных GET-проверках, поэтому versioned `.htaccess` добавил proxy-aware fail-safe redirect. RED: HTTP `200`; GREEN после switch: HTTP `301` на HTTPS. Regression и [CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32585270174) проходят на MySQL 5.7/8.0.
+- Activation: archive `2f8f821` checksum `28bae9fa…08b3d`; `public_html` атомарно переключён на release, прежняя директория и tar backup сохранены. `/tests`, `/api/health`, `/privacy`, `/terms` — `200`; health — `ok`; legacy interpretation — `410`; owner login — `404` без hash.
+- Browser QA: desktop catalog DOM корректен; mobile 390×844 имеет `scrollWidth = innerWidth = 390`. Synthetic BDI прошёл 21/21, submit создал result `0/63`, validation error отсутствует, console errors отсутствуют. Один synthetic anonymous session остаётся в staging DB и удалится lifecycle-policy.
+- Наблюдение: browser automation прохождения была медленной; без отдельного network timing это не записывается как подтверждённая server performance regression.
+- Безопасность: во время PTY-ввода DB credential отобразился в tool output. Секрет не попал в Git/Markdown/server logs, но SSH/DB credentials должны быть сменены владельцем после deployment; новые значения не передавать в чат.
+- Следующий шаг: owner acceptance, credential rotation, retention cron и короткий пилот; production не активирован.
+
 ### 08.1D — production artifact и predeploy backup
 
 - Этап / ветка / PR: этап 08, `codex/08-beget-staging-artifact`, [PR #2](https://github.com/dmitryturin-art/psytest-platform/pull/2).
