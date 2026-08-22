@@ -5,8 +5,8 @@
 ## Сейчас
 
 - Активный этап: [02 — клиническая безопасность, privacy и бесплатный пилот](phases/02-clinical-privacy-pilot.md).
-- Состояние: этап 01 завершён; этап 02 движется небольшими пакетами к закрытому бесплатному пилоту. 02.6A `89a5e5a` исправляет известный дефект прогресса BDI: после последнего ответа интерфейс показывает `21 / 21` и `100%`; scoring и submit flow не изменены.
-- Последний функциональный package: 02.6A `89a5e5a`; локальный полный gate и browser QA на desktop/390×844 пройдены. Предыдущий 02.4B owner dashboard подтверждён [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32506141069).
+- Состояние: этап 01 завершён; этап 02 движется небольшими пакетами к закрытому бесплатному пилоту. 02.6A исправил BDI progress, а 02.6B `0954117` убирает пустую sticky-панель на первом вопросе.
+- Последний функциональный package: 02.6B `0954117`; локальный полный gate и browser QA на desktop/390×844 пройдены. 02.6A подтверждён [PHP 8.3/MySQL CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32574951654).
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -32,7 +32,7 @@
 | Architecture check | pass: 5 модулей, шаблоны и статика | project root исправлен и покрыт узким regression-тестом |
 | PHPStan baseline guard | pass: ровно 148 entries | `composer baseline:check` запрещает незаметный рост baseline |
 | Dependency audit | pass: `dompdf` 3.1.6, audit clean | `DEP-01` закрыт в `7272e51`; lock воспроизводим для PHP 8.3 |
-| Browser smoke | пройден частично | BDI progress 21/21 исправлен и проверен на desktop/mobile; остаются blank sticky nav, accessibility и responsive-дефекты |
+| Browser smoke | пройден частично | BDI progress и пустая sticky navigation исправлены на desktop/mobile; остаются accessibility и responsive-дефекты |
 
 Свежие команды и точный вывод добавляются в [WORKLOG.md](WORKLOG.md); эта таблица не заменяет повторный baseline run.
 

@@ -19,6 +19,15 @@
 
 ## 2026-08-22
 
+### 02.6B — hide empty questionnaire navigation
+
+- Этап / ветка / commit: этап 02, `codex/02-empty-test-navigation`, `0954117`.
+- Цель: закрыть `UX-01` — пустая sticky-панель не должна перекрывать первый вопрос, когда обе кнопки недоступны.
+- Сделано: видимость контейнера теперь вычисляется вместе с доступностью «Назад» и «Завершить»; на первом вопросе он скрыт, со второго появляется.
+- Проверки и evidence: RED/GREEN contract; full gate — 156 tests / 1556 assertions, audit/PHPStan/lint/architecture/baseline pass. Browser QA 1280×900 и 390×844: на первом вопросе `display:none`, высота 0; на втором — `flex`, «Назад» видна; overflow и console errors отсутствуют.
+- Не сделано / риски: дизайн панели и общая дизайн-система не менялись.
+- Следующий шаг: закрытый бесплатный pilot либо automated BDI safety notice coverage.
+
 ### 02.6A — final-answer progress completion
 
 - Этап / ветка / commit: этап 02, `codex/02-bdi-progress-completion`, `89a5e5a`.

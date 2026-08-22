@@ -23,6 +23,7 @@ Current-state evidence для этого выбора: [DATA_MAP_CURRENT.md](../
 7. **Методики и лицензии.** 02.5A `7240d3b` создаёт versioned registry текущих модулей: factual evidence, gaps и release gates; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success. Пока право конкретной формы не подтверждено, не добавлять новый public content и не включать paid interpretation; существующие scoring core и бесплатный flow не меняются.
 8. **Закрытый бесплатный пилот.** Небольшая группа, anonymized issue log, support path, никаких платежей/AI.
 9. **Pilot questionnaire UX.** 02.6A `89a5e5a`: сохранение последнего ответа сразу обновляет общий progress, поэтому BDI завершается на `21 / 21` и `100%`, даже когда перехода к следующему вопросу уже нет. Scoring и submit flow не изменены; regression contract и desktop/mobile browser QA пройдены.
+10. **Questionnaire navigation.** 02.6B `0954117`: пустая sticky-панель скрыта на первом вопросе и появляется только при доступном действии «Назад» или «Завершить». Desktop/mobile browser QA пройдены.
 
 ## Privacy-инварианты
 
