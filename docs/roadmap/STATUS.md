@@ -4,8 +4,8 @@
 
 ## Сейчас
 
-- Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [04 — выбор визуального направления](phases/04-ui-ux-redesign.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
-- Состояние: `test.23time.ru` работает на release `398ca23`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `2f8f821` сохранён. Отдельные прототипы A/B/C не подключены к staging и ждут выбора владельца.
+- Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [04 — внедрение выбранного направления A](phases/04-ui-ux-redesign.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
+- Состояние: `test.23time.ru` работает на release `398ca23`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `2f8f821` сохранён. В репозитории подготовлены новая главная `/` и каталог `/tests` в выбранном направлении A; staging пока не обновлялся.
 - Управление знаниями: локальный Graphify обновлён до текущего checkout и теперь имеет обязательную freshness-проверку перед архитектурным query; артефакты остаются вне Git.
 - Последний пакет: 08.1F `398ca23` + [PR #4](https://github.com/dmitryturin-art/psytest-platform/pull/4) — hardening cookie/headers; [PHP 8.3 / MySQL 5.7 и 8.0 CI](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32588895557) — success. Пакет 02.8B BDI notice остаётся последним clinical package.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
@@ -21,7 +21,7 @@
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
 | 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record и runbook закрытого пилота готовы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
 | 03, 05–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
-| 04 | Прототипы на проверке владельца | три направления лендинга/каталога проверены на desktop и mobile; runtime, SMIL result и staging не менялись |
+| 04 | В работе | владелец выбрал A; новая главная и каталог реализованы локально и прошли browser QA, но staging/result/test-taking ещё не менялись |
 | 08 | На проверке владельца (staging) | публичный HTTPS staging работает; cookie/headers проверены внешним smoke, payment/AI/admin выключены, rollback готов; production не начат |
 
 ## Baseline, обнаруженный аудитом
@@ -54,15 +54,15 @@
 
 ## Следующие пять действий
 
-1. Владелец выбирает направление A/B/C либо гибрид в [интерактивном сравнении](../prototypes/04-visual-directions/README.md); после выбора начинается 04.0B без изменения SMIL-графика.
-2. Владелец проверяет основные тесты на [staging](https://test.23time.ru/tests).
-3. Сменить SSH/DB credentials после deployment-сессии; новые секреты не передавать в чат.
-4. Настроить ежедневный retention cleanup через панель Beget.
-5. Провести короткий пилот по `PILOT_RUNBOOK.md`, учитывая D-029 об открытом доступе.
+1. Владелец принимает локальную реализацию направления A после browser preview; затем отдельный deployment-package обновляет staging.
+2. Выполнить 04.0C: questionnaire components и navigation без изменения scoring; отдельно проверить keyboard/mobile.
+3. Владелец проверяет основные тесты на [staging](https://test.23time.ru/tests).
+4. Сменить SSH/DB credentials после deployment-сессии; новые секреты не передавать в чат.
+5. Настроить ежедневный retention cleanup через панель Beget.
 
 ## Решения владельца, нужные сейчас
 
-Нужны выбор визуального направления A/B/C (допустим явно согласованный гибрид) и продуктовая приёмка staging. Scoring, клинический текст и SMIL-график не менялись.
+Нужна визуальная приёмка владельцем нового направления A и отдельная продуктовая приёмка staging. Scoring, клинический текст и SMIL-график не менялись.
 
 ## Последняя контрольная точка
 

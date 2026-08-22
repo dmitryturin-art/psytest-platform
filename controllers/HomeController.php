@@ -11,12 +11,13 @@ namespace PsyTest\Controllers;
 class HomeController extends BaseController
 {
     /**
-     * Home page - redirect to tests list
+     * Public landing page
      */
     public function index(): void
     {
-        header('Location: /tests');
-        exit;
+        echo $this->view->render('home', [
+            'tests' => $this->moduleLoader->getActiveModules(),
+        ]);
     }
 
     /**
