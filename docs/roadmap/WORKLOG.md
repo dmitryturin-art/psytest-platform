@@ -17,16 +17,27 @@
 - Следующий шаг:
 ```
 
+## 2026-08-23
+
+### 08.3 — staging deployment результатов Лазаруса
+
+- Этап / ветка / commit: этап 08, `codex/08-staging-lazarus-results-release`, source `779a2b2` (PR #13).
+- Цель: выложить проверенный 04.0D без миграций и не менять scoring либо protected SMIL chart.
+- Сделано: артефакт собран из `779a2b2`, production dependencies установлены из lockfile; SHA-256 `d60abaa7…3f76f` совпал после загрузки. Новый release распакован вне web root, получил текущий `.env` и storage-каталоги. `public_html` атомарно переключён с `2b0ce92/public` на `779a2b2/public`; прошлый release сохранён для rollback.
+- Проверки и evidence: GitHub Actions [32658374725](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32658374725) — success для PHP 8.3/MySQL 5.7 и 8.0. Внешний smoke: HTTPS `/api/health` и `/tests` — `200`, health `ok`; HTTP `/tests` — `301` → HTTPS. CSS и основной каталог доступны.
+- Не сделано / риски: полноценная ручная проверка конкретного pair result на desktop/390×844 остаётся владельцу/следующему browser package; calculations, PDF и SMIL graph не менялись.
+- Следующий шаг: владелец открывает существующий pair result на staging и оценивает содержание/вёрстку; следующий безопасный пакет 04.0E — общий questionnaire UX либо результатные компоненты без SMIL scoring.
+
 ## 2026-08-22
 
 ### 04.0D — единое представление результатов Лазаруса
 
-- Этап / ветка / commit: этап 04, `codex/04-lazarus-results-comparison`, commit ожидается.
+- Этап / ветка / commit: этап 04, `codex/04-lazarus-results-comparison` → `main`, `779a2b2`.
 - Цель: устранить визуальное расхождение между индивидуальной шкалой и pair comparison, сделать все данные пары читаемыми на мобильном экране без изменения расчётов.
 - Сделано: шкала балла вынесена в общий Twig partial и используется и individual badge, и в двух карточках pair result. В pair comparison добавлены два сопоставимых суммарных профиля; подробная таблица доступна по раскрытию и на mobile преобразуется в карточки с подписями каждого значения.
 - Проверки и evidence: targeted `LazarusPairTest` — 4 tests / 115 assertions; `LazarusModuleTest` — 13 tests / 62 assertions; Twig render smoke, PHPStan, lint, architecture, baseline и diff check — pass; `composer audit` — clean. Полный PHPUnit в локальной среде завершился 13 ранее известных MySQL connection errors (`2002`); CI MySQL 5.7/8.0 остаётся обязательным gate перед staging. Graphify code update прошёл, но для пяти изменённых Markdown-документов инструмент запросил внешний LLM key; до следующей ручной semantic extraction graph считается `STALE` и не используется как доказательство, source files остаются fallback.
-- Не сделано / риски: browser QA и staging deployment выполняются после CI. Scoring, clinical text и protected SMIL chart не менялись.
-- Следующий шаг: commit, GitHub CI, затем atomic staging deployment и проверка страницы пары на desktop/mobile.
+- Не сделано / риски: полноценная визуальная проверка pair result на staging остаётся отдельным шагом. Scoring и protected SMIL chart не менялись.
+- Следующий шаг: 08.3 staging deployment и визуальная приёмка владельца.
 
 ### 04.0C — мобильное прохождение Лазаруса
 

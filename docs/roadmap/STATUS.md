@@ -5,9 +5,9 @@
 ## Сейчас
 
 - Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [04 — внедрение выбранного направления A](phases/04-ui-ux-redesign.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
-- Состояние: `test.23time.ru` работает на release `2b0ce92`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `bf018cf` сохранён. Новая главная `/`, каталог `/tests` и улучшенное мобильное прохождение Лазаруса доступны на staging.
+- Состояние: `test.23time.ru` работает на release `779a2b2`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `2b0ce92` сохранён. Новая главная `/`, каталог `/tests`, мобильное прохождение и обновлённое парное сравнение Лазаруса доступны на staging.
 - Управление знаниями: локальный Graphify обновлён до текущего checkout и теперь имеет обязательную freshness-проверку перед архитектурным query; артефакты остаются вне Git.
-- Последний выложенный пакет: 04.0C `2b0ce92` — мобильная сетка ответов Лазаруса 5×2, сохранение позиции при переходе и понятная подпись предыдущего действия. Следующий исходный пакет 04.0D унифицирует individual/pair presentation Лазаруса и ожидает CI/staging проверки.
+- Последний выложенный пакет: 04.0D `779a2b2` — единая шкала individual/pair результатов Лазаруса, ясные термины сравнения и mobile-карточки подробных данных. CI PHP 8.3/MySQL 5.7 и 8.0, затем внешний HTTPS smoke — success.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).
@@ -21,7 +21,7 @@
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
 | 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record и runbook закрытого пилота готовы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
 | 03, 05–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
-| 04 | В работе | владелец выбрал A; новая главная/каталог и мобильное прохождение Лазаруса выложены на staging; 04.0D улучшает pair results, защищённый SMIL-график не меняется |
+| 04 | В работе | владелец выбрал A; новая главная/каталог, мобильное прохождение и pair results Лазаруса выложены на staging; защищённый SMIL-график не меняется |
 | 08 | На проверке владельца (staging) | публичный HTTPS staging работает; cookie/headers проверены внешним smoke, payment/AI/admin выключены, rollback готов; production не начат |
 
 ## Baseline, обнаруженный аудитом
