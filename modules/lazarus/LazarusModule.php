@@ -286,7 +286,7 @@ final class LazarusModule extends BaseTestModule
             : 0.0;
 
         $summary = sprintf(
-            'Общая согласованность ответов: %.1f%%. %s',
+            'Совпадение собственных оценок отношений: %.1f%%. %s',
             $overallAgreement,
             $overallAgreement >= 80
                 ? 'Партнёры в целом согласны в оценке отношений.'

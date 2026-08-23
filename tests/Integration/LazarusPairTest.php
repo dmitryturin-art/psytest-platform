@@ -44,6 +44,8 @@ final class LazarusPairTest extends TestCase
         $this->assertArrayHasKey('items', $comparison);
         $this->assertArrayHasKey('overall_agreement', $comparison);
         $this->assertArrayHasKey('summary', $comparison);
+        $this->assertSame($r1, $comparison['results_1']);
+        $this->assertSame($r2, $comparison['results_2']);
         $this->assertCount(16, $comparison['items']);
 
         // Каждый item имеет поля, нужные шаблону
@@ -113,6 +115,11 @@ final class LazarusPairTest extends TestCase
             $this->assertIsInt($item['p2_self']);
             $this->assertIsInt($item['difference']);
         }
+
+        // Карточки pair-comparison используют реальные individual totals,
+        // не повторно рассчитанные данные.
+        $this->assertSame($r1['total_self'], $comparison['results_1']['total_self']);
+        $this->assertSame($r2['total_self'], $comparison['results_2']['total_self']);
     }
 
     /**
