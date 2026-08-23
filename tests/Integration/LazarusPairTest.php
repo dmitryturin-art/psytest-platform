@@ -6,6 +6,8 @@ namespace PsyTest\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Lazarus\LazarusModule;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
 /**
  * Integration test for the Lazarus pair-mode flow.
@@ -120,6 +122,37 @@ final class LazarusPairTest extends TestCase
         // не повторно рассчитанные данные.
         $this->assertSame($r1['total_self'], $comparison['results_1']['total_self']);
         $this->assertSame($r2['total_self'], $comparison['results_2']['total_self']);
+    }
+
+    public function testPairComparisonUsesDistinctWebAndPdfLayouts(): void
+    {
+        $r1 = $this->module->calculateResults($this->allAnswers(self: 8, partner: 6));
+        $r2 = $this->module->calculateResults($this->allAnswers(self: 6, partner: 8));
+        $comparison = $this->module->comparePairResults($r1, $r2);
+        $twig = new Environment(new FilesystemLoader(dirname(__DIR__, 2) . '/templates'), ['cache' => false]);
+
+        $web = $twig->render('blocks/pair-comparison.twig', ['comparison' => $comparison]);
+        $pdf = $twig->render('blocks/pair-comparison.twig', ['comparison' => $comparison, 'is_pdf' => true]);
+
+        $this->assertStringContainsString('pair-comparison__details', $web);
+        $this->assertStringContainsString('score-badge__scale', $web);
+        $this->assertStringContainsString('pair-comparison--pdf', $pdf);
+        $this->assertStringContainsString('Нач.:<br>оценка', $pdf);
+        $this->assertStringNotContainsString('<details', $pdf);
+    }
+
+    public function testControllerUsesPdfLayoutOnlyForPdfRoute(): void
+    {
+        $controller = (string) file_get_contents(dirname(__DIR__, 2) . '/controllers/ResultController.php');
+        $pairShow = substr(
+            $controller,
+            (int) strpos($controller, 'public function pairShow'),
+            (int) strpos($controller, 'public function pairPdf') - (int) strpos($controller, 'public function pairShow'),
+        );
+        $pairPdf = substr($controller, (int) strpos($controller, 'public function pairPdf'));
+
+        $this->assertStringNotContainsString("'is_pdf' => true", $pairShow);
+        $this->assertStringContainsString("'is_pdf' => true", $pairPdf);
     }
 
     /**

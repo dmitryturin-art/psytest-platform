@@ -1,13 +1,13 @@
 # Текущий статус программы
 
-Обновлён: 2026-08-22. Это оперативная панель; краткое состояние для паузы находится в [CHECKPOINT.md](CHECKPOINT.md).
+Обновлён: 2026-08-23. Это оперативная панель; краткое состояние для паузы находится в [CHECKPOINT.md](CHECKPOINT.md).
 
 ## Сейчас
 
 - Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [04 — внедрение выбранного направления A](phases/04-ui-ux-redesign.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
 - Состояние: `test.23time.ru` работает на release `779a2b2`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `2b0ce92` сохранён. Новая главная `/`, каталог `/tests`, мобильное прохождение и обновлённое парное сравнение Лазаруса доступны на staging.
 - Управление знаниями: локальный Graphify обновлён до текущего checkout и теперь имеет обязательную freshness-проверку перед архитектурным query; артефакты остаются вне Git.
-- Последний выложенный пакет: 04.0D `779a2b2` — единая шкала individual/pair результатов Лазаруса, ясные термины сравнения и mobile-карточки подробных данных. CI PHP 8.3/MySQL 5.7 и 8.0, затем внешний HTTPS smoke — success.
+- Последний выложенный пакет: 04.0D `779a2b2` — единая шкала individual/pair результатов Лазаруса, ясные термины сравнения и mobile-карточки подробных данных. CI PHP 8.3/MySQL 5.7 и 8.0, затем внешний HTTPS smoke — success. Локально готовится 04.0E: унификация meter совпадения, заметное раскрытие и корректный pair PDF; staging пока не менялся.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
 - Последние завершённые work packages: CI для PHP 8.3 (`0c91adf`), Linux-совместимый autoload Лазаруса (`b82347e`), CSRF enforcement (`e42eb89`) и прозрачный протокол статусов (`ed3d896`).

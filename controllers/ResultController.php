@@ -258,6 +258,7 @@ class ResultController extends BaseController
         );
         $comparisonHtml = $this->view->render('blocks/pair-comparison', [
             'comparison' => $comparisonData,
+            'is_pdf' => true,
         ]);
 
         // Generate PDF

@@ -47,11 +47,27 @@ class PDFGenerator
      */
     public function generate(string $html, string $filename, bool $saveToFile = true): string
     {
+        return $this->generateWithOrientation($html, $filename, $saveToFile, 'portrait');
+    }
+
+    /**
+     * Generate a PDF with an explicit paper orientation.
+     *
+     * Pair comparisons contain six meaningful columns. They are deliberately
+     * generated in landscape rather than squeezed into an unreadable portrait
+     * table.
+     */
+    private function generateWithOrientation(
+        string $html,
+        string $filename,
+        bool $saveToFile,
+        string $orientation
+    ): string {
         // Add base styles
         $fullHtml = $this->wrapInHtml($html);
 
         $this->dompdf->loadHtml($fullHtml);
-        $this->dompdf->setPaper('a4', 'portrait');
+        $this->dompdf->setPaper('a4', $orientation);
         $this->dompdf->render();
 
         if ($saveToFile) {
@@ -118,7 +134,7 @@ class PDFGenerator
 
         $html = $this->renderPairTemplate($comparison, $test, $comparisonHtml);
 
-        return $this->generate($html, $filename, true);
+        return $this->generateWithOrientation($html, $filename, true, 'landscape');
     }
 
     /**

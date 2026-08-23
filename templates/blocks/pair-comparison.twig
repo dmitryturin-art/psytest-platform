@@ -1,3 +1,43 @@
+{% if is_pdf|default(false) %}
+<div class="pair-comparison-block pair-comparison--pdf">
+    <style>
+        .pair-comparison--pdf { font-size: 8pt; }
+        .pair-comparison--pdf .pair-comparison__pdf-key { margin: 0 0 8px; text-align: left; }
+        .pair-comparison--pdf .pair-comparison__table { width: 100%; margin: 0; border-collapse: collapse; table-layout: fixed; font-size: 7.4pt; }
+        .pair-comparison--pdf .pair-comparison__table th, .pair-comparison--pdf .pair-comparison__table td { padding: 4px; overflow-wrap: break-word; }
+        .pair-comparison--pdf .pair-comparison__table .col-item { width: 44%; }
+        .pair-comparison--pdf .pair-comparison__table .col-score { width: 11%; text-align: center; }
+        .pair-comparison--pdf .pair-comparison__table .col-diff { width: 9%; text-align: center; }
+        .pair-comparison--pdf .pair-comparison__table .col-gap { width: 12.5%; text-align: center; }
+        .pair-comparison--pdf .pair-comparison__table .item-domain, .pair-comparison--pdf .pair-comparison__table .item-text { display: block; }
+        .pair-comparison--pdf .pair-comparison__table .item-domain { font-weight: bold; font-size: 6.8pt; }
+    </style>
+    <p class="pair-comparison__pdf-key"><strong>Как читать таблицу:</strong> «Нач.» — начавший опросник, «Пригл.» — приглашённый участник. «Угадал» — предположение об оценке партнёра минус его фактическая оценка.</p>
+    <table class="pair-comparison__table">
+        <caption>Подробное сравнение ответов двух участников</caption>
+        <thead><tr>
+            <th class="col-item">Пункт</th>
+            <th class="col-score">Нач.:<br>оценка</th>
+            <th class="col-score">Пригл.:<br>оценка</th>
+            <th class="col-diff">Разница</th>
+            <th class="col-gap">Нач.:<br>угадал</th>
+            <th class="col-gap">Пригл.:<br>угадал</th>
+        </tr></thead>
+        <tbody>
+            {% for item in comparison.items %}
+            <tr>
+                <td class="col-item"><span class="item-domain">{{ item.domain }}</span><span class="item-text">{{ item.text }}</span></td>
+                <td class="col-score">{{ item.p1_self ?? '—' }}</td>
+                <td class="col-score">{{ item.p2_self ?? '—' }}</td>
+                <td class="col-diff">{% if item.difference is not null %}{% if item.difference > 0 %}+{{ item.difference }}{% else %}{{ item.difference }}{% endif %}{% else %}—{% endif %}</td>
+                <td class="col-gap">{% if item.p1_accuracy is not null %}{% if item.p1_accuracy > 0 %}+{{ item.p1_accuracy }}{% else %}{{ item.p1_accuracy }}{% endif %}{% else %}—{% endif %}</td>
+                <td class="col-gap">{% if item.p2_accuracy is not null %}{% if item.p2_accuracy > 0 %}+{{ item.p2_accuracy }}{% else %}{{ item.p2_accuracy }}{% endif %}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
 <div class="pair-comparison-block">
     {% set first = comparison.results_1|default({}) %}
     {% set second = comparison.results_2|default({}) %}
@@ -28,8 +68,9 @@
 
     {% if comparison.overall_agreement is defined %}
     <div class="pair-comparison__agreement">
-        <div class="agreement-bar"><div class="agreement-fill" style="width: {{ comparison.overall_agreement }}%"></div></div>
-        <span class="agreement-label">Совпадение собственных оценок: {{ comparison.overall_agreement }}%</span>
+        {% set agreement_thresholds = { low_agreement: { min: 0, max: 49 }, medium_agreement: { min: 50, max: 79 }, high_agreement: { min: 80, max: 100 } } %}
+        {% include 'blocks/score-scale.twig' with { score: comparison.overall_agreement, max: 100, thresholds: agreement_thresholds, label: 'Совпадение собственных оценок' } only %}
+        <span class="pair-comparison__agreement-label">Совпадение собственных оценок: {{ comparison.overall_agreement }}%</span>
     </div>
     {% endif %}
 
@@ -71,3 +112,4 @@
         <p><strong>Насколько угадал</strong> — предположение человека об оценке партнёра минус фактическая оценка партнёра. Отрицательное значение — недооценили, положительное — переоценили.</p>
     </div>
 </div>
+{% endif %}
