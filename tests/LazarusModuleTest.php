@@ -171,7 +171,7 @@ final class LazarusModuleTest extends TestCase
         $this->assertArrayHasKey('overall_agreement', $comparison);
         $this->assertGreaterThan(0, $comparison['overall_agreement']);
         $this->assertLessThanOrEqual(100, $comparison['overall_agreement']);
-        $this->assertStringContainsString('согласованность', $comparison['summary']);
+        $this->assertStringContainsString('собственных оценок', $comparison['summary']);
 
         // П1 оценил себя 8, П2 — 6 → difference=2
         $item1 = $comparison['items'][0];
