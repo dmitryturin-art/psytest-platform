@@ -19,6 +19,15 @@
 
 ## 2026-08-23
 
+### 08.4 — staging deployment 04.0E результатов Лазаруса
+
+- Этап / ветка / commit: этап 08, `codex/04-pair-result-polish` → `main`, `5da9ab5` (PR #15).
+- Цель: выложить проверенный 04.0E без миграций и без изменения scoring либо protected SMIL chart.
+- Сделано: артефакт собран из `5da9ab5`, production dependencies установлены из lockfile; SHA-256 совпал после загрузки. `public_html` атомарно переключён с `779a2b2/public` на `5da9ab5/public`; прошлый release сохранён для rollback.
+- Проверки и evidence: GitHub Actions [32661544002](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32661544002) — success для PHP 8.3/MySQL 5.7 и 8.0. Внешний smoke: HTTPS `/api/health` и `/tests` — `200`, health `ok`; HTTP `/tests` — `301` → HTTPS. Локальная visual QA synthetic PDF через Poppler: 3 страницы A4 landscape, все шесть колонок помещаются и header повторяется.
+- Не сделано / риски: ручная проверка владельцем конкретного pair result на desktop/390×844 и скачанного PDF остаётся следующим acceptance шагом. Calculations и SMIL graph не менялись.
+- Следующий шаг: владелец проверяет существующее парное сравнение и его PDF на staging; следующий безопасный пакет — 04.1 result components/UX без SMIL scoring.
+
 ### 08.3 — staging deployment результатов Лазаруса
 
 - Этап / ветка / commit: этап 08, `codex/08-staging-lazarus-results-release`, source `779a2b2` (PR #13).
@@ -32,12 +41,12 @@
 
 ### 04.0E — парный результат: единый meter, раскрытие и PDF
 
-- Этап / ветка / commit: этап 04, `codex/04-pair-result-polish`, commit pending.
+- Этап / ветка / commit: этап 04, `codex/04-pair-result-polish` → `main`, `5da9ab5` (source `88ea0c6`, PR #15).
 - Цель: устранить три владелецких дефекта в результатах Лазаруса без затрагивания scoring: устаревшую шкалу совпадения, малозаметное раскрытие и выход таблицы за границы PDF.
 - Сделано: agreement использует общий `score-scale.twig` с маркером и пороговыми зонами вместо отдельного gradient bar; `summary` оформлен как заметный control с 48px target, контрастным фоном, focus и состоянием open. PDF route рендерит отдельную короткую таблицу с ключом терминов; генератор использует A4 landscape. Browser-версия и PDF не смешиваются.
-- Проверки и evidence: targeted PHPUnit `LazarusPairTest` + `PDFGeneratorSmokeTest` — 8 tests / 128 assertions; architecture и PHPStan baseline checks — pass; `git diff --check` — pass. PDF с синтетическими данными отрендерен Poppler: 3 страницы A4 landscape, все шесть колонок и заголовки помещаются, header повторяется на последующих страницах. Graphify incremental update обработал code, но остановился на пяти изменённых Markdown без LLM key; граф остаётся `STALE` и не используется как доказательство.
-- Не сделано / риски: CI, staging deploy и browser visual acceptance обычной pair-страницы ещё ожидаются. В этом пакете не менялись вопросы, расчёты, SMIL или публичный текст результатов.
-- Следующий шаг: проверить полный quality gate, открыть PR/CI, затем при успехе выложить 04.0E на staging и попросить владельца проверить пару и PDF.
+- Проверки и evidence: targeted PHPUnit `LazarusPairTest` + `PDFGeneratorSmokeTest` — 8 tests / 128 assertions; architecture и PHPStan baseline checks — pass; `git diff --check` — pass. PDF с синтетическими данными отрендерен Poppler: 3 страницы A4 landscape, все шесть колонок и заголовки помещаются, header повторяется на последующих страницах. Graphify incremental update обработал code, но остановился на изменённых Markdown без LLM key; граф остаётся `STALE` и не используется как доказательство.
+- Не сделано / риски: browser visual acceptance обычной pair-страницы владельцем ещё ожидается. В этом пакете не менялись вопросы, расчёты, SMIL или публичный текст результатов.
+- Следующий шаг: владелец проверяет staging pair result и PDF; затем 04.1 result components/UX без SMIL scoring.
 
 ## 2026-08-22
 
