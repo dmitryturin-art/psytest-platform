@@ -275,6 +275,32 @@ class SessionManager
     }
 
     /**
+     * Return the active second-partner session for an invite. Opening an invite
+     * creates this row before the visitor answers, so it must be reusable until
+     * the partner completes the questionnaire.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getPairSessionForSourceToken(string $token): ?array
+    {
+        $session = $this->db->selectOne(
+            "SELECT * FROM test_sessions
+             WHERE partner_token = :token
+             AND expires_at > NOW()
+             AND status NOT IN ('expired', 'deleted')",
+            ['token' => $token],
+        );
+
+        if ($session) {
+            $session['answers'] = !empty($session['answers']) ? json_decode($session['answers'], true) : [];
+            $session['calculated_results'] = !empty($session['calculated_results']) ? json_decode($session['calculated_results'], true) : [];
+            $session['demographics'] = !empty($session['demographics']) ? json_decode($session['demographics'], true) : [];
+        }
+
+        return $session;
+    }
+
+    /**
      * Atomically create the second partner's session.
      *
      * The preflight check makes the normal case clear to a visitor. The
