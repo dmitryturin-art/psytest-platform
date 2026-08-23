@@ -2958,8 +2958,19 @@ body {
         font-size: 0.82rem;
     }
     .scale-option__num {
-        padding: 7px 0;
-        font-size: 0.75rem;
+        display: grid;
+        min-height: 44px;
+        padding: 0;
+        place-items: center;
+        font-size: 0.9rem;
+    }
+    .dual-scale__row {
+        align-items: flex-start;
+    }
+    .dual-scale__options {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(44px, 1fr));
+        gap: 8px;
     }
 }
 
