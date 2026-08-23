@@ -242,8 +242,9 @@
         updateNavigation();
         updateProgress();
 
-        // Scroll to top of question
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Keep the current reading position when moving between questions.
+        // On mobile, jumping to the page header made each answer require a
+        // second scroll back to the answer scale.
     }
 
     /**
