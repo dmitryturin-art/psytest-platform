@@ -28,6 +28,17 @@
 - Не сделано / риски: полноценная ручная проверка конкретного pair result на desktop/390×844 остаётся владельцу/следующему browser package; calculations, PDF и SMIL graph не менялись.
 - Следующий шаг: владелец открывает существующий pair result на staging и оценивает содержание/вёрстку; следующий безопасный пакет 04.0E — общий questionnaire UX либо результатные компоненты без SMIL scoring.
 
+## 2026-08-23
+
+### 04.0E — парный результат: единый meter, раскрытие и PDF
+
+- Этап / ветка / commit: этап 04, `codex/04-pair-result-polish`, commit pending.
+- Цель: устранить три владелецких дефекта в результатах Лазаруса без затрагивания scoring: устаревшую шкалу совпадения, малозаметное раскрытие и выход таблицы за границы PDF.
+- Сделано: agreement использует общий `score-scale.twig` с маркером и пороговыми зонами вместо отдельного gradient bar; `summary` оформлен как заметный control с 48px target, контрастным фоном, focus и состоянием open. PDF route рендерит отдельную короткую таблицу с ключом терминов; генератор использует A4 landscape. Browser-версия и PDF не смешиваются.
+- Проверки и evidence: targeted PHPUnit `LazarusPairTest` + `PDFGeneratorSmokeTest` — 8 tests / 128 assertions; architecture и PHPStan baseline checks — pass; `git diff --check` — pass. PDF с синтетическими данными отрендерен Poppler: 3 страницы A4 landscape, все шесть колонок и заголовки помещаются, header повторяется на последующих страницах. Graphify incremental update обработал code, но остановился на пяти изменённых Markdown без LLM key; граф остаётся `STALE` и не используется как доказательство.
+- Не сделано / риски: CI, staging deploy и browser visual acceptance обычной pair-страницы ещё ожидаются. В этом пакете не менялись вопросы, расчёты, SMIL или публичный текст результатов.
+- Следующий шаг: проверить полный quality gate, открыть PR/CI, затем при успехе выложить 04.0E на staging и попросить владельца проверить пару и PDF.
+
 ## 2026-08-22
 
 ### 04.0D — единое представление результатов Лазаруса
