@@ -1,59 +1,73 @@
 <div class="pair-comparison-block">
+    {% set first = comparison.results_1|default({}) %}
+    {% set second = comparison.results_2|default({}) %}
+    {% set max_score = first.max_score|default(second.max_score|default(160)) %}
+    {% set thresholds = { dissatisfied: { min: 16, max: 79 }, satisfied: { min: 80, max: 160 } } %}
+
+    <section class="pair-comparison__scores" aria-labelledby="pair-scores-title">
+        <h3 id="pair-scores-title" class="pair-comparison__subtitle">Как каждый оценивает отношения</h3>
+        <div class="pair-score-grid">
+            <article class="pair-score-card score-badge score-badge--{{ first.level|default('dissatisfied') }}">
+                <p class="pair-score-card__label">Начавший опросник</p>
+                <div class="pair-score-card__value">{{ first.total_self|default('—') }}<span>/{{ max_score }}</span></div>
+                {% include 'blocks/score-scale.twig' with { score: first.total_self|default(0), max: max_score, thresholds: thresholds, label: 'Оценка начавшего опросник' } only %}
+                <p class="pair-score-card__level">{{ first.level_name|default('Нет данных') }}</p>
+            </article>
+            <article class="pair-score-card score-badge score-badge--{{ second.level|default('dissatisfied') }}">
+                <p class="pair-score-card__label">Приглашённый участник</p>
+                <div class="pair-score-card__value">{{ second.total_self|default('—') }}<span>/{{ max_score }}</span></div>
+                {% include 'blocks/score-scale.twig' with { score: second.total_self|default(0), max: max_score, thresholds: thresholds, label: 'Оценка приглашённого участника' } only %}
+                <p class="pair-score-card__level">{{ second.level_name|default('Нет данных') }}</p>
+            </article>
+        </div>
+    </section>
+
     {% if comparison.summary is defined %}
     <p class="pair-comparison__summary">{{ comparison.summary }}</p>
     {% endif %}
 
     {% if comparison.overall_agreement is defined %}
     <div class="pair-comparison__agreement">
-        <div class="agreement-bar">
-            <div class="agreement-fill" style="width: {{ comparison.overall_agreement }}%"></div>
-        </div>
-        <span class="agreement-label">Согласованность ответов: {{ comparison.overall_agreement }}%</span>
+        <div class="agreement-bar"><div class="agreement-fill" style="width: {{ comparison.overall_agreement }}%"></div></div>
+        <span class="agreement-label">Совпадение собственных оценок: {{ comparison.overall_agreement }}%</span>
     </div>
     {% endif %}
 
-    <table class="pair-comparison__table">
-        <thead>
-            <tr>
+    <div class="pair-comparison__guide">
+        <p><strong>Как читать сравнение:</strong> «начавший» — человек, который получил ссылку первым и отправил приглашение; «приглашённый» — человек, который прошёл по этой ссылке.</p>
+        <p>В первых двух столбцах — собственная оценка отношений каждого человека. Столбцы «насколько угадал» показывают, насколько предположение одного человека об оценке другого отличается от фактической оценки: <strong>минус</strong> — недооценил, <strong>плюс</strong> — переоценил.</p>
+    </div>
+
+    <details class="pair-comparison__details">
+        <summary>Подробное сравнение по 16 пунктам</summary>
+        <p class="pair-comparison__details-hint">На телефоне каждый пункт показан отдельной карточкой, чтобы все значения оставались читаемыми.</p>
+        <table class="pair-comparison__table">
+            <caption class="visually-hidden">Подробное сравнение ответов двух участников</caption>
+            <thead><tr>
                 <th class="col-item">Пункт</th>
-                <th class="col-score">Ответ 1-го</th>
-                <th class="col-score">Ответ 2-го</th>
-                <th class="col-diff">Разница</th>
-                <th class="col-gap">1-й: ожидание vs реальность</th>
-                <th class="col-gap">2-й: ожидание vs реальность</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in comparison.items %}
-            <tr class="row-diff-{{ item.difference|abs }}">
-                <td class="col-item">
-                    <span class="item-domain">{{ item.domain }}</span>
-                    <span class="item-text">{{ item.text }}</span>
-                </td>
-                <td class="col-score">{{ item.p1_self ?? '—' }}</td>
-                <td class="col-score">{{ item.p2_self ?? '—' }}</td>
-                <td class="col-diff {{ item.difference == 0 ? 'diff-match' : 'diff-mismatch' }}">
-                    {% if item.difference is not null %}
-                        {% if item.difference > 0 %}+{{ item.difference }}{% else %}{{ item.difference }}{% endif %}
-                    {% else %}—{% endif %}
-                </td>
-                <td class="col-gap {{ item.p1_accuracy is not null and item.p1_accuracy|abs >= 2 ? 'gap-large' : '' }}">
-                    {% if item.p1_accuracy is not null %}
-                        {% if item.p1_accuracy > 0 %}+{{ item.p1_accuracy }}{% else %}{{ item.p1_accuracy }}{% endif %}
-                    {% else %}—{% endif %}
-                </td>
-                <td class="col-gap {{ item.p2_accuracy is not null and item.p2_accuracy|abs >= 2 ? 'gap-large' : '' }}">
-                    {% if item.p2_accuracy is not null %}
-                        {% if item.p2_accuracy > 0 %}+{{ item.p2_accuracy }}{% else %}{{ item.p2_accuracy }}{% endif %}
-                    {% else %}—{% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <th class="col-score">Начавший: собственная оценка</th>
+                <th class="col-score">Приглашённый: собственная оценка</th>
+                <th class="col-diff">Расхождение оценок</th>
+                <th class="col-gap">Начавший: насколько угадал приглашённого</th>
+                <th class="col-gap">Приглашённый: насколько угадал начавшего</th>
+            </tr></thead>
+            <tbody>
+                {% for item in comparison.items %}
+                <tr class="row-diff-{{ item.difference|abs }}">
+                    <td class="col-item" data-label="Пункт"><span class="item-domain">{{ item.domain }}</span><span class="item-text">{{ item.text }}</span></td>
+                    <td class="col-score" data-label="Начавший: собственная оценка">{{ item.p1_self ?? '—' }}</td>
+                    <td class="col-score" data-label="Приглашённый: собственная оценка">{{ item.p2_self ?? '—' }}</td>
+                    <td class="col-diff {{ item.difference == 0 ? 'diff-match' : 'diff-mismatch' }}" data-label="Расхождение оценок">{% if item.difference is not null %}{% if item.difference > 0 %}+{{ item.difference }}{% else %}{{ item.difference }}{% endif %}{% else %}—{% endif %}</td>
+                    <td class="col-gap {{ item.p1_accuracy is not null and item.p1_accuracy|abs >= 2 ? 'gap-large' : '' }}" data-label="Начавший: насколько угадал приглашённого">{% if item.p1_accuracy is not null %}{% if item.p1_accuracy > 0 %}+{{ item.p1_accuracy }}{% else %}{{ item.p1_accuracy }}{% endif %}{% else %}—{% endif %}</td>
+                    <td class="col-gap {{ item.p2_accuracy is not null and item.p2_accuracy|abs >= 2 ? 'gap-large' : '' }}" data-label="Приглашённый: насколько угадал начавшего">{% if item.p2_accuracy is not null %}{% if item.p2_accuracy > 0 %}+{{ item.p2_accuracy }}{% else %}{{ item.p2_accuracy }}{% endif %}{% else %}—{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </details>
 
     <div class="pair-comparison__legend">
-        <p><strong>Разница</strong> — расхождение между ответами первого и второго партнёра (0 = полное совпадание).</p>
-        <p><strong>Ожидание vs реальность</strong> — насколько каждый угадал ответ другого. Отрицательное значение — недооценили, положительное — переоценили.</p>
+        <p><strong>Расхождение оценок</strong> — разница между собственными оценками начавшего и приглашённого (0 = полное совпадение).</p>
+        <p><strong>Насколько угадал</strong> — предположение человека об оценке партнёра минус фактическая оценка партнёра. Отрицательное значение — недооценили, положительное — переоценили.</p>
     </div>
 </div>

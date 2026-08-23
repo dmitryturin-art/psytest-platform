@@ -19,6 +19,23 @@
 
 ## 2026-08-22
 
+### 04.0D — единое представление результатов Лазаруса
+
+- Этап / ветка / commit: этап 04, `codex/04-lazarus-results-comparison`, commit ожидается.
+- Цель: устранить визуальное расхождение между индивидуальной шкалой и pair comparison, сделать все данные пары читаемыми на мобильном экране без изменения расчётов.
+- Сделано: шкала балла вынесена в общий Twig partial и используется и individual badge, и в двух карточках pair result. В pair comparison добавлены два сопоставимых суммарных профиля; подробная таблица доступна по раскрытию и на mobile преобразуется в карточки с подписями каждого значения.
+- Проверки и evidence: targeted `LazarusPairTest` — 4 tests / 115 assertions; `LazarusModuleTest` — 13 tests / 62 assertions; Twig render smoke, PHPStan, lint, architecture, baseline и diff check — pass; `composer audit` — clean. Полный PHPUnit в локальной среде завершился 13 ранее известных MySQL connection errors (`2002`); CI MySQL 5.7/8.0 остаётся обязательным gate перед staging. Graphify code update прошёл, но для пяти изменённых Markdown-документов инструмент запросил внешний LLM key; до следующей ручной semantic extraction graph считается `STALE` и не используется как доказательство, source files остаются fallback.
+- Не сделано / риски: browser QA и staging deployment выполняются после CI. Scoring, clinical text и protected SMIL chart не менялись.
+- Следующий шаг: commit, GitHub CI, затем atomic staging deployment и проверка страницы пары на desktop/mobile.
+
+### 04.0C — мобильное прохождение Лазаруса
+
+- Этап / ветка / commit: этап 04, `codex/04-lazarus-mobile-navigation` → `main`, `2b0ce92`.
+- Цель: убрать риск промаха по десяти малым кнопкам на телефоне и не сбрасывать человека к заголовку при переходе к следующему вопросу.
+- Сделано: варианты ответа на mobile стали сеткой 5×2 с touch targets 44px; программная прокрутка после следующего вопроса удалена; кнопка возврата названа «Предыдущий вопрос».
+- Проверки и evidence: contract test `LazarusMobileNavigationContractTest`; GitHub Actions для PR #12 прошёл на PHP 8.3/MySQL 5.7 и 8.0. Release `2b0ce92` атомарно выложен на staging; базовые smoke routes доступны.
+- Не сделано / риски: этот пакет не менял results/pair comparison; это 04.0D.
+
 ### 08.2 — staging deployment editorial landing/catalog
 
 - Этап / ветка / commit: этап 08, `codex/08-staging-editorial-ui`, release `1559188`; документационный commit ожидается.
