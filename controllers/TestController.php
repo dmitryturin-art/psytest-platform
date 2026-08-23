@@ -171,16 +171,14 @@ class TestController extends BaseController
     {
         $partnerToken = $_GET['partner'] ?? null;
         if (!$partnerToken) {
-            http_response_code(400);
-            echo 'Partner token required';
+            $this->renderPairInviteError(400, 'Не найдена ссылка-приглашение', 'Откройте полную ссылку, которую прислал первый участник.');
             return;
         }
 
         // The pair invite contains the first partner's result-access token.
         $partnerSession = $this->sessionManager->getSessionByResultToken($partnerToken);
         if (!$partnerSession) {
-            http_response_code(404);
-            echo 'Partner session not found';
+            $this->renderPairInviteError(404, 'Приглашение недоступно', 'Ссылка устарела, удалена или относится к недоступному результату.');
             return;
         }
 
@@ -188,32 +186,37 @@ class TestController extends BaseController
         // cannot create a pair session for another.
         $test = $this->getTestOrFail($slug);
         if (!$this->getSessionTestForRoute($partnerSession, $slug)) {
-            http_response_code(404);
-            echo 'Partner session not found';
-            return;
-        }
-        if ($this->sessionManager->hasPairSessionForSourceToken($partnerToken)) {
-            http_response_code(409);
-            echo 'Partner invite has already been used';
+            $this->renderPairInviteError(404, 'Приглашение недоступно', 'Эта ссылка не относится к выбранному тесту.');
             return;
         }
 
         // Get module
         $module = $this->getModuleOrFail($slug);
         if (!$module->supportsPairMode()) {
-            http_response_code(400);
-            echo 'This test does not support pair mode';
+            $this->renderPairInviteError(400, 'Парный режим недоступен', 'Для этой методики нельзя создать парное сравнение.');
             return;
         }
 
         $metadata = $module->getMetadata();
 
-        // The database uniqueness constraint resolves concurrent attempts.
-        $session = $this->sessionManager->createPairSession($test['id'], $partnerToken);
-        if ($session === null) {
-            http_response_code(409);
-            echo 'Partner invite has already been used';
+        $session = $this->sessionManager->getPairSessionForSourceToken($partnerToken);
+        if ($session && $session['status'] === 'completed') {
+            $this->renderPairInviteError(409, 'Партнёр уже завершил тест', 'Сравнение будет доступно на странице результатов первого участника.');
             return;
+        }
+
+        if ($session === null) {
+            // The database uniqueness constraint resolves concurrent opens. If
+            // another request created an unfinished session, resume it instead
+            // of treating an unanswered invite as consumed.
+            $session = $this->sessionManager->createPairSession($test['id'], $partnerToken);
+            if ($session === null) {
+                $session = $this->sessionManager->getPairSessionForSourceToken($partnerToken);
+                if (!$session || $session['status'] === 'completed') {
+                    $this->renderPairInviteError(409, 'Партнёр уже завершил тест', 'Сравнение будет доступно на странице результатов первого участника.');
+                    return;
+                }
+            }
         }
 
         $questions = $module->getQuestions();
@@ -239,8 +242,7 @@ class TestController extends BaseController
     {
         $module = $this->getModuleOrFail($slug);
         if (!$module->supportsPairMode()) {
-            http_response_code(400);
-            echo 'This test does not support pair mode';
+            $this->errorResponse('Для этой методики недоступен парный режим', 400);
             return;
         }
 
@@ -248,8 +250,7 @@ class TestController extends BaseController
         $partnerToken = $_POST['partner_token'] ?? null;
 
         if (!$sessionId || !Uuid::isValid($sessionId) || !$partnerToken) {
-            http_response_code(400);
-            echo 'Missing or invalid session/partner data';
+            $this->errorResponse('Некорректные данные парного прохождения', 400);
             return;
         }
 
@@ -259,8 +260,7 @@ class TestController extends BaseController
             || !$this->getSessionTestForRoute($session, $slug)
             || !$this->sessionManager->isPairSessionBoundToSourceToken($sessionId, $partnerToken)
         ) {
-            http_response_code(404);
-            echo 'Pair session not found';
+            $this->errorResponse('Парное прохождение не найдено', 404);
             return;
         }
 
@@ -287,7 +287,7 @@ class TestController extends BaseController
             $allAnswers = AnswerMerger::overlay($allAnswers, $formDemographics);
         }
         if (AnswerValidator::validate($module, $allAnswers, true) !== []) {
-            $this->errorResponse('Invalid or incomplete answers', 422);
+            $this->errorResponse('Некорректные или неполные ответы', 422);
         }
         $this->sessionManager->saveAnswers($sessionId, $allAnswers);
 
@@ -330,5 +330,14 @@ class TestController extends BaseController
         // No separate /pair/{id} page is needed for the normal flow.
         header('Location: /result/' . $slug . '/' . $session['session_token']);
         exit;
+    }
+
+    private function renderPairInviteError(int $statusCode, string $title, string $message): void
+    {
+        http_response_code($statusCode);
+        echo $this->view->render('pair-invite-error', [
+            'title' => $title,
+            'message' => $message,
+        ]);
     }
 }

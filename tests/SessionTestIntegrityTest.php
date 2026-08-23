@@ -58,6 +58,6 @@ final class SessionTestIntegrityTest extends TestCase
 
         self::assertIsString($pairStart);
         self::assertStringContainsString('createPairSession($test[\'id\'], $partnerToken)', $pairStart);
-        self::assertStringContainsString('http_response_code(409)', $pairStart);
+        self::assertStringContainsString('renderPairInviteError(409', $pairStart);
     }
 }

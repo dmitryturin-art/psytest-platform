@@ -196,6 +196,10 @@ final class LazarusE2ETest extends TestCase
         $this->sm->createSession($this->testId, ['partner_token' => $p1['session_token']]);
 
         self::assertTrue($this->sm->hasPairSessionForSourceToken($p1['session_token']));
+
+        $resumable = $this->sm->getPairSessionForSourceToken($p1['session_token']);
+        self::assertNotNull($resumable, 'An opened but unanswered partner invite must be resumable.');
+        self::assertSame('partial', $resumable['status']);
     }
 
     public function testPairSessionMustBeBoundToTheSubmittedSourceToken(): void
