@@ -41,4 +41,28 @@ final class PDFGeneratorSmokeTest extends TestCase
         preg_match('/\/MediaBox\s*\[\s*0(?:\.0+)?\s+0(?:\.0+)?\s+([\d.]+)\s+([\d.]+)\s*\]/', $pdf, $matches);
         self::assertGreaterThan((float) $matches[2], (float) $matches[1]);
     }
+
+    public function testResultPdfContainingPairComparisonUsesLandscapePaper(): void
+    {
+        $directory = sys_get_temp_dir() . '/psytest-pdf-' . bin2hex(random_bytes(4));
+        $generator = new PDFGenerator($directory);
+
+        $path = $generator->generateTestResult(
+            ['id' => 'paired-result', 'created_at' => '2026-08-24 12:00:00'],
+            ['name' => 'Опросник удовлетворённости браком'],
+            '<div class="pair-comparison--pdf"><table><tr><td>Проверка</td></tr></table></div>',
+            true,
+        );
+
+        $filename = 'result_paired-result.pdf';
+        $pdf = file_get_contents($directory . '/' . $filename);
+        @unlink($directory . '/' . $filename);
+        @rmdir($directory);
+
+        self::assertSame('/storage/pdfs/' . $filename, $path);
+        self::assertIsString($pdf);
+        self::assertMatchesRegularExpression('/\/MediaBox\s*\[\s*0(?:\.0+)?\s+0(?:\.0+)?\s+([\d.]+)\s+([\d.]+)\s*\]/', $pdf);
+        preg_match('/\/MediaBox\s*\[\s*0(?:\.0+)?\s+0(?:\.0+)?\s+([\d.]+)\s+([\d.]+)\s*\]/', $pdf, $matches);
+        self::assertGreaterThan((float) $matches[2], (float) $matches[1]);
+    }
 }

@@ -1,10 +1,12 @@
 {% if is_pdf|default(false) %}
-<div class="pair-comparison-block pair-comparison--pdf">
+<div class="pair-comparison-block pair-comparison--pdf{{ is_result_pdf|default(false) ? ' pair-comparison--result-pdf' : '' }}">
     <style>
         .pair-comparison--pdf { font-size: 8pt; }
+        .pair-comparison--result-pdf { page-break-before: always; padding-top: 12mm; }
         .pair-comparison--pdf .pair-comparison__pdf-key { margin: 0 0 8px; text-align: left; }
-        .pair-comparison--pdf .pair-comparison__table { width: 100%; margin: 0; border-collapse: collapse; table-layout: fixed; font-size: 7.4pt; }
-        .pair-comparison--pdf .pair-comparison__table th, .pair-comparison--pdf .pair-comparison__table td { padding: 4px; overflow-wrap: break-word; }
+        .pair-comparison--pdf .pair-comparison__table { width: 100%; margin: 0; border-collapse: collapse; table-layout: fixed; font-size: 7.2pt; }
+        .pair-comparison--pdf .pair-comparison__table th, .pair-comparison--pdf .pair-comparison__table td { padding: 3px; overflow-wrap: break-word; }
+        .pair-comparison--pdf .pair-comparison__table tr { page-break-inside: avoid; break-inside: avoid; }
         .pair-comparison--pdf .pair-comparison__table .col-item { width: 44%; }
         .pair-comparison--pdf .pair-comparison__table .col-score { width: 11%; text-align: center; }
         .pair-comparison--pdf .pair-comparison__table .col-diff { width: 9%; text-align: center; }

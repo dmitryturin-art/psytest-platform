@@ -131,13 +131,19 @@ class ResultController extends BaseController
         // as PDF so buildSections suppresses the invite-to-partner block
         // (an invite link has no place in a printed document).
         $this->enrichWithPairComparison($results, $session, $module);
+        $includesPairComparison = isset($results['pair_comparison']);
         $results['is_pdf'] = true;
 
         $sections = $module->buildSections($results);
         $resultsHtml = $this->renderSectionsToHtml($sections);
 
         // Generate PDF
-        $pdfPath = $this->pdfGenerator->generateTestResult($session, $test, $resultsHtml);
+        $pdfPath = $this->pdfGenerator->generateTestResult(
+            $session,
+            $test,
+            $resultsHtml,
+            $includesPairComparison,
+        );
 
         // Send file
         $fullPath = dirname(__DIR__) . $pdfPath;

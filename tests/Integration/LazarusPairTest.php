@@ -138,7 +138,35 @@ final class LazarusPairTest extends TestCase
         $this->assertStringContainsString('score-badge__scale', $web);
         $this->assertStringContainsString('pair-comparison--pdf', $pdf);
         $this->assertStringContainsString('Нач.:<br>оценка', $pdf);
+        $this->assertStringContainsString('page-break-inside: avoid', $pdf);
         $this->assertStringNotContainsString('<details', $pdf);
+    }
+
+    public function testPdfResultSectionPropagatesCompactPairLayoutFlag(): void
+    {
+        $first = $this->module->calculateResults($this->allAnswers(self: 8, partner: 6));
+        $second = $this->module->calculateResults($this->allAnswers(self: 6, partner: 8));
+        $comparison = $this->module->comparePairResults($first, $second);
+
+        $webSections = $this->module->buildSections($first + ['pair_comparison' => $comparison]);
+        $pdfSections = $this->module->buildSections($first + [
+            'pair_comparison' => $comparison,
+            'is_pdf' => true,
+        ]);
+
+        $webPairSection = array_values(array_filter(
+            $webSections,
+            static fn ($section): bool => $section->type === 'pair_comparison',
+        ))[0];
+        $pdfPairSection = array_values(array_filter(
+            $pdfSections,
+            static fn ($section): bool => $section->type === 'pair_comparison',
+        ))[0];
+
+        $this->assertFalse($webPairSection->data['is_pdf']);
+        $this->assertTrue($pdfPairSection->data['is_pdf']);
+        $this->assertFalse($webPairSection->data['is_result_pdf']);
+        $this->assertTrue($pdfPairSection->data['is_result_pdf']);
     }
 
     public function testControllerUsesPdfLayoutOnlyForPdfRoute(): void

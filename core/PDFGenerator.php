@@ -83,18 +83,25 @@ class PDFGenerator
      * @param array $session Session data
      * @param array $test Test metadata
      * @param string $resultsHtml Rendered results HTML
+     * @param bool $includesPairComparison Whether the result contains the six-column pair table
      * @return string Path to saved PDF
      */
     public function generateTestResult(
         array $session,
         array $test,
-        string $resultsHtml
+        string $resultsHtml,
+        bool $includesPairComparison = false
     ): string {
         $filename = "result_{$session['id']}.pdf";
 
         $html = $this->renderTestResultTemplate($session, $test, $resultsHtml);
 
-        return $this->generate($html, $filename, true);
+        return $this->generateWithOrientation(
+            $html,
+            $filename,
+            true,
+            $includesPairComparison ? 'landscape' : 'portrait',
+        );
     }
 
     /**

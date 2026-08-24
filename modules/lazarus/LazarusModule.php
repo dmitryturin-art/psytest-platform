@@ -207,7 +207,11 @@ final class LazarusModule extends BaseTestModule
             $sections[] = new ResultSection(
                 type: ResultSection::TYPE_PAIR_COMPARISON,
                 title: 'Сравнение с партнёром',
-                data: ['comparison' => $results['pair_comparison']],
+                data: [
+                    'comparison' => $results['pair_comparison'],
+                    'is_pdf' => !empty($results['is_pdf']),
+                    'is_result_pdf' => !empty($results['is_pdf']),
+                ],
                 block: 'blocks/pair-comparison.twig',
                 order: 50,
             );
