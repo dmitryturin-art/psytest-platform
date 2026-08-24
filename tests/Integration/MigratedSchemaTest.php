@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PsyTest\Tests\Integration;
 
 use PDO;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\Database;
 
@@ -14,6 +15,7 @@ use PsyTest\Core\Database;
  * GitHub Actions runs `composer migrate` before PHPUnit on MySQL 5.7 and 8.0,
  * so this test covers both the migration chain and its resulting schema.
  */
+#[Group('database')]
 final class MigratedSchemaTest extends TestCase
 {
     private PDO $connection;
