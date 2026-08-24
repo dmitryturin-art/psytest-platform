@@ -19,6 +19,16 @@
 
 ## 2026-08-24
 
+### 04.0F — исправление переполнения PDF парного результата Лазаруса
+
+- Этап / ветка / commit: этап 04, `codex/04-fix-lazarus-pair-pdf-overflow`, commit pending.
+- Цель: довести до конца замечание владельца — общая таблица двух участников в скачиваемом result PDF выходила за пригодную компоновку документа, несмотря на заявленный 04.0E landscape polish.
+- Первопричина: `ResultController::pdf()` помечал общий массив результатов как PDF, но `LazarusModule::buildSections()` не передавал этот контекст в data парной секции. Поэтому `pair-comparison.twig` выбирал web-ветку с длинными заголовками; landscape применялся только к отдельному `/pair/{id}/pdf`, а обычный `/result/{slug}/{token}/pdf` оставался portrait.
+- Сделано: pair-секция явно получает `is_pdf`; result PDF с pair comparison генерируется как A4 landscape; compact pair section начинается с новой страницы, строки не разрываются, а размер и padding позволяют отдельному pair PDF занимать две страницы без одиночной последней строки. Web-result, расчёты и protected SMIL chart не менялись.
+- Проверки и evidence: RED — два regression-теста подтвердили portrait result PDF и отсутствие row-break protection; GREEN — targeted PHPUnit 10 tests / 137 assertions. Полный synthetic result на реальных 16 формулировках Лазаруса отрендерен Poppler: вместо 14 страниц с web-таблицей получено 6 landscape-страниц, compact pair table занимает последние две, все шесть колонок и строки находятся в границах. Отдельный pair PDF — 2 страницы A4 landscape. Composer validate и audit — pass; PHPStan, lint, architecture, baseline 148 и diff check — pass. Полный PHPUnit: 174 tests, 1534 assertions, 13 прежних connection errors из-за недоступной локальной MySQL; CI MySQL 5.7/8.0 остаётся обязательным gate.
+- Не сделано / риски: staging пока остаётся на `5da9ab5`; владелец ещё не проверял PDF после реальной выкладки. Graphify freshness: `STALE` (33 changed, 10 deleted); внешняя semantic extraction без отдельного разрешения не запускалась, граф не использовался как evidence, fallback — source inspection, PHPUnit и полный Poppler render.
+- Следующий шаг: commit/push, CI MySQL 5.7/8.0, затем отдельный staging deployment и повторная проверка владельцем.
+
 ### 00J — снятие неподключённых AI/crisis заделов
 
 - Этап / ветка / commit: этап 00, `codex/00-remove-deferred-scaffolding`, commit pending.
