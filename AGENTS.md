@@ -6,19 +6,30 @@ PsyTest — модульная PHP-платформа психологическ
 
 ## Обязательный старт сессии
 
-Перед изменениями:
+**Всегда (три файла, ~20 КБ):**
 
-1. Прочитать `ROADMAP.md` и `docs/roadmap/STATUS.md`.
-2. Прочитать файл активного этапа.
-3. Прочитать `docs/roadmap/PRODUCT_RULES.md` и `docs/roadmap/ENGINEERING_RULES.md`.
-4. Прочитать `ARCHITECTURE.md`; не обходить весь код «на всякий случай».
-5. Запустить `php bin/check-graphify-freshness.php`. Если он возвращает `STALE`, обновить Graphify инкрементально до query; если обновление честно невозможно, не использовать старый граф как доказательство и зафиксировать причину в worklog.
-6. Выполнить Graphify query по затрагиваемой подсистеме, если `graphify-out/graph.json` существует и freshness-check прошёл.
-7. Выполнить agentmemory recall и lesson recall по теме задачи, если инструменты доступны.
-8. Проверить branch/status/diff и не перезаписывать пользовательские изменения.
-9. Оценить параллельные bounded-подзадачи по правилам оркестрации из `ENGINEERING_RULES.md`; простые независимые проверки делегировать быстрой модели, финальную интеграцию оставить ведущему агенту.
+1. `docs/roadmap/STATUS.md` — где мы и какой этап активен.
+2. Phase-файл активного пакета — только его, не всех активных этапов.
+3. `git status --short` и `git diff` — не перезаписывать чужие изменения.
 
-Полный аудит: `docs/audit/2026-08-15-agent-implementation-plan.md`. Для каждой задачи проверить `docs/roadmap/AUDIT_TRACEABILITY.md`.
+**По типу пакета (таблица разделов — в шапке каждого файла правил):**
+
+- psychometrics / scoring / нормы → `PRODUCT_RULES.md` §8–9, `ENGINEERING_RULES.md` §6;
+- security / данные / приватность → `PRODUCT_RULES.md` §10–11, `ENGINEERING_RULES.md` §9;
+- UI / шаблоны / CSS → `PRODUCT_RULES.md` §12, `ENGINEERING_RULES.md` §7;
+- архитектура / модули → `ARCHITECTURE.md`, `ENGINEERING_RULES.md` §8;
+- оплата / ИИ → `PRODUCT_RULES.md` §3, §5–6.
+
+**По необходимости, а не по умолчанию:**
+
+- Graphify freshness + query — когда пакет трогает незнакомую подсистему, а не всегда.
+- agentmemory / lesson recall — когда задача похожа на ранее решённую.
+- `AUDIT_TRACEABILITY.md` — когда пакет закрывает пункт аудита.
+- `docs/audit/2026-08-15-agent-implementation-plan.md` — исторический, читать не нужно.
+
+Если файл не прочитан — это указывается в отчёте, а не компенсируется чтением «на всякий случай».
+
+`docs/audit/2026-08-15-agent-implementation-plan.md` — исторический план. `docs/roadmap/AUDIT_TRACEABILITY.md` читается только при закрытии конкретного audit finding.
 
 ## Приоритет инструкций
 
