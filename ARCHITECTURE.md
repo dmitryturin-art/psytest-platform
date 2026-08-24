@@ -133,11 +133,11 @@ interface TestModuleInterface
 - новые test sessions и activity records не сохраняют IP или user-agent; nullable legacy-колонки пока остаются в схеме для совместимости;
 - public privacy text не заявляет encryption, отсутствие будущих third parties или немедленное полное физическое удаление.
 
-`ClinicalSafetySignal` извлекает machine-readable BDI item-9 signal. `ResultController` показывает утверждённый generic notice только при этом сигнале, без контактов, URL, страны или IP/GeoIP. `CountryResolver` остаётся чистой неподключённой заготовкой; resource reader не реализован и не должен добавляться без нового решения владельца.
+`ClinicalSafetySignal` извлекает machine-readable BDI item-9 signal. `ResultController` показывает утверждённый generic notice только при этом сигнале, без контактов, URL, страны или IP/GeoIP. Country resolver и реестр кризисных ресурсов не реализованы; их добавление требует нового решения владельца.
 
 ## Legacy integrations и целевой контур
 
-`AIInterpretationService`, `PaymentService`, legacy `ApiController` methods и старые AI/payment tables — исторические слои. Они не доказывают готовность оплаты или AI и не должны подключаться к новым public routes. `AiProcessingConsentService` — отдельная не подключённая к public UI граница: она хранит immutable snapshot явного consent для конкретного checkout и не запускает AI-вызов.
+`AIInterpretationService`, `PaymentService`, legacy `ApiController` methods и старые AI/payment tables — исторические слои. Они не доказывают готовность оплаты или AI и не должны подключаться к новым public routes. Отдельный consent-boundary будет спроектирован вместе с реальным checkout и AI-flow, а не хранится как неподключённый задел.
 
 Новая YooKassa state machine относится к этапу 06. Новый AI flow с отдельным consent, provider boundary, versioned prompts, report audiences и кабинетом терапевта относится к этапу 07. Критерии и release gates — в [ROADMAP.md](ROADMAP.md).
 
@@ -145,7 +145,7 @@ interface TestModuleInterface
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, pair comparisons, activity log, checkout-bound `ai_processing_consents`, legacy AI/payment records и `crisis_resources`. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, pair comparisons, activity log и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 

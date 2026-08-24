@@ -17,7 +17,6 @@
 | Pair comparison | `pair_comparisons.comparison_data` и ссылки на две sessions | Завершённый парный результат Лазаруса | Показывается через result flow | При 180-day physical cleanup сессии FK удаляет связанные rows, а lifecycle заранее удаляет известный pair PDF. Public soft-delete пока не равен physical cleanup. |
 | Activity records | `activity_log` | Технический audit: создание, сохранение, завершение, удаление | Локальная БД | Новые records не содержат IP/user-agent. После public soft-delete часть событий остаётся с `session_id = NULL`; отдельный срок хранения operational records ещё не утверждён. |
 | PDF | `storage/pdfs`, path в legacy `ai_interpretations` | Бесплатный PDF результата и будущая выдача отчёта | Локальная файловая система; generated files игнорируются Git | Плановый anonymous lifecycle удаляет известные result/interpretation/pair PDFs. Public soft-delete не удаляет файл немедленно. |
-| AI consent snapshot | `ai_processing_consents` | Явное разрешение для конкретного checkout, provider, report kind, версии notice и списка категорий данных | Публичного capture route и AI-вызова ещё нет | Запись неизменяема, может быть отозвана и удаляется каскадно вместе с test session. Бесплатное прохождение её не создаёт. |
 | Payment/AI record | legacy `ai_interpretations`, `payment_transactions` | Legacy model; production routes retired | Новый YooKassa/AI flow ещё не существует | Будущая модель обязана отделить фискальные записи от clinical answers и использовать отдельный explicit consent snapshot. |
 
 ## Что публично обещать нельзя до реализации
@@ -31,7 +30,7 @@
 ## Принятые целевые решения
 
 1. Anonymous-данные хранятся 180 календарных дней по реализованной lifecycle-policy; завершённый `therapist_case` владелец явно назначает и удаляет через минимальный защищённый `/admin`.
-2. Передача данных внешнему AI требует отдельного consent при checkout расширенной интерпретации. Серверная immutable consent-запись реализована, но public checkout/capture, AI flow, утверждённый текст и provider list ещё отсутствуют.
+2. Передача данных внешнему AI требует отдельного consent при checkout расширенной интерпретации. Public checkout/capture, AI flow, утверждённый текст, provider list и серверная consent-запись ещё не реализованы.
 
 ## Решения владельца, необходимые до реализации
 

@@ -6,10 +6,11 @@
 
 - Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [04 — внедрение выбранного направления A](phases/04-ui-ux-redesign.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
 - Состояние: `test.23time.ru` работает на release `5da9ab5`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `779a2b2` сохранён. Новая главная `/`, каталог `/tests`, мобильное прохождение и обновлённое парное сравнение Лазаруса доступны на staging.
-- Управление знаниями: локальный Graphify обновлён до текущего checkout и теперь имеет обязательную freshness-проверку перед архитектурным query; артефакты остаются вне Git.
+- Управление знаниями: локальный Graphify имеет обязательную freshness-проверку перед архитектурным query; после 00J граф `STALE`, потому что обновление требует явного разрешения на передачу изменённых исходников внешнему LLM. В этом пакете граф не используется как evidence.
 - Governance 00F: старт сессии теперь требует только status, phase активного пакета и чистое понимание Git-state; остальные документы читаются по типу задачи и явно отражаются в отчёте.
 - Governance 00G–00H: `STATUS.md` стал единственной оперативной панелью, `CHECKPOINT.md` — только протоколом; исходный audit-plan 2026-08-15 перенесён в архив, а рабочей навигацией по findings остаётся traceability.
 - Governance 00I: четыре text-contract test миграций заменяются одним integration test фактически применённой схемы; список маршрутов для документации читается из роутера.
+- Governance 00J: по D-032 удаляются неподключённые AI-consent и country/crisis scaffolding; cleanup-миграция удаляет их таблицы из уже развёрнутых БД, а schema test контролирует итоговое отсутствие.
 - Последний выложенный пакет: 04.0E `5da9ab5` — meter совпадения приведён к единому компоненту шкалы, раскрытие подробностей стало заметным control, а pair PDF получил отдельную compact landscape-компоновку. CI PHP 8.3/MySQL 5.7 и 8.0, затем внешний HTTPS smoke — success.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.
@@ -22,7 +23,7 @@
 |---|---|---|
 | 00 | В работе | governance-каркас и baseline готовы; 00C current-state docs и documentation contract test опубликованы как `d4a4e23`; production runbook относится к 08 |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, серверный AI consent record и runbook закрытого пилота готовы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
+| 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, неподключённый AI-consent задел снят по D-032. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
 | 03, 05–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
 | 04 | В работе | владелец выбрал A; новая главная/каталог, мобильное прохождение и polish pair results/PDF Лазаруса выложены на staging; защищённый SMIL-график не меняется |
 | 08 | На проверке владельца (staging) | публичный HTTPS staging работает; cookie/headers проверены внешним smoke, payment/AI/admin выключены, rollback готов; production не начат |

@@ -67,6 +67,12 @@
 - Текстовые проверки четырёх миграций заменяются одним read-only integration test фактической схемы после `phinx migrate`.
 - Роуты для current-state документации извлекаются из `public/index.php`, а не поддерживаются вторым захардкоженным списком.
 
+### 00J. Снятие неподключённых заделов
+
+- По D-032 удалить `AiProcessingConsentService`, `CountryResolver`/`CountryResolution` и их тесты.
+- Добавить необратимую cleanup-миграцию: в уже развёрнутой БД удалить `ai_processing_consents` и `crisis_resources`; в чистой migration chain итоговая схема также не содержит этих таблиц.
+- Обновить schema snapshot, current-state docs и traceability; не менять legacy AI/payment tables, scoring или BDI notice.
+
 ## Проверка
 
 - `git diff --check`; Markdown link checker или эквивалентный локальный скрипт.
