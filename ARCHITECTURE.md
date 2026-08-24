@@ -62,8 +62,13 @@ HTTP request
 | GET | `/result/{slug}/{token}/pdf` | `ResultController::pdf` | PDF результата |
 | GET | `/result/{slug}/{token}/pair-status` | `ResultController::pairStatus` | polling pair flow |
 | POST | `/result/{token}/delete` | `ResultController::delete` | отдельный delete route; token без slug |
-| GET/POST | `/admin/login`, `/admin` | `OwnerController` | один защищённый owner dashboard; выключен без Argon2id hash в server env |
-| POST | `/admin/case/lookup`, `/assign`, `/delete` | `OwnerController` | явное назначение завершённого кейса и полное ручное удаление |
+| GET | `/admin/login` | `OwnerController::login` | owner login; выключен без Argon2id hash в server env |
+| POST | `/admin/login` | `OwnerController::authenticate` | проверка owner credentials |
+| POST | `/admin/logout` | `OwnerController::logout` | завершение owner session |
+| GET | `/admin` | `OwnerController::dashboard` | защищённый минимальный owner dashboard |
+| POST | `/admin/case/lookup` | `OwnerController::lookupCase` | поиск завершённого кейса по result token |
+| POST | `/admin/case/assign` | `OwnerController::assignCase` | явное назначение therapist case |
+| POST | `/admin/case/delete` | `OwnerController::deleteCase` | полное ручное удаление кейса |
 | GET | `/pair/{id}` | `ResultController::pairShow` | сравнение пары |
 | GET | `/pair/{id}/pdf` | `ResultController::pairPdf` | PDF сравнения |
 | GET | `/api/health` | `ApiController::health` | health check |

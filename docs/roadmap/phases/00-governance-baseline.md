@@ -62,6 +62,11 @@
 - Исходный технический план 2026-08-15 хранится в `docs/archive/`.
 - `AUDIT_TRACEABILITY.md` остаётся единственной рабочей навигацией по audit findings.
 
+### 00I. Поведенческие schema-contracts
+
+- Текстовые проверки четырёх миграций заменяются одним read-only integration test фактической схемы после `phinx migrate`.
+- Роуты для current-state документации извлекаются из `public/index.php`, а не поддерживаются вторым захардкоженным списком.
+
 ## Проверка
 
 - `git diff --check`; Markdown link checker или эквивалентный локальный скрипт.
