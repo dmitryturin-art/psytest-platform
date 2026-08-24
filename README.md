@@ -48,7 +48,7 @@
 | Кабинет владельца и lifecycle кейсов | реализован минимальный защищённый `/admin`; AI-отчёты и полный кабинет терапевта запланированы |
 | Production deployment | не выполнен; предусмотрены staging, backup и rollback gates |
 
-Известные security/privacy/payment проблемы не скрываются: они перечислены в [техническом аудите](docs/audit/2026-08-15-agent-implementation-plan.md) и [матрице закрытия](docs/roadmap/AUDIT_TRACEABILITY.md).
+Известные security/privacy/payment проблемы не скрываются: рабочая навигация находится в [матрице закрытия](docs/roadmap/AUDIT_TRACEABILITY.md), а исходный [технический аудит](docs/archive/2026-08-15-agent-implementation-plan.md) сохранён как история.
 
 ## Технологии
 
@@ -142,7 +142,7 @@ PHPStan пока использует ограниченный baseline из 148
 | Документ | Для чего |
 |---|---|
 | [Ревью для владельца](docs/audit/2026-08-15-owner-review.md) | состояние проекта простым языком |
-| [Технический аудит](docs/audit/2026-08-15-agent-implementation-plan.md) | конкретные defects, решения и инструкции агенту |
+| [Исторический технический аудит](docs/archive/2026-08-15-agent-implementation-plan.md) | исходные defects и рекомендации, заменённые roadmap и traceability |
 | [Roadmap](ROADMAP.md) | этапы, статусы, gates и контрольные точки |
 | [Продуктовые правила](docs/roadmap/PRODUCT_RULES.md) | что именно строится и что нельзя исказить |
 | [Инженерные правила](docs/roadmap/ENGINEERING_RULES.md) | ветки, проверки, evidence и definition of done |

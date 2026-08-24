@@ -25,7 +25,7 @@
 ## Исходный аудит
 
 - [Ревью для владельца](../audit/2026-08-15-owner-review.md)
-- [Техническое задание](../audit/2026-08-15-agent-implementation-plan.md)
+- [Историческое техническое задание](../archive/2026-08-15-agent-implementation-plan.md)
 
 ## Индекс этапов
 
