@@ -19,6 +19,16 @@
 
 ## 2026-08-24
 
+### 08.5 — staging deployment исправленного PDF Лазаруса
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-04f-staging`; runtime release `3a2daa8` (PR #23).
+- Цель: выложить 04.0F на `test.23time.ru`, не меняя scoring, клинический текст, SMIL-график, payment/AI или production.
+- Сделано: production-артефакт собран из точного commit `3a2daa8` с dependencies из lockfile, без `.env` и dev tools; SHA-256 `2c2b874d88f6aa0baaca2b3067704264f1bc23662d43c6757024b653cf3f02e2` совпал после загрузки. Перед необратимой cleanup-миграцией подтверждено, что `ai_processing_consents` и `crisis_resources` существуют, но содержат по 0 строк; сохранён dump `backups/db-pre-3a2daa8-20260824.sql` mode `600`, SHA-256 `e99471ef8171f568b380b456caf4997c3b1854a15cc55daf7a7864736a8e839d`. Миграция применена, обе таблицы отсутствуют, все 8 migrations `up`. `public_html` атомарно переключён с `5da9ab5/public` на `3a2daa8/public`; прошлый release сохранён для rollback.
+- Проверки и evidence: post-merge [GitHub Actions 32744081534](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32744081534) — success: fast gate 29 секунд, MySQL 5.7 — 40 секунд, MySQL 8.0 — 46 секунд. Server PHP 8.3 подтвердил entrypoint и Phinx. Внешний smoke: HTTPS `/api/health` — `200`/`ok`, `/tests` — `200`, HTTP `/tests` — `301` на HTTPS, retired interpretation — `410`, выключенная `/admin/login` — `404`; cookie содержит `Secure`, `HttpOnly`, `SameSite=Lax`, dynamic security headers приходят по одному разу. `DocumentationCurrentStateTest` — 4 tests / 88 assertions; `git diff --check` — pass. Graphify freshness — `STALE` (43 changed, 10 deleted): внешнее semantic-обновление без отдельного разрешения не запускалось, граф не использовался; fallback — исходные runbook/status-файлы и прямой server smoke.
+- Изменённые файлы: runtime source не менялся; обновлены только roadmap/status/runbook records после deployment.
+- Не сделано / риски: владелец ещё должен скачать и визуально принять конкретный полный pair result PDF на staging. Архив содержит безвредные macOS `LIBARCHIVE.xattr.com.apple.provenance` headers, из-за чего `tar` шумно предупреждает при распаковке; содержимое и checksum корректны, но упаковку стоит очистить в будущем deployment automation. Production, retention cron и credential rotation не выполнялись.
+- Следующий шаг: владелец проверяет полный pair result PDF Лазаруса на staging; затем отдельно настраивается ежедневный retention cleanup.
+
 ### 04.0F — исправление переполнения PDF парного результата Лазаруса
 
 - Этап / ветка / commit: этап 04, `codex/04-fix-lazarus-pair-pdf-overflow`, `dd6eff8`.
@@ -26,8 +36,8 @@
 - Первопричина: `ResultController::pdf()` помечал общий массив результатов как PDF, но `LazarusModule::buildSections()` не передавал этот контекст в data парной секции. Поэтому `pair-comparison.twig` выбирал web-ветку с длинными заголовками; landscape применялся только к отдельному `/pair/{id}/pdf`, а обычный `/result/{slug}/{token}/pdf` оставался portrait.
 - Сделано: pair-секция явно получает `is_pdf`; result PDF с pair comparison генерируется как A4 landscape; compact pair section начинается с новой страницы, строки не разрываются, а размер и padding позволяют отдельному pair PDF занимать две страницы без одиночной последней строки. Web-result, расчёты и protected SMIL chart не менялись.
 - Проверки и evidence: RED — два regression-теста подтвердили portrait result PDF и отсутствие row-break protection; GREEN — targeted PHPUnit 10 tests / 137 assertions. Полный synthetic result на реальных 16 формулировках Лазаруса отрендерен Poppler: вместо 14 страниц с web-таблицей получено 6 landscape-страниц, compact pair table занимает последние две, все шесть колонок и строки находятся в границах. Отдельный pair PDF — 2 страницы A4 landscape. Composer validate и audit — pass; PHPStan, lint, architecture, baseline 148 и diff check — pass. После merge 00K общий fast gate — 167 tests / 1562 assertions. [GitHub Actions 32743794319](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32743794319) — success за 28 секунд; DB matrix корректно skipped для PDF/UI scope.
-- Не сделано / риски: staging пока остаётся на `5da9ab5`; владелец ещё не проверял PDF после реальной выкладки. Graphify freshness: `STALE` (33 changed, 10 deleted); внешняя semantic extraction без отдельного разрешения не запускалась, граф не использовался как evidence, fallback — source inspection, PHPUnit и полный Poppler render.
-- Следующий шаг: merge PR #23, затем отдельный staging deployment и повторная проверка владельцем.
+- Не сделано / риски: на момент завершения code package staging оставался на `5da9ab5`; последующий deployment зафиксирован отдельной записью 08.5. Graphify freshness: `STALE` (33 changed, 10 deleted); внешняя semantic extraction без отдельного разрешения не запускалась, граф не использовался как evidence, fallback — source inspection, PHPUnit и полный Poppler render.
+- Следующий шаг: отдельный staging deployment и повторная проверка владельцем; deployment выполнен в 08.5.
 
 ### 00K — CI по риску без дублирования общего gate
 
