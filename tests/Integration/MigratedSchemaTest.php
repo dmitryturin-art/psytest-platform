@@ -105,7 +105,7 @@ final class MigratedSchemaTest extends TestCase
         string $deleteRule,
     ): void {
         $statement = $this->connection->prepare(
-            'SELECT REFERENCED_TABLE_NAME, DELETE_RULE
+            'SELECT constraints.REFERENCED_TABLE_NAME, constraints.DELETE_RULE
              FROM information_schema.REFERENTIAL_CONSTRAINTS AS constraints
              INNER JOIN information_schema.KEY_COLUMN_USAGE AS keys_usage
                ON constraints.CONSTRAINT_SCHEMA = keys_usage.CONSTRAINT_SCHEMA
