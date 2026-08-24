@@ -80,6 +80,8 @@ final class DocumentationCurrentStateTest extends TestCase
         self::assertStringContainsString("mysql: ['5.7', '8.0']", $workflow);
         self::assertStringContainsString('image: mysql:${{ matrix.mysql }}', $workflow);
         self::assertStringContainsString('run: composer migrate', $workflow);
-        self::assertStringContainsString('run: composer test', $workflow);
+        self::assertStringContainsString('run: composer test:fast', $workflow);
+        self::assertStringContainsString('run: composer test:database', $workflow);
+        self::assertStringContainsString("if: needs.quality.outputs.database == 'true'", $workflow);
     }
 }

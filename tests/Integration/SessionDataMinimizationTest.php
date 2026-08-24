@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace PsyTest\Tests\Integration;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\Database;
 use PsyTest\Core\SessionManager;
 
 final class SessionDataMinimizationTest extends TestCase
 {
+    #[Group('database')]
     public function testNewSessionAndActivityRecordsDoNotCaptureClientMetadata(): void
     {
         $db = Database::getInstance();

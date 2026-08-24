@@ -27,7 +27,18 @@
 - Сделано: pair-секция явно получает `is_pdf`; result PDF с pair comparison генерируется как A4 landscape; compact pair section начинается с новой страницы, строки не разрываются, а размер и padding позволяют отдельному pair PDF занимать две страницы без одиночной последней строки. Web-result, расчёты и protected SMIL chart не менялись.
 - Проверки и evidence: RED — два regression-теста подтвердили portrait result PDF и отсутствие row-break protection; GREEN — targeted PHPUnit 10 tests / 137 assertions. Полный synthetic result на реальных 16 формулировках Лазаруса отрендерен Poppler: вместо 14 страниц с web-таблицей получено 6 landscape-страниц, compact pair table занимает последние две, все шесть колонок и строки находятся в границах. Отдельный pair PDF — 2 страницы A4 landscape. Composer validate и audit — pass; PHPStan, lint, architecture, baseline 148 и diff check — pass. Полный PHPUnit: 174 tests, 1534 assertions, 13 прежних connection errors из-за недоступной локальной MySQL; CI MySQL 5.7/8.0 остаётся обязательным gate.
 - Не сделано / риски: staging пока остаётся на `5da9ab5`; владелец ещё не проверял PDF после реальной выкладки. Graphify freshness: `STALE` (33 changed, 10 deleted); внешняя semantic extraction без отдельного разрешения не запускалась, граф не использовался как evidence, fallback — source inspection, PHPUnit и полный Poppler render.
-- Следующий шаг: commit/push, CI MySQL 5.7/8.0, затем отдельный staging deployment и повторная проверка владельцем.
+- Следующий шаг: PR через новый fast gate 00K, затем отдельный staging deployment и повторная проверка владельцем.
+
+### 00K — CI по риску без дублирования общего gate
+
+- Этап / ветка / commit: этап 00, `codex/00-risk-based-ci` → `main`, `58e3f97` (source `8f1362f`, PR #22).
+- Цель: сократить время и расход CI на UI/PDF/docs-пакетах, не теряя проверку PHP 8.3 и совместимость staging MySQL 5.7 с MySQL 8.0.
+- Сделано: общий fast gate (non-DB PHPUnit, dependency audit, PHPStan, formatting, baseline и architecture) выполняется один раз. Тринадцать DB-зависимых тестов из шести классов выделены в PHPUnit group `database`; только эта группа вместе с чистыми migrations запускается в матрице MySQL 5.7/8.0. В PR матрицу включает проверяемый path-classifier; push в `main` и manual run всегда требуют обе DB-версии.
+- Решения: PDF/Twig/CSS/docs проходят быстрый gate; migrations, persistence-код, DB-тесты, Composer dependencies и CI-файлы требуют матрицу. Это оптимизация порядка проверок, а не ослабление release gate: до deployment любое изменение уже находится в `main`, где матрица обязательна.
+- Проверки и evidence: classifier/docs regressions — 10 tests / 112 assertions; полный fast gate — 165 tests / 1553 assertions. Composer validate/audit, PHPStan, lint, architecture check, baseline check, YAML syntax и `git diff --check` — pass. Полный локальный `composer test` обнаружил только 13 ожидаемых connection errors DB-группы из-за недоступной MySQL (178 tests / 1553 assertions), поэтому это не заявлялось зелёным DB-gate. [GitHub Actions 32743418402](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32743418402) — success: fast gate 25 секунд, MySQL 5.7 — 42 секунды, MySQL 8.0 — 49 секунд. Graphify freshness: `STALE` (42 changed: 18 code, 23 documents, 1 papers; 10 deleted); граф не использовался, fallback — source inspection и regression tests.
+- Изменённые файлы: GitHub Actions workflow, Composer scripts, CI scope classifier, PHPUnit group attributes/tests, current-state developer docs и roadmap records.
+- Не сделано / риски: fast-only классификация ещё не была проверена отдельным PR; первым таким доказательством станет 04.0F. Product runtime, migrations, scoring, clinical copy и staging не менялись.
+- Следующий шаг: отправить 04.0F через новый быстрый PR-gate.
 
 ### 00J — снятие неподключённых AI/crisis заделов
 

@@ -5,13 +5,74 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   quality:
+    name: PHP 8.3 / fast gate
+    runs-on: ubuntu-latest
+    outputs:
+      database: ${{ steps.scope.outputs.database || steps.full_scope.outputs.database }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, dom, xml
+          coverage: none
+
+      - name: Detect database-sensitive pull request changes
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -o pipefail
+          git diff --name-only "$BASE_SHA...$HEAD_SHA" | php bin/classify-ci-scope.php >> "$GITHUB_OUTPUT"
+
+      - name: Require database matrix on main and manual runs
+        id: full_scope
+        if: github.event_name != 'pull_request'
+        run: echo "database=true" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Composer manifest and lockfile
+        run: composer validate --strict --no-check-publish
+
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Check known dependency vulnerabilities
+        run: composer audit
+
+      - name: Run tests that do not require MySQL
+        run: composer test:fast
+
+      - name: Check PHPStan baseline cap
+        run: composer baseline:check
+
+      - name: Run static analysis
+        run: composer analyse
+
+      - name: Check formatting
+        run: composer lint
+
+      - name: Check project architecture
+        run: php bin/check-architecture.php
+
+  database:
     name: PHP 8.3 / MySQL ${{ matrix.mysql }}
+    needs: quality
+    if: needs.quality.outputs.database == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -51,29 +112,11 @@ jobs:
           extensions: mbstring, pdo_mysql, dom, xml
           coverage: none
 
-      - name: Validate Composer manifest and lockfile
-        run: composer validate --strict --no-check-publish
-
       - name: Install locked dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Check known dependency vulnerabilities
-        run: composer audit
 
       - name: Apply test database migrations
         run: composer migrate
 
-      - name: Run tests
-        run: composer test
-
-      - name: Check PHPStan baseline cap
-        run: composer baseline:check
-
-      - name: Run static analysis
-        run: composer analyse
-
-      - name: Check formatting
-        run: composer lint
-
-      - name: Check project architecture
-        run: php bin/check-architecture.php
+      - name: Run database tests
+        run: composer test:database
