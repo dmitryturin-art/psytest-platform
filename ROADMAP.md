@@ -73,7 +73,7 @@
 
 - [Файловый индекс этапов](docs/roadmap/README.md)
 - [Текущий статус](docs/roadmap/STATUS.md)
-- [Checkpoint для продолжения после паузы](docs/roadmap/CHECKPOINT.md)
+- [Протокол checkpoint](docs/roadmap/CHECKPOINT.md)
 - [Технический worklog](docs/roadmap/WORKLOG.md)
 - [Человеческий changelog](CHANGELOG.md)
 - [Уроки и профилактика ошибок](docs/roadmap/LESSONS.md)
