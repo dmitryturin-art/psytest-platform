@@ -13,14 +13,14 @@
 | Web server | `nginx-reuseport/1.21.1` перед PHP handler |
 | PHP | web и отдельный CLI `/usr/local/bin/php8.3` — 8.3.20; default CLI `php` — 5.6 и не используется |
 | PHP extensions | доступны `mbstring`, `pdo_mysql`, `dom`, `xml`, `curl`, `openssl`, `zip`, `intl`, `sodium` |
-| Database | отдельная staging DB на MySQL 5.7.21; 7 migrations / 10 tables, pre-migration dump сохранён |
+| Database | отдельная staging DB на MySQL 5.7.21; 8 migrations; свежий pre-migration dump сохранён |
 | Composer | системный Composer 1; deployment artifact должен включать локально собранный `vendor/` |
 | Инструменты | Git 2.42, `tar`, `unzip` и `rsync` доступны |
 | Cron | `crontab` в SSH shell отсутствует; retention job настраивается через панель/Beget API |
-| Web root сейчас | symlink на `releases/779a2b2/public`; release `2b0ce92` сохранён для rollback |
+| Web root сейчас | symlink на `releases/3a2daa8/public`; release `5da9ab5` сохранён для rollback |
 | HTTPS | Let's Encrypt активен; HTTP получает `301` на HTTPS через versioned `.htaccess` |
 | Права | отдельный SSH account имеет read/write ACL на каталог сайта |
-| Активный release | `releases/779a2b2`, production dependencies без dev tools |
+| Активный release | `releases/3a2daa8`, production dependencies без dev tools |
 | Rollback evidence | исходный `public_html` сохранён каталогом и архивом `backups/public-html-predeploy-20260822.tar.gz` |
 
 SSH/DB логины, пароли и другие секреты намеренно не записываются в этот документ.
@@ -47,7 +47,7 @@ bootstrap-адаптера. Приложение не встраивается �
 4. ~~Подготовить artifact с production dependencies.~~ 08.1D: архив собран локально из lockfile, checksum совпал после загрузки; Phinx включён, dev tools и `.env` отсутствуют.
 5. Server `.env` создан с mode `600`, `APP_ENV=production`, `APP_DEBUG=false`; payment/AI выключены. Owner dashboard остаётся выключенным без Argon2id hash.
 6. ~~Установить Basic Auth.~~ Владелец отменил это требование для текущего staging (D-029); HTTPS остаётся обязательным.
-7. Clean migrations применены; Phinx status показывает все 7 migrations как `up`.
+7. Clean migrations применены; Phinx status показывает все 8 migrations как `up`.
 
 ## Оставшиеся эксплуатационные задачи
 
@@ -67,5 +67,7 @@ bootstrap-адаптера. Приложение не встраивается �
 7. 08.2 атомарно переключил staging на `1559188`: новая главная и каталог отвечают `200`, health — `200`/`ok`, HTTP сохраняет `301` на HTTPS; начальные страницы BDI и СМИЛ также отвечают `200`. Расчёты, страницы результатов, PDF и сам SMIL-график этим release не менялись.
 8. 04.0C атомарно переключил staging на `2b0ce92`: приглашение Лазаруса остаётся защищённым, а мобильное прохождение использует сетку ответов 5×2 и не прокручивается к заголовку между вопросами. Расчёты и результаты этим release не менялись.
 9. 04.0D атомарно переключил staging на `779a2b2`: pair results Лазаруса получили единый со шкалой индивидуального результата visual component, два суммарных профиля, ясные русские подписи и адаптивные mobile-карточки для подробного сравнения. Checksum артефакта совпал перед распаковкой; HTTPS health и каталог — `200`, HTTP `/tests` — `301` на HTTPS. Scoring не менялся.
+10. 04.0E атомарно переключил staging на `5da9ab5`: meter совпадения, control раскрытия и отдельный compact landscape pair PDF выложены без изменения scoring; release сохранён как текущий rollback.
+11. 04.0F атомарно переключил staging на `3a2daa8`: общий result PDF с парным сравнением теперь получает compact landscape-layout. SHA-256 артефакта `2c2b874d88f6aa0baaca2b3067704264f1bc23662d43c6757024b653cf3f02e2` совпал после загрузки. Перед необратимой cleanup-миграцией подтверждены две пустые таблицы и сохранён dump `backups/db-pre-3a2daa8-20260824.sql`; после неё все 8 migrations `up`. HTTPS health и `/tests` — `200`, HTTP `/tests` — `301`, retired interpretation — `410`, выключенная admin login — `404`; cookie сохраняет `Secure`, `HttpOnly`, `SameSite=Lax`.
 
-Rollback текущего релиза: атомарно направить `public_html` обратно на `releases/2b0ce92/public`; исходная Beget-заглушка и DB dump дополнительно находятся в `backups/`. Следующий шаг — проверка владельца и короткий пилот.
+Rollback текущего релиза: атомарно направить `public_html` обратно на `releases/5da9ab5/public`; pre-migration dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — ручная проверка владельцем полного pair result PDF, затем короткий пилот.

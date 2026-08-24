@@ -10,7 +10,7 @@
 
 1. **Read-only hosting survey.** 08.1A: [inventory Beget](../BEGET_STAGING.md) подтверждает web/CLI PHP 8.3, пустую staging DB, public root и ACL. HTTPS недоступен; DB работает на MySQL 5.7, cron управляется не через SSH shell, системный Composer устарел.
 2. **Topology decision.** D-028: `test.23time.ru`, отдельное приложение и отдельная staging DB; WordPress не затрагивается. YooKassa/webhook не входят в бесплатный staging.
-3. **Staging.** 08.1B исправил public-root rewrite; 08.1C добавил CI MySQL 5.7/8.0; 08.1D подготовил artifact/backup. 08.1E активировал staging с HTTPS, migrations и browser BDI smoke. 08.1F перевёл его на release `398ca23`: production cookie и единственный слой dynamic security headers проверены внешним HTTP smoke. По D-029 Basic Auth не используется.
+3. **Staging.** 08.1B исправил public-root rewrite; 08.1C добавил CI MySQL 5.7/8.0; 08.1D подготовил artifact/backup. 08.1E активировал staging с HTTPS, migrations и browser BDI smoke. Последующее атомарное обновление до `3a2daa8` выложило исправленный PDF Лазаруса и cleanup-миграцию: все 8 migrations `up`, HTTPS/routes/cookie/retired flow проверены smoke, rollback `5da9ab5` сохранён. По D-029 Basic Auth не используется.
 4. **Configuration/secrets.** Environment matrix, rotation, least privilege, production debug off, writable paths вне public root.
 5. **Database release.** Проверяемые migrations, preflight, backup, restore и rollback/forward-fix procedure.
 6. **Deployment automation.** Repeatable build/install/cache/migrate/smoke steps; releases directory или эквивалентная атомарная смена версии.
