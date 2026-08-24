@@ -107,7 +107,7 @@ git diff --cached
 ## Что не следует считать готовым
 
 - YooKassa, чеки, купоны и paid CTA;
-- внешний AI, provider choice, consent record и AI-report delivery;
+- внешний AI, provider choice, consent capture и AI-report delivery;
 - кабинет терапевта и добровольный пользовательский аккаунт;
 - public crisis resource flow;
 - production deployment, backup/restore drill и rollback;

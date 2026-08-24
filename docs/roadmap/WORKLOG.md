@@ -19,6 +19,15 @@
 
 ## 2026-08-24
 
+### 00J — снятие неподключённых AI/crisis заделов
+
+- Этап / ветка / commit: этап 00, `codex/00-remove-deferred-scaffolding`, commit pending.
+- Цель: выполнить решение владельца по §7.4 внешнего review и D-032 — удалить неподключённые AI-consent и country/crisis resources scaffolding.
+- Сделано: удалены `AiProcessingConsentService`, `CountryResolver`/`CountryResolution` и их tests. `schema.sql`, data map, архитектура, rules и traceability приведены к фактическому отсутствию этих сущностей. Новая необратимая migration удаляет `ai_processing_consents` и `crisis_resources`, если они есть в развёрнутой БД; updated `MigratedSchemaTest` требует их отсутствия после полного `phinx migrate`.
+- Проверки и evidence: `composer validate --strict --no-check-publish`, `composer audit`, PHPStan, lint, architecture check, baseline check, `DocumentationCurrentStateTest` (4 tests / 86 assertions) и `git diff --check` — pass. Локальная MySQL отсутствует, поэтому фактическую migration chain и schema-test докажет CI на MySQL 5.7 и 8.0. Graphify freshness: `STALE` (32 changed, 10 deleted); инкрементное обновление остановлено политикой среды, так как могло передать изменённый код внешнему LLM без отдельного разрешения. Граф не использован; fallback — source inspection и CI.
+- Не сделано / риски: legacy AI/payment tables и будущие этапы 06–07 не входят в пакет. Cleanup-миграция должна быть применена на staging отдельно от merge.
+- Следующий шаг: PR/CI; после merge не начинать AI/payment implementation.
+
 ### 00I — поведенческие schema-contracts
 
 - Этап / ветка / commit: этап 00, `codex/00-schema-contracts`, commit pending.
