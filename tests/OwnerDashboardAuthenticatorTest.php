@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace PsyTest\Tests;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\Database;
 use PsyTest\Core\OwnerDashboardAuthenticator;
 
+#[Group('database')]
 final class OwnerDashboardAuthenticatorTest extends TestCase
 {
     private Database $db;

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace PsyTest\Tests\Integration;
 
 use DateTimeImmutable;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\Database;
 use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\SessionLifecycleService;
 use PsyTest\Core\SessionManager;
 
+#[Group('database')]
 final class SessionLifecycleServiceTest extends TestCase
 {
     private Database $db;

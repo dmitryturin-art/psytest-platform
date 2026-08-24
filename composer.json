@@ -43,6 +43,8 @@
   },
   "scripts": {
     "test": "phpunit",
+    "test:fast": "phpunit --exclude-group database",
+    "test:database": "phpunit --group database",
     "analyse": "phpstan analyse core controllers services modules --level=6 --memory-limit=512M",
     "baseline:check": "php bin/check-phpstan-baseline.php",
     "lint": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",

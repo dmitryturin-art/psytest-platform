@@ -73,6 +73,13 @@
 - Добавить необратимую cleanup-миграцию: в уже развёрнутой БД удалить `ai_processing_consents` и `crisis_resources`; в чистой migration chain итоговая схема также не содержит этих таблиц.
 - Обновить schema snapshot, current-state docs и traceability; не менять legacy AI/payment tables, scoring или BDI notice.
 
+### 00K. CI по риску без дублирования общего gate
+
+- Быстрые PHPUnit-тесты, dependency audit, PHPStan, formatting, baseline и architecture check выполняются один раз на PHP 8.3.
+- Только DB-зависимые тесты и чистая цепочка migrations выполняются в матрице MySQL 5.7/8.0.
+- В pull request матрица включается для migrations, persistence-кода, DB-тестов, зависимостей и самой CI-конфигурации. Каждый push в `main` и ручной запуск сохраняют полный DB-gate перед deployment.
+- Классификация путей и разделение PHPUnit-групп защищены regression-тестами; scoring, продуктовый runtime и migrations не меняются.
+
 ## Проверка
 
 - `git diff --check`; Markdown link checker или эквивалентный локальный скрипт.

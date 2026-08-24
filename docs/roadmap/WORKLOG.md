@@ -19,6 +19,17 @@
 
 ## 2026-08-24
 
+### 00K — CI по риску без дублирования общего gate
+
+- Этап / ветка / commit: этап 00, `codex/00-risk-based-ci`, `8f1362f`.
+- Цель: сократить время и расход CI на UI/PDF/docs-пакетах, не теряя проверку PHP 8.3 и совместимость staging MySQL 5.7 с MySQL 8.0.
+- Сделано: общий fast gate (non-DB PHPUnit, dependency audit, PHPStan, formatting, baseline и architecture) выполняется один раз. Тринадцать DB-зависимых тестов из шести классов выделены в PHPUnit group `database`; только эта группа вместе с чистыми migrations запускается в матрице MySQL 5.7/8.0. В PR матрицу включает проверяемый path-classifier; push в `main` и manual run всегда требуют обе DB-версии.
+- Решения: PDF/Twig/CSS/docs проходят быстрый gate; migrations, persistence-код, DB-тесты, Composer dependencies и CI-файлы требуют матрицу. Это оптимизация порядка проверок, а не ослабление release gate: до deployment любое изменение уже находится в `main`, где матрица обязательна.
+- Проверки и evidence: classifier/docs regressions — 10 tests / 112 assertions; полный fast gate — 165 tests / 1553 assertions. Composer validate/audit, PHPStan, lint, architecture check, baseline check, YAML syntax и `git diff --check` — pass. Полный локальный `composer test` обнаружил только 13 ожидаемых connection errors DB-группы из-за недоступной MySQL (178 tests / 1553 assertions), поэтому это не заявляется зелёным DB-gate. Graphify freshness: `STALE` (42 changed: 18 code, 23 documents, 1 papers; 10 deleted); граф не использовался, fallback — source inspection и regression tests. Внешний GitHub Actions run ожидается после публикации ветки.
+- Изменённые файлы: GitHub Actions workflow, Composer scripts, CI scope classifier, PHPUnit group attributes/tests, current-state developer docs и roadmap records.
+- Не сделано / риски: локальная MySQL недоступна, поэтому DB group и реальное условное поведение GitHub job должны быть подтверждены первым CI-run. Product runtime, migrations, scoring, clinical copy и staging не менялись.
+- Следующий шаг: завершить локальный gate, commit и CI; после merge отправить 04.0F через новый быстрый PR-gate.
+
 ### 00J — снятие неподключённых AI/crisis заделов
 
 - Этап / ветка / commit: этап 00, `codex/00-remove-deferred-scaffolding`, commit pending.

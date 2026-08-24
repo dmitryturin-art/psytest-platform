@@ -1,6 +1,6 @@
 # Разработка PsyTest
 
-Статус: **актуальное руководство для локальной разработки на 2026-08-16**. Оно не заменяет [AGENTS.md](AGENTS.md), [ROADMAP.md](ROADMAP.md), active phase и фактический код. Архитектурная карта — в [ARCHITECTURE.md](ARCHITECTURE.md).
+Статус: **актуальное руководство для локальной разработки на 2026-08-24**. Оно не заменяет [AGENTS.md](AGENTS.md), [ROADMAP.md](ROADMAP.md), active phase и фактический код. Архитектурная карта — в [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Перед началом
 
@@ -48,6 +48,8 @@ git diff --check
 ```
 
 `composer migrate` обязателен при изменении migrations. Для UI нужен browser check на desktop и 390×844; для платежей — sandbox fixtures до отдельного production gate. Не заявляйте зелёный gate без свежего вывода.
+
+Если локальная MySQL недоступна, `composer test:fast` выполняет все тесты, не обращающиеся к базе; это не заменяет `composer test:database` после `composer migrate`. В pull request CI всегда запускает fast gate, а матрицу MySQL 5.7/8.0 добавляет для migrations, persistence-кода, DB-тестов и зависимостей. Push в `main` и ручной запуск всегда выполняют обе DB-конфигурации перед deployment.
 
 ## Текущий HTTP flow
 

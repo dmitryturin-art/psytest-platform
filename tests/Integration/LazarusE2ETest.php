@@ -16,11 +16,13 @@ declare(strict_types=1);
 
 namespace PsyTest\Tests\Integration;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\Database;
 use PsyTest\Core\SessionManager;
 use PsyTest\Modules\Lazarus\LazarusModule;
 
+#[Group('database')]
 final class LazarusE2ETest extends TestCase
 {
     private Database $db;
