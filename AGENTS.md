@@ -25,11 +25,9 @@ PsyTest — модульная PHP-платформа психологическ
 - Graphify freshness + query — когда пакет трогает незнакомую подсистему, а не всегда.
 - agentmemory / lesson recall — когда задача похожа на ранее решённую.
 - `AUDIT_TRACEABILITY.md` — когда пакет закрывает пункт аудита.
-- `docs/audit/2026-08-15-agent-implementation-plan.md` — исторический, читать не нужно.
-
 Если файл не прочитан — это указывается в отчёте, а не компенсируется чтением «на всякий случай».
 
-`docs/audit/2026-08-15-agent-implementation-plan.md` — исторический план. `docs/roadmap/AUDIT_TRACEABILITY.md` читается только при закрытии конкретного audit finding.
+`docs/roadmap/AUDIT_TRACEABILITY.md` читается только при закрытии конкретного audit finding.
 
 ## Приоритет инструкций
 

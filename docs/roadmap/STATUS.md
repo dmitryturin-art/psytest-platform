@@ -8,6 +8,7 @@
 - Состояние: `test.23time.ru` работает на release `5da9ab5`: HTTPS redirect, PHP 8.3, MySQL 5.7, 7 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers больше не дублируются. Rollback `779a2b2` сохранён. Новая главная `/`, каталог `/tests`, мобильное прохождение и обновлённое парное сравнение Лазаруса доступны на staging.
 - Управление знаниями: локальный Graphify обновлён до текущего checkout и теперь имеет обязательную freshness-проверку перед архитектурным query; артефакты остаются вне Git.
 - Governance 00F: старт сессии теперь требует только status, phase активного пакета и чистое понимание Git-state; остальные документы читаются по типу задачи и явно отражаются в отчёте.
+- Governance 00G–00H: `STATUS.md` стал единственной оперативной панелью, `CHECKPOINT.md` — только протоколом; исходный audit-plan 2026-08-15 перенесён в архив, а рабочей навигацией по findings остаётся traceability.
 - Последний выложенный пакет: 04.0E `5da9ab5` — meter совпадения приведён к единому компоненту шкалы, раскрытие подробностей стало заметным control, а pair PDF получил отдельную compact landscape-компоновку. CI PHP 8.3/MySQL 5.7 и 8.0, затем внешний HTTPS smoke — success.
 - Baseline commit: `6c51cc3` (`main` на начало аудита).
 - Состояние продукта: quality gates, dependency safety, legacy payment containment, CSRF и границы result-token улучшены; публичная продажа пока не готова к запуску.

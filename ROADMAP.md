@@ -7,8 +7,8 @@
 1. Прочитать [текущий статус](docs/roadmap/STATUS.md).
 2. Открыть файл активного этапа из таблицы ниже.
 3. Проверить [продуктовые правила](docs/roadmap/PRODUCT_RULES.md) и [инженерные правила](docs/roadmap/ENGINEERING_RULES.md).
-4. Использовать [технический аудит](docs/audit/2026-08-15-agent-implementation-plan.md) как полный backlog и [матрицу трассировки](docs/roadmap/AUDIT_TRACEABILITY.md), чтобы ни одно замечание не потерялось.
-5. Перед кодом свериться с `ARCHITECTURE.md`; если документ расходится с кодом, зафиксировать расхождение и исправить документацию в том же work package.
+4. При закрытии audit finding использовать [матрицу трассировки](docs/roadmap/AUDIT_TRACEABILITY.md), чтобы ни одно замечание не потерялось.
+5. Перед кодом свериться с `ARCHITECTURE.md`, если пакет затрагивает архитектуру; если документ расходится с кодом, зафиксировать расхождение и исправить документацию в том же work package.
 
 ## Иерархия источников
 
@@ -17,10 +17,9 @@
 1. Последнее прямое решение владельца проекта.
 2. [Продуктовые правила](docs/roadmap/PRODUCT_RULES.md) и [журнал решений](docs/roadmap/DECISIONS.md).
 3. Файл активного этапа и его критерии приёмки.
-4. [Технический аудит 2026-08-15](docs/audit/2026-08-15-agent-implementation-plan.md).
-5. `ARCHITECTURE.md` как описание фактической системы.
-6. `README.md` и `DEVELOPMENT.md`.
-7. `docs/archive/` и `docs/superpowers/` — только история, не действующие инструкции.
+4. `ARCHITECTURE.md` как описание фактической системы.
+5. `README.md` и `DEVELOPMENT.md`.
+6. `docs/archive/` и `docs/superpowers/` — только история, не действующие инструкции.
 
 Если новое решение меняет продукт, его сначала добавляют в `DECISIONS.md` и `PRODUCT_RULES.md`, затем обновляют затронутые этапы.
 
@@ -82,7 +81,7 @@
 - [Журнал решений](docs/roadmap/DECISIONS.md)
 - [Трассировка аудита](docs/roadmap/AUDIT_TRACEABILITY.md)
 - [Ревью для владельца](docs/audit/2026-08-15-owner-review.md)
-- [Технический план](docs/audit/2026-08-15-agent-implementation-plan.md)
+- [Исторический технический план](docs/archive/2026-08-15-agent-implementation-plan.md)
 
 ## Что считается завершением work package
 
