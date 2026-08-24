@@ -21,7 +21,7 @@
 
 ### 04.0F — исправление переполнения PDF парного результата Лазаруса
 
-- Этап / ветка / commit: этап 04, `codex/04-fix-lazarus-pair-pdf-overflow`, commit pending.
+- Этап / ветка / commit: этап 04, `codex/04-fix-lazarus-pair-pdf-overflow`, `dd6eff8`.
 - Цель: довести до конца замечание владельца — общая таблица двух участников в скачиваемом result PDF выходила за пригодную компоновку документа, несмотря на заявленный 04.0E landscape polish.
 - Первопричина: `ResultController::pdf()` помечал общий массив результатов как PDF, но `LazarusModule::buildSections()` не передавал этот контекст в data парной секции. Поэтому `pair-comparison.twig` выбирал web-ветку с длинными заголовками; landscape применялся только к отдельному `/pair/{id}/pdf`, а обычный `/result/{slug}/{token}/pdf` оставался portrait.
 - Сделано: pair-секция явно получает `is_pdf`; result PDF с pair comparison генерируется как A4 landscape; compact pair section начинается с новой страницы, строки не разрываются, а размер и padding позволяют отдельному pair PDF занимать две страницы без одиночной последней строки. Web-result, расчёты и protected SMIL chart не менялись.
