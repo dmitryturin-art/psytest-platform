@@ -148,7 +148,7 @@ PHPStan пока использует ограниченный baseline из 148
 | [Инженерные правила](docs/roadmap/ENGINEERING_RULES.md) | ветки, проверки, evidence и definition of done |
 | [Changelog](CHANGELOG.md) | изменения понятным владельцу языком |
 | [Worklog](docs/roadmap/WORKLOG.md) | техническая история действий и проверок |
-| [Checkpoint](docs/roadmap/CHECKPOINT.md) | продолжение после паузы без потери контекста |
+| [Протокол checkpoint](docs/roadmap/CHECKPOINT.md) | порядок фиксации состояния перед паузой |
 
 ## Вклад и ветки
 

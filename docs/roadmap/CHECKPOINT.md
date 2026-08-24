@@ -1,93 +1,25 @@
-# Текущий checkpoint
+# Протокол команды «сделай checkpoint»
 
-Обновлён: 2026-08-16
+`STATUS.md` — единственная оперативная панель состояния проекта. Этот файл не хранит
+ветку, сделанное, риски или следующий этап: он описывает только воспроизводимый порядок
+действий при команде владельца «сделай checkpoint».
 
-## Где мы
-
-- Проект: PsyTest Platform.
-- Активный этап: 02 — клиническая безопасность, privacy и бесплатный пилот.
-- Последний опубликованный функциональный package: 02.2B `788e590`; GitHub Actions [32503879209](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32503879209) — **success** на PHP 8.3/MySQL.
-- Current branch: `main`; 02.2B fast-forward merged and pushed. Next work package has not started.
-- 01.5A (`92bf5e6`) связывает route slug с test session; 01.5B (`2cc5321`, форматирование `e8f1f53`) добавляет серверную validation ответов; 01.5C (`52883c9`) устраняет дублирующий index в migration chain. Формулы тестов и корректный пользовательский flow не менялись.
-- Канонические источники в порядке приоритета: последнее решение владельца → `PRODUCT_RULES.md`/`DECISIONS.md` → active phase → technical audit → фактическая архитектура. Полная иерархия — в `ROADMAP.md`.
-
-## Что уже сделано
-
-- Проведён полный аудит проекта.
-- Зафиксированы решения владельца о бесплатных результатах, платных разборах, YooKassa, купонах, двух типах отчёта, кабинете терапевта, SMIL и размещении на 23time.ru.
-- Завершено создание канонической системы управления разработкой в отдельной ветке.
-- Superpowers больше не является обязательной методологией.
-- Созданы и проверены все этапы 00–09, audit traceability, decision/status/worklog/checkpoint/lessons и честный GitHub README.
-- Коммиты: `0943c80` — repository hygiene; `0866ae0` — audited delivery program.
-
-## Что сейчас в работе
-
-- Governance package локально завершён и проверен тремя независимыми reviews.
-- Governance publication завершена.
-- Воспроизводимый baseline завершён: architecture checker починен, PHPStan baseline capped at 148, evidence — в `WORKLOG.md`.
-- Dependency safety завершён: Dompdf 3.1.6, composer audit clean, composer.lock теперь отслеживается и разрешается для PHP 8.3.
-- Legacy payment CTA/endpoints safely retired; CSRF middleware введён для browser mutations.
-- 01.4 разделяет result-access token и pair-reference: lookup результата использует только `session_token`; локальные и GitHub CI проверки зелёные.
-- 01.5A связывает route slug с `test_id` session для result/PDF/status/autosave/submit/pair flow; GitHub CI — success.
-- 01.5B валидирует тип, допустимые значения и полноту ответов до autosave/submit для SMIL, BDI, BAI, HADS и Лазаруса; SEC-04 закрыт evidence из зелёного CI.
-- PAIR-01 уже запрещает повторное создание приглашения; его остальные access-boundary checks остаются отдельным P1-пакетом.
-- 01.5C оставляет `uq_partner_token` в инкрементальной миграции для существующих баз, но не дублирует DDL в bootstrap schema. Contract-test и GitHub CI подтверждают чистый deployment path.
-- SEC-05 удалил публичные dev-harness, оставил только `public/index.php` как PHP front controller, ввёл response hardening и regression-тесты. Локальная browser/HTTP QA подтвердила 404 у прежних diagnostic routes.
-- PAIR-02 подтверждает, что submitted session второго партнёра связана именно с source invite token до записи ответов и расчёта.
-- PAIR-03 подтверждает expiry boundaries; PAIR-04 переводит конкурентный duplicate invite в `409`, а DB-логи больше не включают driver messages с bound values.
-- Составлен factual data map текущего кода и приняты owner-решения: `anonymous` clinical-данные — 180 дней, явный `therapist_case` — бессрочно с ручным удалением; AI-передача требует отдельного consent только при заказе расширенного разбора.
-- 02.1 опубликован в `main`: `87925ba` реализует lifecycle, а `6152177` исправляет clean migration chain. GitHub Actions [31947662859](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31947662859) — success на PHP 8.3/MySQL.
-- 02.2A в `codex/02-bdi-safety-signal`: validated BDI item 9 с оценкой 1–3 создаёт структурированный safety signal, независимый от total; на момент завершения 02.2A UI/текст/ресурсы намеренно не начинались.
-- 02.2A опубликован в `main` как `16c4730`; GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success. На момент публикации UI, клинический текст, country/resource registry не начинались; это состояние изменено 02.2B по D-026.
-- 02.3A `5942587` добавляет pure `CountryResolver`: ручной выбор страны имеет приоритет над session choice, затем над подготовленной trusted подсказкой; некорректные значения приводят к `unknown`. Он не читает IP/HTTP-заголовки, не делает GeoIP-запросов и не сохраняет IP. Локальный full gate: 130 tests/1232 assertions, PHPStan, lint, architecture и baseline — pass; GitHub Actions `31948360267` — success на PHP 8.3/MySQL.
-- 02.3B `50794fa` создаёт пустой fail-closed registry: контакт/URL, официальный источник, дата/автор проверки и `active = 0`. Реестр не связан с результатами или IP, не содержит seed-контактов и ещё не имеет reader/UI или срока актуальности. Локальная migration и full gate прошли (131 tests/1248 assertions); GitHub Actions `31948774257` — success на PHP 8.3/MySQL.
-- 02.4A `a14f5eb` приводит public privacy/delete copy и актуальные docs к реальному поведению: нет claims о шифровании, отсутствии будущих получателей или мгновенном физическом удалении. Есть source-level regression test, browser QA `/privacy` на desktop/390×844, полный local gate (134 tests/1264 assertions) и GitHub CI [31949538307](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31949538307) — success.
-- 02.5A `7240d3b` создаёт factual registry всех пяти модулей и contract test. Scoring/вопросы не меняются; registry фиксирует закрытые release gates для paid interpretation и нового public content, пока owner не приложит evidence конкретной формы. Полный local gate: 138 tests/1387 assertions; GitHub Actions [31950300793](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31950300793) — success на PHP 8.3/MySQL.
-- 00C в `codex/00-current-state-docs` заменяет устаревшие ARCHITECTURE/DEVELOPMENT current-state документами, помечает старый module guide как historical и добавляет contract test routes/legacy commands/local links. Product code и psychometrics не меняются; publication — следующий шаг.
-- 02.2B `788e590`: реализован approved generic BDI notice без country/resource strategy. Во время проверки найден и устранён submit-регресс: `array_merge()` перенумеровывал числовые question IDs, поэтому заполненный BDI отклонялся `422`. Новый answer overlay сохраняет IDs; HTTP fixture с 21 ответом возвращает result redirect. Full local gate, browser QA на desktop/mobile и GitHub Actions [32503879209](https://github.com/dmitryturin-art/psytest-platform/actions/runs/32503879209) — success.
-
-## Ближайшие действия
-
-1. Отдельным work package добавить automated browser cases для BDI notice.
-2. Продолжить privacy package: protected assignment и manual delete для `therapist_case`, затем закрытый бесплатный pilot.
-4. Не менять SMIL/Lazarus scoring без отдельного clinical-risk work package.
-5. Для снятия METH-01 собрать version/edition/pages, источник русской формы и условия/permission на online/commercial use по каждой методике.
-6. Опубликовать 00C только после полного local quality gate; затем сохранить ссылку на CI в DOC-01.
-
-## Известные блокеры и риски
-
-- Новый платный flow пока не существует: legacy endpoints намеренно retired до проектирования YooKassa/AI orders.
-- `therapist_case`, production scheduler для 180-day cleanup, protected delete UX и AI-consent пока не реализованы; public copy теперь явно отделяет current state от будущего flow.
-- BDI item 9 safety-flow опубликован и прошёл GitHub CI; конкретные ресурсы намеренно не публикуются по D-026. Automated browser coverage остаётся долгом до закрытия CLIN-01.
-- Полная документация ещё содержит legacy-слои; 02.4A исправляет privacy/routes точечно, а DOC-01 остаётся в работе.
-- Дополнительные шкалы SMIL требуют отдельной верификации; базовые 13 заморожены.
-- Права на конкретные формы методик пока не документированы; [METHODOLOGY_REGISTRY.md](METHODOLOGY_REGISTRY.md) — единственная current-state точка для этого риска.
-- Два старых PDF остаются только в истории; владелец подтвердил их обезличенность и отказался от history rewrite. Новые generated PDF игнорируются и не попадают в Git.
-
-## Что спросить у владельца сейчас
-
-Кризисный текст утверждён; новых решений владельца для 02.2B не требуется. Визуальное интервью — в этапе 04.
-
-## Точное состояние после checkpoint
-
-- Ветка: `codex/02-bdi-crisis-notice`; HEAD: `788e590`.
-- Незакоммичены только записи текущего checkpoint-протокола: `docs/roadmap/AUDIT_TRACEABILITY.md`, `docs/roadmap/CHECKPOINT.md`, `docs/roadmap/LESSONS.md`, `docs/roadmap/STATUS.md`, `docs/roadmap/WORKLOG.md`.
-- Staged, untracked, generated или секретных файлов нет. `git diff --check` завершён без ошибок.
-- Локальный PHP preview-сервер остановлен; при следующем UI-check его нужно запускать явно. Он не является deployment и не входит в Git.
-
-## Возобновление
-
-- 2026-08-16: владелец принял D-026: BDI item 9 > 0 показывает только нейтральный текст без country/IP/resource directory. В `codex/02-bdi-crisis-notice` commit `788e590` одновременно исправил обнаруженный HTTP-regression BDI submit: numeric IDs больше не перенумеровываются. Full local gate и browser QA пройдены. Следующий шаг — review, merge/push и CI.
-
-## Протокол команды «сделай checkpoint»
-
-1. Обновить этот файл фактическим состоянием, branch и dirty files.
-2. Обновить `STATUS.md` и добавить запись в `WORKLOG.md`.
-3. Зафиксировать новые решения в `DECISIONS.md`, уроки — в `LESSONS.md`.
-4. Запустить доступные узкие проверки или явно написать, что не запускалось.
-5. Сохранить краткое решение/следующий шаг в agentmemory без секретов и персональных данных.
-6. Коммитить только целостный проверенный пакет; иначе записать точный незакоммиченный diff и продолжить с него позже.
+1. Проверить `git status --short`, `git diff` и текущую ветку; не коммитить незавершённый
+   diff автоматически.
+2. Обновить `STATUS.md` фактическим состоянием, активным этапом, ближайшим шагом и
+   блокерами.
+3. Добавить в `WORKLOG.md` короткую запись: что сделано, какие проверки прошли, точный
+   dirty-state и что сознательно не запускалось.
+4. Добавить новое решение в `DECISIONS.md` или урок в `LESSONS.md`, только если они
+   действительно появились в текущем пакете.
+5. Запустить доступные узкие проверки либо явно записать, почему они не запускались.
+6. Сохранить краткое решение/следующий шаг в agentmemory без секретов и персональных
+   данных, если инструмент доступен и это помогает возобновлению.
 
 ## Протокол видимости для владельца
 
-После checkpoint агент обязан сообщить: что готово, активный этап/work package, branch/commit, результат проверок, следующий номерованный шаг и одно из состояний `продолжаю` / `остановлено`. О субагентах сообщается только по прямому вопросу владельца или при реальном блокере. Команда «работай по плану» разрешает продолжать без подтверждения между безопасными work packages.
+После checkpoint агент сообщает: что готово, активный этап/work package, branch/commit,
+результат проверок, следующий номерованный шаг и одно из состояний `продолжаю` /
+`остановлено`. О субагентах сообщается только по прямому вопросу владельца или при
+реальном блокере. Команда «работай по плану» разрешает продолжать без подтверждения
+между безопасными work packages.

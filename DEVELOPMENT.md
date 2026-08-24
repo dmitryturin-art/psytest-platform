@@ -92,7 +92,7 @@ BDI item 9 формирует machine-readable `ClinicalSafetySignal`; при з
 
 ## Документация и коммиты
 
-После пакета обновляйте `STATUS.md`, active phase, `AUDIT_TRACEABILITY.md`, `WORKLOG.md`, `CHECKPOINT.md`, а при изменении фактического устройства — `ARCHITECTURE.md`. `CHANGELOG.md` содержит только проверенный эффект для владельца.
+После пакета обновляйте `STATUS.md`, active phase, `AUDIT_TRACEABILITY.md`, `WORKLOG.md`, а при изменении фактического устройства — `ARCHITECTURE.md`. При явной команде «сделай checkpoint» действуйте по `CHECKPOINT.md`. `CHANGELOG.md` содержит только проверенный эффект для владельца.
 
 Проверьте перед коммитом:
 
