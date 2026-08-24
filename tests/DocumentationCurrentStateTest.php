@@ -20,30 +20,12 @@ final class DocumentationCurrentStateTest extends TestCase
         $routes = (string) file_get_contents($projectRoot . '/public/index.php');
         $architecture = (string) file_get_contents($projectRoot . '/ARCHITECTURE.md');
 
-        foreach ([
-            '/',
-            '/tests',
-            '/test/{slug}',
-            '/test/{slug}/save',
-            '/test/{slug}/submit',
-            '/test/{slug}/pair',
-            '/test/{slug}/pair/submit',
-            '/result/{slug}/{token}',
-            '/result/{slug}/{token}/pdf',
-            '/result/{slug}/{token}/pair-status',
-            '/result/{token}/delete',
-            '/pair/{id}',
-            '/pair/{id}/pdf',
-            '/api/health',
-            '/privacy',
-            '/terms',
-            '/deleted',
-            '/error/{code}',
-            '/interpretation/{token}',
-            '/interpretation/{token}/pay',
-            '/webhook/yoomoney',
-        ] as $route) {
-            self::assertStringContainsString("'{$route}'", $routes, $route);
+        preg_match_all('/\$router->(?:get|post)\(\'([^\']+)\'/', $routes, $matches);
+        $registeredRoutes = array_values(array_unique($matches[1] ?? []));
+
+        self::assertNotEmpty($registeredRoutes, 'No public routes were parsed from public/index.php.');
+
+        foreach ($registeredRoutes as $route) {
             self::assertStringContainsString("`{$route}`", $architecture, $route);
         }
     }

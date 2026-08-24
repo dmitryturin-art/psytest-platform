@@ -17,7 +17,16 @@
 - Следующий шаг:
 ```
 
-## 2026-08-23
+## 2026-08-24
+
+### 00I — поведенческие schema-contracts
+
+- Этап / ветка / commit: этап 00, `codex/00-schema-contracts`, commit pending.
+- Цель: выполнить третью задачу §7.3 внешнего review: заменить четыре теста на текст миграций проверкой реальной схемы после `phinx migrate` и убрать второй hardcoded route list.
+- Сделано: удалены `CrisisResourceRegistryMigrationContractTest`, `AiProcessingConsentMigrationContractTest`, `SessionRetentionMigrationContractTest` и `PairInviteMigrationContractTest`. Новый `Integration/MigratedSchemaTest` read-only проверяет на тестовой БД columns, indexes, отсутствие IP/user-agent в consent, и foreign-key `ON DELETE CASCADE`. `DocumentationCurrentStateTest` извлекает все GET/POST routes из `public/index.php`; найденные им пропуски owner-routes исправлены в current-state `ARCHITECTURE.md`.
+- Проверки и evidence: RED — route-derived test обнаружил недокументированный `/admin/logout`; GREEN — `DocumentationCurrentStateTest`: 4 tests / 86 assertions. PHP syntax нового integration test — pass. Локальный `MigratedSchemaTest` ожидаемо не подключился к отсутствующей MySQL (`2002`); в CI `composer migrate` запускается до PHPUnit для MySQL 5.7 и 8.0 и остаётся обязательным доказательством. Graphify incremental update не завершился из-за 18 изменённых documentation files и отсутствующего LLM key; граф `STALE` не использовался как доказательство, fallback — source files и CI schema test.
+- Не сделано / риски: миграции, schema snapshot и product tables не менялись. §7.4 не начат и ждёт решения владельца.
+- Следующий шаг: reviewer check, PR/CI; при зелёном CI завершить §7.3 и остановиться до решения владельца по §7.4.
 
 ### 00H — архив исходного audit-plan
 
@@ -42,6 +51,8 @@
 - Сделано: `AGENTS.md` разделяет обязательный старт на три файла и контекстное чтение по типу пакета; §11 инженерных правил требует до начала объявить файлы чтения и в конце назвать фактически прочитанные.
 - Не сделано / риски: автоматический лимит бюджета чтения (§7.5 review) не входит в этот пакет. Graphify не запускался: пакет не затрагивает незнакомую подсистему; существующий stale graph не использовался как доказательство.
 - Следующий шаг: три независимых пакета §7.3: упрощение checkpoint, архив audit-plan и замена непродуктовых migration-text contracts.
+
+## 2026-08-23
 
 ### 08.4 — staging deployment 04.0E результатов Лазаруса
 
