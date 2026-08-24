@@ -21,7 +21,7 @@
 
 ### 00K — CI по риску без дублирования общего gate
 
-- Этап / ветка / commit: этап 00, `codex/00-risk-based-ci`, commit pending.
+- Этап / ветка / commit: этап 00, `codex/00-risk-based-ci`, `8f1362f`.
 - Цель: сократить время и расход CI на UI/PDF/docs-пакетах, не теряя проверку PHP 8.3 и совместимость staging MySQL 5.7 с MySQL 8.0.
 - Сделано: общий fast gate (non-DB PHPUnit, dependency audit, PHPStan, formatting, baseline и architecture) выполняется один раз. Тринадцать DB-зависимых тестов из шести классов выделены в PHPUnit group `database`; только эта группа вместе с чистыми migrations запускается в матрице MySQL 5.7/8.0. В PR матрицу включает проверяемый path-classifier; push в `main` и manual run всегда требуют обе DB-версии.
 - Решения: PDF/Twig/CSS/docs проходят быстрый gate; migrations, persistence-код, DB-тесты, Composer dependencies и CI-файлы требуют матрицу. Это оптимизация порядка проверок, а не ослабление release gate: до deployment любое изменение уже находится в `main`, где матрица обязательна.
