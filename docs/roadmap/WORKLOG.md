@@ -648,3 +648,10 @@
 - Сделано: миграция `20260825120000` удаляет `ip_address`/`user_agent` из `test_sessions` и `activity_log` вместе со старыми значениями (down — IrreversibleMigrationException, по образцу D-032); из `SessionManager` (2 места) и `TherapistCaseService` убраны явные NULL-передачи; `MigratedSchemaTest` получил `assertMissingColumn`-контракт на 4 колонки; `SessionDataMinimizationTest` теперь доказывает, что опции метаданных игнорируются API и колонок не существует; `TherapistCaseServiceTest` убраны ссылки на удалённые колонки; DATA_MAP (строка IP/UA + снят открытый вопрос №1), ARCHITECTURE, фаза 02 (WP11), трейсабилити DATA-01 обновлены.
 - Инварианты: scoring, clinical flows и owner-безопасность не тронуты; `owner_login_attempts` IP не хранит по схеме — исключений нет.
 - Проверки: полный gate — validate/audit/migrate/PHPUnit 186 tests/1835 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass.
+
+### 02.7C-deploy — выкладка удаления IP/UA-колонок на staging
+
+- Release / ветка: `c62f34a` (PR #27, CI success: fast gate + MySQL 5.7 + 8.0).
+- Процедура: первая выкладка через `bin/build-release.sh` — артефакт собран, верификация `git ls-files public` прошла, `smil-profile-bg.png` на месте; sha256 совпал; `.env` сервер-сайд из `1ccd53f`; pre-deploy dump `backups/pre-deploy-c62f34a.sql.gz`.
+- Миграция: `20260825120000` применена (2.2s) — `ip_address`/`user_agent` удалены из `test_sessions` и `activity_log`; в схеме не осталось ни одной такой колонки (information_schema = 0).
+- Smoke: home/tests/privacy/terms/health/admin/страница результата — 200; данные 31 сессия / 1 пара без изменений. Rollback: `public_html` → `releases/1ccd53f/public` (дамп сохранён).
