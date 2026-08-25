@@ -33,6 +33,11 @@ final class MigratedSchemaTest extends TestCase
 
         $this->assertMissingTable('ai_processing_consents');
         $this->assertMissingTable('crisis_resources');
+
+        foreach (['test_sessions', 'activity_log'] as $table) {
+            $this->assertMissingColumn($table, 'ip_address');
+            $this->assertMissingColumn($table, 'user_agent');
+        }
     }
 
     /**
@@ -45,6 +50,15 @@ final class MigratedSchemaTest extends TestCase
         foreach ($expectedColumns as $column) {
             self::assertContains($column, $columns, "Missing {$table}.{$column} in migrated schema.");
         }
+    }
+
+    private function assertMissingColumn(string $table, string $column): void
+    {
+        self::assertNotContains(
+            $column,
+            $this->columnNames($table),
+            "Unexpected {$table}.{$column} in migrated schema."
+        );
     }
 
     private function assertMissingTable(string $table): void

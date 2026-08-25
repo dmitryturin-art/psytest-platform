@@ -59,8 +59,6 @@ class SessionManager
             'calculated_results' => json_encode([]),
             'status' => 'partial',
             'retention_class' => RetentionPolicy::ANONYMOUS,
-            'ip_address' => null,
-            'user_agent' => null,
             'created_at' => date('Y-m-d H:i:s'),
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
@@ -445,8 +443,6 @@ class SessionManager
                 'test_id' => $testId,
                 'action' => $action,
                 'details' => json_encode($details),
-                'ip_address' => null,
-                'user_agent' => null,
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
         } catch (\Exception $e) {
