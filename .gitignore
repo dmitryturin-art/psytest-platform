@@ -78,3 +78,6 @@ package-lock.json
 
 # ZCode plan-mode artifacts
 /.zcode/
+
+# Ad-hoc local output artifacts (PDF smoke etc.)
+/output/
