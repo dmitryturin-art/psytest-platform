@@ -86,7 +86,7 @@ codex/06-yookassa-orders
 6. Запустить узкие проверки, затем подходящую часть полного gate.
 7. Для UI — проверить browser flows и screenshots; для данных — migrations/rollback; для платежей — provider fixtures.
 8. Просмотреть diff как reviewer: безопасность, регрессии, дубли, сложность, документация.
-9. Обновить work packages/exit criteria active phase, `STATUS.md`, `AUDIT_TRACEABILITY.md` и при необходимости `ARCHITECTURE.md`.
+9. Добавить запись в `docs/roadmap/WORKLOG.md` в раздел текущей даты (наверх внутри даты): этап/ветка/commit, цель, сделано, evidence. Затем обновить work packages/exit criteria active phase, `STATUS.md`, `AUDIT_TRACEABILITY.md`, при закрытии этапа — таблицы статусов `ROADMAP.md` и `docs/roadmap/README.md`, и при необходимости `ARCHITECTURE.md`. Work package без записи в WORKLOG считается незавершённым.
 10. Сделать точный коммит и передать владельцу результат/риски/следующий шаг по протоколу прозрачности.
 
 ## 4A. Протокол прозрачности работы
@@ -231,8 +231,10 @@ composer baseline:check
 
 В каждом work package проверить:
 
-- `STATUS.md` — что сейчас происходит;
+- `WORKLOG.md` — запись пакета добавлена в раздел текущей даты (наверх), evidence приложен;
+- `STATUS.md` — что сейчас происходит; панель синхронизирована с фактом;
 - active phase — checklist и evidence;
+- при закрытии этапа — таблицы статусов `ROADMAP.md` и `docs/roadmap/README.md`;
 - `AUDIT_TRACEABILITY.md` — покрытые findings;
 - `DECISIONS.md` — новые продуктовые/архитектурные решения;
 - `ARCHITECTURE.md` — изменилось ли фактическое устройство;

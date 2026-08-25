@@ -17,6 +17,132 @@
 - Следующий шаг:
 ```
 
+## 2026-08-25
+
+### docs — образец и промпты расширенного ИИ-разбора Лазаруса
+
+- Этап / ветка / commit: справочный задел этапа 07; файлы созданы по прямой просьбе владельца, без ветки/коммита (не запрашивались).
+- Цель: зафиксировать черновики версионированных промптов (`lazarus | individual|pair | professional|clear`) и обезличенный образец выходного отчёта.
+- Сделано: документ с ключами промптов, схемой передаваемых ИИ данных из `LazarusModule.php`, общим техническим слоем и вариативными частями по PRODUCT_RULES §3/§6/§9, демонстрационным `clear`-образцом и планом тестирования на fixtures.
+- Инцидент: владелец ссылался на `docs/prompt-for-lazarus.md` как источник собственного образца; при чтении в начале хода файл был пуст (0 байт), и агент записал свою генерацию поверх него в тот же путь. Содержимое владельца утеряно; поиск в локальной истории редакторов, Hot Exit backups, Корзине, Time Machine-снапшотах и логах Codex/Kilo копии не нашёл. Генерация агента перенесена в отдельный `docs/lazarus-ai-report-prompts.md`, `docs/prompt-for-lazarus.md` возвращён в пустое состояние под образец владельца. Урок: файл из @-ссылки с пустым содержимым — повод спросить владельца, а не писать поверх него.
+- Решения: нет новых владельческих решений; документы не являются runtime-артефактами и не закрывают пунктов phase-файлов.
+- Проверки и evidence: код не менялся, gate не запускался (docs-only). Graphify freshness — `STALE` (82 changed): внешнее semantic-обновление требует отдельного разрешения на передачу изменённых исходников внешнему LLM; fallback — прямое чтение исходников (`LazarusModule.php`, `metadata.json`, `questions.json`, PRODUCT_RULES).
+- Изменённые файлы: `docs/prompt-for-lazarus.md` (возвращён в пустое состояние под образец владельца), `docs/lazarus-ai-report-prompts.md` (новый, генерация агента), `docs/roadmap/WORKLOG.md`.
+- Не сделано / риски: собственный образец владельца не восстановлен; промпты не проверены на реальном провайдере; реализация backend prompt store относится к этапам 06/07.
+- Следующий шаг: владелец восстанавливает/повторно сохраняет свой образец в `docs/prompt-for-lazarus.md`; при открытии этапа 07 промпты переносятся в версионированный draft/published store и прогоняются на fixtures.
+
+### 03.1C — декларативная схема ответов (Module API v2, WP3 часть 2)
+
+- Этап / ветка / commit: этап 03, `codex/03-answer-schema` → `main`.
+- Цель: формализовать валидацию ответов через декларативную схему модуля (WP3, вторая половина — schema validator).
+- Сделано: `getAnswerSchema(): array` в `TestModuleInterface` (answer_type: ternary/scale10/options, key_template: plain/dual, extra_keys, requires_gender); дефолт options/plain/['gender','age']/false в Base; SMIL — ternary/plain/['gender']/true, Lazarus — scale10/dual/['gender']/false; `AnswerValidator` переписан на схему (без знаний о конкретных модулях), с сохранением исходного поведения: per-question значения для options (не глобальный список), dual-ключи, gender-требование; `AnswerSchemaContractTest` (21 тест) — форма, когерентность (dual⇔scale10, gender⇔ternary), валидные/out-of-range ответы, Lazarus отбраковывает plain-ключи, SMIL требует gender.
+- Инварианты: поведение валидатора идентично прежнему (замерено per-question семантикой options); scoring/шаблоны не тронуты.
+- Проверки: полный gate — PHPUnit 225 tests/1945 assertions, PHPStan level 6 `[OK] No errors`, lint, architecture (в т.ч. из temp-dir), baseline 148, validate, audit — pass.
+
+### 03.1B — capability registry (Module API v2, WP3 часть 1)
+
+- Этап / ветка / commit: этап 03, `codex/03-golden-characterization` (продолжение) → `main`.
+- Цель: перевести неявные флаги возможностей модулей в декларативный реестр (WP3 этапа 03, часть — capability registry).
+- Сделано: `modules/ModuleCapability.php` (pair/chart/pdf/paid_interpretation/clinical_signal); `getCapabilities(): list<string>` в `TestModuleInterface`; дефолт `[PDF]` в `BaseTestModule`; `supportsPairMode()` выведен из capability PAIR и больше не переопределяется (удалены override в Lazarus/BDI/SMIL); декларации — Lazarus [pair, pdf], SMIL [chart, pdf], BDI [clinical_signal, pdf], BAI/HADS [pdf] (наследуют дефолт); `ModuleCapabilityContractTest` (10 тестов) закрепляет декларации, валидность констант, отсутствие дублей и деривацию pair. Контроллеры не менялись — slug-ветвлений в них нет (проверено grep), реестр защищает от их появления.
+- Попутно: `bin/check-architecture.php` — `modules/ModuleCapability.php` добавлен в requiredFiles и во все ручные require-блоки (без него чекер из чужого cwd падал «Class not found»; поймано ArchitectureCheckTest).
+- Инварианты: поведение рантайма не изменилось (supportsPairMode возвращает те же значения); scoring/шаблоны не тронуты.
+- Проверки: полный gate — PHPUnit 204 tests/1903 assertions, PHPStan level 6, lint, architecture (в т.ч. из temp-dir), baseline 148, validate, audit — pass.
+- Следующий пакет: schema validator ответов (вторая часть WP3).
+
+### 03.1A — golden characterization всех модулей перед рефакторингом
+
+- Этап / ветка / commit: этап 03, `codex/03-golden-characterization` → `main`.
+- Цель: WP1 этапа 03 — зафиксировать текущие выводы модулей, чтобы рефакторинг Module API v2 доказывал паритет тестами, а не обещаниями.
+- Сделано: `tests/fixtures/golden/` — детерминированные наборы ответов + пин полного вывода `calculateResults` и `generateInterpretation` для BAI, BDI, HADS, Lazarus (SMIL уже покрыт `tests/fixtures/smil-*`); `GoldenModuleOutputsTest` (8 тестов) требует точного совпадения массивов (assertSame) и запрещает менять scoring/тексты без явного обновления фикстуры с источником; фаза 03 переведена «В работе».
+- Инварианты: прод-код не менялся вообще (только тесты и фикстуры); BDI safety_signals попали в пин — клинический сигнал тоже под паритетом.
+- Проверки: полный gate — PHPUnit 194 tests/1875 assertions, PHPStan level 6, lint, architecture, baseline 148 — pass.
+
+### 08.1G — backup/restore drill и production runbook
+
+- Этап / ветка / commit: этап 08, main.
+- Цель: доказать, что pre-deploy дампы реально восстанавливаются, и зафиксировать процедуру production-выкладки до go-live.
+- Сделано: полный restore drill на staging — дамп `pre-deploy-c62f34a.sql.gz` восстановлен в ту же базу с префиксом `drill_` (8/8 таблиц; построчная сверка: test_sessions 31=31, activity_log 131=131, pair_comparisons 1=1, tests 5=5; выборка данных читается). phinxlog 9 vs 8 — ожидаемо: дамп сделан до миграции c62f34a. Найдено и задокументировано: (1) CLI-пользователь не может создавать базы — для DR в отдельную базу нужен шаг в панели; (2) при восстановлении в ту же базу требуется переименование и таблиц, и CONSTRAINT-имён (конфликт FK-имён — InnoDB требует уникальности в базе). Drill-таблицы удалены, живые данные не тронуты (31 сессия). Создан `PRODUCTION_RUNBOOK.md`: предусловия владельца, 8-шаговая выкладка, откат кода/данных, проверенная процедура восстановления, честные границы (мониторинг, ночной дамп, фискальные, legal review), go-live чек-лист.
+- Проверки: drill-восстановление со сверкой count по 5 таблицам + выборка строк; очистка подтверждена (0 drill-таблиц, 31 сессия на месте).
+
+### 08.1F-доп — cleanup-cron настроен владельцем
+
+- Владелец добавил задание в панели Beget 25.08: `/usr/local/bin/php8.3 /home/q/qdesign/test.23time.ru/current/bin/cleanup-sessions.php >/dev/null 2>&1`, расписание 03:17 ежедневно — точно по CRON_CLEANUP.md.
+- Обещание «анонимные данные 180 дней» теперь исполняется автоматически. Первая автоматическая отработка — 26.08 ~03:17; проверка: свежая строка в `current/storage/logs/cleanup.log`.
+- Уточнение владельца: PHP 8.2 в его панели — это wp-cron WordPress-сайта 23time.ru (отдельное приложение); платформа test.23time.ru работает на 8.3.20 (замер 25.08).
+
+### 08.1F — стабильная точка релиза и готовность cleanup-cron
+
+- Этап / ветка / commit: этап 08, main (docs + серверная настройка).
+- Цель: сделать ежедневную очистку данных настраиваемой без риска устаревания пути и выполнить обязательный старт этапа 08 без решений владельца.
+- Сделано: на staging создан симлинк `current` → активный релиз; `bin/cleanup-sessions.php` проверен через стабильный путь (`EXIT=0`, `0 anonymous sessions removed`, лог `storage/logs/cleanup.log` пишется); полная каноническая последовательность выкладки (8 шагов, включая шаг `current`) зафиксирована в `BEGET_STAGING.md`; пошаговая инструкция cron для панели Beget — `docs/roadmap/CRON_CLEANUP.md` (команда, расписание, проверка, границы).
+- Инварианты: путь в cron не зависит от будущих релизов; therapist_case скрипт не трогает; retention 180 дней соответствует утверждённой политике.
+- Проверки: запуск скрипта на staging через `current` — exit 0; лог-строка подтверждена.
+- Далее по этапу 08: runbook production-выкладки, backup/restore drill, monitoring; настройки панели Beget (cron) и фискальные вопросы — за владельцем.
+
+### 02.7C-deploy — выкладка удаления IP/UA-колонок на staging
+
+- Release / ветка: `c62f34a` (PR #27, CI success: fast gate + MySQL 5.7 + 8.0).
+- Процедура: первая выкладка через `bin/build-release.sh` — артефакт собран, верификация `git ls-files public` прошла, `smil-profile-bg.png` на месте; sha256 совпал; `.env` сервер-сайд из `1ccd53f`; pre-deploy dump `backups/pre-deploy-c62f34a.sql.gz`.
+- Миграция: `20260825120000` применена (2.2s) — `ip_address`/`user_agent` удалены из `test_sessions` и `activity_log`; в схеме не осталось ни одной такой колонки (information_schema = 0).
+- Smoke: home/tests/privacy/terms/health/admin/страница результата — 200; данные 31 сессия / 1 пара без изменений. Rollback: `public_html` → `releases/1ccd53f/public` (дамп сохранён).
+
+### 02.7C — удаление legacy IP/user-agent колонок (D-035)
+
+- Этап / ветка / commit: этап 02, `codex/02-drop-legacy-ip-ua` → `main`.
+- Цель: завершить минимизацию технических метаданных — владелец одобрил план очистки (D-035).
+- Сделано: миграция `20260825120000` удаляет `ip_address`/`user_agent` из `test_sessions` и `activity_log` вместе со старыми значениями (down — IrreversibleMigrationException, по образцу D-032); из `SessionManager` (2 места) и `TherapistCaseService` убраны явные NULL-передачи; `MigratedSchemaTest` получил `assertMissingColumn`-контракт на 4 колонки; `SessionDataMinimizationTest` теперь доказывает, что опции метаданных игнорируются API и колонок не существует; `TherapistCaseServiceTest` убраны ссылки на удалённые колонки; DATA_MAP (строка IP/UA + снят открытый вопрос №1), ARCHITECTURE, фаза 02 (WP11), трейсабилити DATA-01 обновлены.
+- Инварианты: scoring, clinical flows и owner-безопасность не тронуты; `owner_login_attempts` IP не хранит по схеме — исключений нет.
+- Проверки: полный gate — validate/audit/migrate/PHPUnit 186 tests/1835 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass.
+
+### 04.0H-deploy — выкладка закрытия UX-03 на staging
+
+- Release / ветка: `1ccd53f` (PR #26, CI success: fast gate + MySQL 5.7 + 8.0).
+- Процедура: артефакт из lockfile, sha256 совпал (`4aeb72d8…`); `.env` сервер-сайд из `4775dc4`; pre-deploy dump `backups/pre-deploy-1ccd53f.sql.gz`; миграций нет; `public_html` → `releases/1ccd53f/public`.
+- Smoke: home 200; health ok; css содержит `.pv-hit`, низкоконтрастный `#9aa5af` отсутствует; `smil-profile-classic.js` отдаётся 200.
+- Данные: 28 сессий / 1 пара — без изменений. Rollback: `public_html` → `releases/4775dc4/public`.
+
+### 04.0H — закрытие UX-03 и этапа 04
+
+- Этап / ветка / commit: этап 04, `codex/04-ux03-accessibility` → `main`.
+- Цель: закрыть последний finding этапа 04 (UX-03: Lazarus legends/touch/accessibility) и формально завершить этап.
+- Сделано: точки парного графика получили невидимые touch-зоны попадания 24px (r=12) с теми же тултипами; подписи осей и легенда графика перекрашены с #9aa5af/#7f8c8d на #667085 (контраст ≥4.5:1, WCAG AA); из main.css удалены 194 строки мёртвых стилей отменённой «бабочки» (0 ссылок из шаблонов); в PairComparisonVisualTest добавлены контраст-контракт (WCAG-расчёт в тесте) и проверка 32 touch-зон; в фазы 06/07 записаны ответы владельца по доставке и лёгкой авторизации.
+- Инварианты: SMIL не затронут — profile-chart.twig и smil-profile-classic.js без изменений (0 строк в диффе), CSS-диф не содержит ни одной smil-строки, защитные тесты PublicCatalogPresentationTest/SmilModuleSectionsTest/SmilEndToEndTest и golden-фикстуры зелёные.
+- Проверки: полный gate — validate/audit/migrate/PHPUnit 186 tests/1828 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass.
+- Следствие: этап 04 закрыт (все UX-01..03 закрыты); активные фронты — 02 и 08.
+
+### 00M — решения владельца по ревью: заморозка legacy, генераторы, закрытие 00
+
+- Этап / ветка / commit: этап 00, `codex/04-pair-comparison-visual` (продолжение), main.
+- Цель: исполнить решения владельца от 25.08 по находкам ревью.
+- Сделано: D-033 — `services/PaymentService|AIInterpretationService|EmailService` заморожены с пометками в файлах и ARCHITECTURE (не удалять: концепция возвращается на 06/07 в новой модели); D-034 — зафиксирована продуктовая модель платных разборов (база бесплатна всем; платный ИИ-отчёт без обязательной авторизации; купонные клиенты получают отчёт только после правки и одобрения владельца; при авторизации — история прохождений), уточнения добавлены в phase-файлы 06/07; dev-скрипты `create-fake-smil-session.php` и `create-full-smil-session.php` перенесены в `docs/archive/scripts/` (канонический генератор — `bin/simulate-smil-test.php`); этап 00 закрыт (exit criteria выполнены); в `BEGET_STAGING.md` убрана задача ротации SSH/DB-кредов — владелец подтвердил, что её не заказывал.
+- Не закрыто намеренно: этап 04 остаётся активным — UX-03 (legends/touch/accessibility Лазаруса) в трейсабилити «Запланировано»; закрывается отдельным пакетом 04.0H с проверкой, затем 04 закрывается.
+- Проверки: полный gate — validate/audit/migrate/PHPUnit 185/1817/PHPStan/lint/architecture/baseline — pass (см. commit).
+
+### 04.0G-deploy — выкладка графика пары на staging
+
+- Release / ветка: `4775dc4` (PR #25, merge в `main`), `codex/04-pair-comparison-visual`.
+- Процедура: артефакт собран локально из lockfile (vendor --no-dev), sha256 совпал после загрузки (`8bb795fa…`); `.env` скопирован сервер-сайд из `releases/3a2daa8` (mode 600); pre-migration dump `backups/pre-deploy-4775dc4.sql.gz`; `phinx migrate` — новых миграций нет, цепочка уже up; `public_html` атомарно переключён на `releases/4775dc4/public`.
+- Smoke: home 200; `/api/health` ok; `main.css` 200 и содержит `pair-chart-block`; security-заголовки на месте.
+- Данные не затронуты: в staging БД до и после — 28 test_sessions (все с рассчитанными результатами), 1 pair_comparison. Ответы и результаты живут в MySQL, релиз меняет только код.
+- Rollback: атомарно вернуть `public_html` на `releases/3a2daa8/public`; дамп и прежние релизы сохранены.
+- Далее: ручная проверка владельцем тултипов графика (наведение и тап) на desktop и 390×844.
+
+### 04.0G — веб-график совмещённых профилей пары (вариант C) с тултипами
+
+- Этап / ветка / commit: этап 04, `codex/04-pair-comparison-visual` → `main`.
+- Цель: заменить мёртвый Chart.js-контур (CDN грузился на каждой странице, скрипты не рендерили ни один canvas) нативным графиком наложения профилей партнёров по выбору владельца (вариант C — наложенные профили-линии с красными зонами расхождений).
+- Сделано: новый блок `blocks/pair-chart.twig` + секция `pair_chart` (order 45) в `LazarusModule::buildSections()` — только для web, в PDF не попадает; геометрия графика считается в `LazarusModule::pairChartData()`, шаблон только рисует; график добавлен также на страницу `/pair/{id}`; тултипы по точкам (пункт, домен, текст, оценки обоих партнёров, расхождение) на нативном JS с поддержкой наведения, тапа и клавиатурного фокуса; удалены мёртвые `results.js`, `smil-profile.js`, `smil-scale-indicator.js` и Chart.js CDN из `layout.twig` и `result-page.twig`; стили графика и тултипа добавлены в `main.css`.
+- Инварианты: детальная таблица сравнения (web) и компактная PDF-таблица 04.0F не менялись — это закреплено новыми guard-тестами; scoring и клинические тексты не тронуты.
+- Проверки: полный gate локально — validate/audit/migrate/PHPUnit 185 tests/1817 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass. Новые тесты: секция графика отсутствует в PDF-контексте; 32 точки (16×2), данные тултипов на 16 пунктов, aria-label присутствуют.
+- Сознательно не проверено здесь: визуальное поведение тултипов в реальном браузере (390×844 и desktop) — нужна ручная проверка владельцем на staging, как для остальных UI-пакетов этапа 04.
+
+### 00L — применение находок ревью от 25.08: документация и gate
+
+- Этап / ветка / commit: этап 00, `codex/00-governance-review-followup` → `main`.
+- Цель: закрыть механические пункты ревью от 25.08 с нулевым продуктовым риском.
+- Сделано: `docs/architecture.md` (черновик февраля, ложно помечен «Актуально»), `DEPLOYMENT.md` (описывал retired AI-flow) и `QUICKSTART.md` (рекомендовал PHP 8.2) перенесены в `docs/archive/` с баннером «исторический черновик» и ссылками на актуальные документы; полный gate в `AGENTS.md` дополнен обязательным шагом `composer migrate` перед `composer test` (устраняет ложнопадение `MigratedSchemaTest` на дрейфе локальной БД); `/output/` добавлен в `.gitignore`; ревью от 25.08 сохранено как `docs/audit/2026-08-25-project-review.md`.
+- Проверки: полный gate локально — validate/audit/migrate/PHPUnit 180 tests/1647 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass; входящих ссылок на архивированные файлы из живых документов нет (grep).
+
 ## 2026-08-24
 
 ### 08.5 — staging deployment исправленного PDF Лазаруса
@@ -591,115 +717,3 @@
 - Проверки и evidence: сначала RED — отсутствующий class и ожидаемый result key; затем unit/module contracts, полный local gate: Composer audit clean, PHPUnit 126 tests/1228 assertions, PHPStan/lint/architecture/baseline/manifest pass. Architecture checker был дополнен явным dependency requirement, иначе его standalone execution не видел новый core-class.
 - Проверки: GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success на PHP 8.3/MySQL, включая чистую migration chain, PHPUnit, PHPStan, lint и architecture check.
 - Следующий шаг: owner-approved Crisis UI text и начальные resources; затем 02.2B UI/country flow.
-
-### 00L — применение находок ревью от 25.08: документация и gate
-
-- Этап / ветка / commit: этап 00, `codex/00-governance-review-followup` → `main`.
-- Цель: закрыть механические пункты ревью от 25.08 с нулевым продуктовым риском.
-- Сделано: `docs/architecture.md` (черновик февраля, ложно помечен «Актуально»), `DEPLOYMENT.md` (описывал retired AI-flow) и `QUICKSTART.md` (рекомендовал PHP 8.2) перенесены в `docs/archive/` с баннером «исторический черновик» и ссылками на актуальные документы; полный gate в `AGENTS.md` дополнен обязательным шагом `composer migrate` перед `composer test` (устраняет ложнопадение `MigratedSchemaTest` на дрейфе локальной БД); `/output/` добавлен в `.gitignore`; ревью от 25.08 сохранено как `docs/audit/2026-08-25-project-review.md`.
-- Проверки: полный gate локально — validate/audit/migrate/PHPUnit 180 tests/1647 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass; входящих ссылок на архивированные файлы из живых документов нет (grep).
-
-### 04.0G — веб-график совмещённых профилей пары (вариант C) с тултипами
-
-- Этап / ветка / commit: этап 04, `codex/04-pair-comparison-visual` → `main`.
-- Цель: заменить мёртвый Chart.js-контур (CDN грузился на каждой странице, скрипты не рендерили ни один canvas) нативным графиком наложения профилей партнёров по выбору владельца (вариант C — наложенные профили-линии с красными зонами расхождений).
-- Сделано: новый блок `blocks/pair-chart.twig` + секция `pair_chart` (order 45) в `LazarusModule::buildSections()` — только для web, в PDF не попадает; геометрия графика считается в `LazarusModule::pairChartData()`, шаблон только рисует; график добавлен также на страницу `/pair/{id}`; тултипы по точкам (пункт, домен, текст, оценки обоих партнёров, расхождение) на нативном JS с поддержкой наведения, тапа и клавиатурного фокуса; удалены мёртвые `results.js`, `smil-profile.js`, `smil-scale-indicator.js` и Chart.js CDN из `layout.twig` и `result-page.twig`; стили графика и тултипа добавлены в `main.css`.
-- Инварианты: детальная таблица сравнения (web) и компактная PDF-таблица 04.0F не менялись — это закреплено новыми guard-тестами; scoring и клинические тексты не тронуты.
-- Проверки: полный gate локально — validate/audit/migrate/PHPUnit 185 tests/1817 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass. Новые тесты: секция графика отсутствует в PDF-контексте; 32 точки (16×2), данные тултипов на 16 пунктов, aria-label присутствуют.
-- Сознательно не проверено здесь: визуальное поведение тултипов в реальном браузере (390×844 и desktop) — нужна ручная проверка владельцем на staging, как для остальных UI-пакетов этапа 04.
-
-### 04.0G-deploy — выкладка графика пары на staging
-
-- Release / ветка: `4775dc4` (PR #25, merge в `main`), `codex/04-pair-comparison-visual`.
-- Процедура: артефакт собран локально из lockfile (vendor --no-dev), sha256 совпал после загрузки (`8bb795fa…`); `.env` скопирован сервер-сайд из `releases/3a2daa8` (mode 600); pre-migration dump `backups/pre-deploy-4775dc4.sql.gz`; `phinx migrate` — новых миграций нет, цепочка уже up; `public_html` атомарно переключён на `releases/4775dc4/public`.
-- Smoke: home 200; `/api/health` ok; `main.css` 200 и содержит `pair-chart-block`; security-заголовки на месте.
-- Данные не затронуты: в staging БД до и после — 28 test_sessions (все с рассчитанными результатами), 1 pair_comparison. Ответы и результаты живут в MySQL, релиз меняет только код.
-- Rollback: атомарно вернуть `public_html` на `releases/3a2daa8/public`; дамп и прежние релизы сохранены.
-- Далее: ручная проверка владельцем тултипов графика (наведение и тап) на desktop и 390×844.
-
-### 00M — решения владельца по ревью: заморозка legacy, генераторы, закрытие 00
-
-- Этап / ветка / commit: этап 00, `codex/04-pair-comparison-visual` (продолжение), main.
-- Цель: исполнить решения владельца от 25.08 по находкам ревью.
-- Сделано: D-033 — `services/PaymentService|AIInterpretationService|EmailService` заморожены с пометками в файлах и ARCHITECTURE (не удалять: концепция возвращается на 06/07 в новой модели); D-034 — зафиксирована продуктовая модель платных разборов (база бесплатна всем; платный ИИ-отчёт без обязательной авторизации; купонные клиенты получают отчёт только после правки и одобрения владельца; при авторизации — история прохождений), уточнения добавлены в phase-файлы 06/07; dev-скрипты `create-fake-smil-session.php` и `create-full-smil-session.php` перенесены в `docs/archive/scripts/` (канонический генератор — `bin/simulate-smil-test.php`); этап 00 закрыт (exit criteria выполнены); в `BEGET_STAGING.md` убрана задача ротации SSH/DB-кредов — владелец подтвердил, что её не заказывал.
-- Не закрыто намеренно: этап 04 остаётся активным — UX-03 (legends/touch/accessibility Лазаруса) в трейсабилити «Запланировано»; закрывается отдельным пакетом 04.0H с проверкой, затем 04 закрывается.
-- Проверки: полный gate — validate/audit/migrate/PHPUnit 185/1817/PHPStan/lint/architecture/baseline — pass (см. commit).
-
-### 04.0H — закрытие UX-03 и этапа 04
-
-- Этап / ветка / commit: этап 04, `codex/04-ux03-accessibility` → `main`.
-- Цель: закрыть последний finding этапа 04 (UX-03: Lazarus legends/touch/accessibility) и формально завершить этап.
-- Сделано: точки парного графика получили невидимые touch-зоны попадания 24px (r=12) с теми же тултипами; подписи осей и легенда графика перекрашены с #9aa5af/#7f8c8d на #667085 (контраст ≥4.5:1, WCAG AA); из main.css удалены 194 строки мёртвых стилей отменённой «бабочки» (0 ссылок из шаблонов); в PairComparisonVisualTest добавлены контраст-контракт (WCAG-расчёт в тесте) и проверка 32 touch-зон; в фазы 06/07 записаны ответы владельца по доставке и лёгкой авторизации.
-- Инварианты: SMIL не затронут — profile-chart.twig и smil-profile-classic.js без изменений (0 строк в диффе), CSS-диф не содержит ни одной smil-строки, защитные тесты PublicCatalogPresentationTest/SmilModuleSectionsTest/SmilEndToEndTest и golden-фикстуры зелёные.
-- Проверки: полный gate — validate/audit/migrate/PHPUnit 186 tests/1828 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass.
-- Следствие: этап 04 закрыт (все UX-01..03 закрыты); активные фронты — 02 и 08.
-
-### 04.0H-deploy — выкладка закрытия UX-03 на staging
-
-- Release / ветка: `1ccd53f` (PR #26, CI success: fast gate + MySQL 5.7 + 8.0).
-- Процедура: артефакт из lockfile, sha256 совпал (`4aeb72d8…`); `.env` сервер-сайд из `4775dc4`; pre-deploy dump `backups/pre-deploy-1ccd53f.sql.gz`; миграций нет; `public_html` → `releases/1ccd53f/public`.
-- Smoke: home 200; health ok; css содержит `.pv-hit`, низкоконтрастный `#9aa5af` отсутствует; `smil-profile-classic.js` отдаётся 200.
-- Данные: 28 сессий / 1 пара — без изменений. Rollback: `public_html` → `releases/4775dc4/public`.
-
-### 02.7C — удаление legacy IP/user-agent колонок (D-035)
-
-- Этап / ветка / commit: этап 02, `codex/02-drop-legacy-ip-ua` → `main`.
-- Цель: завершить минимизацию технических метаданных — владелец одобрил план очистки (D-035).
-- Сделано: миграция `20260825120000` удаляет `ip_address`/`user_agent` из `test_sessions` и `activity_log` вместе со старыми значениями (down — IrreversibleMigrationException, по образцу D-032); из `SessionManager` (2 места) и `TherapistCaseService` убраны явные NULL-передачи; `MigratedSchemaTest` получил `assertMissingColumn`-контракт на 4 колонки; `SessionDataMinimizationTest` теперь доказывает, что опции метаданных игнорируются API и колонок не существует; `TherapistCaseServiceTest` убраны ссылки на удалённые колонки; DATA_MAP (строка IP/UA + снят открытый вопрос №1), ARCHITECTURE, фаза 02 (WP11), трейсабилити DATA-01 обновлены.
-- Инварианты: scoring, clinical flows и owner-безопасность не тронуты; `owner_login_attempts` IP не хранит по схеме — исключений нет.
-- Проверки: полный gate — validate/audit/migrate/PHPUnit 186 tests/1835 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass.
-
-### 02.7C-deploy — выкладка удаления IP/UA-колонок на staging
-
-- Release / ветка: `c62f34a` (PR #27, CI success: fast gate + MySQL 5.7 + 8.0).
-- Процедура: первая выкладка через `bin/build-release.sh` — артефакт собран, верификация `git ls-files public` прошла, `smil-profile-bg.png` на месте; sha256 совпал; `.env` сервер-сайд из `1ccd53f`; pre-deploy dump `backups/pre-deploy-c62f34a.sql.gz`.
-- Миграция: `20260825120000` применена (2.2s) — `ip_address`/`user_agent` удалены из `test_sessions` и `activity_log`; в схеме не осталось ни одной такой колонки (information_schema = 0).
-- Smoke: home/tests/privacy/terms/health/admin/страница результата — 200; данные 31 сессия / 1 пара без изменений. Rollback: `public_html` → `releases/1ccd53f/public` (дамп сохранён).
-
-### 08.1F — стабильная точка релиза и готовность cleanup-cron
-
-- Этап / ветка / commit: этап 08, main (docs + серверная настройка).
-- Цель: сделать ежедневную очистку данных настраиваемой без риска устаревания пути и выполнить обязательный старт этапа 08 без решений владельца.
-- Сделано: на staging создан симлинк `current` → активный релиз; `bin/cleanup-sessions.php` проверен через стабильный путь (`EXIT=0`, `0 anonymous sessions removed`, лог `storage/logs/cleanup.log` пишется); полная каноническая последовательность выкладки (8 шагов, включая шаг `current`) зафиксирована в `BEGET_STAGING.md`; пошаговая инструкция cron для панели Beget — `docs/roadmap/CRON_CLEANUP.md` (команда, расписание, проверка, границы).
-- Инварианты: путь в cron не зависит от будущих релизов; therapist_case скрипт не трогает; retention 180 дней соответствует утверждённой политике.
-- Проверки: запуск скрипта на staging через `current` — exit 0; лог-строка подтверждена.
-- Далее по этапу 08: runbook production-выкладки, backup/restore drill, monitoring; настройки панели Beget (cron) и фискальные вопросы — за владельцем.
-
-### 08.1F-доп — cleanup-cron настроен владельцем
-
-- Владелец добавил задание в панели Beget 25.08: `/usr/local/bin/php8.3 /home/q/qdesign/test.23time.ru/current/bin/cleanup-sessions.php >/dev/null 2>&1`, расписание 03:17 ежедневно — точно по CRON_CLEANUP.md.
-- Обещание «анонимные данные 180 дней» теперь исполняется автоматически. Первая автоматическая отработка — 26.08 ~03:17; проверка: свежая строка в `current/storage/logs/cleanup.log`.
-- Уточнение владельца: PHP 8.2 в его панели — это wp-cron WordPress-сайта 23time.ru (отдельное приложение); платформа test.23time.ru работает на 8.3.20 (замер 25.08).
-
-### 08.1G — backup/restore drill и production runbook
-
-- Этап / ветка / commit: этап 08, main.
-- Цель: доказать, что pre-deploy дампы реально восстанавливаются, и зафиксировать процедуру production-выкладки до go-live.
-- Сделано: полный restore drill на staging — дамп `pre-deploy-c62f34a.sql.gz` восстановлен в ту же базу с префиксом `drill_` (8/8 таблиц; построчная сверка: test_sessions 31=31, activity_log 131=131, pair_comparisons 1=1, tests 5=5; выборка данных читается). phinxlog 9 vs 8 — ожидаемо: дамп сделан до миграции c62f34a. Найдено и задокументировано: (1) CLI-пользователь не может создавать базы — для DR в отдельную базу нужен шаг в панели; (2) при восстановлении в ту же базу требуется переименование и таблиц, и CONSTRAINT-имён (конфликт FK-имён — InnoDB требует уникальности в базе). Drill-таблицы удалены, живые данные не тронуты (31 сессия). Создан `PRODUCTION_RUNBOOK.md`: предусловия владельца, 8-шаговая выкладка, откат кода/данных, проверенная процедура восстановления, честные границы (мониторинг, ночной дамп, фискальные, legal review), go-live чек-лист.
-- Проверки: drill-восстановление со сверкой count по 5 таблицам + выборка строк; очистка подтверждена (0 drill-таблиц, 31 сессия на месте).
-
-### 03.1A — golden characterization всех модулей перед рефакторингом
-
-- Этап / ветка / commit: этап 03, `codex/03-golden-characterization` → `main`.
-- Цель: WP1 этапа 03 — зафиксировать текущие выводы модулей, чтобы рефакторинг Module API v2 доказывал паритет тестами, а не обещаниями.
-- Сделано: `tests/fixtures/golden/` — детерминированные наборы ответов + пин полного вывода `calculateResults` и `generateInterpretation` для BAI, BDI, HADS, Lazarus (SMIL уже покрыт `tests/fixtures/smil-*`); `GoldenModuleOutputsTest` (8 тестов) требует точного совпадения массивов (assertSame) и запрещает менять scoring/тексты без явного обновления фикстуры с источником; фаза 03 переведена «В работе».
-- Инварианты: прод-код не менялся вообще (только тесты и фикстуры); BDI safety_signals попали в пин — клинический сигнал тоже под паритетом.
-- Проверки: полный gate — PHPUnit 194 tests/1875 assertions, PHPStan level 6, lint, architecture, baseline 148 — pass.
-
-### 03.1B — capability registry (Module API v2, WP3 часть 1)
-
-- Этап / ветка / commit: этап 03, `codex/03-golden-characterization` (продолжение) → `main`.
-- Цель: перевести неявные флаги возможностей модулей в декларативный реестр (WP3 этапа 03, часть — capability registry).
-- Сделано: `modules/ModuleCapability.php` (pair/chart/pdf/paid_interpretation/clinical_signal); `getCapabilities(): list<string>` в `TestModuleInterface`; дефолт `[PDF]` в `BaseTestModule`; `supportsPairMode()` выведен из capability PAIR и больше не переопределяется (удалены override в Lazarus/BDI/SMIL); декларации — Lazarus [pair, pdf], SMIL [chart, pdf], BDI [clinical_signal, pdf], BAI/HADS [pdf] (наследуют дефолт); `ModuleCapabilityContractTest` (10 тестов) закрепляет декларации, валидность констант, отсутствие дублей и деривацию pair. Контроллеры не менялись — slug-ветвлений в них нет (проверено grep), реестр защищает от их появления.
-- Попутно: `bin/check-architecture.php` — `modules/ModuleCapability.php` добавлен в requiredFiles и во все ручные require-блоки (без него чекер из чужого cwd падал «Class not found»; поймано ArchitectureCheckTest).
-- Инварианты: поведение рантайма не изменилось (supportsPairMode возвращает те же значения); scoring/шаблоны не тронуты.
-- Проверки: полный gate — PHPUnit 204 tests/1903 assertions, PHPStan level 6, lint, architecture (в т.ч. из temp-dir), baseline 148, validate, audit — pass.
-- Следующий пакет: schema validator ответов (вторая часть WP3).
-
-### 03.1C — декларативная схема ответов (Module API v2, WP3 часть 2)
-
-- Этап / ветка / commit: этап 03, `codex/03-answer-schema` → `main`.
-- Цель: формализовать валидацию ответов через декларативную схему модуля (WP3, вторая половина — schema validator).
-- Сделано: `getAnswerSchema(): array` в `TestModuleInterface` (answer_type: ternary/scale10/options, key_template: plain/dual, extra_keys, requires_gender); дефолт options/plain/['gender','age']/false в Base; SMIL — ternary/plain/['gender']/true, Lazarus — scale10/dual/['gender']/false; `AnswerValidator` переписан на схему (без знаний о конкретных модулях), с сохранением исходного поведения: per-question значения для options (не глобальный список), dual-ключи, gender-требование; `AnswerSchemaContractTest` (21 тест) — форма, когерентность (dual⇔scale10, gender⇔ternary), валидные/out-of-range ответы, Lazarus отбраковывает plain-ключи, SMIL требует gender.
-- Инварианты: поведение валидатора идентично прежнему (замерено per-question семантикой options); scoring/шаблоны не тронуты.
-- Проверки: полный gate — PHPUnit 225 tests/1945 assertions, PHPStan level 6 `[OK] No errors`, lint, architecture (в т.ч. из temp-dir), baseline 148, validate, audit — pass.

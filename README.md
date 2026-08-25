@@ -46,7 +46,7 @@
 | Платная интерпретация | legacy-flow отключается и будет заменён |
 | YooKassa и чеки | запланированы; старый YooMoney-код не считается рабочей интеграцией |
 | Кабинет владельца и lifecycle кейсов | реализован минимальный защищённый `/admin`; AI-отчёты и полный кабинет терапевта запланированы |
-| Production deployment | не выполнен; предусмотрены staging, backup и rollback gates |
+| Production deployment | не выполнен; staging работает на [test.23time.ru](https://test.23time.ru/tests), cleanup-cron и restore drill пройдены, rollback готов |
 
 Известные security/privacy/payment проблемы не скрываются: рабочая навигация находится в [матрице закрытия](docs/roadmap/AUDIT_TRACEABILITY.md), а исходный [технический аудит](docs/archive/2026-08-15-agent-implementation-plan.md) сохранён как история.
 
