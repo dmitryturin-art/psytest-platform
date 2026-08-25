@@ -1,11 +1,11 @@
 # Текущий статус программы
 
-Обновлён: 2026-08-24. Это единственная оперативная панель; порядок фиксации перед паузой находится в [CHECKPOINT.md](CHECKPOINT.md).
+Обновлён: 2026-08-25. Это единственная оперативная панель; порядок фиксации перед паузой находится в [CHECKPOINT.md](CHECKPOINT.md). Панель синхронизирована с новейшими записями [WORKLOG.md](WORKLOG.md); первоисточник хронологии — WORKLOG.
 
 ## Сейчас
 
-- Активные этапы: [00 — governance и воспроизводимый baseline](phases/00-governance-baseline.md) + [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [04 — внедрение выбранного направления A](phases/04-ui-ux-redesign.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md).
-- Состояние: `test.23time.ru` работает на release `3a2daa8`: HTTPS redirect, PHP 8.3, MySQL 5.7, 8 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers не дублируются. Rollback `5da9ab5` сохранён. Новая главная `/`, каталог `/tests`, мобильное прохождение и исправленный PDF парного сравнения Лазаруса доступны на staging.
+- Активные этапы: [02 — клиническая безопасность и бесплатный пилот](phases/02-clinical-privacy-pilot.md) + [03 — Module API v2](phases/03-module-api-v2.md) + [08 — staging на проверке владельца](phases/08-production-deployment.md). Этапы 00 и 04 закрыты 25.08; следующий инженерный пакет — 03.2 renderer contract.
+- Состояние: `test.23time.ru` работает на release `c62f34a` через стабильную точку `current`: HTTPS redirect, PHP 8.3, MySQL 5.7, 9 migrations. Сессионная cookie имеет `Secure`, `HttpOnly`, `SameSite=Lax`; динамические security headers не дублируются. Откат — на предыдущий релиз через `releases/`. Направление A целиком на staging: главная, каталог, мобильное прохождение, веб-график совмещённых профилей пары и compact PDF; cleanup-cron (03:17) настроен владельцем, restore drill пройден, `PRODUCTION_RUNBOOK.md` готов.
 - Управление знаниями: локальный Graphify имеет обязательную freshness-проверку перед архитектурным query; после 00K граф `STALE`, потому что обновление требует явного разрешения на передачу изменённых исходников внешнему LLM. В этом пакете граф не используется как evidence.
 - Governance 00F: старт сессии теперь требует только status, phase активного пакета и чистое понимание Git-state; остальные документы читаются по типу задачи и явно отражаются в отчёте.
 - Governance 00G–00H: `STATUS.md` стал единственной оперативной панелью, `CHECKPOINT.md` — только протоколом; исходный audit-plan 2026-08-15 перенесён в архив, а рабочей навигацией по findings остаётся traceability.
@@ -24,12 +24,13 @@
 
 | Этап | Состояние | Прогресс/условие перехода |
 |---|---|---|
-| 00 | В работе | governance-каркас и baseline готовы; 00K убирает двойной запуск общего gate, сохраняя MySQL 5.7/8.0 для DB-risk PR и каждого push в `main`; production runbook относится к 08 |
+| 00 | Завершён | закрыт 25.08: 00A–00M выполнены, находки ревью от 25.08 применены (00L/00M), baseline воспроизводим |
 | 01 | Завершён | containment/security boundaries, validation, web-root hygiene и PAIR-01 подтверждены CI |
-| 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик и owner dashboard реализованы; IP/User-Agent не собираются, неподключённый AI-consent задел снят по D-032. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
-| 03, 05–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
-| 04 | В работе | владелец выбрал A; новая главная/каталог, мобильное прохождение и 04.0F с фактическим compact/landscape PDF парного результата выложены на staging. Нужна ручная повторная проверка PDF владельцем. Защищённый SMIL-график не меняется |
-| 08 | На проверке владельца (staging) | публичный HTTPS staging работает; cookie/headers проверены внешним smoke, payment/AI/admin выключены, rollback готов; production не начат |
+| 02 | В работе | lifecycle, BDI safety, factual privacy copy, реестр методик, owner dashboard и минимизация метаданных (02.7C/D-035) реализованы. Нужны staging/pilot evidence, automated BDI browser coverage и legal review |
+| 03 | В работе | 03.1A golden characterization, 03.1B capability registry, 03.1C answer schema validator закрыты 25.08 (PR #28–#30); следующий пакет — 03.2 renderer contract |
+| 04 | Завершён | закрыт 25.08: UX-01..03 закрыты (04.0G pair chart принят владельцем, 04.0H touch/контраст), направление A внедрено; SMIL-график не менялся |
+| 05–07, 09 | Не начаты | открываются по exit criteria предыдущих этапов; исследования допустимы раньше без release |
+| 08 | На проверке владельца (staging) | публичный HTTPS staging работает на `4775dc4`+; cleanup-cron и restore drill готовы (08.1F/G), rollback готов; production не начат |
 
 ## Baseline, обнаруженный аудитом
 
@@ -61,15 +62,16 @@
 
 ## Следующие пять действий
 
-1. Владелец принимает направление A на [staging](https://test.23time.ru/) и проверяет основные тесты.
-2. Повторно скачать и визуально проверить полный парный result PDF Лазаруса на staging.
-3. Настроить ежедневный retention cleanup через панель Beget.
-4. Подготовить короткий бесплатный пилот только после приёмки staging.
+1. Владелец завершает приёмку staging: основные flows направления A и повторная визуальная проверка полного парного result PDF Лазаруса.
+2. Legal review и подтверждение происхождения/прав методик (риск №6) — блокер платных разборов перед открытием этапов 06/07.
+3. Этап 03, пакет 03.2: renderer contract для единичного результата, pair result, таблиц, шкал и защищённого SMIL-chart component.
+4. После приёмки staging — короткий бесплатный пилот (exit этапа 02).
 5. Отдельно запланировать будущие ссылки в results/PDF из [issue #9](https://github.com/dmitryturin-art/psytest-platform/issues/9).
 
 ## Решения владельца, нужные сейчас
 
-04.0F выложен; нужна повторная проверка владельцем полного PDF парного результата Лазаруса. Scoring, клинический текст и SMIL-график не менялись.
+- Финальная приёмка staging: полный парный PDF Лазаруса (04.0F follow-up) и основные flows направления A.
+- Legal review/provenance методик: без подтверждённых прав платная интерпретация не открывается даже после этапов 06/07.
 
 ## Checkpoint
 
