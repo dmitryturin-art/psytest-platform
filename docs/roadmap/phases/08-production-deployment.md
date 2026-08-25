@@ -16,7 +16,7 @@
 6. **Deployment automation.** Repeatable build/install/cache/migrate/smoke steps; releases directory или эквивалентная атомарная смена версии.
 7. **Operations.** Structured logs без ответов/секретов, health checks, error/payment/job alerts, retention и disk monitoring. 08.1F: стабильная точка `current` → активный релиз, cleanup-скрипт проверен через неё на staging (EXIT=0, лог пишется); готовая инструкция cron для панели Beget — [CRON_CLEANUP.md](../CRON_CLEANUP.md), настройка расписания — за владельцем.
 8. **Go-live.** Staging acceptance, backup/restore drill, controlled release window, smoke/free flow/sandbox or approved real payment, rollback criteria.
-9. **Runbooks/docs.** 08.1G: backup/restore drill пройден (дамп → 8/8 таблиц, сверка строк; особенности: отдельная база для DR создаётся в панели, same-DB restore требует переименования CONSTRAINT), `PRODUCTION_RUNBOOK.md` зафиксирован до go-live. Обновить фактическую архитектуру, recovery, incident response, secret rotation и человеческий changelog.
+9. **Runbooks/docs.** 08.1G: backup/restore drill пройден (дамп → 8/8 таблиц, сверка строк; особенности: отдельная база для DR создаётся в панели, same-DB restore требует переименования CONSTRAINT), `PRODUCTION_RUNBOOK.md` зафиксирован до go-live. 08.1H: схема бэкапов — ежедневные автоматические бэкапы Beget + pre-deploy дампы (свой ночной дамп исключён решением владельца); на go-live — разовый drill восстановления из панельного бэкапа. Обновить фактическую архитектуру, recovery, incident response, secret rotation и человеческий changelog.
 
 ## Контрольная точка владельца
 
