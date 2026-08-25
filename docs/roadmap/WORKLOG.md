@@ -685,3 +685,13 @@
 - Сделано: `tests/fixtures/golden/` — детерминированные наборы ответов + пин полного вывода `calculateResults` и `generateInterpretation` для BAI, BDI, HADS, Lazarus (SMIL уже покрыт `tests/fixtures/smil-*`); `GoldenModuleOutputsTest` (8 тестов) требует точного совпадения массивов (assertSame) и запрещает менять scoring/тексты без явного обновления фикстуры с источником; фаза 03 переведена «В работе».
 - Инварианты: прод-код не менялся вообще (только тесты и фикстуры); BDI safety_signals попали в пин — клинический сигнал тоже под паритетом.
 - Проверки: полный gate — PHPUnit 194 tests/1875 assertions, PHPStan level 6, lint, architecture, baseline 148 — pass.
+
+### 03.1B — capability registry (Module API v2, WP3 часть 1)
+
+- Этап / ветка / commit: этап 03, `codex/03-golden-characterization` (продолжение) → `main`.
+- Цель: перевести неявные флаги возможностей модулей в декларативный реестр (WP3 этапа 03, часть — capability registry).
+- Сделано: `modules/ModuleCapability.php` (pair/chart/pdf/paid_interpretation/clinical_signal); `getCapabilities(): list<string>` в `TestModuleInterface`; дефолт `[PDF]` в `BaseTestModule`; `supportsPairMode()` выведен из capability PAIR и больше не переопределяется (удалены override в Lazarus/BDI/SMIL); декларации — Lazarus [pair, pdf], SMIL [chart, pdf], BDI [clinical_signal, pdf], BAI/HADS [pdf] (наследуют дефолт); `ModuleCapabilityContractTest` (10 тестов) закрепляет декларации, валидность констант, отсутствие дублей и деривацию pair. Контроллеры не менялись — slug-ветвлений в них нет (проверено grep), реестр защищает от их появления.
+- Попутно: `bin/check-architecture.php` — `modules/ModuleCapability.php` добавлен в requiredFiles и во все ручные require-блоки (без него чекер из чужого cwd падал «Class not found»; поймано ArchitectureCheckTest).
+- Инварианты: поведение рантайма не изменилось (supportsPairMode возвращает те же значения); scoring/шаблоны не тронуты.
+- Проверки: полный gate — PHPUnit 204 tests/1903 assertions, PHPStan level 6, lint, architecture (в т.ч. из temp-dir), baseline 148, validate, audit — pass.
+- Следующий пакет: schema validator ответов (вторая часть WP3).

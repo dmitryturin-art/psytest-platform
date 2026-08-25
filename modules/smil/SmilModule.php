@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace PsyTest\Modules\Smil;
 
 use PsyTest\Modules\BaseTestModule;
+use PsyTest\Modules\ModuleCapability;
 use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
 use PsyTest\Modules\Smil\Scoring\RawScoreCalculator;
@@ -1097,11 +1098,11 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Check if SMIL supports pair mode
+     * {@inheritDoc}
      */
-    public function supportsPairMode(): bool
+    public function getCapabilities(): array
     {
-        return false;
+        return [ModuleCapability::CHART, ModuleCapability::PDF];
     }
 
     /**
