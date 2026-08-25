@@ -655,3 +655,12 @@
 - Процедура: первая выкладка через `bin/build-release.sh` — артефакт собран, верификация `git ls-files public` прошла, `smil-profile-bg.png` на месте; sha256 совпал; `.env` сервер-сайд из `1ccd53f`; pre-deploy dump `backups/pre-deploy-c62f34a.sql.gz`.
 - Миграция: `20260825120000` применена (2.2s) — `ip_address`/`user_agent` удалены из `test_sessions` и `activity_log`; в схеме не осталось ни одной такой колонки (information_schema = 0).
 - Smoke: home/tests/privacy/terms/health/admin/страница результата — 200; данные 31 сессия / 1 пара без изменений. Rollback: `public_html` → `releases/1ccd53f/public` (дамп сохранён).
+
+### 08.1F — стабильная точка релиза и готовность cleanup-cron
+
+- Этап / ветка / commit: этап 08, main (docs + серверная настройка).
+- Цель: сделать ежедневную очистку данных настраиваемой без риска устаревания пути и выполнить обязательный старт этапа 08 без решений владельца.
+- Сделано: на staging создан симлинк `current` → активный релиз; `bin/cleanup-sessions.php` проверен через стабильный путь (`EXIT=0`, `0 anonymous sessions removed`, лог `storage/logs/cleanup.log` пишется); полная каноническая последовательность выкладки (8 шагов, включая шаг `current`) зафиксирована в `BEGET_STAGING.md`; пошаговая инструкция cron для панели Beget — `docs/roadmap/CRON_CLEANUP.md` (команда, расписание, проверка, границы).
+- Инварианты: путь в cron не зависит от будущих релизов; therapist_case скрипт не трогает; retention 180 дней соответствует утверждённой политике.
+- Проверки: запуск скрипта на staging через `current` — exit 0; лог-строка подтверждена.
+- Далее по этапу 08: runbook production-выкладки, backup/restore drill, monitoring; настройки панели Beget (cron) и фискальные вопросы — за владельцем.

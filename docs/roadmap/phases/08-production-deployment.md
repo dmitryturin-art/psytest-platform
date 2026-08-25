@@ -14,7 +14,7 @@
 4. **Configuration/secrets.** Environment matrix, rotation, least privilege, production debug off, writable paths вне public root.
 5. **Database release.** Проверяемые migrations, preflight, backup, restore и rollback/forward-fix procedure.
 6. **Deployment automation.** Repeatable build/install/cache/migrate/smoke steps; releases directory или эквивалентная атомарная смена версии.
-7. **Operations.** Structured logs без ответов/секретов, health checks, error/payment/job alerts, retention и disk monitoring.
+7. **Operations.** Structured logs без ответов/секретов, health checks, error/payment/job alerts, retention и disk monitoring. 08.1F: стабильная точка `current` → активный релиз, cleanup-скрипт проверен через неё на staging (EXIT=0, лог пишется); готовая инструкция cron для панели Beget — [CRON_CLEANUP.md](../CRON_CLEANUP.md), настройка расписания — за владельцем.
 8. **Go-live.** Staging acceptance, backup/restore drill, controlled release window, smoke/free flow/sandbox or approved real payment, rollback criteria.
 9. **Runbooks/docs.** Обновить фактическую архитектуру, recovery, incident response, secret rotation и человеческий changelog.
 

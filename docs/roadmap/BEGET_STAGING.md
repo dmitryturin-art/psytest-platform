@@ -41,6 +41,20 @@ test.23time.ru
 инцидента L-015 с выпавшей фоновой сеткой графика СМИЛ). Ручная сборка rsync-командой
 запрещена.
 
+Полная последовательность выкладки (все шаги обязательны):
+
+1. `bin/build-release.sh` → `tmp/release-<sha>.tar.gz` + sha256.
+2. Загрузить в `backups/`, сверить sha256 на сервере.
+3. Распаковать в `releases/<sha>/`, скопировать `.env` из предыдущего релиза (`chmod 600`).
+4. Pre-migration dump → `backups/pre-deploy-<sha>.sql.gz`.
+5. `/usr/local/bin/php8.3 vendor/bin/phinx migrate -c phinx.php`.
+6. Атомарное переключение: `ln -sfn releases/<sha>/public public_html.new && mv -T public_html.new public_html`.
+7. Стабильная точка для cron: `ln -sfn releases/<sha> current`.
+8. Smoke: `/api/health`, главная, страница результата, логи ошибок пусты.
+
+Rollback: вернуть `public_html` на `releases/<предыдущий>/public`; дампы и прежние
+релизы сохраняются в `backups/` и `releases/`.
+
 Корень домена доступен deployment account по ACL, поэтому текущие относительные
 пути `public/index.php` сохраняются без публичного размещения исходников и без
 bootstrap-адаптера. Приложение не встраивается в WordPress и не использует его
