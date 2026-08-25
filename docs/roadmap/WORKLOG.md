@@ -591,3 +591,12 @@
 - Проверки и evidence: сначала RED — отсутствующий class и ожидаемый result key; затем unit/module contracts, полный local gate: Composer audit clean, PHPUnit 126 tests/1228 assertions, PHPStan/lint/architecture/baseline/manifest pass. Architecture checker был дополнен явным dependency requirement, иначе его standalone execution не видел новый core-class.
 - Проверки: GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success на PHP 8.3/MySQL, включая чистую migration chain, PHPUnit, PHPStan, lint и architecture check.
 - Следующий шаг: owner-approved Crisis UI text и начальные resources; затем 02.2B UI/country flow.
+
+### 04.0G — веб-график совмещённых профилей пары (вариант C) с тултипами
+
+- Этап / ветка / commit: этап 04, `codex/04-pair-comparison-visual` → `main`.
+- Цель: заменить мёртвый Chart.js-контур (CDN грузился на каждой странице, скрипты не рендерили ни один canvas) нативным графиком наложения профилей партнёров по выбору владельца (вариант C — наложенные профили-линии с красными зонами расхождений).
+- Сделано: новый блок `blocks/pair-chart.twig` + секция `pair_chart` (order 45) в `LazarusModule::buildSections()` — только для web, в PDF не попадает; геометрия графика считается в `LazarusModule::pairChartData()`, шаблон только рисует; график добавлен также на страницу `/pair/{id}`; тултипы по точкам (пункт, домен, текст, оценки обоих партнёров, расхождение) на нативном JS с поддержкой наведения, тапа и клавиатурного фокуса; удалены мёртвые `results.js`, `smil-profile.js`, `smil-scale-indicator.js` и Chart.js CDN из `layout.twig` и `result-page.twig`; стили графика и тултипа добавлены в `main.css`.
+- Инварианты: детальная таблица сравнения (web) и компактная PDF-таблица 04.0F не менялись — это закреплено новыми guard-тестами; scoring и клинические тексты не тронуты.
+- Проверки: полный gate локально — validate/audit/migrate/PHPUnit 185 tests/1817 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass. Новые тесты: секция графика отсутствует в PDF-контексте; 32 точки (16×2), данные тултипов на 16 пунктов, aria-label присутствуют.
+- Сознательно не проверено здесь: визуальное поведение тултипов в реальном браузере (390×844 и desktop) — нужна ручная проверка владельцем на staging, как для остальных UI-пакетов этапа 04.

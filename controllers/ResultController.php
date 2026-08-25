@@ -12,6 +12,7 @@ namespace PsyTest\Controllers;
 
 use PsyTest\Core\ClinicalSafetyNotice;
 use PsyTest\Core\PDFGenerator;
+use PsyTest\Modules\Lazarus\LazarusModule;
 use PsyTest\Modules\ResultSection;
 
 class ResultController extends BaseController
@@ -221,12 +222,19 @@ class ResultController extends BaseController
         $comparisonHtml = $this->view->render('blocks/pair-comparison', [
             'comparison' => $comparisonData,
         ]);
+        $chartData = $module instanceof LazarusModule
+            ? $module->pairChartData($comparisonData)
+            : null;
+        $chartHtml = $chartData !== null
+            ? $this->view->render('blocks/pair-chart', ['chart' => $chartData])
+            : '';
 
         echo $this->view->render('result-page', [
             'test' => $test,
             'session' => $session1,
             'pair_comparison' => $comparison,
             'pair_comparison_html' => $comparisonHtml,
+            'pair_chart_html' => $chartHtml,
         ]);
     }
 

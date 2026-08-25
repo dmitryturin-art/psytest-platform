@@ -52,6 +52,13 @@ final class LazarusModule extends BaseTestModule
     private const TOTAL_QUESTIONS = 16;
     private const MAX_SCORE_PER_ITEM = 10;
 
+    /** @var list<string> Короткие подписи пунктов для оси X веб-графика. */
+    private const CHART_SHORT_LABELS = [
+        'Общение', 'Общение', 'Интим.', 'Финансы', 'Время', 'Соц.жизнь',
+        'Родит.', 'Союзнич.', 'Досуг', 'Ценности', 'Эмоц.близ.', 'Доверие',
+        'Привычки', 'Семья парт.', 'Своя семья', 'Внешность',
+    ];
+
     /**
      * {@inheritDoc}
      *
@@ -204,6 +211,18 @@ final class LazarusModule extends BaseTestModule
 
         // Если есть результат сравнения пары — блок сравнения (для обоих партнёров).
         if (isset($results['pair_comparison'])) {
+            // Веб-график совмещённых профилей — отдельная секция; в печатную
+            // версию не попадает: PDF использует утверждённую компактную таблицу.
+            if (empty($results['is_pdf'])) {
+                $sections[] = new ResultSection(
+                    type: ResultSection::TYPE_PAIR_CHART,
+                    title: 'График совмещённых профилей',
+                    data: ['chart' => $this->pairChartData($results['pair_comparison'])],
+                    block: 'blocks/pair-chart.twig',
+                    order: 45,
+                );
+            }
+
             $sections[] = new ResultSection(
                 type: ResultSection::TYPE_PAIR_COMPARISON,
                 title: 'Сравнение с партнёром',
@@ -303,6 +322,102 @@ final class LazarusModule extends BaseTestModule
             'summary' => $summary,
             'results_1' => $results1,
             'results_2' => $results2,
+        ];
+    }
+
+    /**
+     * Подготовить данные веб-графика совмещённых профилей пары.
+     * Вся геометрия считается здесь; шаблон blocks/pair-chart.twig только рисует.
+     *
+     * @param array<string, mixed> $comparison Результат comparePairResults().
+     *
+     * @return array<string, mixed>
+     */
+    public function pairChartData(array $comparison): array
+    {
+        $width = 940;
+        $height = 330;
+        $left = 36;
+        $right = 16;
+        $top = 26;
+        $bottom = 64;
+        $step = ($width - $left - $right) / self::TOTAL_QUESTIONS;
+        $baseY = $height - $bottom;
+        $x = static fn (int $i): float => $left + $step * $i + $step / 2;
+        $y = static fn (float $score): float => $top + (10 - $score) / 10 * ($height - $top - $bottom);
+
+        $grid = [];
+        foreach ([0, 2, 4, 6, 8, 10] as $value) {
+            $grid[] = ['y' => round($y((float) $value), 1), 'label' => $value];
+        }
+
+        $pointsP1 = [];
+        $pointsP2 = [];
+        $dots = [];
+        $bands = [];
+        $labels = [];
+
+        foreach ($comparison['items'] ?? [] as $index => $item) {
+            $i = (int) $index;
+            $p1 = isset($item['p1_self']) ? (int) $item['p1_self'] : null;
+            $p2 = isset($item['p2_self']) ? (int) $item['p2_self'] : null;
+            $diff = isset($item['difference']) ? (int) $item['difference'] : null;
+            $domain = self::CHART_SHORT_LABELS[$i] ?? '';
+            $text = mb_substr((string) ($item['text'] ?? ''), 0, 110);
+
+            if ($p1 !== null) {
+                $pointsP1[] = round($x($i), 1) . ',' . round($y((float) $p1), 1);
+            }
+            if ($p2 !== null) {
+                $pointsP2[] = round($x($i), 1) . ',' . round($y((float) $p2), 1);
+            }
+
+            $dot = [
+                'x' => round($x($i), 1),
+                'y1' => $p1 !== null ? round($y((float) $p1), 1) : null,
+                'y2' => $p2 !== null ? round($y((float) $p2), 1) : null,
+                'i' => $i + 1,
+                'domain' => $domain,
+                'text' => $text,
+                'v1' => $p1,
+                'v2' => $p2,
+                'd' => $diff,
+            ];
+
+            if ($p1 !== null || $p2 !== null) {
+                $dots[] = $dot;
+            }
+
+            if ($diff !== null && abs($diff) >= 3) {
+                $bandLeft = $x(max(0, $i - 1)) + ($i === 0 ? 0 : $step / 2);
+                $bandRight = $x(min(self::TOTAL_QUESTIONS - 1, $i + 1)) - ($i === self::TOTAL_QUESTIONS - 1 ? 0 : $step / 2);
+                $bands[] = ['x' => round($bandLeft, 1), 'width' => round($bandRight - $bandLeft, 1)];
+            }
+
+            $labels[] = [
+                'x' => round($x($i), 1),
+                'num' => $i + 1,
+                'domain' => $domain,
+            ];
+        }
+
+        $firstX = round($x(0), 1);
+        $lastX = round($x(self::TOTAL_QUESTIONS - 1), 1);
+        $pointsP1String = implode(' ', $pointsP1);
+        $pointsP2String = implode(' ', $pointsP2);
+
+        return [
+            'width' => $width,
+            'height' => $height,
+            'labels_y' => $baseY + 32,
+            'grid' => $grid,
+            'bands' => $bands,
+            'points_p1' => $pointsP1String,
+            'points_p2' => $pointsP2String,
+            'fill_p1' => trim($pointsP1String . " {$lastX},{$baseY} {$firstX},{$baseY}"),
+            'fill_p2' => trim($pointsP2String . " {$lastX},{$baseY} {$firstX},{$baseY}"),
+            'dots' => $dots,
+            'labels' => $labels,
         ];
     }
 
