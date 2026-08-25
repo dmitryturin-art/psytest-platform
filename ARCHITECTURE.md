@@ -24,7 +24,7 @@ public/       front controller, CSS/JS и статические assets
 controllers/  HTTP-координация
 core/         Router, Database, CSRF, sessions, lifecycle, PDF и module loader
 modules/      методики, вопросы, scoring и result sections
-services/     legacy AI/payment/email code; AI/payment публично не вызываются
+services/     legacy AI/payment/email code — ЗАМОРОЖЕНО до этапов 06/07 (D-033); публично не вызываются
 templates/    Twig-страницы и result blocks
 database/     Phinx migrations и schema snapshot
 tests/        unit, integration и contract/regression tests

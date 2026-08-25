@@ -6,6 +6,8 @@
  * Handles YooMoney (ЮMoney) payment integration
  */
 
+// FROZEN (D-033): не используется и не маршрутизируется; справочный задел до этапов 06/07.
+// Не включать без нового решения владельца — см. docs/roadmap/DECISIONS.md.
 declare(strict_types=1);
 
 namespace PsyTest\Services;
