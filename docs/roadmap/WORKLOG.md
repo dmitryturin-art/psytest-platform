@@ -633,3 +633,10 @@
 - Инварианты: SMIL не затронут — profile-chart.twig и smil-profile-classic.js без изменений (0 строк в диффе), CSS-диф не содержит ни одной smil-строки, защитные тесты PublicCatalogPresentationTest/SmilModuleSectionsTest/SmilEndToEndTest и golden-фикстуры зелёные.
 - Проверки: полный gate — validate/audit/migrate/PHPUnit 186 tests/1828 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass.
 - Следствие: этап 04 закрыт (все UX-01..03 закрыты); активные фронты — 02 и 08.
+
+### 04.0H-deploy — выкладка закрытия UX-03 на staging
+
+- Release / ветка: `1ccd53f` (PR #26, CI success: fast gate + MySQL 5.7 + 8.0).
+- Процедура: артефакт из lockfile, sha256 совпал (`4aeb72d8…`); `.env` сервер-сайд из `4775dc4`; pre-deploy dump `backups/pre-deploy-1ccd53f.sql.gz`; миграций нет; `public_html` → `releases/1ccd53f/public`.
+- Smoke: home 200; health ok; css содержит `.pv-hit`, низкоконтрастный `#9aa5af` отсутствует; `smil-profile-classic.js` отдаётся 200.
+- Данные: 28 сессий / 1 пара — без изменений. Rollback: `public_html` → `releases/4775dc4/public`.
