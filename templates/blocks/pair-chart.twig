@@ -49,6 +49,15 @@
             {% endif %}
             {% endfor %}
 
+            {% for dot in c.dots %}
+            {% if dot.y2 is not null %}
+            <circle class="pv-hit" data-dot="{{ loop.index0 }}" cx="{{ dot.x }}" cy="{{ dot.y2 }}" r="12" fill="transparent" aria-hidden="true"/>
+            {% endif %}
+            {% if dot.y1 is not null %}
+            <circle class="pv-hit" data-dot="{{ loop.index0 }}" cx="{{ dot.x }}" cy="{{ dot.y1 }}" r="12" fill="transparent" aria-hidden="true"/>
+            {% endif %}
+            {% endfor %}
+
             {% for l in c.labels %}
             <text class="pv-xtick" x="{{ l.x }}" y="{{ c.height - 64 + 16 }}" text-anchor="middle">{{ l.num }}</text>
             <text class="pv-xdom" transform="rotate(-40 {{ l.x }} {{ c.labels_y }})" x="{{ l.x }}" y="{{ c.labels_y }}">{{ l.domain }}</text>
@@ -138,20 +147,20 @@
     }
 
     svg.addEventListener('pointerover', function (e) {
-        var dot = e.target.closest ? e.target.closest('.pv-dot') : null;
+        var dot = e.target.closest ? e.target.closest('.pv-dot, .pv-hit') : null;
         if (dot) showFor(dot);
     });
     svg.addEventListener('pointerout', function (e) {
-        var dot = e.target.closest ? e.target.closest('.pv-dot') : null;
+        var dot = e.target.closest ? e.target.closest('.pv-dot, .pv-hit') : null;
         if (dot) hide();
     });
     svg.addEventListener('focusin', function (e) {
-        var dot = e.target.closest ? e.target.closest('.pv-dot') : null;
+        var dot = e.target.closest ? e.target.closest('.pv-dot, .pv-hit') : null;
         if (dot) showFor(dot);
     });
     svg.addEventListener('focusout', hide);
     svg.addEventListener('click', function (e) {
-        var dot = e.target.closest ? e.target.closest('.pv-dot') : null;
+        var dot = e.target.closest ? e.target.closest('.pv-dot, .pv-hit') : null;
         if (!dot) return;
         if (tip.hidden) {
             showFor(dot);

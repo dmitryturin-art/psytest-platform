@@ -624,3 +624,12 @@
 - Сделано: D-033 — `services/PaymentService|AIInterpretationService|EmailService` заморожены с пометками в файлах и ARCHITECTURE (не удалять: концепция возвращается на 06/07 в новой модели); D-034 — зафиксирована продуктовая модель платных разборов (база бесплатна всем; платный ИИ-отчёт без обязательной авторизации; купонные клиенты получают отчёт только после правки и одобрения владельца; при авторизации — история прохождений), уточнения добавлены в phase-файлы 06/07; dev-скрипты `create-fake-smil-session.php` и `create-full-smil-session.php` перенесены в `docs/archive/scripts/` (канонический генератор — `bin/simulate-smil-test.php`); этап 00 закрыт (exit criteria выполнены); в `BEGET_STAGING.md` убрана задача ротации SSH/DB-кредов — владелец подтвердил, что её не заказывал.
 - Не закрыто намеренно: этап 04 остаётся активным — UX-03 (legends/touch/accessibility Лазаруса) в трейсабилити «Запланировано»; закрывается отдельным пакетом 04.0H с проверкой, затем 04 закрывается.
 - Проверки: полный gate — validate/audit/migrate/PHPUnit 185/1817/PHPStan/lint/architecture/baseline — pass (см. commit).
+
+### 04.0H — закрытие UX-03 и этапа 04
+
+- Этап / ветка / commit: этап 04, `codex/04-ux03-accessibility` → `main`.
+- Цель: закрыть последний finding этапа 04 (UX-03: Lazarus legends/touch/accessibility) и формально завершить этап.
+- Сделано: точки парного графика получили невидимые touch-зоны попадания 24px (r=12) с теми же тултипами; подписи осей и легенда графика перекрашены с #9aa5af/#7f8c8d на #667085 (контраст ≥4.5:1, WCAG AA); из main.css удалены 194 строки мёртвых стилей отменённой «бабочки» (0 ссылок из шаблонов); в PairComparisonVisualTest добавлены контраст-контракт (WCAG-расчёт в тесте) и проверка 32 touch-зон; в фазы 06/07 записаны ответы владельца по доставке и лёгкой авторизации.
+- Инварианты: SMIL не затронут — profile-chart.twig и smil-profile-classic.js без изменений (0 строк в диффе), CSS-диф не содержит ни одной smil-строки, защитные тесты PublicCatalogPresentationTest/SmilModuleSectionsTest/SmilEndToEndTest и golden-фикстуры зелёные.
+- Проверки: полный gate — validate/audit/migrate/PHPUnit 186 tests/1828 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass.
+- Следствие: этап 04 закрыт (все UX-01..03 закрыты); активные фронты — 02 и 08.

@@ -109,6 +109,7 @@ final class PairComparisonVisualTest extends TestCase
         self::assertSame(2, substr_count($html, '<polyline'));
         self::assertSame(2, substr_count($html, '<polygon'));
         self::assertSame(32, substr_count($html, 'class="pv-dot pv-dot--'), '16 items × 2 partners.');
+        self::assertSame(32, substr_count($html, 'class="pv-hit"'), 'Every dot needs a 24px touch hit area.');
         self::assertSame(32, substr_count($html, 'tabindex="0"'));
         self::assertGreaterThanOrEqual(1, substr_count($html, 'class="pv-band"'));
 
@@ -126,6 +127,45 @@ final class PairComparisonVisualTest extends TestCase
         self::assertStringContainsString('aria-label="Пункт 8', $html);
         self::assertStringNotContainsString('<table', $html);
         self::assertStringNotContainsString('cdn.jsdelivr', $html);
+    }
+
+    public function testChartTextContrastMeetsWcagAA(): void
+    {
+        $pairs = [
+            ['#667085', '#ffffff'], // подписи осей и легенда графика
+            ['#cfd8e0', '#2c3e50'], // текст тултипа
+            ['#f5d9ae', '#2c3e50'], // расхождение ±1–2 в тултипе
+            ['#f3b3ae', '#2c3e50'], // расхождение ≥3 в тултипе
+        ];
+        foreach ($pairs as [$fg, $bg]) {
+            self::assertGreaterThanOrEqual(
+                4.5,
+                self::contrastRatio($fg, $bg),
+                "Цвет $fg на $bg должен давать контраст не ниже 4.5:1."
+            );
+        }
+
+        $css = (string) file_get_contents(dirname(__DIR__) . '/public/css/main.css');
+        self::assertStringNotContainsString('#9aa5af', $css, 'Подписи осей не должны использовать низкоконтрастный цвет.');
+        self::assertStringNotContainsString('pair-item__chart', $css, 'Мёртвые стили отменённой «бабочки» должны быть удалены.');
+    }
+
+    private static function contrastRatio(string $fgHex, string $bgHex): float
+    {
+        $channel = static function (float $v): float {
+            return $v <= 0.03928 ? $v / 12.92 : pow(($v + 0.055) / 1.055, 2.4);
+        };
+        $luminance = static function (string $hex) use ($channel): float {
+            $hex = ltrim($hex, '#');
+
+            return 0.2126 * $channel(hexdec(substr($hex, 0, 2)) / 255)
+                + 0.7152 * $channel(hexdec(substr($hex, 2, 2)) / 255)
+                + 0.0722 * $channel(hexdec(substr($hex, 4, 2)) / 255);
+        };
+        $l1 = $luminance($fgHex);
+        $l2 = $luminance($bgHex);
+
+        return round((max($l1, $l2) + 0.05) / (min($l1, $l2) + 0.05), 2);
     }
 
     /**
