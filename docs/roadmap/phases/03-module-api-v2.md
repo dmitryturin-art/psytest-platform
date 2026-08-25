@@ -1,6 +1,6 @@
 # Этап 03 — Module API v2
 
-Статус: **Не начат**. Зависит от безопасного baseline этапов 01–02.
+Статус: **В работе** (с 25.08.2026). 03.1A: golden characterization для BAI/BDI/HADS/Lazarus — детерминированные ответы + пин полного вывода calculateResults и generateInterpretation (`tests/fixtures/golden/`, `GoldenModuleOutputsTest`); SMIL уже покрыт своими golden-фикстурами. Любое изменение scoring/интерпретации для этих наборов обязано обновлять фикстуру с указанием источника.
 
 ## Цель
 
