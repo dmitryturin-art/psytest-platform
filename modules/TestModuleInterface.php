@@ -70,6 +70,18 @@ interface TestModuleInterface
     public function getCapabilities(): array;
 
     /**
+     * Declarative answer schema used by the shared AnswerValidator.
+     *
+     * @return array{
+     *   answer_type: 'ternary'|'scale10'|'options',
+     *   key_template: 'plain'|'dual',
+     *   extra_keys: list<string>,
+     *   requires_gender: bool,
+     * }
+     */
+    public function getAnswerSchema(): array;
+
+    /**
      * Check if module supports pair comparison mode
      *
      * @return bool True if pair mode is supported

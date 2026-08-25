@@ -141,6 +141,21 @@ abstract class BaseTestModule implements TestModuleInterface
     }
 
     /**
+     * Default answer schema for option-based questionnaires.
+     *
+     * @return array<string, mixed>
+     */
+    public function getAnswerSchema(): array
+    {
+        return [
+            'answer_type' => 'options',
+            'key_template' => 'plain',
+            'extra_keys' => ['gender', 'age'],
+            'requires_gender' => false,
+        ];
+    }
+
+    /**
      * Derived from the PAIR capability (do not override; declare capabilities instead).
      */
     public function supportsPairMode(): bool

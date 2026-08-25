@@ -259,6 +259,19 @@ final class LazarusModule extends BaseTestModule
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getAnswerSchema(): array
+    {
+        return [
+            'answer_type' => 'scale10',
+            'key_template' => 'dual',
+            'extra_keys' => ['gender'],
+            'requires_gender' => false,
+        ];
+    }
+
+    /**
      * Сравнение результатов двух партнёров.
      *
      * @param array<string, mixed> $results1 Результаты Партнёра 1.

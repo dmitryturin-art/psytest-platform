@@ -695,3 +695,11 @@
 - Инварианты: поведение рантайма не изменилось (supportsPairMode возвращает те же значения); scoring/шаблоны не тронуты.
 - Проверки: полный gate — PHPUnit 204 tests/1903 assertions, PHPStan level 6, lint, architecture (в т.ч. из temp-dir), baseline 148, validate, audit — pass.
 - Следующий пакет: schema validator ответов (вторая часть WP3).
+
+### 03.1C — декларативная схема ответов (Module API v2, WP3 часть 2)
+
+- Этап / ветка / commit: этап 03, `codex/03-answer-schema` → `main`.
+- Цель: формализовать валидацию ответов через декларативную схему модуля (WP3, вторая половина — schema validator).
+- Сделано: `getAnswerSchema(): array` в `TestModuleInterface` (answer_type: ternary/scale10/options, key_template: plain/dual, extra_keys, requires_gender); дефолт options/plain/['gender','age']/false в Base; SMIL — ternary/plain/['gender']/true, Lazarus — scale10/dual/['gender']/false; `AnswerValidator` переписан на схему (без знаний о конкретных модулях), с сохранением исходного поведения: per-question значения для options (не глобальный список), dual-ключи, gender-требование; `AnswerSchemaContractTest` (21 тест) — форма, когерентность (dual⇔scale10, gender⇔ternary), валидные/out-of-range ответы, Lazarus отбраковывает plain-ключи, SMIL требует gender.
+- Инварианты: поведение валидатора идентично прежнему (замерено per-question семантикой options); scoring/шаблоны не тронуты.
+- Проверки: полный gate — PHPUnit 225 tests/1945 assertions, PHPStan level 6 `[OK] No errors`, lint, architecture (в т.ч. из temp-dir), baseline 148, validate, audit — pass.
