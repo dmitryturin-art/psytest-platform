@@ -607,3 +607,12 @@
 - Инварианты: детальная таблица сравнения (web) и компактная PDF-таблица 04.0F не менялись — это закреплено новыми guard-тестами; scoring и клинические тексты не тронуты.
 - Проверки: полный gate локально — validate/audit/migrate/PHPUnit 185 tests/1817 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass. Новые тесты: секция графика отсутствует в PDF-контексте; 32 точки (16×2), данные тултипов на 16 пунктов, aria-label присутствуют.
 - Сознательно не проверено здесь: визуальное поведение тултипов в реальном браузере (390×844 и desktop) — нужна ручная проверка владельцем на staging, как для остальных UI-пакетов этапа 04.
+
+### 04.0G-deploy — выкладка графика пары на staging
+
+- Release / ветка: `4775dc4` (PR #25, merge в `main`), `codex/04-pair-comparison-visual`.
+- Процедура: артефакт собран локально из lockfile (vendor --no-dev), sha256 совпал после загрузки (`8bb795fa…`); `.env` скопирован сервер-сайд из `releases/3a2daa8` (mode 600); pre-migration dump `backups/pre-deploy-4775dc4.sql.gz`; `phinx migrate` — новых миграций нет, цепочка уже up; `public_html` атомарно переключён на `releases/4775dc4/public`.
+- Smoke: home 200; `/api/health` ok; `main.css` 200 и содержит `pair-chart-block`; security-заголовки на месте.
+- Данные не затронуты: в staging БД до и после — 28 test_sessions (все с рассчитанными результатами), 1 pair_comparison. Ответы и результаты живут в MySQL, релиз меняет только код.
+- Rollback: атомарно вернуть `public_html` на `releases/3a2daa8/public`; дамп и прежние релизы сохранены.
+- Далее: ручная проверка владельцем тултипов графика (наведение и тап) на desktop и 390×844.
