@@ -1106,6 +1106,19 @@ class SmilModule extends BaseTestModule
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getAnswerSchema(): array
+    {
+        return [
+            'answer_type' => 'ternary',
+            'key_template' => 'plain',
+            'extra_keys' => ['gender'],
+            'requires_gender' => true,
+        ];
+    }
+
+    /**
      * Compare pair results
      */
     public function comparePairResults(array $results1, array $results2): array
