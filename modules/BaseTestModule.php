@@ -131,11 +131,21 @@ abstract class BaseTestModule implements TestModuleInterface
     }
 
     /**
-     * Supports pair mode (override if supported)
+     * Default capability set; modules override to declare what they support.
+     *
+     * @return list<string>
+     */
+    public function getCapabilities(): array
+    {
+        return [ModuleCapability::PDF];
+    }
+
+    /**
+     * Derived from the PAIR capability (do not override; declare capabilities instead).
      */
     public function supportsPairMode(): bool
     {
-        return false;
+        return in_array(ModuleCapability::PAIR, $this->getCapabilities(), true);
     }
 
     /**

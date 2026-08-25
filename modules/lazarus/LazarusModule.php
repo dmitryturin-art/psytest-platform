@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace PsyTest\Modules\Lazarus;
 
 use PsyTest\Modules\BaseTestModule;
+use PsyTest\Modules\ModuleCapability;
 use PsyTest\Modules\ResultSection;
 
 final class LazarusModule extends BaseTestModule
@@ -250,11 +251,11 @@ final class LazarusModule extends BaseTestModule
     }
 
     /**
-     * Парный режим поддерживается.
+     * {@inheritDoc}
      */
-    public function supportsPairMode(): bool
+    public function getCapabilities(): array
     {
-        return true;
+        return [ModuleCapability::PAIR, ModuleCapability::PDF];
     }
 
     /**

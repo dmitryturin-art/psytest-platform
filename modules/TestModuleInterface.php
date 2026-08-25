@@ -63,6 +63,13 @@ interface TestModuleInterface
     public function generateInterpretation(array $scores): array;
 
     /**
+     * Declarative capabilities of this module (Module API v2).
+     *
+     * @return list<string> Subset of ModuleCapability constants.
+     */
+    public function getCapabilities(): array;
+
+    /**
      * Check if module supports pair comparison mode
      *
      * @return bool True if pair mode is supported

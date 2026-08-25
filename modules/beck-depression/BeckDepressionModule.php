@@ -16,6 +16,7 @@ namespace PsyTest\Modules\BeckDepression;
 
 use PsyTest\Core\ClinicalSafetySignal;
 use PsyTest\Modules\BaseTestModule;
+use PsyTest\Modules\ModuleCapability;
 use PsyTest\Modules\ResultSection;
 
 class BeckDepressionModule extends BaseTestModule
@@ -232,9 +233,9 @@ class BeckDepressionModule extends BaseTestModule
     /**
      * {@inheritDoc}
      */
-    public function supportsPairMode(): bool
+    public function getCapabilities(): array
     {
-        return false;
+        return [ModuleCapability::CLINICAL_SIGNAL, ModuleCapability::PDF];
     }
 
     /**

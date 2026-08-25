@@ -28,6 +28,7 @@ $requiredFiles = [
     'core/View.php',
     'core/Security.php',
     'core/ClinicalSafetySignal.php',
+    'modules/ModuleCapability.php',
     'modules/TestModuleInterface.php',
     'modules/BaseTestModule.php',
     'modules/smil/SmilModule.php',
@@ -130,6 +131,7 @@ echo "\n4. Проверка модуля СМИЛ...\n";
 
 if (file_exists($projectRoot . '/modules/smil/SmilModule.php')) {
     require_once $projectRoot . '/modules/TestModuleInterface.php';
+    require_once $projectRoot . '/modules/ModuleCapability.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
     require_once $projectRoot . '/modules/smil/Scoring/RawScoreCalculator.php';
@@ -183,6 +185,7 @@ echo "\n5. Проверка модуля BAI...\n";
 
 if (file_exists($projectRoot . '/modules/beck-anxiety/BeckAnxietyModule.php')) {
     require_once $projectRoot . '/modules/TestModuleInterface.php';
+    require_once $projectRoot . '/modules/ModuleCapability.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
     require_once $projectRoot . '/modules/beck-anxiety/BeckAnxietyModule.php';
@@ -225,6 +228,7 @@ echo "\n6. Проверка модуля BDI...\n";
 
 if (file_exists($projectRoot . '/modules/beck-depression/BeckDepressionModule.php')) {
     require_once $projectRoot . '/modules/TestModuleInterface.php';
+    require_once $projectRoot . '/modules/ModuleCapability.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
     require_once $projectRoot . '/core/ClinicalSafetySignal.php';
@@ -268,6 +272,7 @@ echo "\n7. Проверка модуля HADS...\n";
 
 if (file_exists($projectRoot . '/modules/hads/HadsModule.php')) {
     require_once $projectRoot . '/modules/TestModuleInterface.php';
+    require_once $projectRoot . '/modules/ModuleCapability.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
     require_once $projectRoot . '/modules/hads/HadsModule.php';
