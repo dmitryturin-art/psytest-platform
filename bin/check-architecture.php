@@ -365,6 +365,7 @@ $staticFiles = [
     'public/js/main.js' => 'Main JS',
     'public/js/test-taking.js' => 'Test Taking JS',
     'public/js/smil-profile-classic.js' => 'SMIL Classic Profile JS',
+    'public/images/smil-profile-bg.png' => 'SMIL Classic Profile Background',
 ];
 
 foreach ($staticFiles as $file => $desc) {
