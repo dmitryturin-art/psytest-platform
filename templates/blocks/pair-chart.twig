@@ -1,0 +1,170 @@
+{# Веб-график совмещённых профилей пары (Лазарус). Только web: в PDF секция не попадает. #}
+{% set c = chart %}
+<div class="pair-chart-block">
+    <p class="pair-chart__hint">Две кривые — профили партнёров по пунктам 1–16 (шкала 0–10). Красные зоны отмечают расхождение 3 и больше. Наведите курсор на точку или коснитесь её, чтобы увидеть показатель.</p>
+
+    <div class="pair-chart__legend">
+        <span><i class="pair-chart__sw pair-chart__sw--p1"></i><b>Начавший</b></span>
+        <span><i class="pair-chart__sw pair-chart__sw--p2"></i><b>Приглашённый</b></span>
+    </div>
+
+    <div class="pair-chart__wrap">
+        <svg class="pair-chart-svg" viewBox="0 0 {{ c.width }} {{ c.height }}" role="img"
+             aria-label="Наложенные профили двух партнёров по 16 пунктам, шкала от 0 до 10">
+            <defs>
+                <linearGradient id="pairChartFillP1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#3498db" stop-opacity=".22"/>
+                    <stop offset="1" stop-color="#3498db" stop-opacity=".02"/>
+                </linearGradient>
+                <linearGradient id="pairChartFillP2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#7d5fd3" stop-opacity=".20"/>
+                    <stop offset="1" stop-color="#7d5fd3" stop-opacity=".02"/>
+                </linearGradient>
+            </defs>
+
+            {% for band in c.bands %}
+            <rect class="pv-band" x="{{ band.x }}" y="26" width="{{ band.width }}" height="{{ c.height - 26 - 64 }}" rx="4"/>
+            {% endfor %}
+
+            {% for g in c.grid %}
+            <line class="pv-grid{{ g.label == 0 ? ' pv-grid--zero' : '' }}" x1="36" y1="{{ g.y }}" x2="{{ c.width - 16 }}" y2="{{ g.y }}"/>
+            <text class="pv-ytick" x="28" y="{{ g.y + 4 }}" text-anchor="end">{{ g.label }}</text>
+            {% endfor %}
+
+            <polygon class="pv-stepfill pv-stepfill--p2" points="{{ c.fill_p2 }}"/>
+            <polygon class="pv-stepfill pv-stepfill--p1" points="{{ c.fill_p1 }}"/>
+            <polyline class="pv-line pv-line--p2" points="{{ c.points_p2 }}"/>
+            <polyline class="pv-line pv-line--p1" points="{{ c.points_p1 }}"/>
+
+            {% for dot in c.dots %}
+            {% if dot.y2 is not null %}
+            <circle class="pv-dot pv-dot--p2" data-dot="{{ loop.index0 }}" cx="{{ dot.x }}" cy="{{ dot.y2 }}" r="3.4"
+                    tabindex="0" role="graphics-symbol"
+                    aria-label="Пункт {{ dot.i }} ({{ dot.domain }}): приглашённый {{ dot.v2 }} из 10{% if dot.d is not null %}, расхождение {{ dot.d > 0 ? '+' }}{{ dot.d }}{% endif %}"/>
+            {% endif %}
+            {% if dot.y1 is not null %}
+            <circle class="pv-dot pv-dot--p1" data-dot="{{ loop.index0 }}" cx="{{ dot.x }}" cy="{{ dot.y1 }}" r="3.4"
+                    tabindex="0" role="graphics-symbol"
+                    aria-label="Пункт {{ dot.i }} ({{ dot.domain }}): начавший {{ dot.v1 }} из 10{% if dot.d is not null %}, расхождение {{ dot.d > 0 ? '+' }}{{ dot.d }}{% endif %}"/>
+            {% endif %}
+            {% endfor %}
+
+            {% for l in c.labels %}
+            <text class="pv-xtick" x="{{ l.x }}" y="{{ c.height - 64 + 16 }}" text-anchor="middle">{{ l.num }}</text>
+            <text class="pv-xdom" transform="rotate(-40 {{ l.x }} {{ c.labels_y }})" x="{{ l.x }}" y="{{ c.labels_y }}">{{ l.domain }}</text>
+            {% endfor %}
+        </svg>
+
+        <div class="pv-tip" hidden></div>
+        <script type="application/json" class="pv-tip-data">{{ c.dots|json_encode(constant('JSON_HEX_TAG'))|raw }}</script>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var block = document.currentScript ? document.currentScript.previousElementSibling : null;
+    if (!block || !block.classList.contains('pair-chart-block')) {
+        block = document.querySelector('.pair-chart-block');
+    }
+    if (!block || block.dataset.tipInit === '1') {
+        return;
+    }
+    block.dataset.tipInit = '1';
+
+    var tip = block.querySelector('.pv-tip');
+    var dataEl = block.querySelector('.pv-tip-data');
+    var svg = block.querySelector('.pair-chart-svg');
+    if (!tip || !dataEl || !svg) {
+        return;
+    }
+
+    var dots = [];
+    try {
+        dots = JSON.parse(dataEl.textContent || '[]');
+    } catch (e) {
+        return;
+    }
+
+    function esc(value) {
+        return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function diffClass(d) {
+        var abs = Math.abs(d);
+        if (abs >= 3) return ' pv-tip__diff--big';
+        if (abs > 0) return ' pv-tip__diff--mid';
+        return '';
+    }
+
+    function render(d) {
+        var html = '<b class="pv-tip__title">' + d.i + '. ' + esc(d.domain) + '</b>';
+        if (d.text) {
+            html += '<span class="pv-tip__text">' + esc(d.text) + '</span>';
+        }
+        html += '<span class="pv-tip__row"><i class="pv-tip__sw pv-tip__sw--p1"></i>Начавший: <b>' + (d.v1 === null ? '—' : d.v1 + ' / 10') + '</b></span>';
+        html += '<span class="pv-tip__row"><i class="pv-tip__sw pv-tip__sw--p2"></i>Приглашённый: <b>' + (d.v2 === null ? '—' : d.v2 + ' / 10') + '</b></span>';
+        if (d.d !== null) {
+            html += '<span class="pv-tip__row pv-tip__diff' + diffClass(d.d) + '">Расхождение: <b>' + (d.d > 0 ? '+' : '') + d.d + '</b></span>';
+        }
+        tip.innerHTML = html;
+    }
+
+    function place(dotEl) {
+        var wrap = block.querySelector('.pair-chart__wrap');
+        var dotRect = dotEl.getBoundingClientRect();
+        var wrapRect = wrap.getBoundingClientRect();
+        var left = dotRect.left - wrapRect.left + dotRect.width / 2;
+        var top = dotRect.top - wrapRect.top;
+        var below = top < 110;
+        tip.style.left = Math.min(Math.max(left, 90), wrapRect.width - 90) + 'px';
+        tip.style.top = (below ? dotRect.bottom - wrapRect.top + 10 : top - 10) + 'px';
+        tip.style.transform = below ? 'translateX(-50%)' : 'translate(-50%, -100%)';
+    }
+
+    function showFor(dotEl) {
+        var d = dots[parseInt(dotEl.getAttribute('data-dot'), 10)];
+        if (!d) {
+            return;
+        }
+        render(d);
+        place(dotEl);
+        tip.hidden = false;
+    }
+
+    function hide() {
+        tip.hidden = true;
+    }
+
+    svg.addEventListener('pointerover', function (e) {
+        var dot = e.target.closest ? e.target.closest('.pv-dot') : null;
+        if (dot) showFor(dot);
+    });
+    svg.addEventListener('pointerout', function (e) {
+        var dot = e.target.closest ? e.target.closest('.pv-dot') : null;
+        if (dot) hide();
+    });
+    svg.addEventListener('focusin', function (e) {
+        var dot = e.target.closest ? e.target.closest('.pv-dot') : null;
+        if (dot) showFor(dot);
+    });
+    svg.addEventListener('focusout', hide);
+    svg.addEventListener('click', function (e) {
+        var dot = e.target.closest ? e.target.closest('.pv-dot') : null;
+        if (!dot) return;
+        if (tip.hidden) {
+            showFor(dot);
+        } else {
+            var same = !tip.hidden && dot.getAttribute('data-dot') === tip.getAttribute('data-dot-src');
+            tip.setAttribute('data-dot-src', dot.getAttribute('data-dot'));
+            if (same) { hide(); } else { showFor(dot); }
+        }
+    });
+    document.addEventListener('click', function (e) {
+        if (!block.contains(e.target)) hide();
+    });
+    window.addEventListener('scroll', hide, { passive: true });
+    window.addEventListener('resize', hide);
+})();
+</script>

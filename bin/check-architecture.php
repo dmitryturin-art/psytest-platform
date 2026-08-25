@@ -364,7 +364,7 @@ $staticFiles = [
     'public/css/main.css' => 'CSS стили',
     'public/js/main.js' => 'Main JS',
     'public/js/test-taking.js' => 'Test Taking JS',
-    'public/js/results.js' => 'Results JS',
+    'public/js/smil-profile-classic.js' => 'SMIL Classic Profile JS',
 ];
 
 foreach ($staticFiles as $file => $desc) {

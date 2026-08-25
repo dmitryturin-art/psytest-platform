@@ -34,7 +34,7 @@ final class PublicCatalogPresentationTest extends TestCase
     {
         $projectRoot = dirname(__DIR__);
         $styles = (string) file_get_contents($projectRoot . '/public/css/editorial-catalog.css');
-        $smilResult = (string) file_get_contents($projectRoot . '/templates/result-page.twig');
+        $smilResult = (string) file_get_contents($projectRoot . '/templates/blocks/profile-chart.twig');
 
         self::assertStringContainsString('.editorial-home-page', $styles);
         self::assertStringContainsString('.tests-list-page', $styles);
