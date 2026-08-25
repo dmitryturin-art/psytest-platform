@@ -18,25 +18,28 @@ final class SessionDataMinimizationTest extends TestCase
         $test = $db->selectOne("SELECT id FROM tests WHERE slug = 'bdi'");
         $sessions = new SessionManager($db);
 
+        // Metadata options must be silently ignored: the columns no longer exist.
         $session = $sessions->createSession((int) $test['id'], [
             'ip_address' => '203.0.113.10',
             'user_agent' => 'Regression fixture browser',
         ]);
 
         try {
-            $stored = $db->selectOne(
-                'SELECT ip_address, user_agent FROM test_sessions WHERE id = ?',
-                [$session['id']],
-            );
+            foreach (['test_sessions', 'activity_log'] as $table) {
+                $columns = $db->select('SHOW COLUMNS FROM `' . $table . '`');
+                $names = array_map(
+                    static fn (array $column): string => (string) $column['Field'],
+                    $columns,
+                );
+                self::assertNotContains('ip_address', $names, "Legacy metadata column {$table}.ip_address must stay dropped.");
+                self::assertNotContains('user_agent', $names, "Legacy metadata column {$table}.user_agent must stay dropped.");
+            }
+
             $activity = $db->selectOne(
-                'SELECT ip_address, user_agent FROM activity_log WHERE session_id = ? AND action = ?',
+                'SELECT details FROM activity_log WHERE session_id = ? AND action = ?',
                 [$session['id'], 'session_created'],
             );
-
-            self::assertNull($stored['ip_address']);
-            self::assertNull($stored['user_agent']);
-            self::assertNull($activity['ip_address']);
-            self::assertNull($activity['user_agent']);
+            self::assertNotFalse($activity);
         } finally {
             $db->delete('activity_log', 'session_id = ?', [$session['id']]);
             $db->delete('test_sessions', 'id = ?', [$session['id']]);

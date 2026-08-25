@@ -70,12 +70,10 @@ final class TherapistCaseServiceTest extends TestCase
         self::assertFileDoesNotExist($this->storagePath . '/result_' . $session['id'] . '.pdf');
         self::assertFileDoesNotExist($this->storagePath . '/interpretation_' . $session['id'] . '.pdf');
 
-        $audit = $this->db->select('SELECT session_id, test_id, details, ip_address, user_agent FROM activity_log WHERE action = ?', ['therapist_case_deleted']);
+        $audit = $this->db->select('SELECT session_id, test_id, details FROM activity_log WHERE action = ?', ['therapist_case_deleted']);
         self::assertNotEmpty($audit);
         self::assertNull($audit[0]['session_id']);
         self::assertNull($audit[0]['test_id']);
         self::assertSame(['actor' => 'owner'], json_decode((string) $audit[0]['details'], true, flags: JSON_THROW_ON_ERROR));
-        self::assertNull($audit[0]['ip_address']);
-        self::assertNull($audit[0]['user_agent']);
     }
 }

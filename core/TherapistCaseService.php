@@ -94,8 +94,6 @@ final class TherapistCaseService
             'test_id' => null,
             'action' => $action,
             'details' => json_encode(['actor' => 'owner'], JSON_THROW_ON_ERROR),
-            'ip_address' => null,
-            'user_agent' => null,
         ]);
     }
 }

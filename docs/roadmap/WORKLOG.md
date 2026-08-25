@@ -640,3 +640,11 @@
 - Процедура: артефакт из lockfile, sha256 совпал (`4aeb72d8…`); `.env` сервер-сайд из `4775dc4`; pre-deploy dump `backups/pre-deploy-1ccd53f.sql.gz`; миграций нет; `public_html` → `releases/1ccd53f/public`.
 - Smoke: home 200; health ok; css содержит `.pv-hit`, низкоконтрастный `#9aa5af` отсутствует; `smil-profile-classic.js` отдаётся 200.
 - Данные: 28 сессий / 1 пара — без изменений. Rollback: `public_html` → `releases/4775dc4/public`.
+
+### 02.7C — удаление legacy IP/user-agent колонок (D-035)
+
+- Этап / ветка / commit: этап 02, `codex/02-drop-legacy-ip-ua` → `main`.
+- Цель: завершить минимизацию технических метаданных — владелец одобрил план очистки (D-035).
+- Сделано: миграция `20260825120000` удаляет `ip_address`/`user_agent` из `test_sessions` и `activity_log` вместе со старыми значениями (down — IrreversibleMigrationException, по образцу D-032); из `SessionManager` (2 места) и `TherapistCaseService` убраны явные NULL-передачи; `MigratedSchemaTest` получил `assertMissingColumn`-контракт на 4 колонки; `SessionDataMinimizationTest` теперь доказывает, что опции метаданных игнорируются API и колонок не существует; `TherapistCaseServiceTest` убраны ссылки на удалённые колонки; DATA_MAP (строка IP/UA + снят открытый вопрос №1), ARCHITECTURE, фаза 02 (WP11), трейсабилити DATA-01 обновлены.
+- Инварианты: scoring, clinical flows и owner-безопасность не тронуты; `owner_login_attempts` IP не хранит по схеме — исключений нет.
+- Проверки: полный gate — validate/audit/migrate/PHPUnit 186 tests/1835 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass.

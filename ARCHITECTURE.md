@@ -130,7 +130,7 @@ interface TestModuleInterface
 - production web root допускает только `public/index.php` как PHP entry point;
 - result token, ответы, отчёты и секреты не должны попадать в логи, fixtures или Git;
 - приложение не использует IP как достоверную страну и не вызывает GeoIP API;
-- новые test sessions и activity records не сохраняют IP или user-agent; nullable legacy-колонки пока остаются в схеме для совместимости;
+- новые test sessions и activity records не сохраняют IP или user-agent; nullable legacy-колонки и старые значения удалены миграцией `20260825120000` (02.7C, D-035);
 - public privacy text не заявляет encryption, отсутствие будущих third parties или немедленное полное физическое удаление.
 
 `ClinicalSafetySignal` извлекает machine-readable BDI item-9 signal. `ResultController` показывает утверждённый generic notice только при этом сигнале, без контактов, URL, страны или IP/GeoIP. Country resolver и реестр кризисных ресурсов не реализованы; их добавление требует нового решения владельца.
