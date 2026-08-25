@@ -591,3 +591,10 @@
 - Проверки и evidence: сначала RED — отсутствующий class и ожидаемый result key; затем unit/module contracts, полный local gate: Composer audit clean, PHPUnit 126 tests/1228 assertions, PHPStan/lint/architecture/baseline/manifest pass. Architecture checker был дополнен явным dependency requirement, иначе его standalone execution не видел новый core-class.
 - Проверки: GitHub Actions [31948009328](https://github.com/dmitryturin-art/psytest-platform/actions/runs/31948009328) — success на PHP 8.3/MySQL, включая чистую migration chain, PHPUnit, PHPStan, lint и architecture check.
 - Следующий шаг: owner-approved Crisis UI text и начальные resources; затем 02.2B UI/country flow.
+
+### 00L — применение находок ревью от 25.08: документация и gate
+
+- Этап / ветка / commit: этап 00, `codex/00-governance-review-followup` → `main`.
+- Цель: закрыть механические пункты ревью от 25.08 с нулевым продуктовым риском.
+- Сделано: `docs/architecture.md` (черновик февраля, ложно помечен «Актуально»), `DEPLOYMENT.md` (описывал retired AI-flow) и `QUICKSTART.md` (рекомендовал PHP 8.2) перенесены в `docs/archive/` с баннером «исторический черновик» и ссылками на актуальные документы; полный gate в `AGENTS.md` дополнен обязательным шагом `composer migrate` перед `composer test` (устраняет ложнопадение `MigratedSchemaTest` на дрейфе локальной БД); `/output/` добавлен в `.gitignore`; ревью от 25.08 сохранено как `docs/audit/2026-08-25-project-review.md`.
+- Проверки: полный gate локально — validate/audit/migrate/PHPUnit 180 tests/1647 assertions/PHPStan level 6/lint/architecture/baseline 148 — pass; входящих ссылок на архивированные файлы из живых документов нет (grep).

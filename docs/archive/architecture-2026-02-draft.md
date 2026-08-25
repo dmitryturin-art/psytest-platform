@@ -1,3 +1,6 @@
+> Исторический черновик февраля 2026. Не исполнять как актуальную инструкцию.
+> Актуальные документы: [ARCHITECTURE.md](../../ARCHITECTURE.md), [DEVELOPMENT.md](../../DEVELOPMENT.md), [docs/roadmap/BEGET_STAGING.md](../roadmap/BEGET_STAGING.md).
+
 # Архитектура PsyTest Platform
 
 **Версия:** 1.0  

@@ -79,12 +79,17 @@ PsyTest — модульная PHP-платформа психологическ
 ```bash
 composer validate --strict --no-check-publish
 composer audit
+composer migrate
 composer test
 composer analyse
 composer lint
 php bin/check-architecture.php
 composer baseline:check
 ```
+
+`composer migrate` обязателен перед `composer test`: интеграционный `MigratedSchemaTest`
+проверяет фактически применённую схему, и без него локальный gate даёт ложнопадение на
+дрейфе БД (CI всегда применяет миграции до PHPUnit).
 
 Если часть gate пока сломана baseline-состоянием, зафиксировать это в `STATUS.md`; не выдавать старую поломку за результат текущего изменения.
 
