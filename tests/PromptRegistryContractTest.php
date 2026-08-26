@@ -91,18 +91,48 @@ final class PromptRegistryContractTest extends TestCase
         }
     }
 
-    public function testEveryPromptIsStillAwaitingOwnerApproval(): void
+    public function testPublicationCarriesTheOwnerApprovalThatAuthorisedIt(): void
     {
-        // Снимок текущего состояния: тексты собраны из согласованных материалов,
-        // но клиническую формулировку публикует владелец, а не разработчик.
-        // Когда владелец одобрит промпт, этот тест обновляется вместе с манифестом.
-        foreach ($this->declaredKeys() as [$test, $mode, $kind]) {
-            $prompt = $this->registry()->forReview($test, $mode, $kind);
+        // Клиническую формулировку публикует владелец, а не разработчик. Статус
+        // published без записи о том, кто и когда одобрил текст, недопустим:
+        // иначе одобрение нельзя ни проверить, ни оспорить позже.
+        $manifest = json_decode(
+            (string) file_get_contents(self::PROMPTS_PATH . '/manifest.json'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
 
-            self::assertSame(
-                Prompt::STATUS_DRAFT,
-                $prompt?->status,
-                "«{$prompt?->key()}» опубликован — это владельческое решение, оно должно быть отражено в тесте и WORKLOG.",
+        $published = 0;
+        foreach ($manifest['prompts'] as $key => $entry) {
+            if (($entry['status'] ?? null) !== Prompt::STATUS_PUBLISHED) {
+                continue;
+            }
+
+            $published++;
+            self::assertNotEmpty($entry['approved_by'] ?? '', "«{$key}» опубликован без указания, кто одобрил текст.");
+            self::assertMatchesRegularExpression(
+                '/^\d{4}-\d{2}-\d{2}$/',
+                (string) ($entry['approved_at'] ?? ''),
+                "«{$key}» опубликован без даты одобрения.",
+            );
+        }
+
+        self::assertGreaterThan(0, $published, 'Предусловие: в реестре есть хотя бы один опубликованный промпт.');
+    }
+
+    public function testSmilPromptsCoverAdditionalScalesInBothReportKinds(): void
+    {
+        // Замечание владельца 26.08: дополнительные шкалы разбираются не только
+        // в профессиональном заключении, но и в понятном разборе.
+        foreach ([Prompt::KIND_PROFESSIONAL, Prompt::KIND_CLEAR] as $kind) {
+            $prompt = $this->registry()->forReview('smil', 'individual', $kind);
+            self::assertInstanceOf(Prompt::class, $prompt);
+
+            self::assertMatchesRegularExpression(
+                '/дополнительн\w*\s+шкал/iu',
+                $prompt->text,
+                "«{$prompt->key()}» обязан разбирать дополнительные шкалы.",
             );
         }
     }
