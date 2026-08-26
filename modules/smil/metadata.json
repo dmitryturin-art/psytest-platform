@@ -74,7 +74,9 @@
   ],
   "requires_demographics": {
     "gender": true,
-    "age": false
+    "age": true,
+    "min_age": 16,
+    "max_age": 100
   },
   "version": "1.0",
   "author": "Ф.Б. Собчик",

@@ -51,6 +51,15 @@ class SmilModule extends BaseTestModule
     /**
      * Answer values
      */
+    /**
+     * Границы возраста для взрослой формы СМИЛ. Возраст не участвует в подсчёте
+     * баллов: нормы Собчик в этой реализации гендерные. Он нужен для клинического
+     * прочтения профиля и станет различителем, когда появится подростковая форма
+     * методики — сейчас в платформе только взрослая.
+     */
+    protected const MIN_AGE = 16;
+    protected const MAX_AGE = 100;
+
     protected const ANSWER_YES = 1;
     protected const ANSWER_UNKNOWN = 2;  // "Не знаю" / "?"
     protected const ANSWER_NO = 0;
@@ -1113,8 +1122,13 @@ class SmilModule extends BaseTestModule
         return [
             'answer_type' => 'ternary',
             'key_template' => 'plain',
-            'extra_keys' => ['gender'],
+            'extra_keys' => ['gender', 'age'],
             'requires_gender' => true,
+            // Возраст не участвует в подсчёте: нормы Собчик в этой реализации
+            // гендерные. Он нужен для клинического прочтения профиля и для
+            // будущего разделения на взрослую и подростковую формы методики.
+            'requires_age' => true,
+            'age_range' => ['min' => self::MIN_AGE, 'max' => self::MAX_AGE],
         ];
     }
 
