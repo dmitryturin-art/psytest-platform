@@ -13,9 +13,18 @@ namespace PsyTest\Core\Ai;
  */
 final class AiClient
 {
+    /** Статусы, при которых повтор осмыслен: перегрузка пула и сбои на стороне провайдера. */
+    private const RETRYABLE_STATUSES = [408, 409, 425, 429, 500, 502, 503, 504];
+
+    /**
+     * @param callable(int): void|null $sleeper Пауза между попытками; подменяется в тестах,
+     *                                          чтобы они не ждали по-настоящему.
+     */
     public function __construct(
         private readonly AiProviderSettings $settings,
         private readonly AiTransport $transport,
+        private readonly int $maxAttempts = 3,
+        private $sleeper = null,
     ) {
     }
 
@@ -110,29 +119,74 @@ final class AiClient
      */
     private function send(string $method, string $path, ?array $body): array
     {
-        $result = $this->transport->request(
-            $method,
-            $this->settings->baseUrl . $path,
-            [
-                'Authorization' => $this->settings->authorizationHeader(),
-                'Content-Type' => 'application/json',
-            ],
-            $body,
-            $this->settings->timeoutSeconds,
-        );
+        $attempt = 0;
 
-        if ($result['status'] < 200 || $result['status'] >= 300) {
+        while (true) {
+            $attempt++;
+
+            $result = $this->transport->request(
+                $method,
+                $this->settings->baseUrl . $path,
+                [
+                    'Authorization' => $this->settings->authorizationHeader(),
+                    'Content-Type' => 'application/json',
+                ],
+                $body,
+                $this->settings->timeoutSeconds,
+            );
+
+            $status = $result['status'];
+
+            if ($status >= 200 && $status < 300) {
+                $decoded = json_decode($result['body'], true);
+                if (!is_array($decoded)) {
+                    throw new AiProviderException('Провайдер вернул нечитаемый ответ.');
+                }
+
+                return $decoded;
+            }
+
+            // Бесплатные эндпоинты живут в общем пуле и регулярно отвечают 429
+            // «перегружено, повторите» — без повтора такой поток нерабочий.
+            if (in_array($status, self::RETRYABLE_STATUSES, true) && $attempt < $this->maxAttempts) {
+                $this->pause($attempt);
+                continue;
+            }
+
             // Тело ошибки провайдера не пересказывается: в нём может оказаться
-            // эхо запроса, то есть клинические данные.
-            throw new AiProviderException("Провайдер ответил HTTP {$result['status']}.");
+            // эхо запроса, то есть клинические данные. Называется только категория.
+            throw new AiProviderException(sprintf(
+                'Провайдер ответил HTTP %d (%s); попыток: %d.',
+                $status,
+                self::describeStatus($status),
+                $attempt,
+            ));
+        }
+    }
+
+    private function pause(int $attempt): void
+    {
+        $seconds = min(8, 2 ** ($attempt - 1));
+
+        if ($this->sleeper !== null) {
+            ($this->sleeper)($seconds);
+
+            return;
         }
 
-        $decoded = json_decode($result['body'], true);
-        if (!is_array($decoded)) {
-            throw new AiProviderException('Провайдер вернул нечитаемый ответ.');
-        }
+        sleep($seconds);
+    }
 
-        return $decoded;
+    private static function describeStatus(int $status): string
+    {
+        return match (true) {
+            $status === 401 || $status === 403 => 'ключ отклонён',
+            $status === 402 => 'недостаточно средств на счёте провайдера',
+            $status === 404 => 'модель недоступна по текущей политике данных аккаунта',
+            $status === 429 => 'модель перегружена или превышен лимит запросов',
+            $status >= 500 => 'сбой на стороне провайдера',
+            default => 'запрос отклонён',
+        };
     }
 
     /** @param array<string, mixed> $context */

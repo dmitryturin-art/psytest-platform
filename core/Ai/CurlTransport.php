@@ -33,7 +33,9 @@ final class CurlTransport implements AiTransport
         $response = curl_exec($handle);
         $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
         $error = curl_error($handle);
-        curl_close($handle);
+        // curl_close() не вызывается: с PHP 8.0 дескриптор закрывается сам,
+        // а с 8.5 вызов помечен deprecated и печатает предупреждение.
+        unset($handle);
 
         if ($response === false) {
             // Текст ошибки curl не содержит тела запроса, поэтому клинические

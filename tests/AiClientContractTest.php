@@ -133,6 +133,114 @@ final class AiClientContractTest extends TestCase
         $client->complete($this->prompt(), ['test' => 'smil']);
     }
 
+    /**
+     * Транспорт, отдающий заранее заданную последовательность ответов.
+     *
+     * @param list<array{0: int, 1: array<string, mixed>}> $responses
+     */
+    private function sequenceTransport(array $responses): AiTransport
+    {
+        $transport = $this->createStub(AiTransport::class);
+        $transport->method('request')->willReturnCallback(
+            function () use (&$responses): array {
+                $this->attempts++;
+                [$status, $body] = array_shift($responses) ?? [500, []];
+
+                return ['status' => $status, 'body' => json_encode($body, JSON_UNESCAPED_UNICODE)];
+            }
+        );
+
+        return $transport;
+    }
+
+    private int $attempts = 0;
+
+    /** @var list<int> */
+    private array $pauses = [];
+
+    private function sleeper(): callable
+    {
+        return function (int $seconds): void {
+            $this->pauses[] = $seconds;
+        };
+    }
+
+    public function testOverloadedFreeEndpointIsRetriedAndCanSucceed(): void
+    {
+        // Бесплатные эндпоинты живут в общем пуле и регулярно отвечают
+        // «перегружено, повторите» — без повтора такой поток нерабочий.
+        $client = new AiClient(
+            $this->settings(),
+            $this->sequenceTransport([
+                [429, ['error' => 'rate limited']],
+                [429, ['error' => 'rate limited']],
+                [200, $this->completionBody()],
+            ]),
+            3,
+            $this->sleeper(),
+        );
+
+        $completion = $client->complete($this->prompt(), ['test' => 'smil']);
+
+        self::assertSame('Заключение.', $completion->text);
+        self::assertSame(3, $this->attempts);
+        self::assertSame([1, 2], $this->pauses, 'Пауза между попытками должна расти.');
+    }
+
+    public function testRetriesStopAtTheConfiguredLimit(): void
+    {
+        $client = new AiClient(
+            $this->settings(),
+            $this->sequenceTransport([
+                [429, []], [429, []], [429, []], [429, []],
+            ]),
+            3,
+            $this->sleeper(),
+        );
+
+        try {
+            $client->complete($this->prompt(), ['test' => 'smil']);
+            self::fail('Ожидалось исключение.');
+        } catch (AiProviderException $e) {
+            self::assertSame(3, $this->attempts);
+            self::assertStringContainsString('попыток: 3', $e->getMessage());
+            self::assertStringContainsString('перегружена', $e->getMessage());
+        }
+    }
+
+    public function testRejectedKeyIsNotRetried(): void
+    {
+        // Повторять запрос с заведомо негодным ключом бессмысленно и только
+        // растягивает отказ на минуты.
+        $client = new AiClient(
+            $this->settings(),
+            $this->sequenceTransport([[401, []], [200, $this->completionBody()]]),
+            3,
+            $this->sleeper(),
+        );
+
+        try {
+            $client->complete($this->prompt(), ['test' => 'smil']);
+            self::fail('Ожидалось исключение.');
+        } catch (AiProviderException $e) {
+            self::assertSame(1, $this->attempts);
+            self::assertStringContainsString('ключ отклонён', $e->getMessage());
+            self::assertSame([], $this->pauses);
+        }
+    }
+
+    public function testDataPolicyRefusalIsNamedExplicitly(): void
+    {
+        $client = new AiClient($this->settings(), $this->sequenceTransport([[404, []]]), 3, $this->sleeper());
+
+        try {
+            $client->complete($this->prompt(), ['test' => 'smil']);
+            self::fail('Ожидалось исключение.');
+        } catch (AiProviderException $e) {
+            self::assertStringContainsString('политике данных', $e->getMessage());
+        }
+    }
+
     public function testProviderErrorBodyIsNotRepeatedInTheException(): void
     {
         // Тело ошибки провайдера может содержать эхо запроса, то есть клинические
