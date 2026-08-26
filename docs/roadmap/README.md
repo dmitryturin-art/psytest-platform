@@ -37,8 +37,8 @@
 | 03 | В работе | единый модульный контракт для разных типов тестов | [Открыть](phases/03-module-api-v2.md) |
 | 04 | Завершён | современный UI/UX без повреждения SMIL-профиля | [Открыть](phases/04-ui-ux-redesign.md) |
 | 05 | Не начат | проверенные дополнительные шкалы и профессиональный SMIL | [Открыть](phases/05-smil-professional-parity.md) |
-| 06 | Не начат | заказы, 100%-ные купоны, YooKassa и чеки | [Открыть](phases/06-orders-coupons-yookassa.md) |
-| 07 | Не начат | AI reports, редакции и кабинет терапевта | [Открыть](phases/07-ai-reports-therapist-office.md) |
+| 06 | Не начат, после 07 (D-037) | заказы, 100%-ные купоны, YooKassa и чеки как переключатель доступа | [Открыть](phases/06-orders-coupons-yookassa.md) |
+| 07 | Следующий рабочий этап (D-037) | AI reports, редакции и кабинет терапевта; сначала бесплатно | [Открыть](phases/07-ai-reports-therapist-office.md) |
 | 08 | В работе (staging) | Beget survey, staging, затем backup/monitoring/production | [Открыть](phases/08-production-deployment.md) |
 | 09 | Не начат | новые модули и контролируемый рост | [Открыть](phases/09-growth-new-modules.md) |
 

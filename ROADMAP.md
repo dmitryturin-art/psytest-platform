@@ -39,8 +39,8 @@
 | [03](docs/roadmap/phases/03-module-api-v2.md) | Module API v2 | В работе | новые типы тестов без slug-ветвлений в ядре |
 | [04](docs/roadmap/phases/04-ui-ux-redesign.md) | UI/UX и дизайн-система | Завершён | современный, удобный и профессиональный интерфейс |
 | [05](docs/roadmap/phases/05-smil-professional-parity.md) | Профессиональная комплектация SMIL | Не начат | канонический профиль и проверенные дополнительные шкалы |
-| [06](docs/roadmap/phases/06-orders-coupons-yookassa.md) | Заказы, купоны и YooKassa | Не начат | идемпотентная оплата и чеки |
-| [07](docs/roadmap/phases/07-ai-reports-therapist-office.md) | ИИ-отчёты и кабинет терапевта | Не начат | два вида отчётов, редактор и контролируемая выдача |
+| [06](docs/roadmap/phases/06-orders-coupons-yookassa.md) | Заказы, купоны и YooKassa | Не начат, после 07 (D-037) | идемпотентная оплата и чеки поверх работающего разбора |
+| [07](docs/roadmap/phases/07-ai-reports-therapist-office.md) | ИИ-отчёты и кабинет терапевта | Следующий рабочий этап (D-037) | два вида отчётов, редактор и контролируемая выдача; сначала бесплатно |
 | [08](docs/roadmap/phases/08-production-deployment.md) | Staging и production | В работе (staging) | проверенное размещение на `test.23time.ru`; production отдельно |
 | [09](docs/roadmap/phases/09-growth-new-modules.md) | Рост и новые модули | Не начат | управляемое расширение после стабильного запуска |
 
