@@ -50,6 +50,16 @@ final class LazarusModule extends BaseTestModule
         ],
     ];
 
+    /** Режимы отчёта ИИ (docs/lazarus-ai-report-prompts.md §1). */
+    private const AI_MODE_INDIVIDUAL = 'individual';
+    private const AI_MODE_PAIR = 'pair';
+
+    /** Домен считается слабым при собственной оценке не выше этого значения. */
+    private const AI_WEAK_DOMAIN_MAX = 5;
+
+    /** Расхождение восприятия считается заметным начиная с этой величины. */
+    private const AI_LARGE_GAP_MIN = 3;
+
     private const TOTAL_QUESTIONS = 16;
     private const MAX_SCORE_PER_ITEM = 10;
 
@@ -336,6 +346,124 @@ final class LazarusModule extends BaseTestModule
             'summary' => $summary,
             'results_1' => $results1,
             'results_2' => $results2,
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Форма полезной нагрузки зафиксирована в docs/lazarus-ai-report-prompts.md §2.
+     * Наружу уходят только рассчитанные значения и тексты пунктов методики:
+     * ни токенов, ни идентификаторов сессии, ни email, ни имён, ни свободного
+     * текста респондента — их в модуле просто нет.
+     *
+     * @param array<string, mixed> $results
+     *
+     * @return array<string, mixed>|null
+     */
+    public function aiReportContext(array $results, string $mode): ?array
+    {
+        return match ($mode) {
+            self::AI_MODE_INDIVIDUAL => $this->aiIndividualContext($results),
+            self::AI_MODE_PAIR => $this->aiPairContext($results),
+            default => null,
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $results Результат calculateResults().
+     *
+     * @return array<string, mixed>|null
+     */
+    private function aiIndividualContext(array $results): ?array
+    {
+        if (!isset($results['self_scores'], $results['partner_scores'])) {
+            return null;
+        }
+
+        $items = [];
+        $weakDomains = [];
+        $largeGaps = [];
+
+        foreach ($this->getQuestions() as $question) {
+            $id = (int) $question['id'];
+            $self = $results['self_scores'][$id] ?? null;
+            $partnerExpected = $results['partner_scores'][$id] ?? null;
+            $gap = $results['perception_gaps'][$id] ?? null;
+            $domain = (string) ($question['domain'] ?? '');
+
+            $items[] = [
+                'id' => $id,
+                'domain' => $domain,
+                'text' => (string) $question['text'],
+                'self' => $self,
+                'partner_expected' => $partnerExpected,
+                'gap' => $gap,
+            ];
+
+            if ($self !== null && $self <= self::AI_WEAK_DOMAIN_MAX && $domain !== '') {
+                $weakDomains[] = $domain;
+            }
+            if ($gap !== null && abs((int) $gap) >= self::AI_LARGE_GAP_MIN && $domain !== '') {
+                $largeGaps[] = $domain;
+            }
+        }
+
+        return [
+            'test' => 'lazarus',
+            'mode' => self::AI_MODE_INDIVIDUAL,
+            'items' => $items,
+            'totals' => [
+                'self' => $results['total_self'] ?? null,
+                'partner_expected' => $results['total_partner'] ?? null,
+                'max' => $results['max_score'] ?? null,
+            ],
+            'level' => $results['level'] ?? null,
+            'level_name' => $results['level_name'] ?? null,
+            'weak_domains' => array_values(array_unique($weakDomains)),
+            'large_perception_gaps' => array_values(array_unique($largeGaps)),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $comparison Результат comparePairResults().
+     *
+     * @return array<string, mixed>|null
+     */
+    private function aiPairContext(array $comparison): ?array
+    {
+        if (!isset($comparison['items']) || !is_array($comparison['items'])) {
+            return null;
+        }
+
+        $partner1 = $this->aiIndividualContext($comparison['results_1'] ?? []);
+        $partner2 = $this->aiIndividualContext($comparison['results_2'] ?? []);
+
+        if ($partner1 === null || $partner2 === null) {
+            return null;
+        }
+
+        $items = [];
+        foreach ($comparison['items'] as $item) {
+            $items[] = [
+                'id' => (int) $item['id'],
+                'domain' => (string) ($item['domain'] ?? ''),
+                'text' => (string) ($item['text'] ?? ''),
+                'partner1_self' => $item['p1_self'] ?? null,
+                'partner2_self' => $item['p2_self'] ?? null,
+                'difference' => $item['difference'] ?? null,
+                'partner1_accuracy' => $item['p1_accuracy'] ?? null,
+                'partner2_accuracy' => $item['p2_accuracy'] ?? null,
+            ];
+        }
+
+        return [
+            'test' => 'lazarus',
+            'mode' => self::AI_MODE_PAIR,
+            'items' => $items,
+            'overall_agreement' => $comparison['overall_agreement'] ?? null,
+            'partner1' => $partner1,
+            'partner2' => $partner2,
         ];
     }
 

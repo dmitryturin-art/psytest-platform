@@ -31,12 +31,12 @@
 
 1. **Provider adapter.** Настраиваемые provider/model/timeout/retry/cost limits; секреты только в environment/secret storage.
 2. **Prompt registry.** Отдельные versioned templates по test, mode (individual/pair), audience (lay/professional) и report kind. Общего фильтра, обрезающего профессиональный материал, нет.
-3. **Structured context.** Передавать только нужные score/validity/scales и явно введённый запрос; не отправлять лишние идентификаторы. Snapshot позволяет воспроизвести отчёт.
+3. **Structured context.** Передавать только нужные score/validity/scales и явно введённый запрос; не отправлять лишние идентификаторы. Snapshot позволяет воспроизвести отчёт. **07.1 (26.08): контракт введён** — `aiReportContext(array $results, string $mode): ?array` в `TestModuleInterface`, Base возвращает `null` (модуль не отдаёт наружу ничего, пока явно не объявит), Lazarus реализует `individual` и `pair` по форме из `docs/lazarus-ai-report-prompts.md` §2. `AiReportContextContractTest` стережёт границу: форма полезной нагрузки, пороги слабых доменов и расхождений, отсутствие идентификаторов и демографии, отсутствие HTML. Осталось по WP3: SMIL (вместе с промптом владельца) и snapshot для воспроизводимости.
 4. **Report variants.** «Понятный», «Профессиональный», «Оба»; одинаковые факты, разная терминология и структура. Платный сторонний посетитель получает выбранную полную версию.
 5. **Generation jobs.** Queue/retry/idempotency, состояния pending/running/failed/ready; webhook оплаты не ждёт LLM.
-6. **Therapist case.** Связь купона/сессии с кейсом, два AI drafts, rich/plain structured editor, revisions, comparison, approve и explicit send.
+6. **Therapist case.** Связь купона/сессии с кейсом, два AI drafts, rich/plain structured editor, revisions, comparison, approve и explicit send. Сюда же по решению владельца от 26.08 отнесена доработка нынешнего мини-кабинета: ссылка «открыть результат» по найденному токену и русские подписи статусов вместо сырых значений БД (`completed`, `partial`, `anonymous`, `therapist_case`). Отдельным пакетом раньше не делается — нормальный кабинет делается целиком.
 7. **Delivery.** Browser view, PDF/print, email/link с expiry и access control; профессиональная и клиентская редакции сохраняются раздельно.
-8. **Evaluation.** De-identified fixtures SMIL/Lazarus, rubric полноты/фактической согласованности/терминологии, hallucination flags, cost/latency monitoring.
+8. **Evaluation.** De-identified fixtures SMIL/Lazarus, rubric полноты/фактической согласованности/терминологии, hallucination flags, cost/latency monitoring. **Отдельный критерий от владельца (26.08):** платформа передаёт ИИ структурированный расчёт, тогда как владелец вручную обычно даёт модели готовый PDF. Это разные входы, поэтому качество нельзя считать доказанным по аналогии — на этапе evaluation обязательно сравнить отчёт, полученный из структурированной нагрузки, с отчётом, который владелец получает своим ручным способом на тех же данных, и убедиться, что выводы не беднее и не искажены.
 9. **Owner controls.** Выбор модели/провайдера/active prompt, preview на fixture, rollback версии, kill switch.
 
 ## Важные границы
