@@ -30,7 +30,33 @@ php -S 127.0.0.1:8000 -t public
 
 Откройте `http://127.0.0.1:8000/tests`. В production не используйте встроенный server и не направляйте document root в корень репозитория.
 
-`config.php` читает `.env` и environment variables. `DB_*`, `APP_*`, `SESSION_TTL_DAYS`, `ANONYMOUS_RETENTION_DAYS`, `CSRF_ENABLED`, `PDF_STORAGE_PATH` и logging configuration имеют текущий смысл. Мини-кабинет владельца остаётся выключенным, пока server environment не задаст `OWNER_DASHBOARD_PASSWORD_HASH` как Argon2id hash; пароль или hash не попадают в Git. Legacy `YOOMONEY_*` и `OPENROUTER_*` не включают payment или AI: public routes retired, новый YooKassa/AI design не реализован.
+`config.php` читает `.env` и environment variables. `DB_*`, `APP_*`, `SESSION_TTL_DAYS`, `ANONYMOUS_RETENTION_DAYS`, `CSRF_ENABLED`, `PDF_STORAGE_PATH` и logging configuration имеют текущий смысл. Мини-кабинет владельца остаётся выключенным, пока server environment не задаст `OWNER_DASHBOARD_PASSWORD_HASH` как Argon2id hash; пароль или hash не попадают в Git (как задать и как поменять — раздел «Пароль кабинета владельца» ниже). Legacy `YOOMONEY_*` и `OPENROUTER_*` не включают payment или AI: public routes retired, новый YooKassa/AI design не реализован.
+
+## Пароль кабинета владельца
+
+Кабинет `/admin` включается ровно одним значением в **серверном** `.env` — Argon2id-хэшем.
+Пароль не хранится нигде: ни в Git, ни в базе, ни в логах. Поэтому «сменить пароль» = заменить одну строку.
+
+```bash
+php bin/owner-password.php          # спросит пароль дважды, ввод не отображается
+```
+
+Скрипт печатает готовую строку вида `OWNER_DASHBOARD_PASSWORD_HASH=$argon2id$...`. Её нужно
+положить вместо старой строки в `.env` на сервере (`~/current/.env`, права `600`) — новый пароль
+действует со следующего запроса, перезапуск не нужен. Уже открытая сессия в кабинете не рвётся:
+чтобы разлогинить себя, нажмите «Выйти» или дождитесь `OWNER_DASHBOARD_SESSION_TTL_MINUTES`.
+
+Для скриптов есть неинтерактивный режим: `echo 'пароль' | php bin/owner-password.php --stdin`
+(в интерактивной оболочке так делать не стоит — пароль останется в истории команд).
+
+Проверки, которые скрипт делает до вывода строки: PHP-сборка действительно даёт Argon2id,
+хэш подтверждает исходный пароль, пустой пароль отклоняется. Пароль короче 8 символов
+не блокируется, но выводится предупреждение: страница входа публична, защита — только
+ограничение попыток (`OWNER_DASHBOARD_LOGIN_MAX_ATTEMPTS` за `OWNER_DASHBOARD_LOGIN_WINDOW_MINUTES`).
+
+Смены пароля из самого кабинета намеренно нет: это потребовало бы, чтобы веб-приложение
+писало в собственный `.env`, то есть имело право менять свою конфигурацию во время работы.
+На shared-хостинге это лишний риск ради экономии одной команды.
 
 ## Полный quality gate
 
