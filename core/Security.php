@@ -45,21 +45,6 @@ class Security
     }
 
     /**
-     * Sanitize HTML (allow only safe tags)
-     */
-    public static function sanitizeHtml(?string $html): string
-    {
-        if ($html === null) {
-            return '';
-        }
-
-        // Strip all tags except allowed ones
-        $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><code><pre>';
-
-        return strip_tags($html, $allowedTags);
-    }
-
-    /**
      * Sanitize input string
      */
     public static function sanitizeInput(?string $input): string

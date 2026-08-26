@@ -42,8 +42,8 @@ class ModuleLoader
     {
         // Попытка загрузить из кэша APCu
         if (function_exists('apcu_fetch')) {
-            $cached = apcu_fetch(self::CACHE_KEY);
-            if ($cached !== false) {
+            $cached = apcu_fetch($this->cacheKey());
+            if (self::isUsableRegistry($cached)) {
                 $this->modules = $cached;
                 return $this;
             }
@@ -65,7 +65,7 @@ class ModuleLoader
 
         // Сохранение в кэш APCu
         if (function_exists('apcu_store')) {
-            apcu_store(self::CACHE_KEY, $this->modules, self::CACHE_TTL);
+            apcu_store($this->cacheKey(), $this->modules, self::CACHE_TTL);
         }
 
         return $this;
@@ -82,7 +82,11 @@ class ModuleLoader
         $moduleFile = $dir . '/' . $className . 'Module.php';
 
         if (!file_exists($moduleFile)) {
-            error_log("Module file not found: $moduleFile");
+            // Чужая директория внутри modules/ — это не сломанный модуль, а просто
+            // не модуль. Сообщаем только если каталог сам объявляет себя модулем.
+            if (file_exists($dir . '/metadata.json') || file_exists($dir . '/questions.json')) {
+                error_log("Module file not found: $moduleFile");
+            }
             return;
         }
 
@@ -113,9 +117,52 @@ class ModuleLoader
                 'class' => $actualClassName,
             ];
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // Ошибка одного модуля (в том числе \Error из его конструктора) не должна
+            // обрушивать discover() и вместе с ним весь каталог тестов.
             error_log("Failed to load module $moduleName: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Кэш реестра привязан к конкретному modules-пути: загрузчик вызывается и с
+     * нестандартным путём (тестовые фикстуры), и такие реестры не должны
+     * подменять друг друга в общем APCu.
+     */
+    private function cacheKey(): string
+    {
+        return self::CACHE_KEY . ':' . md5($this->modulesPath);
+    }
+
+    /**
+     * Кэш переживает выкладку релиза и изменение классов, поэтому доверяем ему
+     * только пока каждая запись несёт живой инстанс модуля. Всё остальное
+     * (например `__PHP_Incomplete_Class` после смены релиза или payload прежней
+     * формы) отбрасывается в пользу свежего сканирования, а не отдаётся наружу.
+     *
+     * @param mixed $cached
+     */
+    private static function isUsableRegistry($cached): bool
+    {
+        if (!is_array($cached) || $cached === []) {
+            return false;
+        }
+
+        foreach ($cached as $entry) {
+            if (!is_array($entry)) {
+                return false;
+            }
+
+            if (!isset($entry['instance'], $entry['metadata'], $entry['path'], $entry['class'])) {
+                return false;
+            }
+
+            if (!$entry['instance'] instanceof TestModuleInterface) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -228,7 +275,7 @@ class ModuleLoader
     public function clearCache(): void
     {
         if (function_exists('apcu_delete')) {
-            apcu_delete(self::CACHE_KEY);
+            apcu_delete($this->cacheKey());
         }
     }
 }
