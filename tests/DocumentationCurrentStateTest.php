@@ -45,7 +45,11 @@ final class DocumentationCurrentStateTest extends TestCase
         self::assertStringContainsString('Маршрута `/api/yoomoney/webhook` нет.', $architecture);
         self::assertStringContainsString('php bin/check-architecture.php', $development);
         self::assertStringContainsString('`410 Gone`', $architecture);
-        self::assertStringContainsString('не включают payment или AI', $development);
+        self::assertStringContainsString('не включает payment', $development);
+        // Этап 07 включает ИИ намеренно, но заполненный ключ сам по себе ничего
+        // не запускает — документация обязана говорить именно это.
+        self::assertStringContainsString('Ключ хранится только в environment', $development);
+        self::assertStringContainsString('заполненный ключ ничего не включает', $development);
         self::assertStringContainsString('соответствует фактическому `TestModuleInterface`', $newModuleGuide);
         self::assertStringNotContainsString('renderResults', $newModuleGuide, 'Module HTML rendering is retired; sections are the only path.');
         self::assertStringNotContainsString('Chart.js', $newModuleGuide, 'External chart libraries are banned.');
