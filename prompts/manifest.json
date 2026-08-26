@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "purpose": "Версионированные system prompts по ключу «методика | режим | вид отчёта» (PRODUCT_RULES §6). Публикация — решение владельца: пока статус draft, промпт не попадает в боевой поток.",
+  "statuses": {
+    "draft": "Текст ещё не одобрен владельцем. PromptRegistry::published() возвращает null; проверять на обезличенных фикстурах через forReview().",
+    "published": "Одобрен владельцем и разрешён к использованию."
+  },
+  "rollback": "Откат — это уменьшение номера version у ключа, а не правка текста уже существующей версии.",
+  "prompts": {
+    "lazarus | individual | professional": {
+      "version": 1,
+      "status": "draft",
+      "allows_owner_context": true,
+      "source": "docs/lazarus-ai-report-prompts.md §3, §4.1"
+    },
+    "lazarus | individual | clear": {
+      "version": 1,
+      "status": "draft",
+      "allows_owner_context": false,
+      "source": "docs/lazarus-ai-report-prompts.md §3, §4.2"
+    },
+    "lazarus | pair | professional": {
+      "version": 1,
+      "status": "draft",
+      "allows_owner_context": true,
+      "source": "docs/lazarus-ai-report-prompts.md §3, §4.1, §4.3"
+    },
+    "lazarus | pair | clear": {
+      "version": 1,
+      "status": "draft",
+      "allows_owner_context": false,
+      "source": "docs/lazarus-ai-report-prompts.md §3, §4.2, §4.3"
+    },
+    "smil | individual | professional": {
+      "version": 1,
+      "status": "draft",
+      "allows_owner_context": true,
+      "source": "промпт владельца от 2026-08-26 (Obsidian: Промпты для анализа СМИЛ) + общий технический слой"
+    },
+    "smil | individual | clear": {
+      "version": 1,
+      "status": "draft",
+      "allows_owner_context": false,
+      "source": "черновик по принципам clear-варианта; владельцем не проверялся"
+    }
+  }
+}
