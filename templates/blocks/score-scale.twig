@@ -1,4 +1,11 @@
-{% set scale_pct = max > 0 ? (score / max * 100)|round(1) : 0 %}
+{# Ось шкалы начинается с минимума первой зоны, а не с нуля: у Лазаруса это 16,
+   и отсчёт от нуля смещал маркер вправо — балл 79 («неудовлетворённость»)
+   рисовался внутри зелёной зоны «удовлетворённость». #}
+{% set scale_min = thresholds|first.min ?? 0 %}
+{% set scale_max = thresholds|last.max ?? max %}
+{% set scale_span = scale_max - scale_min %}
+{% set scale_pct = scale_span > 0 ? (((score - scale_min) / scale_span * 100)|round(1)) : 0 %}
+{% set scale_pct = scale_pct < 0 ? 0 : (scale_pct > 100 ? 100 : scale_pct) %}
 <div class="score-badge__scale" aria-label="{{ label|default('Результат') }}: {{ score }} из {{ max }}">
     {% for name, range in thresholds %}
         <div class="score-badge__zone score-badge__zone--{{ name }}"
