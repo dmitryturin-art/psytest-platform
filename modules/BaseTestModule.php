@@ -164,6 +164,14 @@ abstract class BaseTestModule implements TestModuleInterface
     }
 
     /**
+     * Web pair chart data (renderer contract; override to provide a chart).
+     */
+    public function pairChartData(array $comparison): ?array
+    {
+        return null;
+    }
+
+    /**
      * Compare pair results (override if pair mode supported)
      */
     public function comparePairResults(array $results1, array $results2): array

@@ -41,11 +41,6 @@ parameters:
 			path: controllers/ResultController.php
 
 		-
-			message: "#^Method PsyTest\\\\Controllers\\\\ResultController\\:\\:renderSectionsToHtml\\(\\) has parameter \\$sections with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: controllers/ResultController.php
-
-		-
 			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:__construct\\(\\) has parameter \\$config with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: core/Database.php

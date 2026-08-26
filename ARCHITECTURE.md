@@ -43,7 +43,7 @@ HTTP request
   -> Twig HTML, JSON или PDF
 ```
 
-`TestController` создаёт session, сохраняет валидированные ответы и вычисляет результат методом модуля. `ResultController` получает result только по `session_token`, проверяет соответствие route slug тесту и рендерит `ResultSection` через `result-layout.twig`.
+`TestController` создаёт session, сохраняет валидированные ответы и вычисляет результат методом модуля. `ResultController` получает result только по `session_token`, проверяет соответствие route slug тесту и рендерит `ResultSection` через `result-layout.twig`. PDF-ветка рендерит те же секции через общий `core/ResultSectionRenderer.php` (единственный dispatch секций в HTML, включая статический SMIL-график для печати). Контроллеры не ссылаются на конкретные классы модулей — только `TestModuleInterface`; веб-график пары — декларативный метод `pairChartData(): ?array` интерфейса (реализует Lazarus). Контракт закреплён `RendererContractTest` (19 тестов).
 
 ## Публичные маршруты
 

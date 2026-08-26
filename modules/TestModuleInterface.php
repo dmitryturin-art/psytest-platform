@@ -99,6 +99,19 @@ interface TestModuleInterface
     public function comparePairResults(array $results1, array $results2): array;
 
     /**
+     * Prepare web chart data for a pair comparison (renderer contract).
+     *
+     * All geometry belongs to the module; the shared layer only renders
+     * the returned structure via blocks/pair-chart.twig. Modules without
+     * a web pair chart return null.
+     *
+     * @param array<string, mixed> $comparison Result of comparePairResults().
+     *
+     * @return array<string, mixed>|null
+     */
+    public function pairChartData(array $comparison): ?array;
+
+    /**
      * Get custom test template (optional)
      *
      * @return string|null Template name or null for default

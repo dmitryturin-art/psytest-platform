@@ -28,9 +28,11 @@ $requiredFiles = [
     'core/View.php',
     'core/Security.php',
     'core/ClinicalSafetySignal.php',
+    'core/ResultSectionRenderer.php',
     'modules/ModuleCapability.php',
     'modules/TestModuleInterface.php',
     'modules/BaseTestModule.php',
+    'modules/ResultSection.php',
     'modules/smil/SmilModule.php',
     'modules/beck-anxiety/BeckAnxietyModule.php',
     'modules/beck-depression/BeckDepressionModule.php',
@@ -134,6 +136,7 @@ if (file_exists($projectRoot . '/modules/smil/SmilModule.php')) {
     require_once $projectRoot . '/modules/ModuleCapability.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/core/ResultSectionRenderer.php';
     require_once $projectRoot . '/modules/smil/Scoring/RawScoreCalculator.php';
     require_once $projectRoot . '/modules/smil/Scoring/TScoreCalculator.php';
     require_once $projectRoot . '/modules/smil/Scoring/ValidityAssessor.php';
@@ -188,6 +191,7 @@ if (file_exists($projectRoot . '/modules/beck-anxiety/BeckAnxietyModule.php')) {
     require_once $projectRoot . '/modules/ModuleCapability.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/core/ResultSectionRenderer.php';
     require_once $projectRoot . '/modules/beck-anxiety/BeckAnxietyModule.php';
     
     try {
@@ -231,6 +235,7 @@ if (file_exists($projectRoot . '/modules/beck-depression/BeckDepressionModule.ph
     require_once $projectRoot . '/modules/ModuleCapability.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/core/ResultSectionRenderer.php';
     require_once $projectRoot . '/core/ClinicalSafetySignal.php';
     require_once $projectRoot . '/modules/beck-depression/BeckDepressionModule.php';
     
@@ -275,6 +280,7 @@ if (file_exists($projectRoot . '/modules/hads/HadsModule.php')) {
     require_once $projectRoot . '/modules/ModuleCapability.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
+    require_once $projectRoot . '/core/ResultSectionRenderer.php';
     require_once $projectRoot . '/modules/hads/HadsModule.php';
     
     try {
