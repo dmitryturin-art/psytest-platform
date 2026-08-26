@@ -10,11 +10,13 @@ use PsyTest\Core\ModuleLoader;
 use PsyTest\Modules\Smil\SmilModule;
 
 /**
- * Сбор возраста (решение владельца 26.08).
+ * Возраст при прохождении не спрашивается (D-040).
  *
- * Возраст нужен для клинического прочтения профиля СМИЛ и станет различителем,
- * когда появится подростковая форма методики. Главное ограничение: он **не
- * участвует в подсчёте** — проверенное ядро Собчик остаётся неизменным.
+ * Форму методики задаёт сам выбор респондента, а возраст и прочие сведения о себе
+ * человек или специалист сообщает при заказе расширенного разбора. Общий слой при
+ * этом обязан уметь проверить возраст, если методика когда-нибудь его потребует:
+ * форма прохождения умеет показывать это поле, и без серверной проверки оно было бы
+ * принято без единого ограничения.
  */
 final class AgeCollectionContractTest extends TestCase
 {
@@ -37,43 +39,63 @@ final class AgeCollectionContractTest extends TestCase
         return $answers;
     }
 
-    public function testSmilAsksForAgeAndDeclaresItsRange(): void
+    public function testNoModuleAsksForAgeWhileTakingTheTest(): void
     {
-        $schema = $this->smil()->getAnswerSchema();
+        // D-040: возраст не влияет ни на подсчёт, ни на выбор формы методики,
+        // поэтому лишний вопрос респонденту не задаётся.
+        $loader = (new ModuleLoader(null, null))->discover();
 
-        self::assertTrue($schema['requires_age']);
-        self::assertSame(16, $schema['age_range']['min'], 'Нижняя граница взрослой формы.');
-        self::assertSame(100, $schema['age_range']['max']);
-        self::assertContains('age', $schema['extra_keys']);
+        foreach (array_keys($loader->getAllModules()) as $slug) {
+            $module = $loader->getModule($slug);
 
-        $metadata = $this->smil()->getMetadata();
-        self::assertTrue($metadata['requires_demographics']['age'], 'Форма прохождения обязана показать поле возраста.');
-        self::assertSame(16, $metadata['requires_demographics']['min_age'], 'Форма и валидатор должны знать одну границу.');
-        self::assertSame(100, $metadata['requires_demographics']['max_age']);
+            self::assertFalse($module->getAnswerSchema()['requires_age'] ?? false, "Методика {$slug} требует возраст.");
+            self::assertFalse(
+                $module->getMetadata()['requires_demographics']['age'] ?? false,
+                "Форма прохождения {$slug} показывает поле возраста.",
+            );
+        }
     }
 
-    public function testServerRejectsMissingAndImplausibleAge(): void
+    public function testValidatorStillGuardsAgeForAnyModuleThatEverDeclaresIt(): void
     {
-        // До этого пакета возраст числился «лишним ключом» и не проверялся вовсе:
-        // на сервер можно было прислать что угодно или не прислать ничего.
-        $module = $this->smil();
+        // Шаблон прохождения умеет показывать поле возраста по метаданным.
+        // Если методика его включит, общий слой обязан проверить значение —
+        // до этой правки такое поле принималось вообще без ограничений.
+        $module = new class () extends \PsyTest\Modules\BaseTestModule {
+            public function getQuestions(): array
+            {
+                return [['id' => 1, 'text' => 'q', 'options' => [['value' => 0, 'text' => 'a']]]];
+            }
 
-        self::assertContains('invalid_age', AnswerValidator::validate($module, $this->answers(null), true));
-        self::assertContains('invalid_age', AnswerValidator::validate($module, $this->answers(15), true));
-        self::assertContains('invalid_age', AnswerValidator::validate($module, $this->answers(101), true));
-        self::assertContains('invalid_age', AnswerValidator::validate($module, $this->answers('тридцать'), true));
-        self::assertContains('invalid_age', AnswerValidator::validate($module, $this->answers(-5), true));
-        self::assertContains('invalid_age', AnswerValidator::validate($module, $this->answers(39.5), true));
-    }
+            public function getAnswerSchema(): array
+            {
+                return array_merge(parent::getAnswerSchema(), [
+                    'requires_age' => true,
+                    'age_range' => ['min' => 13, 'max' => 15],
+                ]);
+            }
 
-    public function testServerAcceptsAgeInsideTheRangeAsNumberOrDigits(): void
-    {
-        $module = $this->smil();
+            public function calculateResults(array $answers): array
+            {
+                return [];
+            }
 
-        // Из HTML-формы возраст приходит строкой.
-        self::assertNotContains('invalid_age', AnswerValidator::validate($module, $this->answers(16), true));
-        self::assertNotContains('invalid_age', AnswerValidator::validate($module, $this->answers('39'), true));
-        self::assertNotContains('invalid_age', AnswerValidator::validate($module, $this->answers(100), true));
+            public function generateInterpretation(array $scores): array
+            {
+                return ['summary' => '', 'recommendations' => []];
+            }
+
+            public function buildSections(array $results): array
+            {
+                return [];
+            }
+        };
+
+        self::assertContains('invalid_age', AnswerValidator::validate($module, [1 => 0], true));
+        self::assertContains('invalid_age', AnswerValidator::validate($module, [1 => 0, 'age' => 12], true));
+        self::assertContains('invalid_age', AnswerValidator::validate($module, [1 => 0, 'age' => 16], true));
+        self::assertContains('invalid_age', AnswerValidator::validate($module, [1 => 0, 'age' => 'четырнадцать'], true));
+        self::assertNotContains('invalid_age', AnswerValidator::validate($module, [1 => 0, 'age' => '14'], true));
     }
 
     public function testAgeDoesNotChangeASingleScore(): void
@@ -91,20 +113,4 @@ final class AgeCollectionContractTest extends TestCase
         }
     }
 
-    public function testOtherModulesStillDoNotAskForAge(): void
-    {
-        $loader = (new ModuleLoader(null, null))->discover();
-
-        foreach (array_keys($loader->getAllModules()) as $slug) {
-            if ($slug === 'smil') {
-                continue;
-            }
-
-            $schema = $loader->getModule($slug)->getAnswerSchema();
-            self::assertFalse(
-                $schema['requires_age'] ?? false,
-                "Методика {$slug} не объявляла обязательный возраст — лишний вопрос респонденту не задаётся.",
-            );
-        }
-    }
 }

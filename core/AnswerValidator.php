@@ -13,13 +13,22 @@ use PsyTest\Modules\TestModuleInterface;
  */
 final class AnswerValidator
 {
+    /** Значения, которыми дополняется схема модуля, если он их не объявил. */
+    private const SCHEMA_DEFAULTS = [
+        'requires_age' => false,
+        'age_range' => ['min' => 13, 'max' => 100],
+    ];
+
     /**
      * @param array<int|string, mixed> $answers
      * @return list<string>
      */
     public static function validate(TestModuleInterface $module, array $answers, bool $complete): array
     {
-        $schema = $module->getAnswerSchema();
+        // Модуль может вернуть схему без новых ключей — так делает любой модуль,
+        // написанный до их появления. Общий слой дополняет её значениями по
+        // умолчанию, а не падает на отсутствующем индексе.
+        $schema = $module->getAnswerSchema() + self::SCHEMA_DEFAULTS;
         $questions = $module->getQuestions();
         $errors = [];
 
