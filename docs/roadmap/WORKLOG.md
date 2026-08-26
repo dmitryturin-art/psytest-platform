@@ -19,6 +19,17 @@
 
 ## 2026-08-26
 
+### 00N — уборка Superpowers: локальные артефакты удалены, история перенесена в архив
+
+- Этап / ветка / commit: governance-followup, `codex/00-superpowers-archive`.
+- Цель: устранить остаточную поверхность Superpowers, которая уже не является действующей методологией (AGENTS.md §Приоритет, ENGINEERING_RULES §11), но продолжала занимать место в рабочем контексте и на диске.
+- Сделано: (1) `docs/superpowers/` перенесён `git mv` в `docs/archive/superpowers/` — историческая ценность сохранена, но материалы больше не лежат рядом с действующими доками; (2) ссылки в `AGENTS.md` §Приоритет и `ROADMAP.md` §Навигация приведены к новому пути; исторические упоминания в `docs/audit/`, `docs/archive/`, `LESSONS.md` и прошлых записях WORKLOG намеренно не переписывались; (3) локальный неотслеживаемый `.superpowers/` (79 файлов, 6 МБ, артефакты сессий 22.06) перемещён в Корзину — восстановим при необходимости; (4) отключённый плагин `superpowers@claude-plugins-official` 6.3.0 деинсталлирован из окружения владельца (`enabledPlugins` уже стоял в `false`, то есть плагин фактически не работал ни в одной сессии).
+- Решения: `docs/superpowers/` не удаляется, а архивируется — на планы 22.06 ссылаются исторические audit-документы; исключение `/.superpowers` в `bin/build-release.sh` оставлено как защита от повторного появления каталога.
+- Проверки и evidence: `DocumentationCurrentStateTest` — 4 tests / 88 assertions OK; grep по `tests/`, `bin/`, `.github/` подтвердил, что путь `docs/superpowers` нигде не пинится тестами и CI; полный fast-набор PHPUnit 235 tests / 1957 assertions OK. Код, scoring и схема БД не менялись. Graphify: `STALE` (101 changed) — обновление требует разрешения на передачу изменённых исходников внешнему LLM; граф не использовался как evidence.
+- Изменённые файлы: `docs/superpowers/**` → `docs/archive/superpowers/**` (8 файлов, rename), `AGENTS.md`, `ROADMAP.md`, `docs/roadmap/STATUS.md`, `docs/roadmap/WORKLOG.md`.
+- Не сделано / риски: рисков нет — изменения только документационные и в локальном окружении; runtime не затронут.
+- Следующий шаг: walkthrough `creating-new-test.md` в чистом окружении (последний exit criterion этапа 03).
+
 ### 03.3 — демо-модуль, удаление мёртвого хука, актуальное руководство (Module API v2)
 
 - Этап / ветка / commit: этап 03, `codex/03-lazarus-adapter`.
