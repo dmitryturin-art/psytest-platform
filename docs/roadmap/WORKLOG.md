@@ -19,6 +19,17 @@
 
 ## 2026-08-26
 
+### 03.2 — renderer contract (Module API v2, WP4)
+
+- Этап / ветка / commit: этап 03, `codex/03-renderer-contract`.
+- Цель: формализовать контракт рендеринга для единичного результата, pair result, таблиц, шкал и защищённого SMIL chart component — убрать модульные знания из общего слоя.
+- Сделано: `core/ResultSectionRenderer.php` — единственный dispatch секций в HTML для PDF-ветки (логика и статический SMIL-chart перенесены из `ResultController` дословно); `pairChartData(array): ?array` добавлен в `TestModuleInterface` (Base — null; реализует Lazarus, ковариантный return), в контроллере удалены `instanceof LazarusModule` и импорт конкретного модуля; `RendererContractTest` (19 тестов) закрепляет: секции всех пяти модулей рендерятся standalone web-блоками и через общий PDF-рендерер, pair chart декларативен (не-chart модули возвращают null), контроллеры не импортируют конкретные классы модулей, канонический SMIL-график (`blocks/profile-chart.twig` + `public/js/smil-profile-classic.js`) защищён от замены. Попутно: stale-baseline entry удалён (148→147, cap обновлён), ResultSection/ResultSectionRenderer добавлены в requiredFiles и require-блоки `bin/check-architecture.php`; ARCHITECTURE.md дополнен описанием рендеринга.
+- Решения: web-ветка остаётся на twig-dispatch (`result-layout.twig`), PHP-рендерер покрывает только PDF — strangler без big-bang; блоки могут приходить с именами без `.twig`, нормализация в рендерере сохранена как в прежнем коде.
+- Проверки и evidence: полный gate — validate OK, audit clean, migrate OK, PHPUnit 244 tests/2034 assertions (включая новые 19/89), PHPStan level 6 `[OK]`, lint 0 fixes, architecture check exit 0 (все модули, секции рендерятся), baseline 147/147 — pass. `PhpStanBaselineCheckTest` пинил строку «148 entries» — обновлён на 147 вместе с baseline. Graphify: `STALE` (86 changed) — инкрементальное semantic-обновление требует разрешения на передачу изменённых исходников внешнему LLM; fallback — прямое чтение исходников, граф не использовался как evidence.
+- Изменённые файлы: `core/ResultSectionRenderer.php` (новый), `modules/TestModuleInterface.php`, `modules/BaseTestModule.php`, `controllers/ResultController.php`, `tests/RendererContractTest.php` (новый), `tests/PhpStanBaselineCheckTest.php`, `bin/check-architecture.php`, `bin/check-phpstan-baseline.php`, `phpstan-baseline.neon`, `ARCHITECTURE.md`, phase 03, STATUS.md.
+- Не сделано / риски: миграция модулей на контракт (WP5) только впереди; поведение рантайма не менялось — golden-фикстуры не тронуты.
+- Следующий шаг: пакет 03.3 — legacy adapter и миграция Lazarus на Module API v2.
+
 ### docs — восстановление хронологии WORKLOG, правила журнала, синхронизация панелей
 
 - Этап / ветка / commit: governance-followup, `codex/00-docs-panels-sync`; `8f37786`, `61c976d`, `40f7258`, `95e220e`, merge `e6eae84` (PR #31).

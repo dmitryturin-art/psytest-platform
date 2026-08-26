@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 $projectRoot = dirname(__DIR__);
 $baselinePath = $projectRoot . '/phpstan-baseline.neon';
-$expectedEntryCount = 148;
+$expectedEntryCount = 147;
 
 if (!is_file($baselinePath)) {
     fwrite(STDERR, "PHPStan baseline is missing: {$baselinePath}\n");
