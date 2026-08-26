@@ -1,0 +1,22 @@
+{
+  "slug": "demo-wellbeing",
+  "name": "Демонстрационный опросник",
+  "description": "Минимальный модуль-образец для документации добавления тестов; не регистрируется в каталоге.",
+  "question_count": 4,
+  "estimated_time": 2,
+  "scales": [
+    {
+      "code": "wellbeing",
+      "name": "Самочувствие",
+      "description": "Сумма баллов по четырём пунктам"
+    }
+  ],
+  "requires_demographics": {
+    "gender": false,
+    "age": false
+  },
+  "version": "1.0",
+  "author": "PsyTest Platform",
+  "source": "Внутренний демонстрационный пример",
+  "language": "ru"
+}

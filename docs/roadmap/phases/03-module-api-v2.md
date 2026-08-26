@@ -16,9 +16,9 @@
 2. Ввести immutable DTO для answer set, score result, validity, signal и result sections.
 3. Добавить schema validator и capability registry; запретить контроллеру угадывать тип теста по slug. 03.1B: capability registry введён — `ModuleCapability` (pair/chart/pdf/paid_interpretation/clinical_signal), `getCapabilities()` в интерфейсе, `supportsPairMode()` выведен из capability PAIR (переопределения удалены), декларации: Lazarus pair+pdf, SMIL chart+pdf, BDI clinical_signal+pdf, BAI/HADS pdf; контракт-тест `ModuleCapabilityContractTest` закрепляет декларации и деривацию. Slug-ветвлений в контроллерах не было (проверено grep) — реестр защищает от их появления. 03.1C: schema validator формализован — `getAnswerSchema()` в интерфейсе (answer_type/key_template/extra_keys/requires_gender), `AnswerValidator` переписан на декларативную схему (поведение идентично, включая per-question значения для options); `AnswerSchemaContractTest` (21 тест) закрепляет форму схемы, когерентность и поведение валидатора.
 4. Создать renderer contract для единичного результата, pair result, таблиц, шкал и защищённого SMIL chart component. 03.2: контракт введён — `core/ResultSectionRenderer.php` стал единственным dispatch секций в HTML для PDF-ветки (статический SMIL-chart перенесён из контроллера дословно); `pairChartData(): ?array` добавлен в `TestModuleInterface` (Base — null, реализует Lazarus), `instanceof LazarusModule` и импорт конкретного модуля удалены из контроллера; `RendererContractTest` (19 тестов) закрепляет: секции всех модулей рендерятся standalone (web) и через общий рендерер (PDF), pair chart декларативен, контроллеры не ссылаются на конкретные модули, канонический SMIL-график (`profile-chart.twig` + `smil-profile-classic.js`) защищён от замены; PHPStan baseline 148→147.
-5. Сделать legacy adapter и мигрировать по одному: Lazarus → BDI → BAI/HADS → SMIL.
-6. После parity удалить только доказанно неиспользуемые branches/helpers/templates и дубли.
-7. Обновить `architecture.md` и `creating-new-test.md` реальным примером минимального модуля.
+5. Сделать legacy adapter и мигрировать по одному: Lazarus → BDI → BAI/HADS → SMIL. Переосмыслено 26.08: адаптер не понадобился — модули переведены на декларативную поверхность v2 напрямую (03.1B capability registry, 03.1C answer schema, 03.2 renderer contract с `pairChartData()`) под защитой golden-фикстур; отдельный adapter-слой не создавался и не требуется. WP5 закрыт как выполненный другим путём.
+6. После parity удалить только доказанно неиспользуемые branches/helpers/templates и дубли. 03.3: удалён мёртвый хук `getResultTemplate()` (ноль потребителей — проверено grep по core/controllers/modules/templates); `getCustomJavaScript()` оставлен — живой потребитель в test-wrapper.twig.
+7. Обновить `architecture.md` и `creating-new-test.md` реальным примером минимального модуля. 03.2 обновил ARCHITECTURE.md (renderer); 03.3 переписал `creating-new-test.md` как актуальное руководство с проверенным примером `tests/fixtures/demo-wellbeing/`; text-contract `DocumentationCurrentStateTest` закрепил новое состояние (легаси `renderResults`/Chart.js отсутствуют).
 8. Уменьшать PHPStan baseline по затронутым namespaces; общий count не растёт.
 
 ## Ограничения
@@ -29,11 +29,11 @@
 
 ## Проверка и exit criteria
 
-- Golden tests до/после дают идентичные базовые результаты.
-- Contract tests проходят для каждого модуля; invalid/missing answers отклоняются сервером.
-- Новый демонстрационный модуль добавляется без изменения core controller.
-- Нет новых slug-ветвлений; legacy adapter удалён там, где завершена миграция.
-- Документация добавления теста проверена пошагово в чистом окружении.
+- Golden tests до/после дают идентичные базовые результаты. ✓ (03.1A, фикстуры не менялись)
+- Contract tests проходят для каждого модуля; invalid/missing answers отклоняются сервером. ✓ (capability/schema/renderer контракты 03.1B/C/03.2)
+- Новый демонстрационный модуль добавляется без изменения core controller. ✓ (03.3: `tests/fixtures/demo-wellbeing/` + `DemoModuleContractTest` — обнаружение загрузчиком, схема-валидация, web/PDF-рендеринг без правок ядра)
+- Нет новых slug-ветвлений; legacy adapter удалён там, где завершена миграция. ✓ (03.2: контроллеры module-agnostic; адаптер не создавался — см. WP5)
+- Документация добавления теста проверена пошагово в чистом окружении. ✗ Осталось: walkthrough руководства на чистой копии репозитория перед закрытием этапа.
 
 ## Покрытие аудита
 
