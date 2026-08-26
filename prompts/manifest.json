@@ -8,52 +8,58 @@
   "rollback": "Откат — это уменьшение номера version у ключа, а не правка текста уже существующей версии.",
   "prompts": {
     "lazarus | individual | professional": {
-      "version": 1,
+      "version": 2,
       "status": "published",
       "allows_owner_context": true,
       "source": "docs/lazarus-ai-report-prompts.md §3, §4.1",
       "approved_by": "владелец",
-      "approved_at": "2026-08-26"
+      "approved_at": "2026-08-26",
+      "change": "v2: добавлено правило оформления — табличные данные подаются таблицей Markdown (замечание владельца 26.08)"
     },
     "lazarus | individual | clear": {
-      "version": 1,
+      "version": 2,
       "status": "published",
       "allows_owner_context": false,
       "source": "docs/lazarus-ai-report-prompts.md §3, §4.2",
       "approved_by": "владелец",
-      "approved_at": "2026-08-26"
+      "approved_at": "2026-08-26",
+      "change": "v2: добавлено правило оформления — табличные данные подаются таблицей Markdown (замечание владельца 26.08)"
     },
     "lazarus | pair | professional": {
-      "version": 1,
+      "version": 2,
       "status": "published",
       "allows_owner_context": true,
       "source": "docs/lazarus-ai-report-prompts.md §3, §4.1, §4.3",
       "approved_by": "владелец",
-      "approved_at": "2026-08-26"
+      "approved_at": "2026-08-26",
+      "change": "v2: добавлено правило оформления — табличные данные подаются таблицей Markdown (замечание владельца 26.08)"
     },
     "lazarus | pair | clear": {
-      "version": 1,
+      "version": 2,
       "status": "published",
       "allows_owner_context": false,
       "source": "docs/lazarus-ai-report-prompts.md §3, §4.2, §4.3",
       "approved_by": "владелец",
-      "approved_at": "2026-08-26"
+      "approved_at": "2026-08-26",
+      "change": "v2: добавлено правило оформления — табличные данные подаются таблицей Markdown (замечание владельца 26.08)"
     },
     "smil | individual | professional": {
-      "version": 1,
+      "version": 2,
       "status": "published",
       "allows_owner_context": true,
       "source": "промпт владельца от 2026-08-26 (Obsidian: Промпты для анализа СМИЛ) + общий технический слой",
       "approved_by": "владелец",
-      "approved_at": "2026-08-26"
+      "approved_at": "2026-08-26",
+      "change": "v2: добавлено правило оформления — табличные данные подаются таблицей Markdown (замечание владельца 26.08)"
     },
     "smil | individual | clear": {
-      "version": 1,
+      "version": 2,
       "status": "published",
       "allows_owner_context": false,
       "source": "черновик по принципам clear-варианта; прочитан владельцем 26.08 и дополнен по его замечанию разбором дополнительных шкал наравне с основными",
       "approved_by": "владелец",
-      "approved_at": "2026-08-26"
+      "approved_at": "2026-08-26",
+      "change": "v2: добавлено правило оформления — табличные данные подаются таблицей Markdown (замечание владельца 26.08)"
     }
   },
   "approval": "Публикация — решение владельца. Опубликованный ключ обязан нести approved_by и approved_at: без них PromptRegistryContractTest не пропустит статус published."
