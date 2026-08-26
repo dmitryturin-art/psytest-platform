@@ -54,6 +54,49 @@ final class DocumentationCurrentStateTest extends TestCase
         self::assertStringContainsString('composer migrate', $architectureCheck);
     }
 
+    /**
+     * Pins the new-module recipe to the walkthrough actually performed on a clean
+     * clone (26.08.2026). Each assertion corresponds to a step that failed or
+     * printed a warning when the previous version of the guide was followed literally.
+     */
+    public function testNewModuleGuideMatchesTheVerifiedWalkthroughRecipe(): void
+    {
+        $projectRoot = dirname(__DIR__);
+        $guide = (string) file_get_contents($projectRoot . '/docs/creating-new-test.md');
+        $referenceMigration = (string) file_get_contents(
+            $projectRoot . '/database/migrations/20260708123506_add_lazarus_test.php'
+        );
+        $composer = (string) file_get_contents($projectRoot . '/composer.json');
+
+        // Phinx AbstractMigration has no insert(); the documented snippet must use
+        // the same API as the reference migration it points at.
+        self::assertStringNotContainsString(
+            "\$this->insert('tests'",
+            $guide,
+            'AbstractMigration::insert() does not exist — the snippet must use table()->insert()->saveData().'
+        );
+        self::assertStringContainsString('->saveData()', $guide);
+        self::assertStringContainsString("table('tests')->insert(", $referenceMigration);
+        self::assertStringContainsString('->saveData()', $referenceMigration);
+
+        // Registering the methodology is a hard gate step, not a footnote:
+        // MethodologyRegistryContractTest fails without it.
+        self::assertStringContainsString('methodology-registry.json', $guide);
+
+        // A new module needs its own PSR-4 entry, otherwise every composer install
+        // prints a psr-4 compliance warning for the kebab-case module directory.
+        self::assertStringContainsString('"PsyTest\\\\Modules\\\\MyTest\\\\": "modules/my-test/"', $guide);
+
+        // bin/check-architecture.php only covers the five current modules; the guide
+        // must not claim that editing it is required for a green gate.
+        self::assertStringNotContainsString('добавьте новый модуль в requiredFiles', $guide);
+
+        // Module fixtures live in kebab-case directories and can never satisfy the
+        // PsyTest\Tests\ => tests/ rule; they are loaded by ModuleLoader, not Composer.
+        self::assertStringContainsString('"exclude-from-classmap"', $composer);
+        self::assertStringContainsString('"tests/fixtures/"', $composer);
+    }
+
     public function testCurrentStateDocumentationLinksResolveLocally(): void
     {
         $projectRoot = dirname(__DIR__);
