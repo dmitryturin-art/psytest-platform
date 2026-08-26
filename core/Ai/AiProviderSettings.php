@@ -15,7 +15,11 @@ final class AiProviderSettings
 {
     public const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
     public const DEFAULT_MODEL = 'openrouter/free';
-    public const DEFAULT_TIMEOUT_SECONDS = 120;
+    /**
+     * Разбор — длинный текст: замеры 26.08 дали 86–100 с на индивидуальном отчёте
+     * и больше на парном. 120 с обрывали работающий запрос на середине.
+     */
+    public const DEFAULT_TIMEOUT_SECONDS = 300;
 
     public function __construct(
         public readonly string $baseUrl,
