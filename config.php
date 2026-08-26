@@ -69,12 +69,13 @@ return new class {
             'user' => $this->getString('DB_USER', 'root'),
             'pass' => $this->getString('DB_PASS', ''),
             'charset' => $this->getString('DB_CHARSET', 'utf8mb4'),
+            'port' => $this->getInt('DB_PORT', 3306),
         ];
     }
     
     public function dsn(): string {
         $db = $this->db();
-        return "mysql:host={$db['host']};dbname={$db['name']};charset={$db['charset']}";
+        return "mysql:host={$db['host']};port={$db['port']};dbname={$db['name']};charset={$db['charset']}";
     }
     
     // Application settings

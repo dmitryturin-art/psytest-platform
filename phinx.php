@@ -21,7 +21,7 @@ return [
             'user' => $config->getString('DB_USER'),
             'pass' => $config->getString('DB_PASS'),
             'charset' => $config->getString('DB_CHARSET', 'utf8mb4'),
-            'port' => 3306,
+            'port' => $config->getInt('DB_PORT', 3306),
         ],
     ],
 ];

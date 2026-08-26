@@ -48,7 +48,10 @@ class Database
     private function connect(): void
     {
         try {
-            $dsn = "mysql:host={$this->config['host']};dbname={$this->config['name']};charset=utf8mb4";
+            // DB_PORT по умолчанию 3306; отличается, когда база поднята рядом
+            // с локальной — например MySQL 5.7 в Docker для bin/local-gate.sh.
+            $port = (int) ($this->config['port'] ?? 3306);
+            $dsn = "mysql:host={$this->config['host']};port={$port};dbname={$this->config['name']};charset=utf8mb4";
 
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
