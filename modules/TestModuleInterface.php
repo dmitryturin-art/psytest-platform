@@ -119,13 +119,6 @@ interface TestModuleInterface
     public function getTestTemplate(): ?string;
 
     /**
-     * Get custom result template (optional)
-     *
-     * @return string|null Template name or null for default
-     */
-    public function getResultTemplate(): ?string;
-
-    /**
      * Get custom JavaScript for test (optional)
      *
      * @return string|null JavaScript code or file path

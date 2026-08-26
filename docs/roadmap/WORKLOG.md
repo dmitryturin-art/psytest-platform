@@ -19,6 +19,17 @@
 
 ## 2026-08-26
 
+### 03.3 — демо-модуль, удаление мёртвого хука, актуальное руководство (Module API v2)
+
+- Этап / ветка / commit: этап 03, `codex/03-lazarus-adapter`.
+- Цель: доказать exit-criterion «новый тест без изменений ядра», убрать доказанно мёртвую легаси-поверхность и привести `creating-new-test.md` к фактическому состоянию (WP5–WP7).
+- Сделано: пакет начат как «legacy adapter + миграция Lazarus», но аудит показал — адаптер не нужен: модули уже на декларативной поверхности v2 (03.1B/C, 03.2), slug-ветвлений в общем слое нет. Переформулирован в три результата. (1) Демо-модуль `tests/fixtures/demo-wellbeing/` (metadata/questions/класс только с calculateResults/generateInterpretation/buildSections) + `DemoModuleContractTest` (4 теста): обнаружение общим ModuleLoader по кастомному пути, отсутствие переопределений кроме доменных методов, валидация через общий AnswerValidator, сквозной web+PDF рендеринг секций; для DB-независимости теста `ModuleLoader` переведён на ленивый доступ к БД. (2) Удалён мёртвый хук `getResultTemplate()` из интерфейса и Base (ноль потребителей — grep по core/controllers/modules/templates); `getCustomJavaScript()` оставлен как живой (test-wrapper.twig). (3) `docs/creating-new-test.md` переписан из «исторического черновика» в актуальное руководство на примере демо-модуля; `DocumentationCurrentStateTest` закрепил новое состояние (маркеры легаси `renderResults`/Chart.js запрещены).
+- Решения: WP5 закрыт «выполнено другим путём» без adapter-слоя (записано в phase-файле); демо-модуль живёт в tests/fixtures и не регистрируется в каталоге.
+- Проверки и evidence: полный gate — validate OK, audit clean, migrate OK, PHPUnit 248 tests/2049 assertions, PHPStan level 6 `[OK]`, lint 0, architecture exit 0, baseline 147/147 — pass. Golden-фикстуры не менялись. Graphify: `STALE` (93 changed) — semantic-обновление требует разрешения на передачу изменённых исходников внешнему LLM; fallback — прямое чтение исходников, граф не использовался как evidence.
+- Изменённые файлы: `core/ModuleLoader.php`, `modules/TestModuleInterface.php`, `modules/BaseTestModule.php`, `tests/fixtures/demo-wellbeing/*` (новое), `tests/DemoModuleContractTest.php` (новый), `tests/DocumentationCurrentStateTest.php`, `docs/creating-new-test.md`, phase 03, STATUS.md.
+- Не сделано / риски: walkthrough руководства в чистом окружении не выполнялся — обязательное условие закрытия этапа 03; CODE-01 baseline shrink продолжается отдельными пакетами.
+- Следующий шаг: walkthrough creating-new-test.md в чистом окружении → владельческое решение о закрытии этапа 03.
+
 ### 03.2 — renderer contract (Module API v2, WP4)
 
 - Этап / ветка / commit: этап 03, `codex/03-renderer-contract`.

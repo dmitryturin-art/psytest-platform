@@ -275,14 +275,6 @@ abstract class BaseTestModule implements TestModuleInterface
     }
 
     /**
-     * Get custom result template (default: null = use default)
-     */
-    public function getResultTemplate(): ?string
-    {
-        return null;
-    }
-
-    /**
      * Get custom JavaScript for test (default: null = use default)
      */
     public function getCustomJavaScript(): ?string

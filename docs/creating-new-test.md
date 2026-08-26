@@ -1,112 +1,79 @@
-# Руководство по созданию нового психологического теста
+# Руководство по добавлению нового теста (Module API v2)
 
-> **Исторический черновик — не исполнять как текущую инструкцию.** Его примеры не соответствуют фактическому `TestModuleInterface`, проверкам и release gates. Добавление методик начнётся после утверждения [этапа 03](roadmap/phases/03-module-api-v2.md); до этого руководствуйтесь [ROADMAP.md](../ROADMAP.md), `AGENTS.md` и актуальными модулями/tests. Не добавляйте тексты вопросов, нормы или публичную интерпретацию без доказательств в [реестре методик](roadmap/METHODOLOGY_REGISTRY.md).
+**Статус:** актуальное руководство, соответствует фактическому `TestModuleInterface` и gate.
+**Проверенный пример:** `tests/fixtures/demo-wellbeing/` — минимальный модуль, покрытый `DemoModuleContractTest` (обнаружение загрузчиком, схема-валидация ответов, web/PDF-рендеринг секций).
 
-**Версия:** 1.0  
-**Дата:** 26 февраля 2026  
-**Для:** Разработчиков
-
----
-
-## 📋 Содержание
-
-1. [Введение](#введение)
-2. [Быстрый старт](#быстрый-старт)
-3. [Детальное руководство](#детальное-руководство)
-4. [Примеры](#примеры)
-5. [Чек-лист](#чек-лист)
-6. [FAQ](#faq)
+Добавление нового типа теста не требует изменений в контроллерах, рендерере, валидаторе или шаблонах — только новой директории модуля и записи в БД.
 
 ---
 
-## 🎯 Введение
+## 1. Структура модуля
 
-Это руководство поможет вам создать новый психологический тест для PsyTest Platform. Процесс занимает 30-60 минут для простого теста и 2-4 часа для сложного.
-
-### Что вам понадобится
-
-- ✅ Знание PHP 8.3+
-- ✅ Понимание психометрии (базовое)
-- ✅ Текст вопросов теста
-- ✅ Алгоритм расчета результатов
-- ✅ Интерпретации шкал
-
-### Типы тестов
-
-| Тип | Сложность | Пример | Время |
-|-----|-----------|--------|-------|
-| Простой | ⭐ | Beck Anxiety | 30 мин |
-| Средний | ⭐⭐ | Big Five | 1-2 часа |
-| Сложный | ⭐⭐⭐ | СМИЛ (MMPI) | 4+ часа |
-
----
-
-## ⚡ Быстрый старт
-
-### Шаг 1: Создайте структуру
-
-```bash
-# Создайте директорию модуля
-mkdir -p modules/my-test
-
-# Создайте необходимые файлы
-cd modules/my-test
-touch MyTestModule.php metadata.json questions.json README.md
+```
+modules/my-test/
+├── MyTestModule.php   # класс; имя файла = PascalCase(имя директории) + "Module"
+├── metadata.json      # метаданные теста
+└── questions.json     # вопросы
 ```
 
-### Шаг 2: Заполните метаданные
+`ModuleLoader` находит модуль автоматически по директории (`my-test` → ищет `MyTestModule.php`). Класс должен наследовать `PsyTest\Modules\BaseTestModule`.
 
-**Файл:** `metadata.json`
+## 2. metadata.json
 
 ```json
 {
   "slug": "my-test",
-  "name": "Мой психологический тест",
-  "description": "Краткое описание теста",
+  "name": "Мой тест",
+  "description": "Краткое описание",
   "question_count": 20,
   "estimated_time": 10,
   "scales": [
-    {
-      "code": "A",
-      "name": "Шкала A",
-      "description": "Описание шкалы A"
-    }
+    {"code": "A", "name": "Шкала A", "description": "Описание шкалы"}
   ],
-  "requires_demographics": {
-    "gender": false,
-    "age": false
-  },
+  "requires_demographics": {"gender": false, "age": false},
   "version": "1.0",
-  "author": "Автор теста"
+  "author": "Автор",
+  "source": "Источник методики",
+  "language": "ru"
 }
 ```
 
-### Шаг 3: Добавьте вопросы
+Обязательные поля: `slug`, `name`, `question_count`, `estimated_time`. Источник и права на методику обязательны до публикации (см. `docs/roadmap/METHODOLOGY_REGISTRY.md`).
 
-**Файл:** `questions.json`
+## 3. questions.json
+
+Форма вопроса зависит от декларативной схемы ответов модуля:
+
+- `answer_type: 'options'` — вопрос содержит `options: [{value, text}]` (BAI/BDI/HADS);
+- `answer_type: 'ternary'` — ответы «да/нет/не знаю», опционально `text_male`/`text_female` (SMIL);
+- `answer_type: 'scale10'`, `key_template: 'dual'` — рейтинг 0–10 с двумя ключами на пункт (Lazarus).
 
 ```json
 [
   {
     "id": 1,
-    "text": "Текст первого вопроса",
-    "type": "yes_no",
+    "text": "Текст утверждения",
     "scale": "A",
-    "direction": 1
-  },
-  {
-    "id": 2,
-    "text": "Текст второго вопроса",
-    "type": "yes_no",
-    "scale": "A",
-    "direction": -1
+    "options": [
+      {"value": 0, "text": "Совершенно неверно"},
+      {"value": 3, "text": "Совершенно верно"}
+    ]
   }
 ]
 ```
 
-### Шаг 4: Создайте класс модуля
+## 4. Класс модуля
 
-**Файл:** `MyTestModule.php`
+Обязательно реализуются три доменных метода. Всё остальное дают декларативные значения Base:
+
+| Поведение | Механизм v2 | Значение по умолчанию |
+|---|---|---|
+| Валидация ответов | `AnswerValidator` по `getAnswerSchema()` | options/plain, extra_keys `[gender, age]` |
+| Возможности (pair/chart/pdf/paid_interpretation/clinical_signal) | `getCapabilities()` | `[pdf]` |
+| Парный режим | capability `pair`; сравнение — `comparePairResults()` | выключен |
+| Веб-график пары | `pairChartData(): ?array` | `null` |
+| Рендеринг результата | `buildSections()` + блоки `templates/blocks/*` | — |
+| Шаблон прохождения | `getTestTemplate()` | `test-wrapper` |
 
 ```php
 <?php
@@ -115,942 +82,104 @@ declare(strict_types=1);
 namespace PsyTest\Modules\MyTest;
 
 use PsyTest\Modules\BaseTestModule;
+use PsyTest\Modules\ResultSection;
 
-class MyTestModule extends BaseTestModule
+final class MyTestModule extends BaseTestModule
 {
+    private const MAX_SCORE = 60;
+
+    /** @param array<string, mixed> $answers */
     public function calculateResults(array $answers): array
     {
-        $score = 0;
-        $questions = $this->getQuestions();
-        
-        foreach ($answers as $questionId => $answer) {
-            $question = $this->findQuestion($questions, $questionId);
-            if ($question) {
-                $direction = $question['direction'] ?? 1;
-                $score += ($direction === 1) ? ($answer ? 1 : 0) : ($answer ? 0 : 1);
-            }
+        $total = 0;
+        foreach ($this->getQuestions() as $question) {
+            $total += (int) ($answers[$question['id']] ?? 0);
         }
-        
-        return [
-            'scores' => ['A' => $score],
-            'total' => $score,
-        ];
+
+        return ['total' => $total, 'max_score' => self::MAX_SCORE];
     }
-    
+
+    /**
+     * @param array<string, mixed> $scores
+     * @return array{summary: string, recommendations: list<string>}
+     */
     public function generateInterpretation(array $scores): array
     {
-        $score = $scores['scores']['A'] ?? 0;
-        
-        if ($score < 5) {
-            $level = 'low';
-            $text = 'Низкий уровень';
-        } elseif ($score < 15) {
-            $level = 'normal';
-            $text = 'Нормальный уровень';
-        } else {
-            $level = 'high';
-            $text = 'Высокий уровень';
-        }
-        
         return [
-            'summary' => $text,
-            'scales' => [
-                'A' => [
-                    'score' => $score,
-                    'level' => $level,
-                    'interpretation' => $text,
-                ]
-            ],
+            'summary' => 'Сумма: ' . ($scores['total'] ?? 0),
             'recommendations' => [],
         ];
     }
-    
-    public function renderResults(array $results): string
+
+    /**
+     * Секции рендерятся общими слоями: web — result-layout.twig,
+     * PDF — core/ResultSectionRenderer.php. Формы данных блоков см.
+     * templates/blocks/score-badge.twig, interpretation.twig, recommendations.twig.
+     *
+     * @param array<string, mixed> $results
+     * @return list<ResultSection>
+     */
+    public function buildSections(array $results): array
     {
-        $html = '<div class="test-results">';
-        $html .= '<h2>Результаты теста</h2>';
-        $html .= '<p>Ваш балл: ' . ($results['total'] ?? 0) . '</p>';
-        $html .= '</div>';
-        return $html;
-    }
-    
-    private function findQuestion(array $questions, int $id): ?array
-    {
-        foreach ($questions as $question) {
-            if ($question['id'] == $id) {
-                return $question;
-            }
-        }
-        return null;
+        return [
+            new ResultSection(
+                type: ResultSection::TYPE_SCORE_BADGE,
+                title: 'Результат',
+                data: [
+                    'score' => $results['total'],
+                    'max' => self::MAX_SCORE,
+                    'level' => 'normal',
+                    'level_label' => 'Норма',
+                    'description' => '',
+                    'thresholds' => ['normal' => ['min' => 0, 'max' => self::MAX_SCORE]],
+                ],
+                block: 'blocks/score-badge.twig',
+                order: 10,
+            ),
+        ];
     }
 }
 ```
 
-### Шаг 5: Зарегистрируйте в БД
+Правила:
 
-```sql
-INSERT INTO tests (name, slug, module_class, description, is_active, sort_order)
-VALUES (
-    'Мой психологический тест',
-    'my-test',
-    'PsyTest\\Modules\\MyTest\\MyTestModule',
-    'Краткое описание теста',
-    1,
-    10
-);
+- **Никакого HTML в модуле** — только данные секций; разметку делают шаблоны.
+- **Никаких переопределений `supportsPairMode()`** — только capability `PAIR`.
+- Графики: веб-график пары возвращается через `pairChartData()` (геометрия считается в модуле); статический PDF-график профиля рисует общий рендерер из данных секции `profile_chart`.
+- Изменения scoring после первого релиза фиксируются golden-тестами (`tests/fixtures/golden/`).
+
+## 5. Регистрация в БД
+
+Миграция (по образцу `database/migrations/20260708123506_add_lazarus_test.php`):
+
+```php
+$this->insert('tests', [
+    'name' => 'Мой тест',
+    'slug' => 'my-test',
+    'module_class' => 'PsyTest\\Modules\\MyTest\\MyTestModule',
+    'description' => 'Краткое описание',
+    'is_active' => 1,
+    'sort_order' => 10,
+]);
 ```
 
-### Шаг 6: Протестируйте
+Загрузчик сопоставляет запись со строкой каталога по `slug`; `module_class` хранится для документирования.
+
+## 6. Проверка
 
 ```bash
-# Создайте тестовую сессию
-php bin/test-module.php my-test
-
-# Откройте в браузере
-open http://localhost:8000/test/my-test
+composer validate --strict --no-check-publish
+composer migrate          # применить миграцию регистрации
+composer test             # включая RendererContractTest / DemoModuleContractTest паттерн
+composer analyse && composer lint
+php bin/check-architecture.php   # добавьте новый модуль в requiredFiles и require-блоки
+composer baseline:check
 ```
 
----
+Для нового модуля добавьте контрактные тесты по образцу `tests/DemoModuleContractTest.php` и, при изменении поведения существующих модулей, golden-фикстуры с указанием источника.
 
-## 📚 Детальное руководство
+## 7. Ограничения платформы
 
-### Структура модуля
-
-```
-modules/my-test/
-├── MyTestModule.php           # Главный класс модуля
-├── metadata.json              # Метаданные теста
-├── questions.json             # Вопросы теста
-├── interpretations.json       # Интерпретации (опционально)
-├── norms.json                 # Нормативные данные (опционально)
-├── README.md                  # Документация модуля
-└── views/                     # Кастомные шаблоны (опционально)
-    ├── test.twig
-    └── results.twig
-```
-
----
-
-### Метаданные (metadata.json)
-
-#### Обязательные поля
-
-```json
-{
-  "slug": "my-test",              // URL-идентификатор (a-z, 0-9, -)
-  "name": "Название теста",       // Отображаемое название
-  "description": "Описание",      // Краткое описание
-  "question_count": 20,           // Количество вопросов
-  "estimated_time": 10            // Время прохождения (минуты)
-}
-```
-
-#### Опциональные поля
-
-```json
-{
-  "scales": [                     // Шкалы теста
-    {
-      "code": "A",                // Код шкалы
-      "name": "Название",         // Название шкалы
-      "description": "Описание"   // Описание шкалы
-    }
-  ],
-  "requires_demographics": {      // Требуемые демографические данные
-    "gender": true,               // Требуется пол
-    "age": true,                  // Требуется возраст
-    "min_age": 16,                // Минимальный возраст
-    "max_age": 65                 // Максимальный возраст
-  },
-  "version": "1.0",               // Версия теста
-  "author": "Автор",              // Автор методики
-  "source": "Источник",           // Источник/ссылка
-  "language": "ru",               // Язык теста
-  "supports_pair_mode": false     // Поддержка парного режима
-}
-```
-
----
-
-### Вопросы (questions.json)
-
-#### Формат вопроса
-
-```json
-{
-  "id": 1,                        // Уникальный ID (обязательно)
-  "text": "Текст вопроса",        // Текст вопроса (обязательно)
-  "type": "yes_no",               // Тип вопроса (обязательно)
-  "scale": "A",                   // Шкала (опционально)
-  "direction": 1,                 // Направление подсчета (опционально)
-  "weight": 1.0,                  // Вес вопроса (опционально)
-  "reverse": false                // Обратный подсчет (опционально)
-}
-```
-
-#### Типы вопросов
-
-**1. Да/Нет (yes_no)**
-
-```json
-{
-  "id": 1,
-  "text": "Вы часто чувствуете тревогу?",
-  "type": "yes_no",
-  "scale": "anxiety"
-}
-```
-
-**2. Шкала Лайкерта (likert)**
-
-```json
-{
-  "id": 2,
-  "text": "Насколько вы согласны с утверждением?",
-  "type": "likert",
-  "scale": "A",
-  "options": [
-    {"value": 0, "label": "Совершенно не согласен"},
-    {"value": 1, "label": "Не согласен"},
-    {"value": 2, "label": "Нейтрально"},
-    {"value": 3, "label": "Согласен"},
-    {"value": 4, "label": "Полностью согласен"}
-  ]
-}
-```
-
-**3. Множественный выбор (multiple_choice)**
-
-```json
-{
-  "id": 3,
-  "text": "Выберите наиболее подходящий вариант",
-  "type": "multiple_choice",
-  "scale": "B",
-  "options": [
-    {"value": "a", "label": "Вариант A", "score": 1},
-    {"value": "b", "label": "Вариант B", "score": 2},
-    {"value": "c", "label": "Вариант C", "score": 3}
-  ]
-}
-```
-
-**4. Числовой ввод (numeric)**
-
-```json
-{
-  "id": 4,
-  "text": "Сколько часов вы спите в день?",
-  "type": "numeric",
-  "scale": "sleep",
-  "min": 0,
-  "max": 24,
-  "step": 0.5
-}
-```
-
----
-
-### Класс модуля (MyTestModule.php)
-
-#### Базовая структура
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace PsyTest\Modules\MyTest;
-
-use PsyTest\Modules\BaseTestModule;
-
-class MyTestModule extends BaseTestModule
-{
-    /**
-     * Расчет результатов
-     * 
-     * @param array $answers Ответы пользователя
-     * @return array Результаты расчета
-     */
-    public function calculateResults(array $answers): array
-    {
-        // Ваша логика расчета
-        return [
-            'scores' => [],
-            'raw_scores' => [],
-            'percentiles' => [],
-        ];
-    }
-    
-    /**
-     * Генерация интерпретации
-     * 
-     * @param array $scores Рассчитанные баллы
-     * @return array Интерпретация
-     */
-    public function generateInterpretation(array $scores): array
-    {
-        // Ваша логика интерпретации
-        return [
-            'summary' => '',
-            'scales' => [],
-            'recommendations' => [],
-        ];
-    }
-    
-    /**
-     * Рендеринг результатов
-     * 
-     * @param array $results Полные результаты
-     * @return string HTML
-     */
-    public function renderResults(array $results): string
-    {
-        // Ваш HTML
-        return '<div>...</div>';
-    }
-}
-```
-
-#### Методы BaseTestModule
-
-Доступные методы из базового класса:
-
-```php
-// Загрузка вопросов
-protected function loadQuestionsFromJson(string $filename): array
-
-// Расчет T-score
-protected function calculateTScore(float $rawScore, float $mean, float $stdDev): float
-
-// Нормализация балла
-protected function normalizeScore(float $score, float $min, float $max): float
-
-// Определение уровня
-protected function getInterpretationLevel(float $score, array $thresholds): string
-
-// Валидация ответов
-protected function validateAnswers(array $answers, array $questions): bool
-```
-
----
-
-### Расчет результатов
-
-#### Простой подсчет баллов
-
-```php
-public function calculateResults(array $answers): array
-{
-    $score = 0;
-    $questions = $this->getQuestions();
-    
-    foreach ($answers as $questionId => $answer) {
-        $question = $this->findQuestion($questions, $questionId);
-        
-        if ($question && $question['scale'] === 'A') {
-            $direction = $question['direction'] ?? 1;
-            
-            if ($direction === 1) {
-                $score += $answer ? 1 : 0;
-            } else {
-                $score += $answer ? 0 : 1;
-            }
-        }
-    }
-    
-    return [
-        'scores' => ['A' => $score],
-        'total' => $score,
-    ];
-}
-```
-
-#### Расчет с весами
-
-```php
-public function calculateResults(array $answers): array
-{
-    $score = 0.0;
-    $questions = $this->getQuestions();
-    
-    foreach ($answers as $questionId => $answer) {
-        $question = $this->findQuestion($questions, $questionId);
-        
-        if ($question) {
-            $weight = $question['weight'] ?? 1.0;
-            $score += $answer * $weight;
-        }
-    }
-    
-    return [
-        'scores' => ['weighted' => $score],
-        'total' => $score,
-    ];
-}
-```
-
-#### Расчет с нормами (T-scores)
-
-```php
-public function calculateResults(array $answers): array
-{
-    $rawScore = $this->calculateRawScore($answers);
-    $gender = $answers['gender'] ?? 'male';
-    
-    // Загрузить нормы
-    $norms = $this->loadNorms();
-    $mean = $norms[$gender]['mean'] ?? 50;
-    $stdDev = $norms[$gender]['stdDev'] ?? 10;
-    
-    // Рассчитать T-score
-    $tScore = $this->calculateTScore($rawScore, $mean, $stdDev);
-    
-    return [
-        'raw_score' => $rawScore,
-        't_score' => $tScore,
-        'gender' => $gender,
-    ];
-}
-
-private function loadNorms(): array
-{
-    $filepath = $this->modulePath . '/norms.json';
-    $content = file_get_contents($filepath);
-    return json_decode($content, true);
-}
-```
-
----
-
-### Интерпретация результатов
-
-#### Простая интерпретация
-
-```php
-public function generateInterpretation(array $scores): array
-{
-    $score = $scores['total'] ?? 0;
-    
-    if ($score < 10) {
-        $level = 'low';
-        $text = 'Низкий уровень тревожности';
-    } elseif ($score < 20) {
-        $level = 'normal';
-        $text = 'Нормальный уровень тревожности';
-    } else {
-        $level = 'high';
-        $text = 'Высокий уровень тревожности';
-    }
-    
-    return [
-        'summary' => $text,
-        'level' => $level,
-        'score' => $score,
-    ];
-}
-```
-
-#### Интерпретация по шкалам
-
-```php
-public function generateInterpretation(array $scores): array
-{
-    $interpretations = [];
-    
-    foreach ($scores['scales'] as $scale => $score) {
-        $interpretations[$scale] = [
-            'score' => $score,
-            'level' => $this->getLevel($score),
-            'text' => $this->getInterpretationText($scale, $score),
-        ];
-    }
-    
-    return [
-        'summary' => $this->generateSummary($interpretations),
-        'scales' => $interpretations,
-        'recommendations' => $this->generateRecommendations($interpretations),
-    ];
-}
-
-private function getLevel(float $score): string
-{
-    if ($score < 45) return 'low';
-    if ($score < 55) return 'normal';
-    if ($score < 65) return 'elevated';
-    if ($score < 75) return 'high';
-    return 'very_high';
-}
-```
-
-#### Загрузка интерпретаций из JSON
-
-```php
-public function generateInterpretation(array $scores): array
-{
-    $interpretations = $this->loadInterpretations();
-    $result = [];
-    
-    foreach ($scores['scales'] as $scale => $score) {
-        $level = $this->getLevel($score);
-        $scaleData = $interpretations[$scale] ?? [];
-        
-        $result[$scale] = [
-            'score' => $score,
-            'level' => $level,
-            'name' => $scaleData['name'] ?? $scale,
-            'text' => $scaleData['levels'][$level] ?? '',
-        ];
-    }
-    
-    return [
-        'summary' => $this->generateSummary($result),
-        'scales' => $result,
-    ];
-}
-
-private function loadInterpretations(): array
-{
-    $filepath = $this->modulePath . '/interpretations.json';
-    $content = file_get_contents($filepath);
-    return json_decode($content, true);
-}
-```
-
-**Файл:** `interpretations.json`
-
-```json
-{
-  "A": {
-    "name": "Шкала A",
-    "levels": {
-      "low": "Низкий уровень: ...",
-      "normal": "Нормальный уровень: ...",
-      "elevated": "Повышенный уровень: ...",
-      "high": "Высокий уровень: ...",
-      "very_high": "Очень высокий уровень: ..."
-    }
-  }
-}
-```
-
----
-
-### Рендеринг результатов
-
-#### Простой HTML
-
-```php
-public function renderResults(array $results): string
-{
-    $html = '<div class="test-results">';
-    $html .= '<h2>Результаты теста</h2>';
-    
-    $html .= '<div class="score-summary">';
-    $html .= '<p class="total-score">Общий балл: ' . ($results['total'] ?? 0) . '</p>';
-    $html .= '</div>';
-    
-    $html .= '<div class="interpretation">';
-    $html .= '<h3>Интерпретация</h3>';
-    $html .= '<p>' . htmlspecialchars($results['interpretation']['summary'] ?? '') . '</p>';
-    $html .= '</div>';
-    
-    $html .= '</div>';
-    return $html;
-}
-```
-
-#### С таблицей шкал
-
-```php
-public function renderResults(array $results): string
-{
-    $html = '<div class="test-results">';
-    
-    // Таблица шкал
-    $html .= '<table class="scales-table">';
-    $html .= '<thead><tr><th>Шкала</th><th>Балл</th><th>Уровень</th></tr></thead>';
-    $html .= '<tbody>';
-    
-    foreach ($results['interpretation']['scales'] ?? [] as $scale => $data) {
-        $levelClass = $data['level'] ?? 'normal';
-        $html .= '<tr class="level-' . $levelClass . '">';
-        $html .= '<td>' . htmlspecialchars($data['name'] ?? $scale) . '</td>';
-        $html .= '<td>' . ($data['score'] ?? 0) . '</td>';
-        $html .= '<td>' . $this->getLevelName($levelClass) . '</td>';
-        $html .= '</tr>';
-    }
-    
-    $html .= '</tbody></table>';
-    $html .= '</div>';
-    
-    return $html;
-}
-
-private function getLevelName(string $level): string
-{
-    $names = [
-        'low' => 'Низкий',
-        'normal' => 'Норма',
-        'elevated' => 'Повышенный',
-        'high' => 'Высокий',
-        'very_high' => 'Очень высокий',
-    ];
-    return $names[$level] ?? $level;
-}
-```
-
-#### С графиком (Chart.js)
-
-```php
-public function renderResults(array $results): string
-{
-    $scales = array_keys($results['scores'] ?? []);
-    $scores = array_values($results['scores'] ?? []);
-    
-    $scalesJson = json_encode($scales);
-    $scoresJson = json_encode($scores);
-    
-    $html = '<div class="test-results">';
-    $html .= '<div class="chart-container">';
-    $html .= '<canvas id="resultsChart" data-labels=\'' . $scalesJson . '\' data-scores=\'' . $scoresJson . '\'></canvas>';
-    $html .= '</div>';
-    $html .= '</div>';
-    
-    return $html;
-}
-```
-
----
-
-## 💡 Примеры
-
-### Пример 1: Простой тест (Beck Anxiety)
-
-**Характеристики:**
-- 21 вопрос
-- Шкала Лайкерта (0-3)
-- Одна шкала
-- Простой подсчет
-
-**Файл:** `modules/beck-anxiety/BeckAnxietyModule.php`
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace PsyTest\Modules\BeckAnxiety;
-
-use PsyTest\Modules\BaseTestModule;
-
-class BeckAnxietyModule extends BaseTestModule
-{
-    public function calculateResults(array $answers): array
-    {
-        $totalScore = 0;
-        
-        foreach ($answers as $questionId => $answer) {
-            if (is_numeric($answer)) {
-                $totalScore += (int) $answer;
-            }
-        }
-        
-        return [
-            'total_score' => $totalScore,
-            'level' => $this->getAnxietyLevel($totalScore),
-        ];
-    }
-    
-    public function generateInterpretation(array $scores): array
-    {
-        $score = $scores['total_score'] ?? 0;
-        $level = $scores['level'] ?? 'minimal';
-        
-        $interpretations = [
-            'minimal' => 'Минимальный уровень тревоги',
-            'mild' => 'Легкая тревога',
-            'moderate' => 'Умеренная тревога',
-            'severe' => 'Выраженная тревога',
-        ];
-        
-        return [
-            'summary' => $interpretations[$level],
-            'score' => $score,
-            'level' => $level,
-        ];
-    }
-    
-    public function renderResults(array $results): string
-    {
-        $score = $results['total_score'] ?? 0;
-        $level = $results['level'] ?? 'minimal';
-        
-        $html = '<div class="beck-results">';
-        $html .= '<h2>Результаты теста Beck Anxiety Inventory</h2>';
-        $html .= '<div class="score-box level-' . $level . '">';
-        $html .= '<p class="score">' . $score . ' баллов</p>';
-        $html .= '<p class="level">' . $results['interpretation']['summary'] . '</p>';
-        $html .= '</div>';
-        $html .= '</div>';
-        
-        return $html;
-    }
-    
-    private function getAnxietyLevel(int $score): string
-    {
-        if ($score <= 7) return 'minimal';
-        if ($score <= 15) return 'mild';
-        if ($score <= 25) return 'moderate';
-        return 'severe';
-    }
-}
-```
-
----
-
-### Пример 2: Тест с несколькими шкалами
-
-**Характеристики:**
-- 50 вопросов
-- Да/Нет
-- 5 шкал
-- T-scores
-
-**Файл:** `modules/big-five/BigFiveModule.php`
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace PsyTest\Modules\BigFive;
-
-use PsyTest\Modules\BaseTestModule;
-
-class BigFiveModule extends BaseTestModule
-{
-    private const SCALES = ['O', 'C', 'E', 'A', 'N'];
-    
-    public function calculateResults(array $answers): array
-    {
-        $rawScores = $this->calculateRawScores($answers);
-        $tScores = $this->convertToTScores($rawScores);
-        
-        return [
-            'raw_scores' => $rawScores,
-            't_scores' => $tScores,
-        ];
-    }
-    
-    private function calculateRawScores(array $answers): array
-    {
-        $scores = array_fill_keys(self::SCALES, 0);
-        $questions = $this->getQuestions();
-        
-        foreach ($answers as $questionId => $answer) {
-            $question = $this->findQuestion($questions, $questionId);
-            
-            if ($question) {
-                $scale = $question['scale'];
-                $direction = $question['direction'] ?? 1;
-                
-                if (isset($scores[$scale])) {
-                    $scores[$scale] += ($direction === 1) ? ($answer ? 1 : 0) : ($answer ? 0 : 1);
-                }
-            }
-        }
-        
-        return $scores;
-    }
-    
-    private function convertToTScores(array $rawScores): array
-    {
-        $norms = $this->loadNorms();
-        $tScores = [];
-        
-        foreach ($rawScores as $scale => $rawScore) {
-            $mean = $norms[$scale]['mean'] ?? 5;
-            $stdDev = $norms[$scale]['stdDev'] ?? 2;
-            $tScores[$scale] = $this->calculateTScore($rawScore, $mean, $stdDev);
-        }
-        
-        return $tScores;
-    }
-    
-    private function loadNorms(): array
-    {
-        return [
-            'O' => ['mean' => 5.0, 'stdDev' => 2.0],
-            'C' => ['mean' => 5.0, 'stdDev' => 2.0],
-            'E' => ['mean' => 5.0, 'stdDev' => 2.0],
-            'A' => ['mean' => 5.0, 'stdDev' => 2.0],
-            'N' => ['mean' => 5.0, 'stdDev' => 2.0],
-        ];
-    }
-    
-    private function findQuestion(array $questions, int $id): ?array
-    {
-        foreach ($questions as $question) {
-            if ($question['id'] == $id) {
-                return $question;
-            }
-        }
-        return null;
-    }
-}
-```
-
----
-
-## ✅ Чек-лист
-
-### Перед началом
-
-- [ ] Изучена методика теста
-- [ ] Есть текст всех вопросов
-- [ ] Известен алгоритм расчета
-- [ ] Есть интерпретации результатов
-- [ ] Определены требуемые демографические данные
-
-### Создание модуля
-
-- [ ] Создана директория `modules/my-test/`
-- [ ] Создан файл `metadata.json`
-- [ ] Создан файл `questions.json`
-- [ ] Создан файл `MyTestModule.php`
-- [ ] Создан файл `README.md`
-
-### Реализация
-
-- [ ] Метод `calculateResults()` реализован
-- [ ] Метод `generateInterpretation()` реализован
-- [ ] Метод `renderResults()` реализован
-- [ ] Все вопросы добавлены
-- [ ] Интерпретации корректны
-
-### Тестирование
-
-- [ ] Модуль загружается без ошибок
-- [ ] Вопросы отображаются корректно
-- [ ] Расчет результатов работает
-- [ ] Интерпретация генерируется
-- [ ] HTML рендерится правильно
-
-### Регистрация
-
-- [ ] Тест добавлен в БД
-- [ ] Тест активен (`is_active = 1`)
-- [ ] Тест отображается в списке
-- [ ] Ссылка работает
-
-### Документация
-
-- [ ] README.md заполнен
-- [ ] Описана методика
-- [ ] Указаны источники
-- [ ] Примеры результатов добавлены
-
----
-
-## ❓ FAQ
-
-### Как добавить демографические данные?
-
-В `metadata.json`:
-
-```json
-{
-  "requires_demographics": {
-    "gender": true,
-    "age": true,
-    "min_age": 16,
-    "max_age": 65
-  }
-}
-```
-
-В коде:
-
-```php
-public function calculateResults(array $answers): array
-{
-    $gender = $answers['gender'] ?? 'male';
-    $age = $answers['age'] ?? 25;
-    
-    // Использовать в расчетах
-}
-```
-
-### Как добавить кастомный шаблон?
-
-1. Создайте файл `views/results.twig`
-2. Переопределите метод:
-
-```php
-public function getResultTemplate(): ?string
-{
-    return 'my-test-results';
-}
-```
-
-3. Создайте шаблон в `templates/my-test-results.twig`
-
-### Как добавить кастомный JavaScript?
-
-```php
-public function getCustomJavaScript(): ?string
-{
-    return '/js/my-test.js';
-}
-```
-
-### Как поддержать парный режим?
-
-```php
-public function supportsPairMode(): bool
-{
-    return true;
-}
-
-public function comparePairResults(array $results1, array $results2): array
-{
-    return [
-        'results_1' => $results1,
-        'results_2' => $results2,
-        'differences' => $this->calculateDifferences($results1, $results2),
-    ];
-}
-```
-
-### Как добавить PDF-отчет?
-
-PDF генерируется автоматически из HTML результатов. Для кастомизации:
-
-1. Добавьте CSS для печати
-2. Используйте классы `.pdf-only` и `.screen-only`
-
-### Как валидировать ответы?
-
-```php
-public function calculateResults(array $answers): array
-{
-    $questions = $this->getQuestions();
-    
-    if (!$this->validateAnswers($answers, $questions)) {
-        throw new \InvalidArgumentException('Invalid answers');
-    }
-    
-    // Расчет...
-}
-```
-
----
-
-## 📚 Дополнительные ресурсы
-
-- [Архитектура системы](architecture.md)
-- [API документация](api/)
-- [Примеры модулей](../modules/)
-- [Психометрия: основы](https://example.com)
-
----
-
-**Конец руководства**
+- Все тесты и базовые результаты бесплатны; платный расширенный разбор — отдельный контур этапа 06/07 и capability `paid_interpretation`.
+- Тексты вопросов, нормы и интерпретации публикуются только при подтверждённых правах на русскую адаптацию методики.
+- Клинические сигналы (например, BDI item 9) объявляются capability `clinical_signal` и обрабатываются общим слоем `ClinicalSafetyNotice`.

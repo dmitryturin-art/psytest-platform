@@ -46,7 +46,9 @@ final class DocumentationCurrentStateTest extends TestCase
         self::assertStringContainsString('php bin/check-architecture.php', $development);
         self::assertStringContainsString('`410 Gone`', $architecture);
         self::assertStringContainsString('не включают payment или AI', $development);
-        self::assertStringContainsString('Исторический черновик — не исполнять как текущую инструкцию', $newModuleGuide);
+        self::assertStringContainsString('соответствует фактическому `TestModuleInterface`', $newModuleGuide);
+        self::assertStringNotContainsString('renderResults', $newModuleGuide, 'Module HTML rendering is retired; sections are the only path.');
+        self::assertStringNotContainsString('Chart.js', $newModuleGuide, 'External chart libraries are banned.');
         self::assertStringNotContainsString('bin/install-db.php', $architectureCheck);
         self::assertStringNotContainsString('QUICKSTART.md', $architectureCheck);
         self::assertStringContainsString('composer migrate', $architectureCheck);

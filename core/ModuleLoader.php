@@ -24,7 +24,15 @@ class ModuleLoader
     public function __construct(?string $modulesPath = null, ?Database $db = null)
     {
         $this->modulesPath = $modulesPath ?? __DIR__ . '/../modules';
-        $this->db = $db ?? Database::getInstance();
+        $this->db = $db;
+    }
+
+    /**
+     * Lazy database accessor: module discovery must not require a connection.
+     */
+    private function db(): Database
+    {
+        return $this->db ??= Database::getInstance();
     }
 
     /**
@@ -179,7 +187,7 @@ class ModuleLoader
     public function getActiveModules(): array
     {
         $sql = "SELECT * FROM tests WHERE is_active = 1 ORDER BY sort_order, name";
-        $tests = $this->db->select($sql);
+        $tests = $this->db()->select($sql);
 
         $result = [];
         foreach ($tests as $test) {
