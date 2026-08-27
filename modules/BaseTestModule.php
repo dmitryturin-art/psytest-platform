@@ -172,6 +172,17 @@ abstract class BaseTestModule implements TestModuleInterface
     }
 
     /**
+     * Structured payload for an external AI report.
+     *
+     * Default is null: a module sends nothing outside until it declares
+     * explicitly what may leave the platform (PRODUCT_RULES §6, §11).
+     */
+    public function aiReportContext(array $results, string $mode): ?array
+    {
+        return null;
+    }
+
+    /**
      * Compare pair results (override if pair mode supported)
      */
     public function comparePairResults(array $results1, array $results2): array

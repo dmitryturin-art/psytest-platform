@@ -112,6 +112,25 @@ interface TestModuleInterface
     public function pairChartData(array $comparison): ?array;
 
     /**
+     * Structured payload for an external AI report, or null when the module
+     * has no AI report.
+     *
+     * The module — not the shared layer — decides what leaves the platform.
+     * PRODUCT_RULES §6: the AI receives the computed result, never HTML, PDF
+     * or a screenshot; §11: nothing identifying travels with it. Whatever this
+     * returns is exactly what a provider adapter is allowed to send, so it must
+     * contain no tokens, ids, email, names or free text typed by the respondent.
+     *
+     * @param array<string, mixed> $results Module results: calculateResults()
+     *                                      for 'individual', comparePairResults()
+     *                                      for 'pair'.
+     * @param string $mode 'individual' or 'pair'.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function aiReportContext(array $results, string $mode): ?array;
+
+    /**
      * Get custom test template (optional)
      *
      * @return string|null Template name or null for default
