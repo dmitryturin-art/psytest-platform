@@ -30,6 +30,14 @@ class TestController extends BaseController
         // Check if test is active in database
         $test = $this->getTestOrFail($slug);
 
+        if (!$this->grantsInviteAccess($test)) {
+            // Отвечаем «не найдено», а не «запрещено»: закрытая методика не
+            // должна подтверждать посторонним даже сам факт своего существования.
+            $this->notFoundTest($slug);
+
+            return;
+        }
+
         // Create new session
         $session = $this->sessionManager->createSession($test['id']);
 
@@ -44,6 +52,57 @@ class TestController extends BaseController
             'session' => $session,
             'questions' => $questions,
             'module' => $module, // Pass module for custom JS/demographics
+        ]);
+    }
+
+    /**
+     * Доступ к методике, закрытой ссылкой-приглашением.
+     *
+     * Публичная методика доступна всем. Закрытая требует ключ в адресе
+     * (`?key=…`); успешный ключ запоминается в сессии браузера, чтобы
+     * перезагрузка страницы и переход по шагам не выбрасывали респондента.
+     *
+     * Это шлюз, а не опознание конкретного человека: персональные приглашения
+     * появятся вместе с купонным контуром.
+     *
+     * @param array<string, mixed> $test Строка методики из БД.
+     */
+    private function grantsInviteAccess(array $test): bool
+    {
+        if (($test['visibility'] ?? 'public') !== 'invite') {
+            return true;
+        }
+
+        $expected = (string) ($test['access_key'] ?? '');
+        if ($expected === '') {
+            // Закрытая методика без ключа недоступна никому: это безопаснее,
+            // чем открыть её из-за незаполненной настройки.
+            return false;
+        }
+
+        $slug = (string) $test['slug'];
+        $sessionKey = 'psytest_invite_' . $slug;
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $provided = $_GET['key'] ?? null;
+        if (is_string($provided) && hash_equals($expected, $provided)) {
+            $_SESSION[$sessionKey] = true;
+
+            return true;
+        }
+
+        return ($_SESSION[$sessionKey] ?? false) === true;
+    }
+
+    private function notFoundTest(string $slug): void
+    {
+        http_response_code(404);
+        echo $this->view->render('error-page', [
+            'error' => 'Test not found',
+            'message' => "Test '{$slug}' is not available.",
         ]);
     }
 
