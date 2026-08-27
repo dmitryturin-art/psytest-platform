@@ -10,7 +10,11 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
+use PsyTest\Core\Ai\AiClient;
+use PsyTest\Core\Ai\AiProviderSettings;
+use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
+use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\ClinicalSafetyNotice;
@@ -72,6 +76,57 @@ class ResultController extends BaseController
             'clinical_safety_notice' => ClinicalSafetyNotice::fromResults($results),
             'ai_report' => $this->reportViewData($slug, $session),
         ]);
+    }
+
+    /**
+     * Отпустить браузер и доготовить разбор в том же процессе.
+     *
+     * Расписание для этого не нужно: посетитель получает ответ сразу, а работа
+     * продолжается после закрытия соединения. Модель отвечает несколько минут,
+     * поэтому держать браузер всё это время нельзя — он и сервер оборвут запрос
+     * задолго до конца.
+     *
+     * Если хостинг прервёт процесс на середине, задание останется в работе и
+     * вернётся в очередь само (через получасовой возврат зависших), поэтому
+     * потеря такого прогона ничего не ломает — только откладывает.
+     */
+    private function respondThenGenerate(string $path, AiReportRepository $reports): never
+    {
+        header('Location: ' . $path, true, 303);
+        header('Content-Length: 0');
+
+        // Посетитель ушёл со страницы — работа всё равно доводится до конца,
+        // иначе разбор терялся бы при каждом закрытии вкладки.
+        ignore_user_abort(true);
+        @set_time_limit(0);
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            // Под обычным CGI остаётся только выпихнуть ответ и продолжить.
+            @ob_end_flush();
+            flush();
+        }
+
+        $job = $reports->claimNext();
+        if ($job !== null) {
+            $this->reportGenerator()->process($job);
+        }
+
+        exit;
+    }
+
+    private function reportGenerator(): AiReportGenerator
+    {
+        $settings = AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php');
+
+        return new AiReportGenerator(
+            new AiReportRepository($this->db),
+            $this->sessionManager,
+            $this->moduleLoader,
+            PromptRegistry::default(),
+            new AiClient($settings, new CurlTransport()),
+        );
     }
 
     /**
@@ -156,15 +211,10 @@ class ResultController extends BaseController
             $this->redirect('/result/' . $slug . '/' . $token);
         }
 
-        (new AiReportRepository($this->db))->request(
-            (string) $session['id'],
-            $slug,
-            $mode,
-            $kind,
-            $prompt,
-        );
+        $reports = new AiReportRepository($this->db);
+        $reports->request((string) $session['id'], $slug, $mode, $kind, $prompt);
 
-        $this->redirect('/result/' . $slug . '/' . $token);
+        $this->respondThenGenerate('/result/' . $slug . '/' . $token, $reports);
     }
 
     /**
