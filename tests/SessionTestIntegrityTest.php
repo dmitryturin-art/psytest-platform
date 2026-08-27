@@ -27,7 +27,9 @@ final class SessionTestIntegrityTest extends TestCase
         $resultController = (string) file_get_contents($projectRoot . '/controllers/ResultController.php');
         $testController = (string) file_get_contents($projectRoot . '/controllers/TestController.php');
 
-        self::assertSame(3, substr_count($resultController, 'getSessionTestForRoute($session, $slug)'));
+        // Показ результата, PDF, опрос парного статуса и поток расширенного
+        // разбора: каждый привязанный к slug поток обязан идти через общую защиту.
+        self::assertSame(4, substr_count($resultController, 'getSessionTestForRoute($session, $slug)'));
         self::assertSame(5, substr_count($testController, 'getSessionTestForRoute('));
         self::assertStringContainsString('getSessionTestForRoute($partnerSession, $slug)', $testController);
     }

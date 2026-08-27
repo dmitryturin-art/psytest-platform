@@ -38,6 +38,10 @@
         {% endfor %}
     </div>
 
+    {% if ai_report is defined and ai_report %}
+    {{ include('blocks/ai-report.twig') }}
+    {% endif %}
+
     <div class="results-disclaimer">
         <p><strong>Важно:</strong> Результаты носят ознакомительный характер и не являются диагнозом. Для профессиональной интерпретации обратитесь к квалифицированному специалисту.</p>
     </div>
@@ -118,6 +122,40 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+// Пока разбор готовится, страница спрашивает состояние и сама показывает
+// готовый текст. Разметку строит сервер: ответ модели — внешний текст.
+(function () {
+    const waiting = document.querySelectorAll('.ai-report__item[data-status="pending"], .ai-report__item[data-status="running"]');
+    if (!waiting.length) return;
+
+    waiting.forEach(function (item) {
+        const kind = item.dataset.kind;
+
+        const check = function () {
+            fetch(`${RESULT_CONFIG.basePath}/result/${RESULT_CONFIG.testSlug}/${RESULT_CONFIG.sessionToken}/report-status?kind=${encodeURIComponent(kind)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'ready' && data.html) {
+                        const body = document.createElement('div');
+                        body.className = 'ai-report__body';
+                        body.innerHTML = data.html;
+                        item.querySelector('.ai-report__waiting')?.replaceWith(body);
+                        item.dataset.status = 'ready';
+                        showToast('Разбор готов');
+                        clearInterval(timer);
+                    } else if (data.status === 'failed') {
+                        clearInterval(timer);
+                        window.location.reload();
+                    }
+                })
+                .catch(() => {});
+        };
+
+        const timer = setInterval(check, 20000);
+        check();
+    });
+})();
 
 // Poll for pair comparison status (Lazarus: first partner waiting for second).
 (function () {
