@@ -124,6 +124,11 @@ final class AnswerSchemaContractTest extends TestCase
         if (($schema['requires_gender'] ?? false) || $schema['answer_type'] === 'scale10') {
             $answers['gender'] = 'male';
         }
+        if ($schema['requires_age'] ?? false) {
+            // Демография строится из самой схемы: методика, объявившая возраст
+            // обязательным, обязана получить его в допустимых ею границах.
+            $answers['age'] = (string) $schema['age_range']['min'];
+        }
 
         return $answers;
     }

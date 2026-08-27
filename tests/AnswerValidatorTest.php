@@ -20,6 +20,9 @@ final class AnswerValidatorTest extends TestCase
             $answers[$question['id']] = 1;
         }
         $answers['gender'] = 'female';
+        // С 26.08 СМИЛ требует возраст: он нужен для клинического прочтения
+        // профиля и не участвует в подсчёте (AgeCollectionContractTest).
+        $answers['age'] = 39;
 
         self::assertSame([], AnswerValidator::validate($module, $answers, true));
         $answers[1] = 3;

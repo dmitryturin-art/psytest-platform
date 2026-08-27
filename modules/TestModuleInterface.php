@@ -77,6 +77,8 @@ interface TestModuleInterface
      *   key_template: 'plain'|'dual',
      *   extra_keys: list<string>,
      *   requires_gender: bool,
+     *   requires_age: bool,
+     *   age_range: array{min: int, max: int},
      * }
      */
     public function getAnswerSchema(): array;

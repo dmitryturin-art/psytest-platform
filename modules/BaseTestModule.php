@@ -152,6 +152,8 @@ abstract class BaseTestModule implements TestModuleInterface
             'key_template' => 'plain',
             'extra_keys' => ['gender', 'age'],
             'requires_gender' => false,
+            'requires_age' => false,
+            'age_range' => ['min' => 14, 'max' => 100],
         ];
     }
 

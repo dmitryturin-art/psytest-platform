@@ -13,13 +13,22 @@ use PsyTest\Modules\TestModuleInterface;
  */
 final class AnswerValidator
 {
+    /** Значения, которыми дополняется схема модуля, если он их не объявил. */
+    private const SCHEMA_DEFAULTS = [
+        'requires_age' => false,
+        'age_range' => ['min' => 13, 'max' => 100],
+    ];
+
     /**
      * @param array<int|string, mixed> $answers
      * @return list<string>
      */
     public static function validate(TestModuleInterface $module, array $answers, bool $complete): array
     {
-        $schema = $module->getAnswerSchema();
+        // Модуль может вернуть схему без новых ключей — так делает любой модуль,
+        // написанный до их появления. Общий слой дополняет её значениями по
+        // умолчанию, а не падает на отсутствующем индексе.
+        $schema = $module->getAnswerSchema() + self::SCHEMA_DEFAULTS;
         $questions = $module->getQuestions();
         $errors = [];
 
@@ -50,7 +59,29 @@ final class AnswerValidator
             $errors[] = 'invalid_gender';
         }
 
+        if ($schema['requires_age'] && !self::isAgeInRange($answers['age'] ?? null, $schema)) {
+            $errors[] = 'invalid_age';
+        }
+
         return array_values(array_unique($errors));
+    }
+
+    /**
+     * Возраст приходит из формы строкой и до сих пор не проверялся вовсе:
+     * он числился «лишним ключом» и пропускался. Для методик, где возраст
+     * задан обязательным, это значило, что на сервер можно прислать что угодно.
+     *
+     * @param array<string, mixed> $schema
+     */
+    private static function isAgeInRange(mixed $age, array $schema): bool
+    {
+        if (!is_int($age) && !(is_string($age) && preg_match('/^\d{1,3}$/', $age) === 1)) {
+            return false;
+        }
+
+        $range = $schema['age_range'];
+
+        return (int) $age >= $range['min'] && (int) $age <= $range['max'];
     }
 
     /**

@@ -51,6 +51,14 @@ class SmilModule extends BaseTestModule
     /**
      * Answer values
      */
+    /**
+     * Границы возраста, если методика когда-либо станет его спрашивать.
+     * Сейчас не спрашивает (D-040): возраст не нужен ни для подсчёта, ни для
+     * выбора формы — форму задаёт выбор респондента.
+     */
+    protected const MIN_AGE = 13;
+    protected const MAX_AGE = 100;
+
     protected const ANSWER_YES = 1;
     protected const ANSWER_UNKNOWN = 2;  // "Не знаю" / "?"
     protected const ANSWER_NO = 0;
@@ -1113,8 +1121,13 @@ class SmilModule extends BaseTestModule
         return [
             'answer_type' => 'ternary',
             'key_template' => 'plain',
-            'extra_keys' => ['gender'],
+            'extra_keys' => ['gender', 'age'],
             'requires_gender' => true,
+            // Возраст при прохождении не спрашивается (D-040): форму методики
+            // задаёт сам выбор респондента, а возраст и прочие сведения о себе
+            // человек или специалист сообщает при заказе расширенного разбора.
+            'requires_age' => false,
+            'age_range' => ['min' => self::MIN_AGE, 'max' => self::MAX_AGE],
         ];
     }
 
