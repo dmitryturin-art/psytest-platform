@@ -229,6 +229,22 @@ final class AiClientContractTest extends TestCase
         }
     }
 
+    public function testForbiddenDoesNotBlameTheKeyAlone(): void
+    {
+        // Проверено на рабочем сервере: провайдер отвечает 403 на запросы
+        // с адреса хостинга ещё до проверки ключа. Сообщение «ключ отклонён»
+        // отправило бы владельца искать несуществующую проблему.
+        $client = new AiClient($this->settings(), $this->sequenceTransport([[403, []]]), 3, $this->sleeper());
+
+        try {
+            $client->complete($this->prompt(), ['test' => 'smil']);
+            self::fail('Ожидалось исключение.');
+        } catch (AiProviderException $e) {
+            self::assertStringContainsString('адрес отправителя', $e->getMessage());
+            self::assertSame(1, $this->attempts, 'Повторять запрос с того же адреса бессмысленно.');
+        }
+    }
+
     public function testDataPolicyRefusalIsNamedExplicitly(): void
     {
         $client = new AiClient($this->settings(), $this->sequenceTransport([[404, []]]), 3, $this->sleeper());
