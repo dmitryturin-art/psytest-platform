@@ -290,7 +290,7 @@ final class AiReportContextContractTest extends TestCase
 
         self::assertIsArray($payload);
         self::assertSame(
-            ['test', 'mode', 'items', 'overall_agreement', 'partner1', 'partner2'],
+            ['test', 'mode', 'items', 'agreement', 'partner1', 'partner2'],
             array_keys($payload),
         );
         self::assertSame('pair', $payload['mode']);
@@ -301,7 +301,11 @@ final class AiReportContextContractTest extends TestCase
         );
         self::assertSame('individual', $payload['partner1']['mode']);
         self::assertSame('individual', $payload['partner2']['mode']);
-        self::assertIsFloat($payload['overall_agreement']);
+        // Голое число модель прочитать не может — значение идёт с определением.
+        self::assertSame(['percent', 'means'], array_keys($payload['agreement']));
+        self::assertIsFloat($payload['agreement']['percent']);
+        self::assertStringContainsString('собственных оценок', $payload['agreement']['means']);
+        self::assertStringContainsString('Ожидаемые оценки партнёра в этот показатель не входят', $payload['agreement']['means']);
     }
 
     public function testNoIdentifyingFieldTravelsWithEitherPayload(): void
