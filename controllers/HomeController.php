@@ -16,7 +16,7 @@ class HomeController extends BaseController
     public function index(): void
     {
         echo $this->view->render('home', [
-            'tests' => $this->moduleLoader->getActiveModules(),
+            'tests' => $this->moduleLoader->getPublicModules(),
         ]);
     }
 
@@ -25,7 +25,7 @@ class HomeController extends BaseController
      */
     public function tests(): void
     {
-        $tests = $this->moduleLoader->getActiveModules();
+        $tests = $this->moduleLoader->getPublicModules();
 
         echo $this->view->render('tests-list', [
             'tests' => $tests,

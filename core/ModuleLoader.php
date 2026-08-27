@@ -250,6 +250,22 @@ class ModuleLoader
     }
 
     /**
+     * Методики для публичного каталога.
+     *
+     * Методика с `visibility = invite` в каталоге не показывается: её тексты
+     * не распространяются публично, а доступ выдаётся владельцем по ссылке.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getPublicModules(): array
+    {
+        return array_filter(
+            $this->getActiveModules(),
+            static fn (array $test): bool => ($test['visibility'] ?? 'public') === 'public',
+        );
+    }
+
+    /**
      * Check if a module exists
      */
     public function hasModule(string $slug): bool
