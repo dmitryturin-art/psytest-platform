@@ -7,6 +7,7 @@ namespace PsyTest\Tests;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\ModuleLoader;
 use PsyTest\Modules\Lazarus\LazarusModule;
+use PsyTest\Modules\Smil\SmilModule;
 use PsyTest\Modules\TestModuleInterface;
 
 /**
@@ -72,7 +73,7 @@ final class AiReportContextContractTest extends TestCase
             $module = $loader->getModule($slug);
             self::assertInstanceOf(TestModuleInterface::class, $module);
 
-            if ($slug === 'lazarus') {
+            if (in_array($slug, ['lazarus', 'smil'], true)) {
                 continue;
             }
 
@@ -81,6 +82,138 @@ final class AiReportContextContractTest extends TestCase
                 "Модуль {$slug} ещё не объявлял, что отдаёт ИИ — по умолчанию должен быть null.",
             );
         }
+    }
+
+    private function smil(): SmilModule
+    {
+        return new SmilModule();
+    }
+
+    /** @return array<string, mixed> */
+    private function smilResults(string $gender = 'female'): array
+    {
+        $module = $this->smil();
+        $answers = ['gender' => $gender];
+        foreach ($module->getQuestions() as $index => $question) {
+            $answers[$question['id']] = $index % 3;
+        }
+
+        return $module->calculateResults($answers);
+    }
+
+    public function testSmilPayloadIsScaleLevelOnly(): void
+    {
+        $payload = $this->smil()->aiReportContext($this->smilResults(), 'individual');
+
+        self::assertIsArray($payload);
+        self::assertSame(
+            ['test', 'mode', 'form', 'validity', 'profile', 'indices', 'additional_scales', 'completeness'],
+            array_keys($payload),
+        );
+        self::assertSame('smil', $payload['test']);
+        self::assertCount(10, $payload['profile']['scales'], 'Десять базовых шкал; L, F и K живут в блоке достоверности.');
+        self::assertSame(['code', 'name', 't', 'level'], array_keys($payload['profile']['scales'][0]));
+        self::assertSame(566, $payload['completeness']['total']);
+    }
+
+    public function testSmilNeverShipsItemWordingOrPerItemAnswers(): void
+    {
+        // 566 формулировок принадлежат авторской адаптации методики, и модели
+        // они не нужны: она работает с профилем, а не с отдельными пунктами.
+        $module = $this->smil();
+        $payload = $module->aiReportContext($this->smilResults(), 'individual');
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+        self::assertIsString($json);
+
+        foreach (array_slice($module->getQuestions(), 0, 40) as $question) {
+            $text = (string) ($question['text'] ?? '');
+            if (mb_strlen($text) > 15) {
+                self::assertStringNotContainsString(
+                    mb_substr($text, 0, 15),
+                    $json,
+                    'Формулировка пункта не должна уходить наружу.',
+                );
+            }
+        }
+
+        // Ответы по пунктам тоже остаются внутри платформы.
+        self::assertArrayNotHasKey('raw_scores', $payload);
+        self::assertArrayNotHasKey('answers', $payload);
+    }
+
+    public function testSmilDoesNotFeedThePlatformsOwnInterpretationBackToTheModel(): void
+    {
+        // Иначе модель пересказывает наш готовый вывод вместо собственного анализа.
+        $results = $this->smilResults();
+        $ownText = $results['profile']['scales']['1']['interpretation'] ?? '';
+        self::assertNotSame('', $ownText, 'Предусловие: платформа действительно пишет свой текст по шкале.');
+
+        $json = json_encode($this->smil()->aiReportContext($results, 'individual'), JSON_UNESCAPED_UNICODE);
+
+        self::assertIsString($json);
+        self::assertStringNotContainsString(mb_substr($ownText, 0, 20), $json);
+        self::assertStringNotContainsString('interpretation', $json);
+
+        // Ведущие шкалы приходят из расчёта целыми объектами — на этом и
+        // произошла утечка, поэтому проверяется их форма отдельно.
+        foreach ($this->smil()->aiReportContext($results, 'individual')['profile']['dominant'] as $scale) {
+            self::assertSame(['name', 't', 'level'], array_keys($scale));
+        }
+    }
+
+    public function testSmilShipsNoNormativeConstantsOfAdditionalScales(): void
+    {
+        // T-балл уже посчитан на нашей стороне; нормативные M и σ взяты из
+        // руководства и наружу не отправляются.
+        $payload = $this->smil()->aiReportContext($this->smilResults(), 'individual');
+
+        self::assertIsArray($payload);
+        self::assertNotEmpty($payload['additional_scales']);
+
+        foreach ($payload['additional_scales'] as $scale) {
+            self::assertSame(['code', 'name', 't', 'raw'], array_keys($scale));
+        }
+    }
+
+    public function testSmilReportsTheFormInsteadOfBareGender(): void
+    {
+        $module = $this->smil();
+
+        self::assertSame('взрослая женская', $module->aiReportContext($this->smilResults('female'), 'individual')['form']);
+        self::assertSame('взрослая мужская', $module->aiReportContext($this->smilResults('male'), 'individual')['form']);
+
+        $json = json_encode($module->aiReportContext($this->smilResults('female'), 'individual'), JSON_UNESCAPED_UNICODE);
+        self::assertStringNotContainsString('"female"', (string) $json);
+    }
+
+    public function testSmilCarriesValidityBecauseTheProfileIsUnreadableWithoutIt(): void
+    {
+        $payload = $this->smil()->aiReportContext($this->smilResults(), 'individual');
+
+        self::assertIsArray($payload);
+        self::assertSame(
+            ['is_valid', 'L', 'F', 'K', 'FK_index', 'unknown_count', 'warnings'],
+            array_keys($payload['validity']),
+        );
+        self::assertIsBool($payload['validity']['is_valid']);
+    }
+
+    public function testSmilProfileTypeCarriesARussianLabel(): void
+    {
+        // Модель повторяет внутренний код буквально: в первом живом прогоне
+        // в клинический отчёт попало «psychotic».
+        $payload = $this->smil()->aiReportContext($this->smilResults(), 'individual');
+
+        self::assertIsArray($payload);
+        self::assertSame('psychotic', $payload['profile']['profile_type'], 'Код расчёта сохраняется для прослеживаемости.');
+        self::assertSame('психотический', $payload['profile']['profile_type_label']);
+    }
+
+    public function testSmilHasNoPairMode(): void
+    {
+        self::assertNull($this->smil()->aiReportContext($this->smilResults(), 'pair'));
+        self::assertNull($this->smil()->aiReportContext([], 'individual'));
     }
 
     public function testUnknownModeReturnsNothing(): void
