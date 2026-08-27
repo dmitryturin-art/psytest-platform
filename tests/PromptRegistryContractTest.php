@@ -46,21 +46,45 @@ final class PromptRegistryContractTest extends TestCase
         }
     }
 
-    public function testNoPromptFileIsOrphanedFromTheManifest(): void
+    public function testNoPromptFileBelongsToAnUndeclaredKey(): void
     {
-        $declared = [];
+        // Прежние версии остаются на диске намеренно: откат — это возврат
+        // манифеста на меньший номер версии. Проверяется другое: чтобы на диске
+        // не было промпта, чей ключ вообще не объявлен в реестре.
+        $declaredKeys = [];
         foreach ($this->declaredKeys() as [$test, $mode, $kind]) {
-            $version = $this->registry()->forReview($test, $mode, $kind)?->version;
-            $declared[] = sprintf('%s/%s.%s.v%d.md', $test, $mode, $kind, $version);
+            $declaredKeys[] = sprintf('%s/%s.%s', $test, $mode, $kind);
         }
 
         foreach (glob(self::PROMPTS_PATH . '/*/*.md') ?: [] as $file) {
             $relative = implode('/', array_slice(explode('/', $file), -2));
-            self::assertContains(
-                $relative,
-                $declared,
-                "Файл {$relative} не объявлен в манифесте: промпт вне реестра не должен существовать.",
+
+            self::assertSame(
+                1,
+                preg_match('#^(.+/.+)\.v\d+\.md$#', $relative, $matches),
+                "Имя {$relative} не соответствует схеме <методика>/<режим>.<вид>.v<N>.md.",
             );
+            self::assertContains(
+                $matches[1],
+                $declaredKeys,
+                "Файл {$relative} принадлежит ключу, которого нет в реестре.",
+            );
+        }
+    }
+
+    public function testPreviousVersionsStayOnDiskForRollback(): void
+    {
+        foreach ($this->declaredKeys() as [$test, $mode, $kind]) {
+            $current = $this->registry()->forReview($test, $mode, $kind)?->version;
+            $available = $this->registry()->availableVersions($test, $mode, $kind);
+
+            if ($current > 1) {
+                self::assertContains(
+                    $current - 1,
+                    $available,
+                    "Откат «{$test} | {$mode} | {$kind}» невозможен: предыдущей версии нет на диске.",
+                );
+            }
         }
     }
 
