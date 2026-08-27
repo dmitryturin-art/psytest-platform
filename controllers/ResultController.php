@@ -10,8 +10,12 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
+use PsyTest\Core\Ai\AiReportRepository;
+use PsyTest\Core\Ai\Prompt;
+use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\ClinicalSafetyNotice;
 use PsyTest\Core\PDFGenerator;
+use PsyTest\Core\ReportMarkdown;
 use PsyTest\Core\ResultSectionRenderer;
 
 class ResultController extends BaseController
@@ -66,7 +70,165 @@ class ResultController extends BaseController
             'sections' => $sections,
             'results' => $results,
             'clinical_safety_notice' => ClinicalSafetyNotice::fromResults($results),
+            'ai_report' => $this->reportViewData($slug, $session),
         ]);
+    }
+
+    /**
+     * Возврат на страницу результата после действия.
+     *
+     * 303 нужен, чтобы обновление страницы не повторяло POST-запрос: иначе
+     * посетитель, нажав «обновить», заказывал бы разбор ещё раз.
+     */
+    private function redirect(string $path): never
+    {
+        header('Location: ' . $path, true, 303);
+        exit;
+    }
+
+    /**
+     * Данные блока расширенного разбора для страницы результата.
+     *
+     * Блок показывается, только если для этой методики и режима действительно
+     * опубликован промпт: иначе посетителю предлагалась бы кнопка, которая
+     * ничего не сделает.
+     *
+     * @param array<string, mixed> $session
+     *
+     * @return array<string, mixed>|null
+     */
+    private function reportViewData(string $slug, array $session): ?array
+    {
+        $mode = $this->reportMode($session);
+        $registry = PromptRegistry::default();
+        $reports = new AiReportRepository($this->db);
+
+        $kinds = [];
+        foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
+            if ($registry->published($slug, $mode, $kind) === null) {
+                continue;
+            }
+
+            $report = $reports->findFor((string) $session['id'], $mode, $kind);
+
+            $kinds[] = [
+                'kind' => $kind,
+                'title' => $kind === Prompt::KIND_CLEAR ? 'Понятный разбор' : 'Профессиональное заключение',
+                'status' => $report['status'] ?? 'none',
+                'html' => ($report['status'] ?? '') === AiReportRepository::STATUS_READY
+                    ? ReportMarkdown::toHtml((string) $report['content'])
+                    : null,
+                'failure_reason' => $report['failure_reason'] ?? null,
+            ];
+        }
+
+        return $kinds === [] ? null : ['mode' => $mode, 'kinds' => $kinds];
+    }
+
+    /**
+     * Заказать расширенный разбор.
+     * POST /result/{slug}/{token}/report
+     *
+     * Ставит задание в очередь и возвращается на страницу результата: сам
+     * разбор делается фоновым обработчиком, потому что модель отвечает
+     * несколько минут и веб-запрос столько ждать не может.
+     */
+    public function requestReport(string $slug, string $token): void
+    {
+        [$session, $test] = $this->reportSessionOrFail($slug, $token);
+        if ($session === null) {
+            return;
+        }
+
+        $kind = $_POST['kind'] ?? '';
+        if (!in_array($kind, [Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL], true)) {
+            $this->redirect('/result/' . $slug . '/' . $token);
+        }
+
+        $mode = $this->reportMode($session);
+
+        // Промпт спрашивается здесь, а не в обработчике: если разбор для этой
+        // методики не открыт, посетитель узнаёт об этом сразу, а не через
+        // несколько минут ожидания. Наличие опубликованного промпта и означает,
+        // что разбор для этого сочетания методики, режима и вида разрешён.
+        $prompt = PromptRegistry::default()->published($slug, $mode, $kind);
+        if ($prompt === null) {
+            $this->redirect('/result/' . $slug . '/' . $token);
+        }
+
+        (new AiReportRepository($this->db))->request(
+            (string) $session['id'],
+            $slug,
+            $mode,
+            $kind,
+            $prompt,
+        );
+
+        $this->redirect('/result/' . $slug . '/' . $token);
+    }
+
+    /**
+     * Состояние разбора для опроса со страницы.
+     * GET /result/{slug}/{token}/report-status
+     */
+    public function reportStatus(string $slug, string $token): void
+    {
+        header('Content-Type: application/json');
+
+        [$session] = $this->reportSessionOrFail($slug, $token, true);
+        if ($session === null) {
+            return;
+        }
+
+        $kind = $_GET['kind'] ?? Prompt::KIND_CLEAR;
+        $reports = new AiReportRepository($this->db);
+        $report = $reports->findFor((string) $session['id'], $this->reportMode($session), (string) $kind);
+
+        if ($report === null) {
+            echo json_encode(['status' => 'none']);
+
+            return;
+        }
+
+        echo json_encode([
+            'status' => $report['status'],
+            // Разметку строит сервер: ответ модели — внешний текст, и вставлять
+            // его в страницу без разбора нельзя.
+            'html' => $report['status'] === AiReportRepository::STATUS_READY
+                ? ReportMarkdown::toHtml((string) $report['content'])
+                : null,
+            'failure_reason' => $report['failure_reason'] ?? null,
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Парный разбор делается, когда сравнение уже собрано; иначе одиночный.
+     *
+     * @param array<string, mixed> $session
+     */
+    private function reportMode(array $session): string
+    {
+        return $this->sessionManager->getPairComparisonBySession((string) $session['id']) !== null
+            ? 'pair'
+            : 'individual';
+    }
+
+    /**
+     * @return array{0: array<string, mixed>|null, 1: array<string, mixed>|null}
+     */
+    private function reportSessionOrFail(string $slug, string $token, bool $asJson = false): array
+    {
+        $session = $this->sessionManager->getSessionByResultToken($token);
+        $test = $session !== null ? $this->getSessionTestForRoute($session, $slug) : null;
+
+        if ($session === null || !$test) {
+            http_response_code(404);
+            echo $asJson ? json_encode(['error' => 'not found']) : $this->view->render('error-page');
+
+            return [null, null];
+        }
+
+        return [$session, $test];
     }
 
     /**

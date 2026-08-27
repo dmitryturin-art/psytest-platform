@@ -61,6 +61,8 @@ HTTP request
 | GET | `/result/{slug}/{token}` | `ResultController::show` | базовый результат |
 | GET | `/result/{slug}/{token}/pdf` | `ResultController::pdf` | PDF результата |
 | GET | `/result/{slug}/{token}/pair-status` | `ResultController::pairStatus` | polling pair flow |
+| POST | `/result/{slug}/{token}/report` | `ResultController::requestReport` | заказ расширенного разбора: ставит задание в очередь |
+| GET | `/result/{slug}/{token}/report-status` | `ResultController::reportStatus` | состояние разбора для опроса со страницы |
 | POST | `/result/{token}/delete` | `ResultController::delete` | отдельный delete route; token без slug |
 | GET | `/admin/login` | `OwnerController::login` | owner login; выключен без Argon2id hash в server env |
 | POST | `/admin/login` | `OwnerController::authenticate` | проверка owner credentials |

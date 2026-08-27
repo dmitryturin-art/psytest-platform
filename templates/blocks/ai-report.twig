@@ -1,0 +1,34 @@
+<section class="ai-report" data-ai-report data-mode="{{ ai_report.mode }}">
+    <h2 class="ai-report__title">Расширенный разбор</h2>
+    <p class="ai-report__intro">
+        Подробный разбор результата, подготовленный языковой моделью по рассчитанным показателям.
+        Он не заменяет консультацию специалиста и не является диагнозом.
+    </p>
+
+    {% for item in ai_report.kinds %}
+    <div class="ai-report__item" data-kind="{{ item.kind }}" data-status="{{ item.status }}">
+        <h3 class="ai-report__item-title">{{ item.title }}</h3>
+
+        {% if item.status == 'ready' %}
+            <div class="ai-report__body">{{ item.html|raw }}</div>
+        {% elseif item.status == 'pending' or item.status == 'running' %}
+            <p class="ai-report__waiting" role="status">
+                Разбор готовится. Это занимает несколько минут — страницу можно закрыть и вернуться позже.
+            </p>
+        {% else %}
+            {% if item.status == 'failed' %}
+            <p class="ai-report__error" role="alert">
+                Не получилось подготовить разбор{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}. Можно попробовать снова.
+            </p>
+            {% endif %}
+            <form method="post" action="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/report">
+                {{ csrf_field() }}
+                <input type="hidden" name="kind" value="{{ item.kind }}">
+                <button type="submit" class="btn btn-primary">
+                    {{ item.status == 'failed' ? 'Попробовать снова' : 'Получить разбор' }}
+                </button>
+            </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+</section>
