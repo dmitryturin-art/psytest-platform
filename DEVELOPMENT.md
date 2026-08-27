@@ -30,7 +30,13 @@ php -S 127.0.0.1:8000 -t public
 
 Откройте `http://127.0.0.1:8000/tests`. В production не используйте встроенный server и не направляйте document root в корень репозитория.
 
-`config.php` читает `.env` и environment variables. `DB_*`, `APP_*`, `SESSION_TTL_DAYS`, `ANONYMOUS_RETENTION_DAYS`, `CSRF_ENABLED`, `PDF_STORAGE_PATH` и logging configuration имеют текущий смысл. Мини-кабинет владельца остаётся выключенным, пока server environment не задаст `OWNER_DASHBOARD_PASSWORD_HASH` как Argon2id hash; пароль или hash не попадают в Git (как задать и как поменять — раздел «Пароль кабинета владельца» ниже). Legacy `YOOMONEY_*` и `OPENROUTER_*` не включают payment или AI: public routes retired, новый YooKassa/AI design не реализован.
+`config.php` читает `.env` и environment variables. `DB_*`, `APP_*`, `SESSION_TTL_DAYS`, `ANONYMOUS_RETENTION_DAYS`, `CSRF_ENABLED`, `PDF_STORAGE_PATH` и logging configuration имеют текущий смысл. Мини-кабинет владельца остаётся выключенным, пока server environment не задаст `OWNER_DASHBOARD_PASSWORD_HASH` как Argon2id hash; пароль или hash не попадают в Git (как задать и как поменять — раздел «Пароль кабинета владельца» ниже). Legacy `YOOMONEY_*` не включает payment: public routes retired, новый YooKassa design не реализован.
+
+Настройки ИИ (этап 07): `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_TIMEOUT_SECONDS`. Провайдером
+считается любой сервис с OpenAI-совместимым `chat/completions`, поэтому смена провайдера — это смена
+адреса и ключа без правки кода. Исторические `OPENROUTER_API_KEY` и `OPENROUTER_MODEL` читаются, если
+`AI_*` не заданы. Ключ хранится только в environment. Сам по себе заполненный ключ ничего не включает:
+исходящий вызов делается только из кода, который его запрашивает.
 
 ## Пароль кабинета владельца
 
