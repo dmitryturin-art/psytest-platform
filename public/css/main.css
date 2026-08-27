@@ -3530,8 +3530,29 @@ body {
     to { transform: rotate(360deg); }
 }
 
+/* Нажатая кнопка заказа разбора: та же крутилка, что и у ожидания, —
+   пока страница возвращается, видно, что запрос ушёл. */
+.btn--busy {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: progress;
+}
+
+.btn--busy::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: var(--radius-full);
+    animation: ai-report-spin 0.9s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .ai-report__waiting::before { animation: none; }
+    .ai-report__waiting::before,
+    .btn--busy::before { animation: none; }
 }
 
 .ai-report__error {

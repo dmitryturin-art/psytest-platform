@@ -30,7 +30,7 @@
                     Не получилось подготовить разбор{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}. Можно попробовать снова.
                 </p>
                 {% endif %}
-                <form method="post" action="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/report">
+                <form method="post" action="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/report" data-ai-report-form>
                     {{ csrf_field() }}
                     <input type="hidden" name="kind" value="{{ item.kind }}">
                     <button type="submit" class="btn btn-primary">

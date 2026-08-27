@@ -66,6 +66,24 @@ final class SessionCookiePolicyTest extends TestCase
         self::assertStringNotContainsString('session_start()', $owner);
     }
 
+    /**
+     * Фоновый разбор идёт минуты. Пока файл сессии заперт, следующий запрос
+     * браузера ждёт замок, и страница результата выглядит зависшей: посетитель
+     * не видит ни ожидания, ни опроса состояния. Поэтому сессия закрывается
+     * до того, как процесс уйдёт в работу.
+     */
+    public function testBackgroundReportReleasesTheSessionBeforeGenerating(): void
+    {
+        $source = (string) file_get_contents(dirname(__DIR__) . '/controllers/ResultController.php');
+
+        $closed = strpos($source, 'session_write_close();');
+        $generated = strpos($source, '$reports->claimNext();');
+
+        self::assertNotFalse($closed, 'Сессия должна закрываться перед фоновой работой.');
+        self::assertNotFalse($generated);
+        self::assertLessThan($generated, $closed);
+    }
+
     private function closeSession(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) {

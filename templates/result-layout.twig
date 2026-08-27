@@ -123,6 +123,23 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+// Заказ разбора уходит обычной отправкой формы: до возврата страницы проходит
+// секунда-другая, и без отметки кнопка выглядит так, будто нажатие пропало.
+(function () {
+    document.querySelectorAll('form[data-ai-report-form]').forEach(function (form) {
+        form.addEventListener('submit', function () {
+            const button = form.querySelector('button[type="submit"]');
+            if (!button || button.disabled) return;
+
+            button.classList.add('btn--busy');
+            button.textContent = 'Отправляем запрос…';
+            // Отключение откладывается: выключенная в самом обработчике кнопка
+            // в части браузеров отменяет саму отправку.
+            setTimeout(function () { button.disabled = true; }, 0);
+        });
+    });
+})();
+
 // Пока разбор готовится, страница спрашивает состояние и сама показывает
 // готовый текст. Разметку строит сервер: ответ модели — внешний текст.
 (function () {
