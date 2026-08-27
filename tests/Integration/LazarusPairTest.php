@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PsyTest\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
+use PsyTest\Core\TemplateFunctions;
 use PsyTest\Modules\Lazarus\LazarusModule;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
@@ -130,6 +131,7 @@ final class LazarusPairTest extends TestCase
         $r2 = $this->module->calculateResults($this->allAnswers(self: 6, partner: 8));
         $comparison = $this->module->comparePairResults($r1, $r2);
         $twig = new Environment(new FilesystemLoader(dirname(__DIR__, 2) . '/templates'), ['cache' => false]);
+        TemplateFunctions::register($twig);
 
         $web = $twig->render('blocks/pair-comparison.twig', ['comparison' => $comparison]);
         $pdf = $twig->render('blocks/pair-comparison.twig', ['comparison' => $comparison, 'is_pdf' => true]);

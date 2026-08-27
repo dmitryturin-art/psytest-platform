@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Core\AnswerValidator;
 use PsyTest\Core\ModuleLoader;
 use PsyTest\Core\ResultSectionRenderer;
+use PsyTest\Core\TemplateFunctions;
 use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\TestModuleInterface;
 use PsyTest\Tests\Fixtures\Demo\DemoWellbeingModule;
@@ -87,6 +88,7 @@ final class DemoModuleContractTest extends TestCase
             'cache' => false,
             'strict_variables' => true,
         ]);
+        TemplateFunctions::register($twig);
 
         $web = '';
         foreach ($sections as $section) {

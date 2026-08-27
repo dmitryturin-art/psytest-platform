@@ -8,6 +8,7 @@ use DOMDocument;
 use DOMXPath;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\ClinicalSafetyNotice;
+use PsyTest\Core\TemplateFunctions;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -53,6 +54,7 @@ final class ClinicalSafetyNoticeRenderedResultTest extends TestCase
             'cache' => false,
             'strict_variables' => true,
         ]);
+        TemplateFunctions::register($twig);
 
         return $twig->render('result-layout.twig', [
             'appName' => 'PsyTest',
