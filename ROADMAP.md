@@ -36,7 +36,7 @@
 | [00](docs/roadmap/phases/00-governance-baseline.md) | Управление и baseline | Завершён | единые правила, воспроизводимая точка отсчёта |
 | [01](docs/roadmap/phases/01-containment-security.md) | Containment и безопасность | Завершён | закрыты P0-дефекты и сломанный платный путь |
 | [02](docs/roadmap/phases/02-clinical-privacy-pilot.md) | Клиническая безопасность и бесплатный пилот | В работе | безопасный закрытый бесплатный пилот |
-| [03](docs/roadmap/phases/03-module-api-v2.md) | Module API v2 | В работе | новые типы тестов без slug-ветвлений в ядре |
+| [03](docs/roadmap/phases/03-module-api-v2.md) | Module API v2 | Завершён | новые типы тестов без slug-ветвлений в ядре |
 | [04](docs/roadmap/phases/04-ui-ux-redesign.md) | UI/UX и дизайн-система | Завершён | современный, удобный и профессиональный интерфейс |
 | [05](docs/roadmap/phases/05-smil-professional-parity.md) | Профессиональная комплектация SMIL | Не начат | канонический профиль и проверенные дополнительные шкалы |
 | [06](docs/roadmap/phases/06-orders-coupons-yookassa.md) | Заказы, купоны и YooKassa | Не начат, после 07 (D-037) | идемпотентная оплата и чеки поверх работающего разбора |
