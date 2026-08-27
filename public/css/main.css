@@ -3641,58 +3641,62 @@ body {
 }
 
 /* Готовый разбор свёрнут: он занимает несколько страниц и без сворачивания
-   сливается с результатом теста в один сплошной текст. */
+   сливается с результатом теста в один сплошной текст. Оформление повторяет
+   блок «Подробное сравнение по 16 пунктам» — на него владелец указал как
+   на образец, и одинаковые по смыслу элементы должны выглядеть одинаково. */
 .ai-report__details {
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
+    margin-top: var(--spacing-md);
+    overflow: hidden;
+    border: 1px solid var(--color-border, #dce3e8);
+    border-radius: var(--radius-md, 10px);
+    background: #fff;
 }
 
 .ai-report__summary {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: var(--spacing-sm);
-    padding: var(--spacing-md);
+    min-height: 48px;
+    padding: 12px var(--spacing-md);
     cursor: pointer;
+    color: var(--color-text, #2c3e50);
+    font-weight: 700;
     list-style: none;
-    border-radius: var(--radius-md);
+    background: #eef6fb;
+    border-left: 4px solid var(--color-primary, #3498db);
 }
 
 .ai-report__summary::-webkit-details-marker { display: none; }
 
 .ai-report__summary::before {
-    content: '▸';
-    color: var(--color-primary);
-    transition: transform 0.15s ease;
+    content: '+';
+    display: inline-grid;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--color-primary, #3498db);
+    color: #fff;
+    font-size: 1.2rem;
+    line-height: 1;
 }
 
-.ai-report__details[open] > .ai-report__summary::before {
-    transform: rotate(90deg);
-}
+.ai-report__details[open] > .ai-report__summary::before { content: '−'; }
 
 .ai-report__summary:hover,
-.ai-report__summary:focus-visible {
-    background: #eaf4fb;
-}
+.ai-report__summary:focus-visible { background: #e2f0f9; }
 
-.ai-report__summary-title {
-    font-weight: 600;
-    color: var(--color-text);
-}
+.ai-report__summary-title { font-weight: 700; }
 
 .ai-report__summary-hint {
     color: var(--color-text-light);
     font-size: var(--font-size-sm);
+    font-weight: 400;
 }
 
 .ai-report__details[open] > .ai-report__body {
-    padding: 0 var(--spacing-lg) var(--spacing-lg);
-    background: var(--color-bg-white);
+    padding: var(--spacing-lg);
     border-top: 1px solid var(--color-border);
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-}
-
-.ai-report__details[open] > .ai-report__body > *:first-child {
-    margin-top: var(--spacing-lg);
 }

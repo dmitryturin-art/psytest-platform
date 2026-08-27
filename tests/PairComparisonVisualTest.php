@@ -7,6 +7,7 @@ namespace PsyTest\Tests;
 use DOMDocument;
 use DOMXPath;
 use PHPUnit\Framework\TestCase;
+use PsyTest\Core\TemplateFunctions;
 use PsyTest\Modules\Lazarus\LazarusModule;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
@@ -103,6 +104,7 @@ final class PairComparisonVisualTest extends TestCase
             'cache' => false,
             'strict_variables' => true,
         ]);
+        TemplateFunctions::register($twig);
         $html = $twig->render('blocks/pair-chart.twig', ['chart' => $chart]);
 
         self::assertSame(1, substr_count($html, '<svg'));

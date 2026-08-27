@@ -53,14 +53,12 @@ class View
         $this->twig->addGlobal('basePath', $this->getBasePath());
         $this->twig->addGlobal('isDebug', $isDebug);
 
-        // Add custom functions
-        $this->twig->addFunction(new \Twig\TwigFunction('csrf_field', function () {
-            return '<input type="hidden" name="csrf_token" value="' . $this->generateCsrfToken() . '">';
-        }, ['is_safe' => ['html']]));
-
-        $this->twig->addFunction(new \Twig\TwigFunction('asset', function (string $path) {
-            return $this->getBasePath() . '/' . ltrim($path, '/');
-        }));
+        // Набор функций шаблонов общий с тестами рендеринга: см. TemplateFunctions.
+        TemplateFunctions::register(
+            $this->twig,
+            $this->getBasePath(),
+            fn (): string => $this->generateCsrfToken(),
+        );
     }
 
     /**

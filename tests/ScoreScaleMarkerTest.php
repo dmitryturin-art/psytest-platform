@@ -6,6 +6,7 @@ namespace PsyTest\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\ModuleLoader;
+use PsyTest\Core\TemplateFunctions;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -21,7 +22,10 @@ final class ScoreScaleMarkerTest extends TestCase
 {
     private function twig(): Environment
     {
-        return new Environment(new FilesystemLoader(dirname(__DIR__) . '/templates'), ['cache' => false]);
+        $twig = new Environment(new FilesystemLoader(dirname(__DIR__) . '/templates'), ['cache' => false]);
+        TemplateFunctions::register($twig);
+
+        return $twig;
     }
 
     /** @param array<string, array{min: int, max: int}> $thresholds */

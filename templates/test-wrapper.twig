@@ -193,7 +193,7 @@ const TEST_CONFIG = {
     basePath: '{{ basePath }}',
 };
 </script>
-<script src="{{ basePath }}/js/test-taking.js?v={{ "now"|date("U") }}"></script>
+<script src="{{ asset('js/test-taking.js') }}"></script>
 {% if module.getCustomJavaScript() %}
 <script src="{{ module.getCustomJavaScript() }}?v={{ "now"|date("U") }}"></script>
 {% endif %}

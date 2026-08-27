@@ -6,6 +6,7 @@ namespace PsyTest\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use PsyTest\Core\TemplateFunctions;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
@@ -252,9 +253,12 @@ final class RendererContractTest extends TestCase
 
     private function strictTwig(): Environment
     {
-        return new Environment(new FilesystemLoader(dirname(__DIR__) . '/templates'), [
+        $twig = new Environment(new FilesystemLoader(dirname(__DIR__) . '/templates'), [
             'cache' => false,
             'strict_variables' => true,
         ]);
+        TemplateFunctions::register($twig);
+
+        return $twig;
     }
 }
