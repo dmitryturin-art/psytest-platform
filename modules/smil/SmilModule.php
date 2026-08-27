@@ -1116,6 +1116,157 @@ class SmilModule extends BaseTestModule
     /**
      * {@inheritDoc}
      */
+    /**
+     * {@inheritDoc}
+     *
+     * Наружу уходит только уровень шкал. Сознательно не передаются:
+     *
+     * - формулировки 566 пунктов и ответы респондента по пунктам — модель
+     *   работает с профилем, а не с отдельными утверждениями, а тексты
+     *   пунктов принадлежат авторской адаптации методики;
+     * - собственные интерпретирующие тексты платформы по каждой шкале —
+     *   иначе модель пересказывает наш вывод вместо того, чтобы построить свой;
+     * - нормативные M и σ дополнительных шкал — T-балл уже посчитан здесь,
+     *   и отправлять нормативные данные наружу незачем;
+     * - пол в чистом виде: он выражен идентификатором формы методики, потому
+     *   что клинически значима именно форма, по которой считался профиль.
+     *
+     * @param array<string, mixed> $results Результат calculateResults().
+     *
+     * @return array<string, mixed>|null
+     */
+    public function aiReportContext(array $results, string $mode): ?array
+    {
+        if ($mode !== 'individual') {
+            return null;
+        }
+
+        if (!isset($results['t_scores'], $results['validity'], $results['profile'])) {
+            return null;
+        }
+
+        return [
+            'test' => 'smil',
+            'mode' => 'individual',
+            'form' => $this->aiFormLabel($results['gender'] ?? null),
+            'validity' => $this->aiValidity($results['validity']),
+            'profile' => $this->aiProfile($results),
+            'indices' => $results['indices'] ?? [],
+            'additional_scales' => $this->aiAdditionalScales($results['additional_scores'] ?? []),
+            'completeness' => [
+                'answered' => $results['answered_count'] ?? null,
+                'total' => $results['total_questions'] ?? null,
+                'rate_percent' => $results['completion_rate'] ?? null,
+            ],
+        ];
+    }
+
+    /** Русские подписи внутренних кодов типа профиля — только для отчёта ИИ. */
+    private const AI_PROFILE_TYPE_LABELS = [
+        'normosthenic' => 'нормостенический',
+        'neurotic' => 'невротический',
+        'psychotic' => 'психотический',
+        'personal_deviation' => 'личностные девиации',
+        'mixed' => 'смешанный',
+    ];
+
+    /**
+     * Форма методики, по которой считался профиль. Подростковая форма в
+     * платформе отсутствует, поэтому вариантов пока два (D-040).
+     */
+    private function aiFormLabel(mixed $gender): string
+    {
+        return match ($gender) {
+            'male' => 'взрослая мужская',
+            'female' => 'взрослая женская',
+            default => 'не определена',
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $validity
+     *
+     * @return array<string, mixed>
+     */
+    private function aiValidity(array $validity): array
+    {
+        return [
+            'is_valid' => (bool) ($validity['is_valid'] ?? false),
+            'L' => $validity['L_score'] ?? null,
+            'F' => $validity['F_score'] ?? null,
+            'K' => $validity['K_score'] ?? null,
+            'FK_index' => $validity['FK_index'] ?? null,
+            'unknown_count' => $validity['unknown_count'] ?? null,
+            'warnings' => array_values($validity['warnings'] ?? []),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $results
+     *
+     * @return array<string, mixed>
+     */
+    private function aiProfile(array $results): array
+    {
+        $profile = $results['profile'];
+        $scales = [];
+
+        foreach ($profile['scales'] ?? [] as $code => $scale) {
+            $scales[] = [
+                'code' => (string) $code,
+                'name' => $scale['name'] ?? '',
+                't' => $scale['score'] ?? null,
+                'level' => $scale['level'] ?? null,
+            ];
+        }
+
+        // Ведущие шкалы приходят из расчёта целыми объектами и несут наш
+        // собственный интерпретирующий текст. Наружу он не уходит: иначе
+        // модель пересказывает готовый вывод платформы вместо своего анализа.
+        $dominant = [];
+        foreach ($profile['dominant'] ?? [] as $scale) {
+            $dominant[] = [
+                'name' => $scale['name'] ?? '',
+                't' => $scale['score'] ?? null,
+                'level' => $scale['level'] ?? null,
+            ];
+        }
+
+        $type = $profile['profile_type'] ?? null;
+
+        return [
+            'scales' => $scales,
+            'dominant' => $dominant,
+            // Код типа профиля — внутреннее значение расчёта, и модель повторяет
+            // его в отчёте буквально. Рядом идёт русская подпись, чтобы в готовый
+            // клинический документ не попадало «psychotic».
+            'profile_type' => $type,
+            'profile_type_label' => self::AI_PROFILE_TYPE_LABELS[$type] ?? 'не определён',
+            'code_type' => $profile['code_type'] ?? null,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $additional
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function aiAdditionalScales(array $additional): array
+    {
+        $scales = [];
+
+        foreach ($additional as $code => $scale) {
+            $scales[] = [
+                'code' => (string) $code,
+                'name' => $scale['name'] ?? '',
+                't' => $scale['t'] ?? null,
+                'raw' => $scale['raw'] ?? null,
+            ];
+        }
+
+        return $scales;
+    }
+
     public function getAnswerSchema(): array
     {
         return [
