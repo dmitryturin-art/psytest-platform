@@ -123,11 +123,57 @@ class Database
         try {
             $stmt = $this->connection->prepare($sql);
             $stmt->execute($params);
+
             return $stmt;
         } catch (PDOException $e) {
-            error_log('Database query failed [' . $e->getCode() . ']');
-            throw $e;
+            if (!self::isConnectionLost($e)) {
+                error_log('Database query failed [' . $e->getCode() . ']');
+
+                throw $e;
+            }
+
+            // Внутри транзакции повторять запрос нельзя: новое соединение не
+            // знает о начатой транзакции, и повтор выполнился бы вне её, молча
+            // разорвав атомарность. Отказ обязан дойти до вызывающего.
+            //
+            // Но соединение всё равно восстанавливается: транзакция потеряна в
+            // любом случае, а без переподключения объект остался бы навсегда
+            // непригодным — PDO продолжает считать, что транзакция открыта,
+            // и все последующие запросы падали бы здесь же.
+            if ($this->connection->inTransaction()) {
+                error_log('Database connection lost inside a transaction');
+                $this->connect();
+
+                throw $e;
+            }
+
+            // Соединение закрыл сервер, пока мы были заняты. На рабочем хостинге
+            // `wait_timeout` равен 30 секундам, а подготовка ИИ-разбора занимает
+            // больше двух минут — к моменту записи результата соединения уже нет.
+            //
+            // Повтор здесь безопасен именно для этого случая: раз соединение
+            // потеряно, запрос до сервера не дошёл и выполниться не мог.
+            $this->connect();
+
+            $stmt = $this->connection->prepare($sql);
+            $stmt->execute($params);
+
+            return $stmt;
         }
+    }
+
+    /**
+     * Потеряно ли соединение с сервером.
+     *
+     * Определяется только по коду драйвера: 2006 («server has gone away») и
+     * 2013 («lost connection»). Текст исключения здесь принципиально не
+     * разбирается — драйверное сообщение может содержать значения параметров
+     * запроса, то есть данные респондентов, и в этом файле его не трогают
+     * вовсе (это же стережёт `DatabaseErrorLoggingTest`).
+     */
+    private static function isConnectionLost(PDOException $e): bool
+    {
+        return in_array((int) ($e->errorInfo[1] ?? 0), [2006, 2013], true);
     }
 
     /**
