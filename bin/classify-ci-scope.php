@@ -47,6 +47,7 @@ while (($line = fgets(STDIN)) !== false) {
 
     if (
         str_starts_with($path, 'database/')
+        || str_starts_with($path, 'core/Ai/')
         || str_starts_with($path, 'services/')
         || in_array($path, $databasePaths, true)
     ) {

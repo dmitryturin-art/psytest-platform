@@ -121,6 +121,7 @@ codex/06-yookassa-orders
 ```bash
 composer validate --strict --no-check-publish
 composer audit
+composer migrate
 composer test
 composer analyse
 composer lint

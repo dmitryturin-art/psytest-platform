@@ -1,10 +1,10 @@
 # Архитектура PsyTest Platform
 
-Статус: **фактическое состояние на 2026-08-22**. Здесь описан работающий код, а будущие AI, YooKassa, кабинет терапевта, UI redesign и Module API v2 — в [ROADMAP.md](ROADMAP.md).
+Статус: **сводка актуализирована 2026-09-08**. Module API v2, UI и базовый AI-контур реализованы. Полные кабинеты, редакции/одобрение отчётов и YooKassa остаются в [ROADMAP.md](ROADMAP.md).
 
 ## Обзор
 
-PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платная интерпретация, YooKassa и новый AI-контур не реализованы; старые public endpoints этого контура отвечают `410 Gone`.
+PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платёжный контур и YooKassa не реализованы; старые payment endpoints отвечают `410 Gone`. Новый бесплатный AI-контур работает через `core/Ai/`: реестр промптов, адаптер, очередь `ai_reports`, генерация после HTTP-ответа и polling. Политика согласия, клиентских черновиков, snapshot и удаления имеет открытые дефекты [ревью 08.09](docs/audit/2026-09-08-delivery-review.md).
 
 | Слой | Фактическая технология |
 |---|---|
@@ -86,7 +86,7 @@ HTTP request
 
 `ModuleLoader` сканирует `modules/*`, читает класс из PHP-файла, инстанцирует его и регистрирует по `metadata.slug`. Имя директории не всегда равно slug: например, `modules/beck-depression` имеет slug `bdi`.
 
-Каждый модуль реализует `TestModuleInterface` и обычно наследует `BaseTestModule`:
+Каждый модуль реализует `TestModuleInterface` и обычно наследует `BaseTestModule`. Ниже сокращённый пример; полный действующий контракт, включая answer schema, capabilities и AI context, — `modules/TestModuleInterface.php`:
 
 ```php
 interface TestModuleInterface
@@ -139,15 +139,15 @@ interface TestModuleInterface
 
 ## Legacy integrations и целевой контур
 
-`AIInterpretationService`, `PaymentService`, legacy `ApiController` methods и старые AI/payment tables — исторические слои. Они не доказывают готовность оплаты или AI и не должны подключаться к новым public routes. Отдельный consent-boundary будет спроектирован вместе с реальным checkout и AI-flow, а не хранится как неподключённый задел.
+`AIInterpretationService`, `PaymentService`, legacy `ApiController` methods и старые AI/payment tables — исторические слои. Они не доказывают готовность оплаты или AI и не должны подключаться к новым public routes. Граница согласия требуется уже бесплатному AI-flow и входит в ближайший K0; она не откладывается до оплаты.
 
-Новая YooKassa state machine относится к этапу 06. Новый AI flow с отдельным consent, provider boundary, versioned prompts, report audiences и кабинетом терапевта относится к этапу 07. Критерии и release gates — в [ROADMAP.md](ROADMAP.md).
+Новая YooKassa state machine относится к этапу 06. В этапе 07 уже реализованы provider boundary, versioned prompts и очередь с выдачей. Отдельный consent, snapshots, revisions/approval и полный кабинет остаются незавершёнными. Критерии и release gates — в [ROADMAP.md](ROADMAP.md).
 
 ## База данных и миграции
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, pair comparisons, activity log и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, pair comparisons, activity log, новую ai_reports и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 
@@ -156,6 +156,7 @@ interface TestModuleInterface
 ```bash
 composer validate --strict --no-check-publish
 composer audit
+composer migrate
 composer test
 composer analyse
 composer lint
@@ -163,4 +164,4 @@ php bin/check-architecture.php
 composer baseline:check
 ```
 
-Актуальные status, evidence и следующий work package — в [STATUS.md](docs/roadmap/STATUS.md), [WORKLOG.md](docs/roadmap/WORKLOG.md) и [CHECKPOINT.md](docs/roadmap/CHECKPOINT.md). Новый модуль относится к этапу 03: текущий контракт имеет специальные случаи и будет заменён Module API v2.
+Актуальные status, evidence и следующий work package — в [STATUS.md](docs/roadmap/STATUS.md), [WORKLOG.md](docs/roadmap/WORKLOG.md) и [CHECKPOINT.md](docs/roadmap/CHECKPOINT.md). Module API v2 реализован в закрытом этапе 03; новые реальные модули добавляются в этапе 09.
