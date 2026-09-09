@@ -33,7 +33,7 @@
 
 ## Открытые дефекты по ревью 08.09
 
-- R1: явное AI-consent и защита клиентского черновика отсутствуют в текущей выдаче.
+- R1 исправлен в K0b: server-side just-in-time AI-consent; therapist_case не получает черновик через HTML или status JSON.
 - R2: обработчик использует живую версию промпта/результата вместо immutable snapshot.
 - R3 исправлен в 07.19: после исчерпания попыток статус failed; DB regression проходит.
 - R4: AI persistence не включал DB matrix PR — исправлено с regression test в 07.18.

@@ -20,6 +20,14 @@
 
 ## 2026-09-09
 
+### 07.K0b — согласие на внешний AI и граница клиентского черновика
+
+- Этап / ветка / commit: 07, `codex/07-ai-consent-draft-boundary`; commit указан после финального review.
+- Сделано: форма разборов содержит утверждённое just-in-time согласие. `ResultController` повторно проверяет `ai_consent=1` до постановки задания, поэтому поддельный POST без согласия не вызывает провайдера. Для `therapist_case` HTML показывает только ограничение, `report-status` отвечает `restricted`, а запрос нового разбора отвергается; базовый результат не затронут.
+- Проверки и evidence: syntax PHP — OK; targeted `SessionTestIntegrityTest` + `SessionCookiePolicyTest` — 10 tests / 31 assertions OK; полный `bin/local-gate.sh` — OK на MySQL 5.7.44.
+- Решение: D-050. Согласие не сохраняет имя, email или result token и не расширяет AI-context; публичная формулировка утверждена владельцем.
+- Следующий шаг: K1 — универсальные приглашения для всех поддерживаемых тестов. Push/merge/deploy не выполнялись.
+
 ### 07.K0a — soft-delete удаляет AI-артефакты
 
 - Этап / ветка / commit: 07, `codex/07-delete-ai-artifacts`; commit указан после финального review.

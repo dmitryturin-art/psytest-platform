@@ -62,4 +62,15 @@ final class SessionTestIntegrityTest extends TestCase
         self::assertStringContainsString('createPairSession($test[\'id\'], $partnerToken)', $pairStart);
         self::assertStringContainsString('renderPairInviteError(409', $pairStart);
     }
+
+    public function testAiConsentAndTherapistDraftBoundaryAreEnforcedServerSide(): void
+    {
+        $controller = (string) file_get_contents(dirname(__DIR__) . '/controllers/ResultController.php');
+        $template = (string) file_get_contents(dirname(__DIR__) . '/templates/blocks/ai-report.twig');
+
+        self::assertStringContainsString("(\$_POST['ai_consent'] ?? null) !== '1'", $controller);
+        self::assertStringContainsString("=== 'therapist_case'", $controller);
+        self::assertStringContainsString("['status' => 'restricted']", $controller);
+        self::assertStringContainsString('name="ai_consent"', $template);
+    }
 }

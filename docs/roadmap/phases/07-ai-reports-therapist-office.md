@@ -237,4 +237,5 @@ Qwen напрямую у Alibaba, DeepSeek напрямую, либо росси
 - [x] START_HERE: конкретный следующий пакет и приёмка, подключение через AGENTS.
 - [x] R3: exhausted stale job переходит в failed; условный UPDATE не затирает готовый результат; DB regression и полный gate прошли.
 - [x] K0a: soft-delete транзакционно удаляет AI-артефакты, включая ready/pending/running; late worker не восстанавливает текст.
-- [ ] Далее K0b и K1; K1 универсален для поддерживаемых тестов по D-049.
+- [x] K0b: server-side just-in-time consent; therapist_case не получает черновик через HTML/status JSON.
+- [ ] Далее K1; K1 универсален для поддерживаемых тестов по D-049.

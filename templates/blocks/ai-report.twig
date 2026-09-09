@@ -5,6 +5,10 @@
         Он не заменяет консультацию специалиста и не является диагнозом.
     </p>
 
+    {% if ai_report.restricted %}
+        <p class="ai-report__waiting" role="status">Расширенный черновик доступен специалисту после проверки и одобрения.</p>
+    {% else %}
+
     {% for item in ai_report.kinds %}
     <div class="ai-report__item" data-kind="{{ item.kind }}" data-status="{{ item.status }}">
         {% if item.status == 'ready' %}
@@ -33,6 +37,10 @@
                 <form method="post" action="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/report" data-ai-report-form>
                     {{ csrf_field() }}
                     <input type="hidden" name="kind" value="{{ item.kind }}">
+                    <label>
+                        <input type="checkbox" name="ai_consent" value="1" required>
+                        Разрешаю передать обезличенные результаты теста внешнему AI-сервису для подготовки черновика разбора. Имя, email и ссылка на результат не передаются.
+                    </label>
                     <button type="submit" class="btn btn-primary">
                         {{ item.status == 'failed' ? 'Попробовать снова' : 'Получить разбор' }}
                     </button>
@@ -41,4 +49,5 @@
         {% endif %}
     </div>
     {% endfor %}
+    {% endif %}
 </section>
