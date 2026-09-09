@@ -128,6 +128,25 @@ final class AiReportQueueTest extends TestCase
         self::assertSame(AiReportRepository::STATUS_PENDING, $this->reports->find((string) $job['id'])['status']);
     }
 
+    public function testStuckJobAfterItsLastAttemptBecomesTerminallyFailed(): void
+    {
+        $job = $this->request();
+        $this->db->execute(
+            "UPDATE ai_reports
+             SET status = 'running', attempts = ?, updated_at = (NOW() - INTERVAL 2 HOUR)
+             WHERE id = ?",
+            [AiReportRepository::MAX_ATTEMPTS, $job['id']],
+        );
+
+        $released = $this->reports->releaseStuck(30);
+        $finished = $this->reports->find((string) $job['id']);
+
+        self::assertContains($job['id'], array_column($released, 'id'));
+        self::assertSame(AiReportRepository::STATUS_FAILED, $finished['status']);
+        self::assertSame('Обработчик не завершил последнюю допустимую попытку.', $finished['failure_reason']);
+        self::assertNull($this->reports->claimNext(), 'Исчерпавшее попытки зависшее задание не должно вернуться в очередь.');
+    }
+
     public function testReadyJobKeepsWhatIsNeededToExplainTheReport(): void
     {
         $job = $this->request();

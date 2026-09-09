@@ -60,3 +60,12 @@
 3. В колонке «Требуемое доказательство» добавить commit/test/report link и поставить `Закрыто`.
 4. Обновить `STATUS.md` и человеческий `CHANGELOG.md`, если эффект заметен владельцу/пользователю.
 5. Не закрывать finding только ссылкой на изменённый код без негативного или regression-теста.
+
+## Ревью 08.09: дополнение
+
+| ID | Finding | Evidence | Статус |
+|---|---|---|---|
+| R3 | Последняя прерванная попытка навсегда pending | WORKLOG 07.19; AiReportQueueTest::testStuckJobAfterItsLastAttemptBecomesTerminallyFailed; полный gate 09.09 | Закрыто |
+| R4 | AI persistence пропускал DB matrix | be84cbb, CiScopeClassifierTest | Закрыто |
+
+Остальные R-пункты открыты; порядок исполнения в START_HERE.
