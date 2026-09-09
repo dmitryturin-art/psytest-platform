@@ -31,6 +31,10 @@
         <span class="progress-text" id="progressText">0 / {{ test.question_count }}</span>
     </div>
 
+    {% if is_test_invite %}
+    <p class="test-invite-notice">Это персональное приглашение от специалиста на {{ test.name }}. После прохождения специалист увидит ваши ответы и результат. Не пересылайте ссылку другим людям.</p>
+    {% endif %}
+
     <!-- Test Form -->
     <form id="testForm" class="test-form" method="POST" action="{{ is_pair ? (basePath ~ '/test/' ~ test.slug ~ '/pair/submit') : (basePath ~ '/test/' ~ test.slug ~ '/submit') }}">
         <!-- CSRF Token -->

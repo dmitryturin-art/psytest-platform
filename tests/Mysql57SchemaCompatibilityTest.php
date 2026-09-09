@@ -14,8 +14,8 @@ final class Mysql57SchemaCompatibilityTest extends TestCase
         $bootstrap = (string) file_get_contents($projectRoot . '/database/migrations/20260708050511_init_schema.php');
         $snapshot = (string) file_get_contents($projectRoot . '/database/schema.sql');
 
-        foreach ([$bootstrap, $snapshot] as $schema) {
-            self::assertSame(2, substr_count($schema, '`expires_at` DATETIME NOT NULL'));
+        foreach ([$bootstrap => 2, $snapshot => 3] as $schema => $expiryColumns) {
+            self::assertSame($expiryColumns, substr_count($schema, '`expires_at` DATETIME NOT NULL'));
             self::assertStringNotContainsString('`expires_at` TIMESTAMP NOT NULL', $schema);
         }
     }

@@ -238,4 +238,5 @@ Qwen напрямую у Alibaba, DeepSeek напрямую, либо росси
 - [x] R3: exhausted stale job переходит в failed; условный UPDATE не затирает готовый результат; DB regression и полный gate прошли.
 - [x] K0a: soft-delete транзакционно удаляет AI-артефакты, включая ready/pending/running; late worker не восстанавливает текст.
 - [x] K0b: server-side just-in-time consent; therapist_case не получает черновик через HTML/status JSON.
-- [ ] Далее K1; K1 универсален для поддерживаемых тестов по D-049.
+- [x] K1: `test_invites` хранит test scope, хеш одноразового токена, owner-only note, 14-day expiry, revoke и claimed session. GET только показывает утверждённое информирование; CSRF-защищённый POST атомарно создаёт `therapist_case`. Кабинет показывает ожидает/открыто/завершено, позволяет отозвать неоткрытую ссылку и открыть ответы/результат без result-token. Regression coverage доказывает BDI/HADS scope, повторный claim, revoke/expiry, отсутствие raw token в БД и owner read. K1 не удаляет legacy shared visibility key: его безопасная миграция без обрыва действующих ссылок — отдельный compatibility package.
+- [ ] Далее K2: клиенты/назначения поверх готового invitation flow.

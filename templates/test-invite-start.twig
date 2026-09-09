@@ -1,0 +1,15 @@
+{% extends "layout.twig" %}
+
+{% block title %}Приглашение на тест — {{ appName }}{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="invite-title">
+    <p class="owner-panel-eyebrow">Персональное приглашение</p>
+    <h1 id="invite-title">{{ test_name }}</h1>
+    <p class="test-invite-notice">Это персональное приглашение от специалиста на {{ test_name }}. После прохождения специалист увидит ваши ответы и результат. Не пересылайте ссылку другим людям.</p>
+    <form method="post" action="{{ basePath }}/invite/{{ token }}/start" class="owner-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-primary">Начать тест</button>
+    </form>
+</section>
+{% endblock %}

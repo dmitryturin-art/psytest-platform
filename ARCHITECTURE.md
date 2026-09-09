@@ -1,6 +1,6 @@
 # Архитектура PsyTest Platform
 
-Статус: **сводка актуализирована 2026-09-08**. Module API v2, UI и базовый AI-контур реализованы. Полные кабинеты, редакции/одобрение отчётов и YooKassa остаются в [ROADMAP.md](ROADMAP.md).
+Статус: **сводка актуализирована 2026-09-09**. Module API v2, UI, базовый AI-контур и одноразовые owner invitations реализованы. Полные кабинеты, редакции/одобрение отчётов и YooKassa остаются в [ROADMAP.md](ROADMAP.md).
 
 ## Обзор
 
@@ -54,6 +54,8 @@ HTTP request
 | GET | `/` | `HomeController::index` | публичный лендинг с каталогом доступных методик; пока `noindex` по общей policy |
 | GET | `/tests` | `HomeController::tests` | каталог |
 | GET | `/test/{slug}` | `TestController::start` | начало теста |
+| GET | `/invite/{token}` | `TestController::invite` | read-only preview персонального приглашения |
+| POST | `/invite/{token}/start` | `TestController::startInvite` | CSRF-защищённое одноразовое связывание invitation и session |
 | POST | `/test/{slug}/save` | `TestController::save` | autosave |
 | POST | `/test/{slug}/submit` | `TestController::submit` | validation и scoring |
 | GET | `/test/{slug}/pair` | `TestController::pairStart` | второй партнёр Lazarus |
@@ -71,6 +73,9 @@ HTTP request
 | POST | `/admin/case/lookup` | `OwnerController::lookupCase` | поиск завершённого кейса по result token |
 | POST | `/admin/case/assign` | `OwnerController::assignCase` | явное назначение therapist case |
 | POST | `/admin/case/delete` | `OwnerController::deleteCase` | полное ручное удаление кейса |
+| POST | `/admin/invites/create` | `OwnerController::createInvite` | создать 14-day invitation для поддерживаемой методики |
+| POST | `/admin/invites/revoke` | `OwnerController::revokeInvite` | отозвать неоткрытое invitation |
+| GET | `/admin/invited-case/{sessionId}` | `OwnerController::viewInvitedCase` | защищённо показать ответы и результат invitation case |
 | GET | `/pair/{id}` | `ResultController::pairShow` | сравнение пары |
 | GET | `/pair/{id}/pdf` | `ResultController::pairPdf` | PDF сравнения |
 | GET | `/api/health` | `ApiController::health` | health check |
@@ -124,7 +129,7 @@ interface TestModuleInterface
 
 Новая session получает `retention_class = anonymous`. Независимо существуют access TTL (`expires_at`), срок physical retention 180 дней от `created_at`, public soft-delete и плановый `SessionLifecycleService`, физически удаляющий просроченные anonymous sessions и известные artifacts.
 
-`therapist_case` назначается только владельцем через минимальный `/admin`, защищённый Argon2id password, session, CSRF и глобальным лимитом неудачных входов. Dashboard принимает result token только в POST lookup, не помещает его в URL или audit details; назначить можно лишь завершённую anonymous-сессию. Ручное удаление физически очищает session и известные artifacts, затем оставляет только обезличенное operational событие без идентификаторов кейса. Полный кабинет с отчётами относится к этапу 07. Фактические границы — в [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md), policy — в [RETENTION_POLICY.md](docs/roadmap/RETENTION_POLICY.md).
+`therapist_case` назначается либо владельцем через минимальный `/admin` после завершения anonymous-сессии, либо атомарно при CSRF-защищённом старте персонального приглашения. `test_invites` хранит только SHA-256 хеш bearer-токена, test scope, срок, статус, owner-only note и ссылку на созданную session; raw token появляется лишь в одноразовом copy field владельца. Dashboard защищён Argon2id password, session, CSRF и глобальным лимитом неудачных входов. Ручное удаление физически очищает session и известные artifacts, затем оставляет только обезличенное operational событие без идентификаторов кейса. Полный кабинет с отчётами относится к этапу 07. Фактические границы — в [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md), policy — в [RETENTION_POLICY.md](docs/roadmap/RETENTION_POLICY.md).
 
 ## Безопасность и privacy границы
 
@@ -147,7 +152,7 @@ interface TestModuleInterface
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, pair comparisons, activity log, новую ai_reports и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, `test_invites`, pair comparisons, activity log, новую ai_reports и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 

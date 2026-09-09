@@ -20,6 +20,16 @@
 
 ## 2026-09-09
 
+### 07.K1 — универсальные одноразовые приглашения
+
+- Этап / ветка / commit: 07, `codex/07-universal-test-invites`; commit указан после финального review.
+- Цель: дать специалисту один вертикальный сценарий «создать → скопировать → пройти выбранную методику → увидеть открытие/завершение, ответы и результат» для любой поддерживаемой методики, не смешивая его с Lazarus pair token.
+- Сделано: migration `20260909010000` создаёт `test_invites`: test scope, SHA-256 хеш bearer-токена, owner-only note, pending/claimed/revoked, expiry и one-to-one claimed session. Владелец выбирает методику из runtime-supported ModuleLoader list, получает ссылку только во flash copy-field, отзывает неоткрытую ссылку и видит последние состояния. GET `/invite/{token}` не меняет БД и показывает утверждённое информирование; CSRF-protected POST `/invite/{token}/start` в транзакции atomically claim-ит invite и создаёт `therapist_case`. Защищённый owner route показывает raw answers/results по session ID без result token в URL. Legacy visibility key не удалён: его безопасный вывод из обращения без обрыва действующих ссылок — отдельный compatibility package.
+- Решения: D-051 — 14 календарных дней и утверждённая клиентская формулировка. Контакты клиента не добавлялись; AI/scoring/нормы не менялись.
+- Проверки и evidence: `composer migrate && composer test -- tests/Integration/TestInviteServiceTest.php tests/Integration/MigratedSchemaTest.php tests/OwnerDashboardContractTest.php tests/Mysql57SchemaCompatibilityTest.php` — 8 tests / 73 assertions OK; `composer analyse` — OK; `composer lint` первоначально нашёл порядок import, затем исправлен. Финальный `bin/local-gate.sh` — **OK** на MySQL 5.7.44 (validate, audit, PHPStan, CS Fixer, architecture, baseline, migrations, полный PHPUnit). В браузере проверен preview и CSRF-старт синтетического BDI invite; после проверки synthetic row/session и временный localhost server удалены.
+- Graphify: freshness — STALE (177 changed / 26 deleted); incremental semantic update не запускался, чтобы не расходовать внешний лимит без отдельной необходимости. До CURRENT graph не используется как evidence; fallback — прямое чтение исходников, applied schema и regression tests. Повторить freshness/update до следующего architectural query, ориентир 10.09.2026.
+- Следующий шаг: K2 — клиенты/назначения поверх invitation flow, отдельным work package. Push/merge/deploy не выполнялись.
+
 ### 07.K0b — согласие на внешний AI и граница клиентского черновика
 
 - Этап / ветка / commit: 07, `codex/07-ai-consent-draft-boundary`; commit указан после финального review.

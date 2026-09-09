@@ -36,7 +36,8 @@ class SessionManager
      * Create a new test session
      *
      * @param int $testId Test ID
-     * @param array $options Optional: email, name, demographics, partner_token
+     * @param array $options Optional: email, name, demographics, partner_token,
+     *                       retention_class (internal privileged callers only)
      * @return array Session data including tokens
      */
     public function createSession(int $testId, array $options = []): array
@@ -44,6 +45,10 @@ class SessionManager
         $sessionId = Uuid::uuid4()->toString();
         $sessionToken = $this->generateUniqueToken();
         $partnerToken = $options['partner_token'] ?? null;
+        $retentionClass = $options['retention_class'] ?? RetentionPolicy::ANONYMOUS;
+        if (!in_array($retentionClass, [RetentionPolicy::ANONYMOUS, RetentionPolicy::THERAPIST_CASE], true)) {
+            throw new \InvalidArgumentException('Unknown retention class');
+        }
 
         $expiresAt = new DateTimeImmutable("+{$this->sessionTtlDays} days");
 
@@ -58,7 +63,7 @@ class SessionManager
             'answers' => json_encode([]),
             'calculated_results' => json_encode([]),
             'status' => 'partial',
-            'retention_class' => RetentionPolicy::ANONYMOUS,
+            'retention_class' => $retentionClass,
             'created_at' => date('Y-m-d H:i:s'),
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
@@ -75,7 +80,7 @@ class SessionManager
             'test_id' => $testId,
             'session_token' => $sessionToken,
             'partner_token' => $partnerToken,
-            'retention_class' => RetentionPolicy::ANONYMOUS,
+            'retention_class' => $retentionClass,
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
     }

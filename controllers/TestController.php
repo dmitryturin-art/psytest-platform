@@ -12,11 +12,51 @@ namespace PsyTest\Controllers;
 
 use PsyTest\Core\AnswerMerger;
 use PsyTest\Core\AnswerValidator;
+use PsyTest\Core\TestInviteService;
 use PsyTest\Modules\TestModuleInterface;
 use Ramsey\Uuid\Uuid;
 
 class TestController extends BaseController
 {
+    /** Render a bearer-link preview without consuming the invitation. */
+    public function invite(string $token): void
+    {
+        $invite = (new TestInviteService($this->db, $this->sessionManager))->preview($token);
+        if ($invite === null) {
+            $this->notFoundTest('invite');
+
+            return;
+        }
+
+        echo $this->view->render('test-invite-start', [
+            'token' => $token,
+            'test_name' => $invite['test_name'],
+        ]);
+    }
+
+    /** Claim a one-time owner invitation, independently from pair links. */
+    public function startInvite(string $token): void
+    {
+        $claimed = (new TestInviteService($this->db, $this->sessionManager))->claim($token);
+        if ($claimed === null) {
+            $this->notFoundTest('invite');
+
+            return;
+        }
+
+        $test = $this->getTestOrFail((string) $claimed['test']['slug']);
+        $module = $this->getModuleOrFail((string) $test['slug']);
+        $template = $module->getTestTemplate() ?? 'test-wrapper';
+
+        echo $this->view->render($template, [
+            'test' => array_merge($test, $module->getMetadata()),
+            'session' => $claimed['session'],
+            'questions' => $module->getQuestions(),
+            'module' => $module,
+            'is_test_invite' => true,
+        ]);
+    }
+
     /**
      * Start a test
      * GET /test/{slug}
