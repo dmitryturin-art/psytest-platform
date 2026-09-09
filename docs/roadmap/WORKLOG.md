@@ -20,6 +20,14 @@
 
 ## 2026-09-09
 
+### 07.K0a — soft-delete удаляет AI-артефакты
+
+- Этап / ветка / commit: 07, `codex/07-delete-ai-artifacts`; commit указан после финального review.
+- Сделано: `SessionManager::deleteSession()` в одной транзакции удаляет все `ai_reports` сессии и затем обезличивает сессию. Удалённая строка не может быть обновлена запоздавшим worker.
+- Проверки и evidence: DB regression создаёт ready/pending/running отчёты и owner_context, вызывает публично используемый `deleteSession`, проверяет удаление всех трёх и невозможность resurrection через `markReady`; `composer migrate && composer test -- tests/AiReportQueueTest.php` — 9 tests / 44 assertions OK; полный `bin/local-gate.sh` — OK на MySQL 5.7.44.
+- Решение владельца D-049: K1 универсален для любого поддерживаемого теста; весь трек дополнительных шкал СМИЛ отложен после основного пользовательского и кабинетного контура.
+- Следующий шаг: K0b, затем универсальный K1. Push/merge/deploy не выполнялись.
+
 ### 05.S1 — реестр приложения Собчик и сверка 23 runtime-шкал
 
 - Этап / ветка / commit: 05, `codex/05-additional-scales-inventory`; commit указан после финального review.

@@ -226,19 +226,35 @@ class SessionManager
         $session = $this->getSessionById($sessionId);
 
         if ($session) {
-            $this->db->update(
-                'test_sessions',
-                [
-                    'status' => 'deleted',
-                    'answers' => json_encode([]),
-                    'calculated_results' => json_encode([]),
-                    'user_email' => null,
-                    'user_name' => null,
-                    'demographics' => null,
-                ],
-                'id = ?',
-                [$sessionId]
-            );
+            $this->db->beginTransaction();
+            try {
+                // Soft-delete сохраняет техническую оболочку сессии, поэтому FK
+                // CASCADE не срабатывает сам. Разбор и owner_context — клинические
+                // данные: физически удаляем их в той же транзакции. Поздний worker
+                // больше не найдёт строку и не сможет вернуть текст отчёта.
+                $this->db->delete('ai_reports', 'session_id = ?', [$sessionId]);
+
+                $this->db->update(
+                    'test_sessions',
+                    [
+                        'status' => 'deleted',
+                        'answers' => json_encode([]),
+                        'calculated_results' => json_encode([]),
+                        'user_email' => null,
+                        'user_name' => null,
+                        'demographics' => null,
+                    ],
+                    'id = ?',
+                    [$sessionId]
+                );
+                $this->db->commit();
+            } catch (\Throwable $exception) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollback();
+                }
+
+                throw $exception;
+            }
 
             $this->logActivity($sessionId, $session['test_id'], 'session_deleted', [
                 'reason' => 'user_request',
