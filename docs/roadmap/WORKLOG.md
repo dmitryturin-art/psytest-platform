@@ -20,6 +20,18 @@
 
 ## 2026-09-09
 
+### 05.S1 — реестр приложения Собчик и сверка 23 runtime-шкал
+
+- Этап / ветка / commit: 05, `codex/05-additional-scales-inventory`; commit указан после финального review.
+- Цель: получить проверяемый знаменатель дополнительных шкал выбранного источника и сверить действующие 23 только чтением, не трогая защищённый scoring core.
+- Сделано: создан [реестр приложения](../smil-additional-scales-registry.md). Визуально просмотрены PDF-стр. 196–217 скана Собчик; ключи занимают 197–216 (печатные 195–214), а 217 — профильный бланк. В источнике 113 отдельных записей с номерами 1–212 и пропусками, а не доказанные «200+». У каждой записи есть стабильный ID, название, PDF/печатная страница, происхождение, статус ключей/норм и runtime-статус. True/false и M/σ оставлены `source-present / not-transcribed` для отдельного S2, чтобы OCR/ручная перепись не стала неявной публикацией непроверенных данных.
+- Сверка: настоящий calculator получает ровно 23 определения только из `additional-scales-norms.json`; `additional-scales.json` в текущем `SmilModule` не вызывается и не является вторым calculator. Итог текущих 23: **0 verified, 9 disputed, 14 missing**. Для A, R, Es, Do, Re, MAC, O-H и CYN есть проверяемые расхождения с соответствующими записями; у R, Es и Do `M >` число реальных runtime-ключей. Это evidence неподтверждённости, не основание самовольно менять ключи, нормы или fixtures.
+- Решения: знаменатель S2/S3 — 113 записей именно этого приложения. Правовой статус публикации русской формы остаётся `unconfirmed`. S2 транскрибирует PDF-стр. 197–216 и сверяет глазами; S3 допускается только отдельными утверждёнными партиями 10–20 шкал с независимыми reference cases.
+- Проверки и evidence: структурная проверка реестра — 113 ID, 0 дублей, 23 runtime-строки; `git diff --check` — OK; `composer test -- tests/Smil/AdditionalScalesCalculatorTest.php` — **4 tests / 103 assertions, OK**; полный `bin/local-gate.sh` вне sandbox — **OK** (Composer validate/audit, PHPStan, CS Fixer, architecture, baseline, миграции и полный PHPUnit на MySQL 5.7.44). Изменений в `modules/smil/` или `tests/fixtures/` нет.
+- Graphify: freshness после пакета остаётся STALE; массовый update намеренно не запускался по прямому правилу START_HERE, а stale-граф не использовался как evidence. Fallback — визуальная проверка PDF, исходники и targeted/full tests; обновить до CURRENT до первого архитектурного query, не позднее 10.09.2026.
+- Изменённые файлы: `docs/smil-additional-scales-registry.md`, `docs/roadmap/STATUS.md`, `docs/roadmap/phases/05-smil-professional-parity.md`, `docs/roadmap/WORKLOG.md`.
+- Следующий шаг: S2; независимо от него безопасно продолжать K0a в отдельном work package. Push/merge/deploy не выполнялись.
+
 ### 07.19 — завершение после лимита: инструкция исполнителю и R3
 
 - Этап/ветка: 07, `codex/07-actionable-handoff`, поверх `be84cbb`; commit пакета `fix(ai): terminate exhausted jobs and finalize agent handoff`.
