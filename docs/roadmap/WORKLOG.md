@@ -20,6 +20,16 @@
 
 ## 2026-09-13
 
+### 07.K1a — читаемая карточка кейса по приглашению
+
+- Этап / ветка / commit: этап 07, `codex/07-completed-session-immutable`; commit указан после финальной проверки.
+- Цель: по прямому запросу владельца заменить raw JSON в защищённом кейсе специалиста нормальной карточкой базового результата и заполненной анкеты для каждой поддерживаемой методики, не меняя scoring, AI-flow или клиентскую страницу результата.
+- Сделано: `InvitedCasePresenter` сопоставляет уже сохранённые ответы с текстами вопросов и выбранными вариантами; шкалы с options показывают человеческий текст и балл, СМИЛ — «Верно/Неверно/Не знаю», Лазарус — отдельные оценки «Я» и «Партнёр». `OwnerController` получает только существующий модуль и сохранённые results, затем использует его проверенные `buildSections()` для базовой интерпретации. JSON-поля больше не передаются в Twig и не отображаются.
+- Проверки и evidence: RED — новый `InvitedCasePresenterTest` падал без presenter; GREEN — targeted PHPUnit **5 tests / 38 assertions, OK** для BAI, BDI, HADS, Лазаруса, СМИЛ и owner contract. Browser QA на локальном синтетическом завершённом BAI case: показаны 21 текстовый ответ и базовый результат, raw JSON blocks отсутствуют; desktop 1440×1000 и mobile 390×844 имеют `scrollWidth = innerWidth`, console errors/warnings отсутствуют. Синтетические invite/session после QA удалены. Свежий `bin/local-gate.sh` — **OK**: validate/audit, PHPStan 6, CS Fixer, architecture, baseline, MySQL 5.7.44 migrations и полный PHPUnit.
+- Решения и границы: BAI/клиентский extended-report block не менялись. Для `therapist_case` расширенный AI draft по D-034 остаётся отдельным будущим flow: сначала просмотр/правка/одобрение специалистом, затем явная отправка. Внешний AI не вызывался и новые данные не передавались.
+- Graphify: freshness после пакета — **STALE**: 181 changed (112 code, 69 documents), 26 deleted. Incremental semantic update не запускался, чтобы не расходовать внешний лимит без следующего architectural query; stale graph не используется как evidence. Fallback — прямое чтение controller/module/template, module-wide regression и browser QA; обновить до CURRENT перед следующим architectural query, ориентир 14.09.2026.
+- Следующий шаг: владелец проверяет эту карточку после controlled staging deployment; затем K2 (клиенты/назначения) либо отдельно принимает модель редактирования/одобрения AI-разбора.
+
 ### 08.B3 — ротация пароля кабинета владельца на staging
 
 - Этап / ветка / commit: этап 08, `codex/07-completed-session-immutable`; operational configuration change, runtime code не менялся.

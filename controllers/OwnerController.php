@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
+use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\OwnerDashboardAuthenticator;
 use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\Security;
@@ -161,8 +162,14 @@ final class OwnerController extends BaseController
 
             return;
         }
-        $case['answers_json'] = json_encode($case['answers'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-        $case['results_json'] = json_encode($case['calculated_results'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        $module = $this->moduleLoader->getModule((string) $case['test_slug']);
+        if ($module === null) {
+            $this->notFound();
+
+            return;
+        }
+        $case['answer_rows'] = (new InvitedCasePresenter())->answers($module, $case['answers']);
+        $case['result_sections'] = $module->buildSections($case['calculated_results']);
 
         echo $this->view->render('owner-invited-case', ['case' => $case]);
     }

@@ -46,6 +46,18 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringNotContainsString('invite.token', $template);
     }
 
+    public function testInvitedCaseRendersReadableDataInsteadOfStoredJson(): void
+    {
+        $template = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+
+        self::assertStringContainsString('case.result_sections', $template);
+        self::assertStringContainsString('case.answer_rows', $template);
+        self::assertStringNotContainsString('answers_json', $template);
+        self::assertStringNotContainsString('results_json', $template);
+        self::assertStringContainsString('InvitedCasePresenter', $controller);
+    }
+
     public function testLoginAttemptMigrationContainsNoClientIdentifiers(): void
     {
         $migration = (string) file_get_contents($this->projectRoot . '/database/migrations/20260821010000_add_owner_dashboard_login_attempts.php');
