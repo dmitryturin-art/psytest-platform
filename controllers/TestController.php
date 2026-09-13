@@ -207,6 +207,10 @@ class TestController extends BaseController
             echo 'Session not found';
             return;
         }
+        if ($session['status'] === 'completed') {
+            header('Location: /result/' . $slug . '/' . $session['session_token']);
+            exit;
+        }
 
         // Collect all answers from POST
         $answers = $_POST['answers'] ?? [];
@@ -227,9 +231,6 @@ class TestController extends BaseController
 
         // Merge demographics from form into answers (for calculateResults)
         $formDemographics = $_POST['demographics'] ?? [];
-        if (!empty($formDemographics)) {
-            $this->sessionManager->saveDemographics($sessionId, $formDemographics);
-        }
         // Also merge demographics from session (saved via AJAX)
         if (!empty($session['demographics'])) {
             $allAnswers = AnswerMerger::overlay($allAnswers, $session['demographics']);
@@ -243,19 +244,20 @@ class TestController extends BaseController
             $this->errorResponse('Invalid or incomplete answers', 422);
         }
 
-        // Save final answers
-        $this->sessionManager->saveAnswers($sessionId, $allAnswers);
-
         // Calculate results
         $rawResults = $module->calculateResults($allAnswers);
 
         // Generate interpretation
         $interpretation = $module->generateInterpretation($rawResults);
 
-        // Complete session
-        $this->sessionManager->completeSession($sessionId, array_merge($rawResults, [
-            'interpretation' => $interpretation,
-        ]));
+        // Persist answers and result in one conditional transition. A second
+        // concurrent submit cannot alter an already completed clinical record.
+        $this->sessionManager->finalizeSession(
+            $sessionId,
+            $allAnswers,
+            array_merge($rawResults, ['interpretation' => $interpretation]),
+            $formDemographics !== [] ? $formDemographics : null,
+        );
 
         // Redirect to results page
         header('Location: /result/' . $slug . '/' . $session['session_token']);
@@ -362,6 +364,10 @@ class TestController extends BaseController
             $this->errorResponse('Парное прохождение не найдено', 404);
             return;
         }
+        if ($session['status'] === 'completed') {
+            header('Location: /result/' . $slug . '/' . $session['session_token']);
+            exit;
+        }
 
         // Collect & normalize answers (same logic as submit()).
         $answers = $_POST['answers'] ?? [];
@@ -376,9 +382,6 @@ class TestController extends BaseController
 
         $allAnswers = AnswerMerger::overlay($session['answers'], $normalizedAnswers);
         $formDemographics = $_POST['demographics'] ?? [];
-        if (!empty($formDemographics)) {
-            $this->sessionManager->saveDemographics($sessionId, $formDemographics);
-        }
         if (!empty($session['demographics'])) {
             $allAnswers = AnswerMerger::overlay($allAnswers, $session['demographics']);
         }
@@ -388,15 +391,19 @@ class TestController extends BaseController
         if (AnswerValidator::validate($module, $allAnswers, true) !== []) {
             $this->errorResponse('Некорректные или неполные ответы', 422);
         }
-        $this->sessionManager->saveAnswers($sessionId, $allAnswers);
-
         // Calculate results & complete this (second partner's) session.
         $rawResults = $module->calculateResults($allAnswers);
         $rawResults['is_pair_partner'] = true;
         $interpretation = $module->generateInterpretation($rawResults);
-        $this->sessionManager->completeSession($sessionId, array_merge($rawResults, [
-            'interpretation' => $interpretation,
-        ]));
+        if (!$this->sessionManager->finalizeSession(
+            $sessionId,
+            $allAnswers,
+            array_merge($rawResults, ['interpretation' => $interpretation]),
+            $formDemographics !== [] ? $formDemographics : null,
+        )) {
+            header('Location: /result/' . $slug . '/' . $session['session_token']);
+            exit;
+        }
 
         // Resolve the first partner by their own result-access token. A
         // partner_token is a relationship reference, never an access token.

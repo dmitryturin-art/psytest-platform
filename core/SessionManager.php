@@ -143,12 +143,16 @@ class SessionManager
      */
     public function saveAnswers(string $sessionId, array $answers): bool
     {
-        $this->db->update(
+        $updated = $this->db->update(
             'test_sessions',
             ['answers' => json_encode($answers)],
-            'id = ?',
-            [$sessionId]
+            'id = ? AND status = ?',
+            [$sessionId, 'partial']
         );
+
+        if ($updated === 0) {
+            return false;
+        }
 
         $this->logActivity($sessionId, null, 'answers_saved', [
             'answer_count' => count($answers),
@@ -171,14 +175,12 @@ class SessionManager
             return false;
         }
 
-        $this->db->update(
+        return $this->db->update(
             'test_sessions',
             ['demographics' => json_encode($demographics)],
-            'id = ?',
-            [$sessionId]
-        );
-
-        return true;
+            'id = ? AND status = ?',
+            [$sessionId, 'partial']
+        ) > 0;
     }
 
     /**
@@ -190,20 +192,69 @@ class SessionManager
      */
     public function completeSession(string $sessionId, array $results): bool
     {
-        $this->db->update(
+        $updated = $this->db->update(
             'test_sessions',
             [
                 'calculated_results' => json_encode($results),
                 'status' => 'completed',
                 'completed_at' => date('Y-m-d H:i:s'),
             ],
-            'id = ?',
-            [$sessionId]
+            'id = ? AND status = ?',
+            [$sessionId, 'partial']
         );
+
+        if ($updated === 0) {
+            return false;
+        }
 
         // Get session for logging
         $session = $this->getSessionById($sessionId);
 
+        $this->logActivity($sessionId, $session['test_id'] ?? null, 'session_completed');
+
+        return true;
+    }
+
+    /**
+     * Atomically persist the final test payload and transition a session to completed.
+     *
+     * A completed clinical record is immutable: the status condition makes a duplicate
+     * browser submit (including a concurrent double-click) a harmless no-op.
+     *
+     * @param array<string|int, mixed> $answers
+     * @param array<string, mixed> $results
+     * @param array<string, mixed>|null $demographics
+     */
+    public function finalizeSession(
+        string $sessionId,
+        array $answers,
+        array $results,
+        ?array $demographics = null,
+    ): bool {
+        $data = [
+            'answers' => json_encode($answers),
+            'calculated_results' => json_encode($results),
+            'status' => 'completed',
+            'completed_at' => date('Y-m-d H:i:s'),
+        ];
+        if ($demographics !== null) {
+            $data['demographics'] = json_encode($demographics);
+        }
+
+        $updated = $this->db->update(
+            'test_sessions',
+            $data,
+            'id = ? AND status = ?',
+            [$sessionId, 'partial'],
+        );
+        if ($updated === 0) {
+            return false;
+        }
+
+        $session = $this->getSessionById($sessionId);
+        $this->logActivity($sessionId, $session['test_id'] ?? null, 'answers_saved', [
+            'answer_count' => count($answers),
+        ]);
         $this->logActivity($sessionId, $session['test_id'] ?? null, 'session_completed');
 
         return true;
