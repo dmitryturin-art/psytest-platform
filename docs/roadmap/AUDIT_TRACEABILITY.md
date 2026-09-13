@@ -68,5 +68,6 @@
 | R3 | Последняя прерванная попытка навсегда pending | WORKLOG 07.19; AiReportQueueTest::testStuckJobAfterItsLastAttemptBecomesTerminallyFailed; полный gate 09.09 | Закрыто |
 | R4 | AI persistence пропускал DB matrix | be84cbb, CiScopeClassifierTest | Закрыто |
 | R6 | Release builder захватывал working tree, включая ignored files | 08.B1 `92206fc`: `git archive HEAD` как единственный source, DeploymentArtifactContractTest и реальная сборка с ignored sentinel; полный gate — WORKLOG 08.B1 | Закрыто |
+| R8 | Повторный submit completed-сессии перезаписывал clinical result | 07.K4a `ac77df0`: conditional finalization, SessionSubmissionImmutabilityTest, полный gate — WORKLOG 07.K4a | Закрыто |
 
 Остальные R-пункты открыты; порядок исполнения в START_HERE.

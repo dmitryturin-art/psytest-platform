@@ -20,6 +20,16 @@
 
 ## 2026-09-13
 
+### 07.K4a — R8: completed-сессия неизменяема
+
+- Этап / ветка / commit: этап 07, `codex/07-completed-session-immutable`, runtime commit `ac77df0`.
+- Цель: до следующей выкладки запретить повторному или конкурентному submit менять клинические ответы, демографию и рассчитанный результат уже завершённой сессии.
+- Сделано: `SessionManager` теперь ограничивает все mutable operations статусом `partial`; новый `finalizeSession()` одной условной SQL-операцией записывает final answers/results и переводит состояние в `completed`. Обычный и парный flows используют этот переход; completed-запрос сразу ведёт к существующему result, а проигравший concurrent pair submit не создаёт повторное comparison.
+- Проверки и evidence: до исправления новый DB regression падал на первом `assertFalse` (saveAnswers возвращал true). После: `composer migrate && composer test -- SessionSubmissionImmutabilityTest LazarusE2ETest TestInviteServiceTest` — **11 tests / 65 assertions, OK**; PHP syntax — OK; `composer analyse` — OK. Свежий `bin/local-gate.sh` — **OK**: Composer validate/audit, PHPStan level 6, CS Fixer, architecture, baseline, MySQL 5.7.44 migrations и полный PHPUnit.
+- Документация: STATUS, phase 07, AUDIT_TRACEABILITY и ARCHITECTURE синхронизированы; R8 закрыт. `CHANGELOG.md` не менялся: результат для посетителя не меняет видимый сценарий, но теперь гарантированно стабилен.
+- Graphify: freshness после пакета — **STALE**: 179 changed (110 code, 69 documents), 26 deleted. Incremental semantic update не запускался; до CURRENT graph не используется как evidence. Fallback — исходники lifecycle и DB regression; обновить до следующего architectural query.
+- Следующий шаг: staging release с R6 + R8 по отдельному подтверждению владельца; R2 snapshot остаётся отдельным большим AI-пакетом.
+
 ### 08.B1 — R6: артефакт только из tracked Git tree
 
 - Этап / ветка / commit: этап 08, `codex/08-release-artifact-whitelist`, runtime commit `92206fc`.
