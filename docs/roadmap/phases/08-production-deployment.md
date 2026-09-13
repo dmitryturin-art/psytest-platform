@@ -19,6 +19,7 @@
 9. **Runbooks/docs.** 08.1G: backup/restore drill пройден (дамп → 8/8 таблиц, сверка строк; особенности: отдельная база для DR создаётся в панели, same-DB restore требует переименования CONSTRAINT), `PRODUCTION_RUNBOOK.md` зафиксирован до go-live. 08.1H: схема бэкапов — ежедневные автоматические бэкапы Beget + pre-deploy дампы (свой ночной дамп исключён решением владельца); на go-live — разовый drill восстановления из панельного бэкапа. Обновить фактическую архитектуру, recovery, incident response, secret rotation и человеческий changelog.
 10. **R6 — состав артефакта.** 08.B1 (`92206fc`) распаковывает `git archive HEAD` во внутренний source-каталог и только затем применяет release-exclude rules. Поэтому ignored/untracked файлы из рабочей копии не могут попасть в deploy archive; сохранность всех tracked `public/` files по-прежнему проверяет build script.
 11. **08.B2 — фактическая доставка R6/R8/K1.** После backup/миграции `20260909010000 AddTestInvites` active release — `c8e2b28`; законченная сессия не перезаписывается повторным submit, а owner flow может использовать invitations для любой поддерживаемой методики. Synthetic test flow на сервере намеренно не запускался, чтобы не создавать данные.
+12. **08.B3 — dashboard credential rotation.** По запросу владельца временный пароль `/admin` заменён server-side штатным Argon2id generator; конфигурационный backup имеет mode `600`, temporary hash file удалён. Страница входа отвечает `200`; пароль и hash не документируются и не попадают в Git.
 
 ## Контрольная точка владельца
 

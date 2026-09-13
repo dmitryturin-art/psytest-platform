@@ -20,6 +20,14 @@
 
 ## 2026-09-13
 
+### 08.B3 — ротация пароля кабинета владельца на staging
+
+- Этап / ветка / commit: этап 08, `codex/07-completed-session-immutable`; operational configuration change, runtime code не менялся.
+- Цель: по прямому запросу владельца заменить забытый временный пароль `/admin` на тестовом сайте без помещения пароля или Argon2id-хэша в Git, логи или документацию.
+- Сделано: штатный `bin/owner-password.php` с интерактивным скрытым вводом сформировал Argon2id-строку на сервере; в `current/.env` заменено только значение dashboard hash. До замены создана закрытая backup-копия конфигурации, временный файл hash сразу удалён. Пароль и hash не выводились и не сохранялись в репозитории.
+- Проверки и evidence: config распознаёт Argon2id hash; mode server `.env` — `600`; HTTPS `/admin/login` — `200`. Логин POST намеренно не автоматизировался, чтобы не передавать пароль в команду/логи; generator до записи подтверждает созданный hash через `password_verify`.
+- Следующий шаг: владелец входит в `/admin`, создаёт invitation; самостоятельная смена пароля в UI — отдельный security work package, если потребуется.
+
 ### 08.B2 — контролируемая staging-выкладка R6/R8/K1
 
 - Этап / ветка / commit: этап 08, `codex/07-completed-session-immutable`, deployed runtime `c8e2b28` (R6 `92206fc`, R8 `ac77df0`, K1 `3db772e`).
