@@ -18,6 +18,18 @@
 ```
 
 
+## 2026-09-13
+
+### 08.B1 — R6: артефакт только из tracked Git tree
+
+- Этап / ветка / commit: этап 08, `codex/08-release-artifact-whitelist`, runtime commit `92206fc`.
+- Цель: устранить R6 до следующей выкладки — ignored/untracked файл из рабочей копии не должен попадать в release archive, но tracked public assets должны сохраняться.
+- Сделано: `bin/build-release.sh` сначала получает source через `git archive HEAD`, потом применяет существующий whitelist/exclude-проход к этому source. Путь вывода ограничен формой `tmp/release-<safe-name>`, поэтому builder не удалит произвольный путь. Проверка каждого tracked `public/` файла и production `composer install` сохранены.
+- Проверки и evidence: `DeploymentArtifactContractTest` — **2 tests / 6 assertions, OK**. Небезопасный output path отклонён. Реальная сборка `tmp/release-r6-proof.tar.gz` прошла, SHA-256 `88c870d0805e885bd4958f5fa060ffae36a5d7162538d8f0d3328d4f7595d64c`; специально созданный ignored `node_modules/r6-ignored-release-sentinel` отсутствовал и в staged release, и в архиве. Свежий `bin/local-gate.sh` — **OK**: Composer validate/audit, PHPStan level 6, CS Fixer, architecture, baseline, MySQL 5.7.44 migrations и полный PHPUnit.
+- Документация: STATUS, phase 08, staging runbook и AUDIT_TRACEABILITY синхронизированы; R6 закрыт. `CHANGELOG.md` не менялся: эффект технический, без изменения пользовательского поведения.
+- Graphify: freshness после пакета — **STALE**: 178 changed (109 code, 69 documents), 26 deleted. Incremental semantic update не запускался; до CURRENT graph не используется как evidence. Fallback — прямое чтение builder, archive smoke и tests; обновить до следующего architectural query.
+- Следующий шаг: по отдельному подтверждению владельца подготовить контролируемую staging-вкладку с backup/rollback и smoke; production go-live этим пакетом не разрешён и не выполнялся.
+
 ## 2026-09-09
 
 ### 07.K1 — универсальные одноразовые приглашения
