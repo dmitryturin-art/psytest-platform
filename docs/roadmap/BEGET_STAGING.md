@@ -13,7 +13,7 @@
 | Web server | `nginx-reuseport/1.21.1` перед PHP handler |
 | PHP | web и отдельный CLI `/usr/local/bin/php8.3` — 8.3.20; default CLI `php` — 5.6 и не используется |
 | PHP extensions | доступны `mbstring`, `pdo_mysql`, `dom`, `xml`, `curl`, `openssl`, `zip`, `intl`, `sodium` |
-| Database | отдельная staging DB на MySQL 5.7.21; 8 migrations; свежий pre-migration dump сохранён |
+| Database | отдельная staging DB на MySQL 5.7.21; 12 migrations; свежий pre-migration dump сохранён |
 | Composer | системный Composer 1; deployment artifact должен включать локально собранный `vendor/` |
 | Инструменты | Git 2.42, `tar`, `unzip` и `rsync` доступны |
 | Cron | `crontab` в SSH shell отсутствует; retention job настраивается через панель/Beget API |
@@ -69,7 +69,7 @@ bootstrap-адаптера. Приложение не встраивается �
 4. ~~Подготовить artifact с production dependencies.~~ 08.1D: архив собран локально из lockfile, checksum совпал после загрузки; Phinx включён, dev tools и `.env` отсутствуют.
 5. Server `.env` создан с mode `600`, `APP_ENV=production`, `APP_DEBUG=false`; payment/AI выключены. Owner dashboard остаётся выключенным без Argon2id hash.
 6. ~~Установить Basic Auth.~~ Владелец отменил это требование для текущего staging (D-029); HTTPS остаётся обязательным.
-7. Clean migrations применены; Phinx status показывает все 8 migrations как `up`.
+7. Clean migrations применены; после release `c8e2b28` Phinx status показывает все 12 migrations как `up`.
 
 ## Оставшиеся эксплуатационные задачи
 
@@ -94,4 +94,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 12. Выкладка `2e276b3` устранила зависание страницы результата при заказе разбора: сессия закрывается до фоновой работы модели, поэтому 303-редирект возвращается сразу, а посетитель видит ожидание с крутилкой и опрос состояния. SHA-256 артефакта `ff83347a69ec7ff1bede4b983175a9d1e1f1750912b84ef7f512f5d21a114ebb` совпал после загрузки; pre-deploy dump сохранён в `backups/pre-deploy-2e276b3.sql.gz`. Миграции побайтово совпали с уже применёнными, поэтому `phinx migrate` не запускался. HTTPS health, главная, `/tests` и живая страница результата — `200`, HTTP `/tests` — `301`; новая `main.css` доехала с новой версией в адресе, логи ошибок пусты. Расчёты и scoring не менялись.
 
-Rollback текущего релиза: атомарно направить `public_html` обратно на `releases/78bdf24/public`; pre-migration dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — ручная проверка владельцем полного pair result PDF, затем короткий пилот.
+13. Выкладка `c8e2b28` доставила universal one-time invitations и защиту completed-сессии от повторной перезаписи. SHA-256 артефакта `49990831f1ea749760e4148ee4a90fad3297abece55fc52d4b3d1d5e10b8172c` совпал после upload; перед `AddTestInvites` создан и проверен сжатый dump `backups/pre-deploy-c8e2b28.sql.gz`. После миграции все 12 migrations имеют status `up`; `public_html` и `current` атомарно указывают на `release-c8e2b28`. HTTPS `/`, `/tests`, health, privacy и terms — `200`; новых непустых error logs в окно smoke нет. Прохождение тестов smoke не запускалось, поэтому сессии не создавались.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/2e276b3/public` и `current` на `releases/2e276b3`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.

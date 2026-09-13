@@ -20,6 +20,15 @@
 
 ## 2026-09-13
 
+### 08.B2 — контролируемая staging-выкладка R6/R8/K1
+
+- Этап / ветка / commit: этап 08, `codex/07-completed-session-immutable`, deployed runtime `c8e2b28` (R6 `92206fc`, R8 `ac77df0`, K1 `3db772e`).
+- Цель: безопасно перенести проверенный release на рабочий `test.23time.ru`, применить универсальные invitations migration и сохранить мгновенный откат.
+- Сделано: локальный artifact `release-c8e2b28` собран только из tracked Git tree, SHA-256 совпал после upload; перед миграцией создан и проверен сжатый pre-deploy dump. `AddTestInvites` применена, затем `public_html` и `current` атомарно переведены на новый release. Предыдущий runtime `2e276b3` сохранён как rollback target; releases и backup не удалялись.
+- Проверки и evidence: локальный `bin/local-gate.sh` для runtime уже **OK** (validate/audit, PHPStan 6, CS Fixer, architecture, baseline, MySQL 5.7.44 migrations и полный PHPUnit). На сервере entrypoint синтаксически валиден PHP 8.3; встроенный architecture checker не применим без PATH override, поскольку shared-hosting default CLI — PHP 5.6. После switch HTTPS `/`, `/tests`, `/api/health`, `/privacy`, `/terms` — все `200`; error logs, изменённых в окно smoke, нет. Маршруты прохождения не открывались, поэтому synthetic/клиентские сессии не создавались.
+- Ограничения: это staging/рабочий сайт, не production go-live; payment, AI и новый full E2E не включались. Ротация временно переданных SSH-credentials остаётся действием владельца после завершения доступа.
+- Следующий шаг: K2 — клиенты и назначения поверх invitation flow; отдельный production gate остаётся вне этого пакета.
+
 ### 07.K4a — R8: completed-сессия неизменяема
 
 - Этап / ветка / commit: этап 07, `codex/07-completed-session-immutable`, runtime commit `ac77df0`.
