@@ -46,6 +46,21 @@ final class InvitedCasePresenterTest extends TestCase
         self::assertSame('Верно', $smil[0]['answer']);
     }
 
+    public function testItExcludesClientPairInvitationFromTheOwnerCard(): void
+    {
+        $lazarus = $this->module('lazarus');
+        $answers = [];
+        foreach ($lazarus->getQuestions() as $question) {
+            $id = (string) $question['id'];
+            $answers[$id . '_self'] = 7;
+            $answers[$id . '_partner'] = 6;
+        }
+
+        $sections = $this->presenter->resultSections($lazarus, $lazarus->calculateResults($answers));
+        self::assertNotContains('pair_invite', array_map(static fn ($section): string => $section->type, $sections));
+        self::assertContains('interpretation', array_map(static fn ($section): string => $section->type, $sections));
+    }
+
     private function module(string $slug): \PsyTest\Modules\TestModuleInterface
     {
         $module = $this->modules->getModule($slug);

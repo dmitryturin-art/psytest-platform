@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PsyTest\Core;
 
+use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\TestModuleInterface;
 
 /**
@@ -14,6 +15,21 @@ use PsyTest\Modules\TestModuleInterface;
  */
 final class InvitedCasePresenter
 {
+    /**
+     * Owner cards reuse a module's basic result components, but must never
+     * expose a client-side bearer-link action such as Lazarus pair invitation.
+     *
+     * @param array<string, mixed> $results
+     * @return list<ResultSection>
+     */
+    public function resultSections(TestModuleInterface $module, array $results): array
+    {
+        return array_values(array_filter(
+            $module->buildSections($results),
+            static fn (ResultSection $section): bool => $section->type !== ResultSection::TYPE_PAIR_INVITE,
+        ));
+    }
+
     /**
      * @param array<string|int, mixed> $answers
      * @return list<array<string, string|int|null>>

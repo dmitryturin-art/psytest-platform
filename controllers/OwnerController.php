@@ -168,8 +168,9 @@ final class OwnerController extends BaseController
 
             return;
         }
-        $case['answer_rows'] = (new InvitedCasePresenter())->answers($module, $case['answers']);
-        $case['result_sections'] = $module->buildSections($case['calculated_results']);
+        $presenter = new InvitedCasePresenter();
+        $case['answer_rows'] = $presenter->answers($module, $case['answers']);
+        $case['result_sections'] = $presenter->resultSections($module, $case['calculated_results']);
 
         echo $this->view->render('owner-invited-case', ['case' => $case]);
     }
