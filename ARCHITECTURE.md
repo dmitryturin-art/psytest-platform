@@ -82,6 +82,7 @@ HTTP request
 | GET | `/admin` | `OwnerController::dashboard` | защищённый минимальный owner dashboard |
 | POST | `/admin/case/lookup` | `OwnerController::lookupCase` | поиск завершённого кейса по result token |
 | POST | `/admin/case/assign` | `OwnerController::assignCase` | явное назначение therapist case |
+| POST | `/admin/case/attach` | `OwnerController::attachCase` | привязка найденной сессии к карточке клиента |
 | POST | `/admin/case/delete` | `OwnerController::deleteCase` | полное ручное удаление кейса |
 | POST | `/admin/invites/create` | `OwnerController::createInvite` | создать 14-day invitation для поддерживаемой методики |
 | POST | `/admin/invites/revoke` | `OwnerController::revokeInvite` | отозвать неоткрытое invitation |

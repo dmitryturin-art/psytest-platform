@@ -57,6 +57,36 @@ final class TestInviteService
         return ['id' => $id, 'token' => $token, 'expires_at' => $expiresAt->format('Y-m-d H:i:s')];
     }
 
+    /**
+     * Записывает уже пройденную сессию как погашенное приглашение клиента.
+     *
+     * Ссылки здесь нет и быть не может: сессия состоялась без приглашения, а
+     * строка нужна только чтобы кейс появился в карточке клиента и открывался
+     * по `/admin/invited-case/`. Поэтому `token_hash` берётся от случайных
+     * байтов, сам токен никуда не возвращается, а `expires_at` ставится в
+     * прошлое — такое приглашение нельзя ни открыть, ни погасить повторно.
+     *
+     * Транзакцию открывает вызывающий код: привязка идёт вместе со сменой
+     * режима хранения сессии и, при необходимости, созданием карточки.
+     */
+    public function bindExistingSession(string $sessionId, int $testId, ?string $clientId, string $note): string
+    {
+        $id = Uuid::uuid4()->toString();
+        $this->db->insert('test_invites', [
+            'id' => $id,
+            'test_id' => $testId,
+            'client_id' => $clientId,
+            'token_hash' => hash('sha256', bin2hex(random_bytes(32))),
+            'owner_note' => $note === '' ? null : $note,
+            'status' => 'claimed',
+            'claimed_session_id' => $sessionId,
+            'claimed_at' => date('Y-m-d H:i:s'),
+            'expires_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return $id;
+    }
+
     /** @return array<string, mixed>|null */
     public function preview(string $token): ?array
     {
