@@ -20,6 +20,14 @@
 
 ## 2026-09-14
 
+### 08.B9 — staging-выкладка K2c (`869986d`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-869986d`; deployed runtime `869986d` (merge PR #83). Новых миграций нет.
+- Сделано: артефакт `release-869986d.tar.gz`, SHA-256 `82156738…1f7e` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-869986d.sql.gz` (gzip -t OK); `public_html`/`current` атомарно на `releases/869986d`.
+- Проверки: HTTPS `/`, `/tests`, health, `/admin/login`, `/account/login` — `200`; `/test/smil` — `404`.
+- Rollback: `public_html` → `releases/c9cff61/public`, `current` → `releases/c9cff61`.
+- Следующий шаг: владелец привязывает Лазарус-кейсы к клиенту «Дмитрий» через кабинет и ротирует SSH-пароль deploy-аккаунта.
+
 ### 07.K2c — привязка найденной сессии к карточке клиента
 
 - Этап / ветка / commit: этап 07, `codex/07-k2c-attach-session-to-client` (rebase на `main` `30f6648`); commits `6de1a0c`, `146b03a`.
