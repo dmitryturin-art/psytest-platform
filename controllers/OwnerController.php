@@ -11,6 +11,7 @@ use PsyTest\Core\Security;
 use PsyTest\Core\SessionLifecycleService;
 use PsyTest\Core\TestInviteService;
 use PsyTest\Core\TherapistCaseService;
+use PsyTest\Core\TherapistClientService;
 
 /**
  * Small, single-owner dashboard for explicit therapist-case lifecycle work.
@@ -22,6 +23,7 @@ final class OwnerController extends BaseController
 {
     private OwnerDashboardAuthenticator $authenticator;
     private TherapistCaseService $cases;
+    private TherapistClientService $clients;
     private TestInviteService $invites;
     private bool $isProduction;
     private string $appUrl;
@@ -39,14 +41,13 @@ final class OwnerController extends BaseController
             $config->ownerDashboardLoginMaxAttempts(),
             $config->ownerDashboardLoginWindowSeconds(),
         );
-        $this->cases = new TherapistCaseService(
+        $lifecycle = new SessionLifecycleService(
             $this->db,
-            new SessionLifecycleService(
-                $this->db,
-                new RetentionPolicy($config->anonymousRetentionDays()),
-                $config->pdfStoragePath(),
-            ),
+            new RetentionPolicy($config->anonymousRetentionDays()),
+            $config->pdfStoragePath(),
         );
+        $this->cases = new TherapistCaseService($this->db, $lifecycle);
+        $this->clients = new TherapistClientService($this->db, $lifecycle);
         $this->invites = new TestInviteService($this->db, $this->sessionManager);
         $this->appUrl = $config->appUrl();
     }
@@ -102,7 +103,154 @@ final class OwnerController extends BaseController
             'flash' => $this->takeFlash(),
             'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
             'invites' => $this->invites->recentForOwner(),
+            'clients' => $this->clients->listForOwner(),
         ]);
+    }
+
+    public function clients(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        echo $this->view->render('owner-clients', [
+            'flash' => $this->takeFlash(),
+            'clients' => $this->clients->listForOwner(),
+        ]);
+    }
+
+    public function createClient(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $label = $_POST['label'] ?? '';
+        $note = $_POST['note'] ?? '';
+        if (!$this->isValidClientInput($label, $note)) {
+            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать карточку: подпись обязательна (до 120 символов), заметка — до 1000 символов.']);
+            $this->redirect('/admin/clients');
+        }
+
+        $clientId = $this->clients->create((string) $label, (string) $note);
+        $this->setFlash(['type' => 'success', 'message' => 'Карточка клиента создана.']);
+        $this->redirect('/admin/clients/' . $clientId);
+    }
+
+    public function viewClient(string $clientId): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $card = Security::isValidUuid($clientId) ? $this->clients->findForOwner($clientId) : null;
+        if ($card === null) {
+            $this->notFound();
+
+            return;
+        }
+
+        echo $this->view->render('owner-client', [
+            'flash' => $this->takeFlash(),
+            'client' => $card['client'],
+            'assignments' => $card['assignments'],
+            'history' => $card['history'],
+            'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
+        ]);
+    }
+
+    public function updateClient(string $clientId): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!Security::isValidUuid($clientId) || !$this->clients->exists($clientId)) {
+            $this->notFound();
+
+            return;
+        }
+
+        $label = $_POST['label'] ?? '';
+        $note = $_POST['note'] ?? '';
+        $updated = $this->isValidClientInput($label, $note)
+            && $this->clients->update($clientId, (string) $label, (string) $note);
+
+        $this->setFlash($updated
+            ? ['type' => 'success', 'message' => 'Карточка клиента обновлена.']
+            : ['type' => 'error', 'message' => 'Не удалось обновить карточку: подпись обязательна (до 120 символов), заметка — до 1000 символов.']);
+        $this->redirect('/admin/clients/' . $clientId);
+    }
+
+    public function createClientInvite(string $clientId): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!Security::isValidUuid($clientId) || !$this->clients->exists($clientId)) {
+            $this->notFound();
+
+            return;
+        }
+
+        $testId = $this->validTestId($_POST['test_id'] ?? null);
+        $note = $_POST['owner_note'] ?? '';
+        if ($testId === null || !is_string($note) || mb_strlen(trim($note)) > 1000) {
+            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать назначение: выберите поддерживаемую методику и сократите заметку до 1000 символов.']);
+            $this->redirect('/admin/clients/' . $clientId);
+        }
+
+        $invite = $this->invites->create($testId, trim($note), $clientId);
+        $this->setFlash([
+            'type' => 'success',
+            'message' => 'Назначение создано. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
+            'invite_url' => $this->appUrl . '/invite/' . $invite['token'],
+        ]);
+        $this->redirect('/admin/clients/' . $clientId);
+    }
+
+    public function deleteClient(string $clientId): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!Security::isValidUuid($clientId) || !$this->clients->exists($clientId)) {
+            $this->notFound();
+
+            return;
+        }
+
+        $confirmed = ($_POST['confirm_delete'] ?? null) === 'delete';
+        if (!$confirmed || !$this->clients->delete($clientId)) {
+            $this->setFlash(['type' => 'error', 'message' => 'Удаление не выполнено. Подтвердите удаление галочкой и попробуйте ещё раз.']);
+            $this->redirect('/admin/clients/' . $clientId);
+        }
+
+        $this->setFlash(['type' => 'success', 'message' => 'Карточка клиента, её назначения, результаты и файлы удалены без возможности восстановления.']);
+        $this->redirect('/admin/clients');
+    }
+
+    public function deleteInvitedCase(string $sessionId): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!Security::isValidUuid($sessionId)) {
+            $this->notFound();
+
+            return;
+        }
+
+        $clientId = $_POST['client_id'] ?? '';
+        $confirmed = ($_POST['confirm_delete'] ?? null) === 'delete';
+        $deleted = $confirmed && $this->cases->deleteAssignedCase($sessionId);
+
+        $this->setFlash($deleted
+            ? ['type' => 'success', 'message' => 'Кейс, его заметка и известные связанные файлы удалены без возможности восстановления.']
+            : ['type' => 'error', 'message' => 'Удаление не выполнено. Подтвердите удаление галочкой и откройте кейс заново.']);
+
+        $this->redirect(is_string($clientId) && Security::isValidUuid($clientId)
+            ? '/admin/clients/' . $clientId
+            : '/admin');
     }
 
     public function createInvite(): void
@@ -111,18 +259,18 @@ final class OwnerController extends BaseController
             return;
         }
 
-        $testId = filter_var($_POST['test_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $testId = $this->validTestId($_POST['test_id'] ?? null);
         $note = $_POST['owner_note'] ?? '';
-        $availableIds = array_map(
-            static fn (array $test): int => (int) $test['id'],
-            $this->moduleLoader->getActiveModules(),
-        );
-        if ($testId === false || !in_array($testId, $availableIds, true) || !is_string($note) || mb_strlen(trim($note)) > 1000) {
-            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать приглашение: выберите поддерживаемую методику и сократите заметку до 1000 символов.']);
+        $rawClientId = $_POST['client_id'] ?? '';
+        $clientId = is_string($rawClientId) && $rawClientId !== '' ? $rawClientId : null;
+        $clientIsValid = $clientId === null
+            || (Security::isValidUuid($clientId) && $this->clients->exists($clientId));
+        if ($testId === null || !$clientIsValid || !is_string($note) || mb_strlen(trim($note)) > 1000) {
+            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать приглашение: выберите поддерживаемую методику, существующую карточку клиента и сократите заметку до 1000 символов.']);
             $this->redirect('/admin');
         }
 
-        $invite = $this->invites->create($testId, trim($note));
+        $invite = $this->invites->create($testId, trim($note), $clientId);
         $this->setFlash([
             'type' => 'success',
             'message' => 'Одноразовое приглашение создано. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
@@ -225,6 +373,26 @@ final class OwnerController extends BaseController
             ? ['type' => 'success', 'message' => 'Кейс и известные связанные файлы удалены без возможности восстановления.']
             : ['type' => 'error', 'message' => 'Удаление не выполнено. Проверьте подтверждение и попробуйте найти кейс заново.']);
         $this->redirect('/admin');
+    }
+
+    private function validTestId(mixed $rawTestId): ?int
+    {
+        $testId = filter_var($rawTestId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $availableIds = array_map(
+            static fn (array $test): int => (int) $test['id'],
+            $this->moduleLoader->getActiveModules(),
+        );
+
+        return is_int($testId) && in_array($testId, $availableIds, true) ? $testId : null;
+    }
+
+    private function isValidClientInput(mixed $label, mixed $note): bool
+    {
+        return is_string($label)
+            && is_string($note)
+            && trim($label) !== ''
+            && mb_strlen(trim($label)) <= TherapistClientService::LABEL_MAX_LENGTH
+            && mb_strlen(trim($note)) <= TherapistClientService::NOTE_MAX_LENGTH;
     }
 
     private function requireOwner(): bool

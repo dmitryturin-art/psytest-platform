@@ -85,6 +85,13 @@ $router->post('/admin/case/delete', [OwnerController::class, 'deleteCase']);
 $router->post('/admin/invites/create', [OwnerController::class, 'createInvite']);
 $router->post('/admin/invites/revoke', [OwnerController::class, 'revokeInvite']);
 $router->get('/admin/invited-case/{sessionId}', [OwnerController::class, 'viewInvitedCase']);
+$router->post('/admin/invited-case/{sessionId}/delete', [OwnerController::class, 'deleteInvitedCase']);
+$router->get('/admin/clients', [OwnerController::class, 'clients']);
+$router->post('/admin/clients/create', [OwnerController::class, 'createClient']);
+$router->get('/admin/clients/{clientId}', [OwnerController::class, 'viewClient']);
+$router->post('/admin/clients/{clientId}/update', [OwnerController::class, 'updateClient']);
+$router->post('/admin/clients/{clientId}/invites/create', [OwnerController::class, 'createClientInvite']);
+$router->post('/admin/clients/{clientId}/delete', [OwnerController::class, 'deleteClient']);
 
 // Pair comparison results
 $router->get('/pair/{id}', [ResultController::class, 'pairShow']);

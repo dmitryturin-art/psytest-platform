@@ -26,6 +26,13 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("\$router->post('/admin/invites/create'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invites/revoke'", $routes);
         self::assertStringContainsString("\$router->get('/admin/invited-case/{sessionId}'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/delete'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/clients'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/clients/create'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/clients/{clientId}'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/clients/{clientId}/update'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/clients/{clientId}/invites/create'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/clients/{clientId}/delete'", $routes);
         self::assertStringContainsString("\$router->post('/invite/{token}/start'", $routes);
         self::assertStringContainsString('CsrfMiddleware', $routes);
         self::assertStringContainsString('ownerDashboardPasswordHash()', (string) file_get_contents($this->projectRoot . '/config.php'));
@@ -56,6 +63,40 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringNotContainsString('answers_json', $template);
         self::assertStringNotContainsString('results_json', $template);
         self::assertStringContainsString('InvitedCasePresenter', $controller);
+    }
+
+    public function testClientCardsStayInsideTheDashboardAndAlwaysConfirmDeletion(): void
+    {
+        $clientsList = (string) file_get_contents($this->projectRoot . '/templates/owner-clients.twig');
+        $clientCard = (string) file_get_contents($this->projectRoot . '/templates/owner-client.twig');
+        $invitedCase = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+
+        foreach ([$clientsList, $clientCard, $invitedCase] as $template) {
+            self::assertStringContainsString('name="csrf_token"', $template);
+            self::assertStringNotContainsString('session_token', $template);
+            self::assertStringNotContainsString('invite.token', $template);
+        }
+
+        self::assertStringContainsString('name="confirm_delete" value="delete" required', $clientCard);
+        self::assertStringContainsString('name="confirm_delete" value="delete" required', $invitedCase);
+        self::assertStringContainsString('name="label"', $clientsList);
+        self::assertStringContainsString('name="client_id"', (string) file_get_contents($this->projectRoot . '/templates/owner-dashboard.twig'));
+    }
+
+    public function testClientLabelNeverReachesThePublicInvitePageOrAnAiContext(): void
+    {
+        $respondentPage = (string) file_get_contents($this->projectRoot . '/templates/test-invite-start.twig');
+        $presenter = (string) file_get_contents($this->projectRoot . '/core/InvitedCasePresenter.php');
+
+        foreach (['client_label', 'client_id', 'owner_note', 'therapist_clients'] as $ownerOnlyField) {
+            self::assertStringNotContainsString($ownerOnlyField, $respondentPage, $ownerOnlyField);
+            self::assertStringNotContainsString($ownerOnlyField, $presenter, $ownerOnlyField);
+        }
+
+        foreach (glob($this->projectRoot . '/core/Ai/*.php') ?: [] as $aiSource) {
+            self::assertStringNotContainsString('therapist_clients', (string) file_get_contents($aiSource), $aiSource);
+            self::assertStringNotContainsString('client_label', (string) file_get_contents($aiSource), $aiSource);
+        }
     }
 
     public function testLoginAttemptMigrationContainsNoClientIdentifiers(): void

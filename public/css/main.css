@@ -440,6 +440,50 @@ body {
     cursor: pointer;
 }
 
+/*
+ * Кабинет виден и на телефоне, поэтому его навигация не использует
+ * .header-nav: та скрыта в мобильной раскладке публичного сайта.
+ */
+.owner-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-xs);
+}
+
+.owner-nav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+.owner-panel .btn {
+    min-height: 44px;
+}
+
+.owner-invite-list .btn {
+    margin-top: var(--spacing-sm);
+}
+
+.owner-invite-list strong a,
+.owner-case-details a {
+    color: var(--color-primary);
+    overflow-wrap: anywhere;
+}
+
+.owner-invite-list small a {
+    color: inherit;
+}
+
+.owner-delete-form label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-height: 44px;
+    line-height: 1.4;
+}
+
 @media (max-width: 600px) {
     .owner-panel {
         margin: var(--spacing-md) 0;

@@ -2,7 +2,7 @@
 
 {% block title %}Кейс по приглашению — {{ appName }}{% endblock %}
 {% block body_class %}owner-dashboard-page{% endblock %}
-{% block header_nav %}<a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a>{% endblock %}
+{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a><a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a></nav>{% endblock %}
 
 {% block content %}
 <section class="owner-panel" aria-labelledby="owner-case-title">
@@ -12,6 +12,7 @@
         <div><dt>Статус</dt><dd>{{ case.status }}</dd></div>
         <div><dt>Открыто</dt><dd>{{ case.claimed_at|date("d.m.Y H:i") }}</dd></div>
         <div><dt>Завершено</dt><dd>{% if case.completed_at %}{{ case.completed_at|date("d.m.Y H:i") }}{% else %}ещё нет{% endif %}</dd></div>
+        {% if case.client_label %}<div><dt>Клиент</dt><dd><a href="{{ basePath }}/admin/clients/{{ case.client_id }}">{{ case.client_label }}</a></dd></div>{% endif %}
         {% if case.owner_note %}<div><dt>Заметка специалиста</dt><dd>{{ case.owner_note }}</dd></div>{% endif %}
     </dl>
     {% if case.completed_at %}
@@ -51,6 +52,17 @@
                 {% endfor %}
             </ol>
         {% endif %}
+    </section>
+
+    <section class="owner-case" aria-labelledby="owner-case-delete-title">
+        <h2 id="owner-case-delete-title">Удаление кейса</h2>
+        <p class="owner-help">Удаляются ответы, результат, заметка к назначению и сгенерированные файлы этого прохождения. Карточка клиента остаётся.</p>
+        <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/delete" class="owner-action-form owner-delete-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            {% if case.client_id %}<input type="hidden" name="client_id" value="{{ case.client_id }}">{% endif %}
+            <label><input type="checkbox" name="confirm_delete" value="delete" required> Я понимаю, что удаление необратимо.</label>
+            <button type="submit" class="btn btn-danger">Удалить кейс полностью</button>
+        </form>
     </section>
 </section>
 {% endblock %}

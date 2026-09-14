@@ -289,6 +289,9 @@ class SessionManager
                 // данные: физически удаляем их в той же транзакции. Поздний worker
                 // больше не найдёт строку и не сможет вернуть текст отчёта.
                 $this->db->delete('ai_reports', 'session_id = ?', [$sessionId]);
+                // Приглашение специалиста с его заметкой описывает этот кейс и не
+                // должно пережить его (PRODUCT_RULES §11): FK SET NULL оставил бы заметку.
+                $this->db->delete('test_invites', 'claimed_session_id = ?', [$sessionId]);
 
                 $this->db->update(
                     'test_sessions',

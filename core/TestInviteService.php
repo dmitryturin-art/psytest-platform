@@ -25,7 +25,7 @@ final class TestInviteService
     }
 
     /** @return array{id: string, token: string, expires_at: string} */
-    public function create(int $testId, string $ownerNote): array
+    public function create(int $testId, string $ownerNote, ?string $clientId = null): array
     {
         $test = $this->db->selectOne(
             'SELECT id FROM tests WHERE id = :id AND is_active = 1',
@@ -34,6 +34,12 @@ final class TestInviteService
         if ($test === null) {
             throw new \InvalidArgumentException('Test is unavailable for invitations');
         }
+        if ($clientId !== null) {
+            $client = $this->db->selectOne('SELECT id FROM therapist_clients WHERE id = :id', ['id' => $clientId]);
+            if ($client === null) {
+                throw new \InvalidArgumentException('Client card does not exist');
+            }
+        }
 
         $token = bin2hex(random_bytes(32));
         $expiresAt = new DateTimeImmutable('+' . self::TTL_DAYS . ' days');
@@ -41,6 +47,7 @@ final class TestInviteService
         $this->db->insert('test_invites', [
             'id' => $id,
             'test_id' => $testId,
+            'client_id' => $clientId,
             'token_hash' => hash('sha256', $token),
             'owner_note' => $ownerNote === '' ? null : $ownerNote,
             'status' => 'pending',
@@ -152,17 +159,40 @@ final class TestInviteService
     {
         $invites = $this->db->select(
             "SELECT invites.id, invites.owner_note, invites.status, invites.created_at, invites.expires_at,
-                    invites.claimed_at, invites.claimed_session_id, tests.name AS test_name, sessions.status AS session_status
+                    invites.claimed_at, invites.claimed_session_id, invites.client_id,
+                    tests.name AS test_name, sessions.status AS session_status, sessions.completed_at,
+                    clients.label AS client_label
              FROM test_invites AS invites
              INNER JOIN tests ON tests.id = invites.test_id
              LEFT JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
+             LEFT JOIN therapist_clients AS clients ON clients.id = invites.client_id
              ORDER BY invites.created_at DESC
             LIMIT " . max(1, min($limit, 50)),
         );
+
+        return self::withDisplayStatus($invites);
+    }
+
+    /**
+     * Adds the owner-facing state of each invitation row.
+     *
+     * A claimed invitation without a bound session is legacy data left by an
+     * earlier deletion path: its case no longer exists, so it must never be
+     * offered as a link to `/admin/invited-case/`.
+     *
+     * @param list<array<string, mixed>> $invites
+     * @return list<array<string, mixed>>
+     */
+    public static function withDisplayStatus(array $invites): array
+    {
         $now = new DateTimeImmutable();
         foreach ($invites as &$invite) {
             $invite['display_status'] = match ($invite['status']) {
-                'claimed' => $invite['session_status'] === 'completed' ? 'completed' : 'opened',
+                'claimed' => match (true) {
+                    $invite['claimed_session_id'] === null, $invite['session_status'] === 'deleted' => 'result_deleted',
+                    $invite['session_status'] === 'completed' => 'completed',
+                    default => 'opened',
+                },
                 'revoked' => 'revoked',
                 default => new DateTimeImmutable((string) $invite['expires_at']) <= $now ? 'expired' : 'pending',
             };
@@ -178,10 +208,11 @@ final class TestInviteService
         $case = $this->db->selectOne(
             "SELECT sessions.id, sessions.status, sessions.created_at, sessions.completed_at,
                     sessions.answers, sessions.calculated_results, tests.name AS test_name, tests.slug AS test_slug,
-                    invites.owner_note, invites.claimed_at
+                    invites.owner_note, invites.claimed_at, invites.client_id, clients.label AS client_label
              FROM test_invites AS invites
              INNER JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
              INNER JOIN tests ON tests.id = sessions.test_id
+             LEFT JOIN therapist_clients AS clients ON clients.id = invites.client_id
              WHERE invites.claimed_session_id = :session_id
                AND sessions.status <> 'deleted'",
             ['session_id' => $sessionId],

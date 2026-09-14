@@ -33,6 +33,9 @@ final class MigratedSchemaTest extends TestCase
         $this->assertColumns('test_invites', ['token_hash', 'owner_note', 'claimed_session_id', 'expires_at']);
         $this->assertIndex('test_invites', 'uq_test_invites_token_hash', true);
         $this->assertIndex('test_invites', 'uq_test_invites_claimed_session', true);
+        $this->assertColumns('test_invites', ['client_id']);
+        $this->assertIndex('test_invites', 'idx_test_invites_client', false);
+        $this->assertColumns('therapist_clients', ['label', 'note', 'created_at', 'updated_at']);
 
         $this->assertMissingTable('ai_processing_consents');
         $this->assertMissingTable('crisis_resources');

@@ -1,0 +1,45 @@
+{% extends "layout.twig" %}
+
+{% block title %}Клиенты — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a><a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a></nav>{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-clients-title">
+    <p class="owner-panel-eyebrow">Кабинет специалиста</p>
+    <h1 id="owner-clients-title">Клиенты</h1>
+    <p class="owner-panel-intro">Карточка хранит только вашу подпись и заметку. Контакты клиента платформа не собирает: ссылку вы отправляете сами.</p>
+
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
+
+    <section class="owner-invites" aria-labelledby="owner-client-create-title">
+        <h2 id="owner-client-create-title">Новая карточка</h2>
+        <form method="post" action="{{ basePath }}/admin/clients/create" class="owner-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="client-label">Подпись клиента (видна только вам)</label>
+            <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off">
+            <label for="client-note">Заметка о работе (необязательно)</label>
+            <textarea id="client-note" name="note" maxlength="1000" rows="3"></textarea>
+            <button type="submit" class="btn btn-primary">Создать карточку</button>
+        </form>
+    </section>
+
+    <section class="owner-invites" aria-labelledby="owner-client-list-title">
+        <h2 id="owner-client-list-title">Список клиентов</h2>
+        {% if clients %}
+            <ul class="owner-invite-list">
+            {% for client in clients %}
+                <li>
+                    <strong><a href="{{ basePath }}/admin/clients/{{ client.id }}">{{ client.label }}</a></strong>
+                    <small>назначений: {{ client.assignment_count }} · завершено: {{ client.completed_count ?: 0 }} · создан {{ client.created_at|date("d.m.Y") }}</small>
+                    {% if client.note %}<p>{{ client.note }}</p>{% endif %}
+                    <a class="btn btn-outline" href="{{ basePath }}/admin/clients/{{ client.id }}">Открыть карточку</a>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}<p class="owner-help">Карточек пока нет.</p>{% endif %}
+    </section>
+</section>
+{% endblock %}
