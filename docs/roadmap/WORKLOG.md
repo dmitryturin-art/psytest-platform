@@ -20,6 +20,15 @@
 
 ## 2026-09-14
 
+### 07.K5b — email клиента в карточке и уведомление о готовом разборе
+
+- Этап / ветка / commit: этап 07, `codex/07-k5b-client-email` (rebase на `main` `9207766`); commits `0296211`, `e9ebaee`, `400186e`. Попутные пакеты в main: `de05405` (07.K5a1 — черновики из кабинета дообрабатываются после ответа, общий `ResponseFinisher`; без этого на shared-хостинге без cron задания специалиста зависали в pending) и `9207766` (07.K5a2 — раздел «ИИ-разбор» показывает пояснение для методик без промптов вместо скрытия; по замечанию владельца).
+- Цель (D-054, часть 2): необязательный email в карточке клиента и кнопка «Уведомить клиента на email» после публикации; письмо без текста разбора и без ссылок.
+- Сделано: миграция `20260915040000_add_client_email` (`therapist_clients.email NULL`, `ai_reports.client_notified_at`); `TherapistClientService` валидирует/нормализует email; `ClientReportNotifier` отправляет только при опубликованной clear-ревизии и заполненном email, лимит 1 раз в 10 минут на разбор (по часам БД), сбой отправки — лог без адреса и возврат false; `POST /admin/invited-case/{id}/reports/notify`; в карточке кейса кнопка активна/disabled с подсказкой, шаблон получает только факт наличия email; PRODUCT_RULES §4/§11, DATA_MAP, RETENTION_POLICY и политика приватности обновлены.
+- Проверки и evidence: исполнитель — `composer test` (полный, изолированная БД) **439 tests / 3926 assertions OK** (`ClientReportNotifierTest` 6 tests / 68 assertions); analyse/lint/architecture/baseline OK; rollback/migrate OK; браузер (СМИЛ-кейс): поле email, активная кнопка, письмо в debug-логе без ссылок и текста разбора, повтор через <10 минут отклонён, disabled-кнопка без email; desktop и 390×844 без console errors. Ведущий: `bin/local-gate.sh` на Docker MySQL 5.7.44 — **пройден**.
+- Наблюдение (долг): `SmilModule.php:759` даёт Warning `Undefined array key "is_valid"` для пустых результатов синтетической сессии — предсуществующий дефект отображения, не трогался.
+- Следующий шаг: выкладка K5a1/K5a2/K5b одним релизом; затем WP9 (промпты из кабинета) или O1 (IPIP) по выбору владельца.
+
 ### 08.B7 — staging-выкладка K5a (`c8b5feb`)
 
 - Этап / ветка / commit: этап 08, `codex/08-deploy-c8b5feb`; deployed runtime `c8b5feb` (merge PR #77).

@@ -231,9 +231,65 @@ final class TherapistClientServiceTest extends TestCase
         $this->clients->create('   ', '');
     }
 
-    private function createClient(string $label, string $note): string
+    /**
+     * Email карточки: необязательный, нормализованный и удаляемый (D-054).
+     *
+     * Он единственный контакт, который платформа вообще хранит, поэтому важно,
+     * что пустое поле его стирает, а мусор в него не попадает.
+     */
+    public function testClientEmailIsOptionalNormalisedValidatedAndErasable(): void
     {
-        $id = $this->clients->create($label, $note);
+        $withoutEmail = $this->createClient('Без адреса', '');
+        $card = $this->clients->findForOwner($withoutEmail);
+        self::assertNotNull($card);
+        self::assertNull($card['client']['email']);
+        self::assertFalse($this->clients->hasEmail($withoutEmail));
+
+        $id = $this->clients->create('С адресом', '', '  Client@Example.TEST ');
+        $this->clientIds[] = $id;
+        $card = $this->clients->findForOwner($id);
+        self::assertNotNull($card);
+        self::assertSame('client@example.test', $card['client']['email'], 'Адрес хранится в одном виде.');
+        self::assertTrue($this->clients->hasEmail($id));
+
+        // Пустое поле — это «уведомлять некуда», а не «оставить как было».
+        self::assertTrue($this->clients->update($id, 'С адресом', '', ''));
+        $card = $this->clients->findForOwner($id);
+        self::assertNotNull($card);
+        self::assertNull($card['client']['email']);
+        self::assertFalse($this->clients->hasEmail($id));
+
+        self::assertFalse($this->clients->hasEmail(null));
+        self::assertFalse($this->clients->hasEmail('not-a-uuid'));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->clients->update($id, 'С адресом', '', 'не адрес');
+    }
+
+    public function testDeletingAClientTakesItsEmailAwayWithTheCard(): void
+    {
+        $id = $this->createClient('Уходит вместе с адресом', '', 'erased@example.test');
+        self::assertTrue($this->clients->hasEmail($id));
+
+        self::assertTrue($this->clients->delete($id));
+        self::assertSame(
+            0,
+            (int) $this->db->selectOne(
+                'SELECT COUNT(*) AS total FROM therapist_clients WHERE email = ?',
+                ['erased@example.test'],
+            )['total'],
+        );
+    }
+
+    public function testEmailLongerThanTheColumnIsRejectedInsteadOfBeingTruncated(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->clients->create('Длинный адрес', '', str_repeat('a', 250) . '@example.test');
+    }
+
+    private function createClient(string $label, string $note, string $email = ''): string
+    {
+        $id = $this->clients->create($label, $note, $email);
         $this->clientIds[] = $id;
 
         return $id;

@@ -35,7 +35,7 @@ final class MigratedSchemaTest extends TestCase
         $this->assertIndex('test_invites', 'uq_test_invites_claimed_session', true);
         $this->assertColumns('test_invites', ['client_id']);
         $this->assertIndex('test_invites', 'idx_test_invites_client', false);
-        $this->assertColumns('therapist_clients', ['label', 'note', 'created_at', 'updated_at']);
+        $this->assertColumns('therapist_clients', ['label', 'note', 'email', 'created_at', 'updated_at']);
         $this->assertColumns('visitor_accounts', ['email', 'created_at', 'last_login_at']);
         $this->assertIndex('visitor_accounts', 'uq_visitor_accounts_email', true);
         $this->assertColumns('visitor_login_tokens', ['email', 'rate_key', 'token_hash', 'expires_at', 'used_at', 'created_at']);
@@ -43,7 +43,7 @@ final class MigratedSchemaTest extends TestCase
         $this->assertIndex('visitor_login_tokens', 'idx_visitor_login_tokens_email_created', false);
         $this->assertIndex('visitor_login_tokens', 'idx_visitor_login_tokens_rate_key_created', false);
         $this->assertColumns('ai_reports', ['context_snapshot', 'prompt_snapshot']);
-        $this->assertColumns('ai_reports', ['published_revision_id', 'published_at']);
+        $this->assertColumns('ai_reports', ['published_revision_id', 'published_at', 'client_notified_at']);
         $this->assertColumns('ai_report_revisions', ['report_id', 'revision_no', 'content', 'source', 'created_at']);
         $this->assertIndex('ai_report_revisions', 'uq_report_revision_no', true);
         $this->assertColumns('test_sessions', ['account_id']);

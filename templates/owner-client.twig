@@ -10,7 +10,7 @@
 <section class="owner-panel" aria-labelledby="owner-client-title">
     <p class="owner-panel-eyebrow">Карточка клиента</p>
     <h1 id="owner-client-title">{{ client.label }}</h1>
-    <p class="owner-panel-intro">Подпись и заметка видны только в кабинете: они не попадают в ссылку, на страницу клиента и во внешние сервисы.</p>
+    <p class="owner-panel-intro">Подпись, заметка и email видны только в кабинете: они не попадают в ссылку, на страницу клиента и во внешние сервисы.</p>
 
     {% if flash %}
         <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
@@ -18,13 +18,16 @@
     {% endif %}
 
     <section class="owner-invites" aria-labelledby="owner-client-edit-title">
-        <h2 id="owner-client-edit-title">Подпись и заметка</h2>
+        <h2 id="owner-client-edit-title">Подпись, заметка и email</h2>
         <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/update" class="owner-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <label for="client-label">Подпись клиента</label>
             <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off" value="{{ client.label }}">
             <label for="client-note">Заметка о работе</label>
             <textarea id="client-note" name="note" maxlength="1000" rows="3">{{ client.note }}</textarea>
+            <label for="client-email">Email клиента (необязательно, только для уведомлений)</label>
+            <input id="client-email" name="email" type="email" maxlength="254" autocomplete="off" value="{{ client.email }}">
+            <p class="owner-help">Адрес нужен ровно для одного письма — «разбор готов». Платформа не отправляет его сама: письмо уходит только по вашей кнопке в карточке кейса. Очистите поле, чтобы удалить адрес.</p>
             <button type="submit" class="btn btn-primary">Сохранить</button>
         </form>
     </section>

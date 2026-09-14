@@ -103,6 +103,17 @@
                 {% elseif item.kind == 'clear' %}
                     {% if item.published %}
                         <p class="owner-notice owner-notice--success">Опубликована версия №{{ item.published.revision_no }} от {{ item.published.published_at|date("d.m.Y H:i") }}.</p>
+                        {# Письмо предлагается только после публикации и только по нажатию: автоматической отправки нет (D-054). #}
+                        {% if notify.has_email %}
+                            <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/notify" class="owner-action-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <button type="submit" class="btn">Уведомить клиента на email</button>
+                            </form>
+                            <p class="owner-help">В письме нет текста разбора и ссылки: клиент открывает ту же страницу результата, которую получил после прохождения.{% if notify.last_at %} Последнее уведомление: {{ notify.last_at|date("d.m.Y H:i") }}.{% endif %}</p>
+                        {% else %}
+                            <button type="button" class="btn" disabled>Уведомить клиента на email</button>
+                            <p class="owner-help">Уведомить некуда: {% if notify.client_id %}<a href="{{ basePath }}/admin/clients/{{ notify.client_id }}">добавьте email в карточке клиента</a>{% else %}добавьте email в карточке клиента{% endif %}.</p>
+                        {% endif %}
                     {% else %}
                         <p class="owner-help">Клиенту пока ничего не опубликовано.</p>
                     {% endif %}
