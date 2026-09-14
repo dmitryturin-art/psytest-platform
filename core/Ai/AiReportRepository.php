@@ -156,19 +156,36 @@ final class AiReportRepository
     public function releaseStuck(int $olderThanMinutes = 30): array
     {
         $stuck = $this->db->select(
-            'SELECT id FROM ai_reports WHERE status = ? AND updated_at < (NOW() - INTERVAL ? MINUTE)',
+            'SELECT id, attempts FROM ai_reports WHERE status = ? AND updated_at < (NOW() - INTERVAL ? MINUTE)',
             [self::STATUS_RUNNING, $olderThanMinutes],
         );
 
+        $released = [];
         foreach ($stuck as $row) {
-            $this->db->update(
-                'ai_reports',
-                ['status' => self::STATUS_PENDING, 'failure_reason' => 'Обработчик не завершил задание и был перезапущен'],
-                'id = ?',
-                [$row['id']],
+            $attemptsExhausted = (int) $row['attempts'] >= self::MAX_ATTEMPTS;
+            $updated = $this->db->execute(
+                'UPDATE ai_reports
+                 SET status = ?, failure_reason = ?
+                 WHERE id = ? AND status = ? AND updated_at < (NOW() - INTERVAL ? MINUTE)',
+                [
+                    $attemptsExhausted ? self::STATUS_FAILED : self::STATUS_PENDING,
+                    $attemptsExhausted
+                        ? 'Обработчик не завершил последнюю допустимую попытку.'
+                        : 'Обработчик не завершил задание и был перезапущен',
+                    $row['id'],
+                    self::STATUS_RUNNING,
+                    $olderThanMinutes,
+                ],
             );
+
+            // Между поиском и обновлением обработчик мог успеть записать готовый
+            // отчёт. Возвращаем только задания, которые действительно изменили
+            // статус, и не затираем этот результат устаревшим cleanup-проходом.
+            if ($updated->rowCount() === 1) {
+                $released[] = $row;
+            }
         }
 
-        return $stuck;
+        return $released;
     }
 }

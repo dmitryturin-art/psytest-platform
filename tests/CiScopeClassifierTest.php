@@ -69,6 +69,10 @@ final class CiScopeClassifierTest extends TestCase
             'core/SessionManager.php',
         ], true];
 
+        yield 'AI persistence code requires both databases' => [[
+            'core/Ai/AiReportRepository.php',
+        ], true];
+
         yield 'integration service changes require both databases' => [[
             'services/PaymentService.php',
         ], true];

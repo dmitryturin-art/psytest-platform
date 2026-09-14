@@ -1,10 +1,10 @@
 # Архитектура PsyTest Platform
 
-Статус: **фактическое состояние на 2026-08-22**. Здесь описан работающий код, а будущие AI, YooKassa, кабинет терапевта, UI redesign и Module API v2 — в [ROADMAP.md](ROADMAP.md).
+Статус: **сводка актуализирована 2026-09-09**. Module API v2, UI, базовый AI-контур и одноразовые owner invitations реализованы. Полные кабинеты, редакции/одобрение отчётов и YooKassa остаются в [ROADMAP.md](ROADMAP.md).
 
 ## Обзор
 
-PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платная интерпретация, YooKassa и новый AI-контур не реализованы; старые public endpoints этого контура отвечают `410 Gone`.
+PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платёжный контур и YooKassa не реализованы; старые payment endpoints отвечают `410 Gone`. Новый бесплатный AI-контур работает через `core/Ai/`: реестр промптов, адаптер, очередь `ai_reports`, генерация после HTTP-ответа и polling. Политика согласия, клиентских черновиков, snapshot и удаления имеет открытые дефекты [ревью 08.09](docs/audit/2026-09-08-delivery-review.md).
 
 | Слой | Фактическая технология |
 |---|---|
@@ -43,7 +43,7 @@ HTTP request
   -> Twig HTML, JSON или PDF
 ```
 
-`TestController` создаёт session, сохраняет валидированные ответы и вычисляет результат методом модуля. `ResultController` получает result только по `session_token`, проверяет соответствие route slug тесту и рендерит `ResultSection` через `result-layout.twig`. PDF-ветка рендерит те же секции через общий `core/ResultSectionRenderer.php` (единственный dispatch секций в HTML, включая статический SMIL-график для печати). Контроллеры не ссылаются на конкретные классы модулей — только `TestModuleInterface`; веб-график пары — декларативный метод `pairChartData(): ?array` интерфейса (реализует Lazarus). Контракт закреплён `RendererContractTest` (19 тестов).
+`TestController` создаёт session, сохраняет валидированные ответы и вычисляет результат методом модуля. `SessionManager` переводит её из `partial` в `completed` одним условным update; после этого ответы, демография и рассчитанный результат неизменяемы. `ResultController` получает result только по `session_token`, проверяет соответствие route slug тесту и рендерит `ResultSection` через `result-layout.twig`. PDF-ветка рендерит те же секции через общий `core/ResultSectionRenderer.php` (единственный dispatch секций в HTML, включая статический SMIL-график для печати). Контроллеры не ссылаются на конкретные классы модулей — только `TestModuleInterface`; веб-график пары — декларативный метод `pairChartData(): ?array` интерфейса (реализует Lazarus). Контракт закреплён `RendererContractTest` (19 тестов).
 
 ## Публичные маршруты
 
@@ -54,6 +54,8 @@ HTTP request
 | GET | `/` | `HomeController::index` | публичный лендинг с каталогом доступных методик; пока `noindex` по общей policy |
 | GET | `/tests` | `HomeController::tests` | каталог |
 | GET | `/test/{slug}` | `TestController::start` | начало теста |
+| GET | `/invite/{token}` | `TestController::invite` | read-only preview персонального приглашения |
+| POST | `/invite/{token}/start` | `TestController::startInvite` | CSRF-защищённое одноразовое связывание invitation и session |
 | POST | `/test/{slug}/save` | `TestController::save` | autosave |
 | POST | `/test/{slug}/submit` | `TestController::submit` | validation и scoring |
 | GET | `/test/{slug}/pair` | `TestController::pairStart` | второй партнёр Lazarus |
@@ -71,6 +73,9 @@ HTTP request
 | POST | `/admin/case/lookup` | `OwnerController::lookupCase` | поиск завершённого кейса по result token |
 | POST | `/admin/case/assign` | `OwnerController::assignCase` | явное назначение therapist case |
 | POST | `/admin/case/delete` | `OwnerController::deleteCase` | полное ручное удаление кейса |
+| POST | `/admin/invites/create` | `OwnerController::createInvite` | создать 14-day invitation для поддерживаемой методики |
+| POST | `/admin/invites/revoke` | `OwnerController::revokeInvite` | отозвать неоткрытое invitation |
+| GET | `/admin/invited-case/{sessionId}` | `OwnerController::viewInvitedCase` | защищённо показать базовый результат и читаемую анкету invitation case |
 | GET | `/pair/{id}` | `ResultController::pairShow` | сравнение пары |
 | GET | `/pair/{id}/pdf` | `ResultController::pairPdf` | PDF сравнения |
 | GET | `/api/health` | `ApiController::health` | health check |
@@ -86,7 +91,7 @@ HTTP request
 
 `ModuleLoader` сканирует `modules/*`, читает класс из PHP-файла, инстанцирует его и регистрирует по `metadata.slug`. Имя директории не всегда равно slug: например, `modules/beck-depression` имеет slug `bdi`.
 
-Каждый модуль реализует `TestModuleInterface` и обычно наследует `BaseTestModule`:
+Каждый модуль реализует `TestModuleInterface` и обычно наследует `BaseTestModule`. Ниже сокращённый пример; полный действующий контракт, включая answer schema, capabilities и AI context, — `modules/TestModuleInterface.php`:
 
 ```php
 interface TestModuleInterface
@@ -124,7 +129,7 @@ interface TestModuleInterface
 
 Новая session получает `retention_class = anonymous`. Независимо существуют access TTL (`expires_at`), срок physical retention 180 дней от `created_at`, public soft-delete и плановый `SessionLifecycleService`, физически удаляющий просроченные anonymous sessions и известные artifacts.
 
-`therapist_case` назначается только владельцем через минимальный `/admin`, защищённый Argon2id password, session, CSRF и глобальным лимитом неудачных входов. Dashboard принимает result token только в POST lookup, не помещает его в URL или audit details; назначить можно лишь завершённую anonymous-сессию. Ручное удаление физически очищает session и известные artifacts, затем оставляет только обезличенное operational событие без идентификаторов кейса. Полный кабинет с отчётами относится к этапу 07. Фактические границы — в [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md), policy — в [RETENTION_POLICY.md](docs/roadmap/RETENTION_POLICY.md).
+`therapist_case` назначается либо владельцем через минимальный `/admin` после завершения anonymous-сессии, либо атомарно при CSRF-защищённом старте персонального приглашения. `test_invites` хранит только SHA-256 хеш bearer-токена, test scope, срок, статус, owner-only note и ссылку на созданную session; raw token появляется лишь в одноразовом copy field владельца. `InvitedCasePresenter` возвращает для owner-only case текстовые строки анкеты, сопоставляя сохранённый ответ с текущим модулем; базовый результат рендерится теми же module sections, без raw JSON. Dashboard защищён Argon2id password, session, CSRF и глобальным лимитом неудачных входов. Ручное удаление физически очищает session и известные artifacts, затем оставляет только обезличенное operational событие без идентификаторов кейса. Полный кабинет с отчётами относится к этапу 07. Фактические границы — в [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md), policy — в [RETENTION_POLICY.md](docs/roadmap/RETENTION_POLICY.md).
 
 ## Безопасность и privacy границы
 
@@ -139,15 +144,15 @@ interface TestModuleInterface
 
 ## Legacy integrations и целевой контур
 
-`AIInterpretationService`, `PaymentService`, legacy `ApiController` methods и старые AI/payment tables — исторические слои. Они не доказывают готовность оплаты или AI и не должны подключаться к новым public routes. Отдельный consent-boundary будет спроектирован вместе с реальным checkout и AI-flow, а не хранится как неподключённый задел.
+`AIInterpretationService`, `PaymentService`, legacy `ApiController` methods и старые AI/payment tables — исторические слои. Они не доказывают готовность оплаты или AI и не должны подключаться к новым public routes. Граница согласия требуется уже бесплатному AI-flow и входит в ближайший K0; она не откладывается до оплаты.
 
-Новая YooKassa state machine относится к этапу 06. Новый AI flow с отдельным consent, provider boundary, versioned prompts, report audiences и кабинетом терапевта относится к этапу 07. Критерии и release gates — в [ROADMAP.md](ROADMAP.md).
+Новая YooKassa state machine относится к этапу 06. В этапе 07 уже реализованы provider boundary, versioned prompts и очередь с выдачей. Отдельный consent, snapshots, revisions/approval и полный кабинет остаются незавершёнными. Критерии и release gates — в [ROADMAP.md](ROADMAP.md).
 
 ## База данных и миграции
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, pair comparisons, activity log и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, `test_invites`, pair comparisons, activity log, новую ai_reports и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 
@@ -156,6 +161,7 @@ interface TestModuleInterface
 ```bash
 composer validate --strict --no-check-publish
 composer audit
+composer migrate
 composer test
 composer analyse
 composer lint
@@ -163,4 +169,4 @@ php bin/check-architecture.php
 composer baseline:check
 ```
 
-Актуальные status, evidence и следующий work package — в [STATUS.md](docs/roadmap/STATUS.md), [WORKLOG.md](docs/roadmap/WORKLOG.md) и [CHECKPOINT.md](docs/roadmap/CHECKPOINT.md). Новый модуль относится к этапу 03: текущий контракт имеет специальные случаи и будет заменён Module API v2.
+Актуальные status, evidence и следующий work package — в [STATUS.md](docs/roadmap/STATUS.md), [WORKLOG.md](docs/roadmap/WORKLOG.md) и [CHECKPOINT.md](docs/roadmap/CHECKPOINT.md). Module API v2 реализован в закрытом этапе 03; новые реальные модули добавляются в этапе 09.

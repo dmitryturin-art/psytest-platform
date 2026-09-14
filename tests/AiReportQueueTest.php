@@ -128,6 +128,25 @@ final class AiReportQueueTest extends TestCase
         self::assertSame(AiReportRepository::STATUS_PENDING, $this->reports->find((string) $job['id'])['status']);
     }
 
+    public function testStuckJobAfterItsLastAttemptBecomesTerminallyFailed(): void
+    {
+        $job = $this->request();
+        $this->db->execute(
+            "UPDATE ai_reports
+             SET status = 'running', attempts = ?, updated_at = (NOW() - INTERVAL 2 HOUR)
+             WHERE id = ?",
+            [AiReportRepository::MAX_ATTEMPTS, $job['id']],
+        );
+
+        $released = $this->reports->releaseStuck(30);
+        $finished = $this->reports->find((string) $job['id']);
+
+        self::assertContains($job['id'], array_column($released, 'id'));
+        self::assertSame(AiReportRepository::STATUS_FAILED, $finished['status']);
+        self::assertSame('Обработчик не завершил последнюю допустимую попытку.', $finished['failure_reason']);
+        self::assertNull($this->reports->claimNext(), 'Исчерпавшее попытки зависшее задание не должно вернуться в очередь.');
+    }
+
     public function testReadyJobKeepsWhatIsNeededToExplainTheReport(): void
     {
         $job = $this->request();
@@ -165,5 +184,53 @@ final class AiReportQueueTest extends TestCase
             $this->reports->find((string) $job['id']),
             'Разбор — клинический документ сессии и обязан уходить вместе с ней.',
         );
+    }
+
+    public function testSoftDeletingSessionErasesEveryReportStateAndLateWorkerCannotRestoreIt(): void
+    {
+        $ready = $this->request();
+        $this->reports->markReady((string) $ready['id'], new AiCompletion(
+            text: 'Клинический текст, который нельзя сохранять.',
+            requestedModel: 'fixture/requested',
+            servedModel: 'fixture/served',
+            promptTokens: 1,
+            completionTokens: 1,
+        ));
+
+        $pending = $this->reports->request(
+            $this->sessionId,
+            'lazarus',
+            'individual',
+            'professional',
+            new Prompt('lazarus', 'individual', 'professional', 2, Prompt::STATUS_PUBLISHED, 'текст', false, 'test'),
+            'Заметка владельца, которую нельзя сохранять.',
+        );
+        $running = $this->reports->request(
+            $this->sessionId,
+            'lazarus',
+            'pair',
+            'clear',
+            new Prompt('lazarus', 'pair', 'clear', 2, Prompt::STATUS_PUBLISHED, 'текст', false, 'test'),
+        );
+        $this->db->update('ai_reports', ['status' => AiReportRepository::STATUS_RUNNING], 'id = ?', [$running['id']]);
+
+        self::assertTrue((new SessionManager($this->db))->deleteSession($this->sessionId));
+        $deletedSession = $this->db->selectOne('SELECT status, answers, calculated_results FROM test_sessions WHERE id = ?', [$this->sessionId]);
+        self::assertSame('deleted', $deletedSession['status']);
+        self::assertSame('[]', $deletedSession['answers']);
+        self::assertSame('[]', $deletedSession['calculated_results']);
+
+        foreach ([$ready, $pending, $running] as $report) {
+            self::assertNull($this->reports->find((string) $report['id']));
+        }
+
+        $this->reports->markReady((string) $running['id'], new AiCompletion(
+            text: 'Запоздалый worker не должен воскресить отчёт.',
+            requestedModel: 'fixture/requested',
+            servedModel: 'fixture/served',
+            promptTokens: 1,
+            completionTokens: 1,
+        ));
+        self::assertNull($this->reports->find((string) $running['id']));
     }
 }

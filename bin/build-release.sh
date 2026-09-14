@@ -8,6 +8,8 @@
 # Rules learned from incident 25.08.2026 (SMIL chart background 404):
 # - every exclude must be anchored to the repo root (/pattern), otherwise
 #   rsync silently drops tracked assets like public/images/smil-profile-bg.png;
+# - source files come from the committed Git tree, never from the working
+#   directory, so ignored local artifacts cannot enter a release;
 # - after build, every git-tracked file under public/ must exist in the
 #   artifact — the verification below fails the build otherwise.
 
@@ -15,17 +17,28 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
+SHA=$(git rev-parse --short HEAD)
+OUT=${1:-"tmp/release-$SHA"}
+if [[ ! "$OUT" =~ ^tmp/release-[A-Za-z0-9._-]+$ ]]; then
+    echo "ERROR: output must be a tmp/release-* path inside this repository." >&2
+    exit 1
+fi
+
 if [ -n "$(git status --porcelain)" ]; then
     echo "ERROR: working tree is not clean — commit or stash first." >&2
     exit 1
 fi
 
-SHA=$(git rev-parse --short HEAD)
-OUT=${1:-"tmp/release-$SHA"}
 STAGE="$OUT/release-$SHA"
+SOURCE="$OUT/tracked-$SHA"
 
 rm -rf "$OUT"
-mkdir -p "$STAGE"
+mkdir -p "$STAGE" "$SOURCE"
+
+# `git archive` includes only files committed at HEAD. The clean-tree check
+# above is intentionally retained: a release must name a reviewable commit,
+# not silently skip a developer's uncommitted work.
+git archive --format=tar HEAD | tar -xf - -C "$SOURCE"
 
 rsync -a \
     --exclude '/.git' \
@@ -51,10 +64,12 @@ rsync -a \
     --exclude '/.env' \
     --exclude '/.env.example' \
     --exclude '/.gitignore' \
-    --exclude '.DS_Store' \
+    --exclude '/.DS_Store' \
     --exclude '/storage/*' \
     --exclude '/vendor' \
-    ./ "$STAGE/"
+    "$SOURCE/" "$STAGE/"
+
+rm -rf "$SOURCE"
 
 mkdir -p "$STAGE/storage/logs" "$STAGE/storage/cache" "$STAGE/storage/pdfs"
 

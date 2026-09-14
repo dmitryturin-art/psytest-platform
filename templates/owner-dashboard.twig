@@ -17,10 +17,55 @@
 
     {% if flash %}
         <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+        {% if flash.invite_url %}<p class="owner-invite-url"><input aria-label="Ссылка-приглашение" type="text" readonly value="{{ flash.invite_url }}"></p>{% endif %}
     {% endif %}
     {% if lookup_error %}
         <p class="owner-notice owner-notice--error" role="alert">{{ lookup_error }}</p>
     {% endif %}
+
+    <section class="owner-invites" aria-labelledby="owner-invites-title">
+        <h2 id="owner-invites-title">Новое приглашение</h2>
+        <p class="owner-help">Ссылка действует 14 дней и может быть открыта один раз. Ответы и результат после открытия будут доступны только в этом кабинете.</p>
+        <form method="post" action="{{ basePath }}/admin/invites/create" class="owner-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="invite-test">Методика</label>
+            <select id="invite-test" name="test_id" required>
+                {% for test in invite_tests %}<option value="{{ test.id }}">{{ test.name }}</option>{% endfor %}
+            </select>
+            <label for="invite-note">Заметка для себя (не показывается клиенту)</label>
+            <textarea id="invite-note" name="owner_note" maxlength="1000" rows="3"></textarea>
+            <button type="submit" class="btn btn-primary">Создать ссылку</button>
+        </form>
+    </section>
+
+    <section class="owner-invites" aria-labelledby="owner-invites-history-title">
+        <h2 id="owner-invites-history-title">Последние приглашения</h2>
+        {% if invites %}
+            <ul class="owner-invite-list">
+            {% for invite in invites %}
+                <li>
+                    <strong>{{ invite.test_name }}</strong> —
+                    {% if invite.display_status == 'completed' %}завершено
+                    {% elseif invite.display_status == 'opened' %}открыто
+                    {% elseif invite.display_status == 'revoked' %}отозвано
+                    {% elseif invite.display_status == 'expired' %}срок истёк
+                    {% else %}ожидает открытия{% endif %}
+                    <small>создано {{ invite.created_at|date("d.m.Y H:i") }}</small>
+                    {% if invite.owner_note %}<p>{{ invite.owner_note }}</p>{% endif %}
+                    {% if invite.status == 'pending' %}
+                        <form method="post" action="{{ basePath }}/admin/invites/revoke" class="owner-action-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="invite_id" value="{{ invite.id }}">
+                            <button type="submit" class="btn btn-outline">Отозвать</button>
+                        </form>
+                    {% elseif invite.status == 'claimed' %}
+                        <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ invite.claimed_session_id }}">Открыть кейс</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}<p class="owner-help">Приглашений пока нет.</p>{% endif %}
+    </section>
 
     <form method="post" action="{{ basePath }}/admin/case/lookup" class="owner-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

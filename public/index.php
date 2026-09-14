@@ -56,6 +56,8 @@ $router->get('/tests', [HomeController::class, 'tests']);
 
 // Test taking
 $router->get('/test/{slug}', [TestController::class, 'start']);
+$router->get('/invite/{token}', [TestController::class, 'invite']);
+$router->post('/invite/{token}/start', [TestController::class, 'startInvite']);
 $router->post('/test/{slug}/save', [TestController::class, 'save']);
 $router->post('/test/{slug}/submit', [TestController::class, 'submit']);
 
@@ -80,6 +82,9 @@ $router->get('/admin', [OwnerController::class, 'dashboard']);
 $router->post('/admin/case/lookup', [OwnerController::class, 'lookupCase']);
 $router->post('/admin/case/assign', [OwnerController::class, 'assignCase']);
 $router->post('/admin/case/delete', [OwnerController::class, 'deleteCase']);
+$router->post('/admin/invites/create', [OwnerController::class, 'createInvite']);
+$router->post('/admin/invites/revoke', [OwnerController::class, 'revokeInvite']);
+$router->get('/admin/invited-case/{sessionId}', [OwnerController::class, 'viewInvitedCase']);
 
 // Pair comparison results
 $router->get('/pair/{id}', [ResultController::class, 'pairShow']);

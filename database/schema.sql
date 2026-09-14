@@ -127,6 +127,28 @@ CREATE TABLE IF NOT EXISTS `owner_login_attempts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
+-- OWNER TEST INVITATIONS
+-- ============================================
+CREATE TABLE IF NOT EXISTS `test_invites` (
+  `id` CHAR(36) PRIMARY KEY,
+  `test_id` INT UNSIGNED NOT NULL,
+  `token_hash` CHAR(64) NOT NULL,
+  `owner_note` TEXT DEFAULT NULL,
+  `status` ENUM('pending', 'claimed', 'revoked') NOT NULL DEFAULT 'pending',
+  `claimed_session_id` CHAR(36) DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` DATETIME NOT NULL,
+  `claimed_at` TIMESTAMP NULL DEFAULT NULL,
+  `revoked_at` TIMESTAMP NULL DEFAULT NULL,
+  UNIQUE KEY `uq_test_invites_token_hash` (`token_hash`),
+  UNIQUE KEY `uq_test_invites_claimed_session` (`claimed_session_id`),
+  CONSTRAINT `fk_test_invites_test` FOREIGN KEY (`test_id`) REFERENCES `tests` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_test_invites_session` FOREIGN KEY (`claimed_session_id`) REFERENCES `test_sessions` (`id`) ON DELETE SET NULL,
+  INDEX `idx_test_invites_owner` (`created_at`),
+  INDEX `idx_test_invites_status_expiry` (`status`, `expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- PAYMENT TRANSACTIONS LOG
 -- ============================================
 CREATE TABLE IF NOT EXISTS `payment_transactions` (

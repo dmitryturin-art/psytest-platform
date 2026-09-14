@@ -164,6 +164,10 @@ class ResultController extends BaseController
      */
     private function reportViewData(string $slug, array $session): ?array
     {
+        if (($session['retention_class'] ?? null) === 'therapist_case') {
+            return ['restricted' => true, 'mode' => $this->reportMode($session), 'kinds' => []];
+        }
+
         $mode = $this->reportMode($session);
         $registry = PromptRegistry::default();
         $reports = new AiReportRepository($this->db);
@@ -205,6 +209,16 @@ class ResultController extends BaseController
             return;
         }
 
+        if (($session['retention_class'] ?? null) === 'therapist_case') {
+            $this->redirect('/result/' . $slug . '/' . $token);
+        }
+
+        // Consent is checked server-side: a forged POST without the checkbox
+        // must not create a job or transmit structured results to a provider.
+        if (($_POST['ai_consent'] ?? null) !== '1') {
+            $this->redirect('/result/' . $slug . '/' . $token);
+        }
+
         $kind = $_POST['kind'] ?? '';
         if (!in_array($kind, [Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL], true)) {
             $this->redirect('/result/' . $slug . '/' . $token);
@@ -237,6 +251,12 @@ class ResultController extends BaseController
 
         [$session] = $this->reportSessionOrFail($slug, $token, true);
         if ($session === null) {
+            return;
+        }
+
+        if (($session['retention_class'] ?? null) === 'therapist_case') {
+            echo json_encode(['status' => 'restricted']);
+
             return;
         }
 

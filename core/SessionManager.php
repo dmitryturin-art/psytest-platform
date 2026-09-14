@@ -36,7 +36,8 @@ class SessionManager
      * Create a new test session
      *
      * @param int $testId Test ID
-     * @param array $options Optional: email, name, demographics, partner_token
+     * @param array $options Optional: email, name, demographics, partner_token,
+     *                       retention_class (internal privileged callers only)
      * @return array Session data including tokens
      */
     public function createSession(int $testId, array $options = []): array
@@ -44,6 +45,10 @@ class SessionManager
         $sessionId = Uuid::uuid4()->toString();
         $sessionToken = $this->generateUniqueToken();
         $partnerToken = $options['partner_token'] ?? null;
+        $retentionClass = $options['retention_class'] ?? RetentionPolicy::ANONYMOUS;
+        if (!in_array($retentionClass, [RetentionPolicy::ANONYMOUS, RetentionPolicy::THERAPIST_CASE], true)) {
+            throw new \InvalidArgumentException('Unknown retention class');
+        }
 
         $expiresAt = new DateTimeImmutable("+{$this->sessionTtlDays} days");
 
@@ -58,7 +63,7 @@ class SessionManager
             'answers' => json_encode([]),
             'calculated_results' => json_encode([]),
             'status' => 'partial',
-            'retention_class' => RetentionPolicy::ANONYMOUS,
+            'retention_class' => $retentionClass,
             'created_at' => date('Y-m-d H:i:s'),
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
@@ -75,7 +80,7 @@ class SessionManager
             'test_id' => $testId,
             'session_token' => $sessionToken,
             'partner_token' => $partnerToken,
-            'retention_class' => RetentionPolicy::ANONYMOUS,
+            'retention_class' => $retentionClass,
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
         ];
     }
@@ -138,12 +143,16 @@ class SessionManager
      */
     public function saveAnswers(string $sessionId, array $answers): bool
     {
-        $this->db->update(
+        $updated = $this->db->update(
             'test_sessions',
             ['answers' => json_encode($answers)],
-            'id = ?',
-            [$sessionId]
+            'id = ? AND status = ?',
+            [$sessionId, 'partial']
         );
+
+        if ($updated === 0) {
+            return false;
+        }
 
         $this->logActivity($sessionId, null, 'answers_saved', [
             'answer_count' => count($answers),
@@ -166,14 +175,12 @@ class SessionManager
             return false;
         }
 
-        $this->db->update(
+        return $this->db->update(
             'test_sessions',
             ['demographics' => json_encode($demographics)],
-            'id = ?',
-            [$sessionId]
-        );
-
-        return true;
+            'id = ? AND status = ?',
+            [$sessionId, 'partial']
+        ) > 0;
     }
 
     /**
@@ -185,20 +192,69 @@ class SessionManager
      */
     public function completeSession(string $sessionId, array $results): bool
     {
-        $this->db->update(
+        $updated = $this->db->update(
             'test_sessions',
             [
                 'calculated_results' => json_encode($results),
                 'status' => 'completed',
                 'completed_at' => date('Y-m-d H:i:s'),
             ],
-            'id = ?',
-            [$sessionId]
+            'id = ? AND status = ?',
+            [$sessionId, 'partial']
         );
+
+        if ($updated === 0) {
+            return false;
+        }
 
         // Get session for logging
         $session = $this->getSessionById($sessionId);
 
+        $this->logActivity($sessionId, $session['test_id'] ?? null, 'session_completed');
+
+        return true;
+    }
+
+    /**
+     * Atomically persist the final test payload and transition a session to completed.
+     *
+     * A completed clinical record is immutable: the status condition makes a duplicate
+     * browser submit (including a concurrent double-click) a harmless no-op.
+     *
+     * @param array<string|int, mixed> $answers
+     * @param array<string, mixed> $results
+     * @param array<string, mixed>|null $demographics
+     */
+    public function finalizeSession(
+        string $sessionId,
+        array $answers,
+        array $results,
+        ?array $demographics = null,
+    ): bool {
+        $data = [
+            'answers' => json_encode($answers),
+            'calculated_results' => json_encode($results),
+            'status' => 'completed',
+            'completed_at' => date('Y-m-d H:i:s'),
+        ];
+        if ($demographics !== null) {
+            $data['demographics'] = json_encode($demographics);
+        }
+
+        $updated = $this->db->update(
+            'test_sessions',
+            $data,
+            'id = ? AND status = ?',
+            [$sessionId, 'partial'],
+        );
+        if ($updated === 0) {
+            return false;
+        }
+
+        $session = $this->getSessionById($sessionId);
+        $this->logActivity($sessionId, $session['test_id'] ?? null, 'answers_saved', [
+            'answer_count' => count($answers),
+        ]);
         $this->logActivity($sessionId, $session['test_id'] ?? null, 'session_completed');
 
         return true;
@@ -226,19 +282,35 @@ class SessionManager
         $session = $this->getSessionById($sessionId);
 
         if ($session) {
-            $this->db->update(
-                'test_sessions',
-                [
-                    'status' => 'deleted',
-                    'answers' => json_encode([]),
-                    'calculated_results' => json_encode([]),
-                    'user_email' => null,
-                    'user_name' => null,
-                    'demographics' => null,
-                ],
-                'id = ?',
-                [$sessionId]
-            );
+            $this->db->beginTransaction();
+            try {
+                // Soft-delete сохраняет техническую оболочку сессии, поэтому FK
+                // CASCADE не срабатывает сам. Разбор и owner_context — клинические
+                // данные: физически удаляем их в той же транзакции. Поздний worker
+                // больше не найдёт строку и не сможет вернуть текст отчёта.
+                $this->db->delete('ai_reports', 'session_id = ?', [$sessionId]);
+
+                $this->db->update(
+                    'test_sessions',
+                    [
+                        'status' => 'deleted',
+                        'answers' => json_encode([]),
+                        'calculated_results' => json_encode([]),
+                        'user_email' => null,
+                        'user_name' => null,
+                        'demographics' => null,
+                    ],
+                    'id = ?',
+                    [$sessionId]
+                );
+                $this->db->commit();
+            } catch (\Throwable $exception) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollback();
+                }
+
+                throw $exception;
+            }
 
             $this->logActivity($sessionId, $session['test_id'], 'session_deleted', [
                 'reason' => 'user_request',

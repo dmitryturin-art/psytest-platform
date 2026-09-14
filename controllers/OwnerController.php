@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
+use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\OwnerDashboardAuthenticator;
 use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\Security;
 use PsyTest\Core\SessionLifecycleService;
+use PsyTest\Core\TestInviteService;
 use PsyTest\Core\TherapistCaseService;
 
 /**
@@ -20,7 +22,9 @@ final class OwnerController extends BaseController
 {
     private OwnerDashboardAuthenticator $authenticator;
     private TherapistCaseService $cases;
+    private TestInviteService $invites;
     private bool $isProduction;
+    private string $appUrl;
 
     public function __construct()
     {
@@ -43,6 +47,8 @@ final class OwnerController extends BaseController
                 $config->pdfStoragePath(),
             ),
         );
+        $this->invites = new TestInviteService($this->db, $this->sessionManager);
+        $this->appUrl = $config->appUrl();
     }
 
     public function login(): void
@@ -94,7 +100,79 @@ final class OwnerController extends BaseController
 
         echo $this->view->render('owner-dashboard', [
             'flash' => $this->takeFlash(),
+            'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
+            'invites' => $this->invites->recentForOwner(),
         ]);
+    }
+
+    public function createInvite(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $testId = filter_var($_POST['test_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $note = $_POST['owner_note'] ?? '';
+        $availableIds = array_map(
+            static fn (array $test): int => (int) $test['id'],
+            $this->moduleLoader->getActiveModules(),
+        );
+        if ($testId === false || !in_array($testId, $availableIds, true) || !is_string($note) || mb_strlen(trim($note)) > 1000) {
+            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать приглашение: выберите поддерживаемую методику и сократите заметку до 1000 символов.']);
+            $this->redirect('/admin');
+        }
+
+        $invite = $this->invites->create($testId, trim($note));
+        $this->setFlash([
+            'type' => 'success',
+            'message' => 'Одноразовое приглашение создано. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
+            'invite_url' => $this->appUrl . '/invite/' . $invite['token'],
+        ]);
+        $this->redirect('/admin');
+    }
+
+    public function revokeInvite(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $inviteId = $_POST['invite_id'] ?? '';
+        $revoked = is_string($inviteId) && Security::isValidUuid($inviteId) && $this->invites->revoke($inviteId);
+        $this->setFlash($revoked
+            ? ['type' => 'success', 'message' => 'Неоткрытое приглашение отозвано.']
+            : ['type' => 'error', 'message' => 'Отозвать можно только неоткрытое приглашение.']);
+        $this->redirect('/admin');
+    }
+
+    public function viewInvitedCase(string $sessionId): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!Security::isValidUuid($sessionId)) {
+            $this->notFound();
+
+            return;
+        }
+
+        $case = $this->invites->claimedCaseForOwner($sessionId);
+        if ($case === null) {
+            $this->notFound();
+
+            return;
+        }
+        $module = $this->moduleLoader->getModule((string) $case['test_slug']);
+        if ($module === null) {
+            $this->notFound();
+
+            return;
+        }
+        $presenter = new InvitedCasePresenter();
+        $case['answer_rows'] = $presenter->answers($module, $case['answers']);
+        $case['result_sections'] = $presenter->resultSections($module, $case['calculated_results']);
+
+        echo $this->view->render('owner-invited-case', ['case' => $case]);
     }
 
     public function lookupCase(): void
@@ -192,7 +270,7 @@ final class OwnerController extends BaseController
         exit;
     }
 
-    /** @return array{type: string, message: string}|null */
+    /** @return array{type: string, message: string, invite_url?: string}|null */
     private function takeFlash(): ?array
     {
         $flash = $_SESSION['psytest_owner_dashboard_flash'] ?? null;
@@ -206,7 +284,7 @@ final class OwnerController extends BaseController
             : null;
     }
 
-    /** @param array{type: string, message: string} $flash */
+    /** @param array{type: string, message: string, invite_url?: string} $flash */
     private function setFlash(array $flash): void
     {
         $_SESSION['psytest_owner_dashboard_flash'] = $flash;

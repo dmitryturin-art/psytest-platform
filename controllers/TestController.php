@@ -12,11 +12,51 @@ namespace PsyTest\Controllers;
 
 use PsyTest\Core\AnswerMerger;
 use PsyTest\Core\AnswerValidator;
+use PsyTest\Core\TestInviteService;
 use PsyTest\Modules\TestModuleInterface;
 use Ramsey\Uuid\Uuid;
 
 class TestController extends BaseController
 {
+    /** Render a bearer-link preview without consuming the invitation. */
+    public function invite(string $token): void
+    {
+        $invite = (new TestInviteService($this->db, $this->sessionManager))->preview($token);
+        if ($invite === null) {
+            $this->notFoundTest('invite');
+
+            return;
+        }
+
+        echo $this->view->render('test-invite-start', [
+            'token' => $token,
+            'test_name' => $invite['test_name'],
+        ]);
+    }
+
+    /** Claim a one-time owner invitation, independently from pair links. */
+    public function startInvite(string $token): void
+    {
+        $claimed = (new TestInviteService($this->db, $this->sessionManager))->claim($token);
+        if ($claimed === null) {
+            $this->notFoundTest('invite');
+
+            return;
+        }
+
+        $test = $this->getTestOrFail((string) $claimed['test']['slug']);
+        $module = $this->getModuleOrFail((string) $test['slug']);
+        $template = $module->getTestTemplate() ?? 'test-wrapper';
+
+        echo $this->view->render($template, [
+            'test' => array_merge($test, $module->getMetadata()),
+            'session' => $claimed['session'],
+            'questions' => $module->getQuestions(),
+            'module' => $module,
+            'is_test_invite' => true,
+        ]);
+    }
+
     /**
      * Start a test
      * GET /test/{slug}
@@ -167,6 +207,10 @@ class TestController extends BaseController
             echo 'Session not found';
             return;
         }
+        if ($session['status'] === 'completed') {
+            header('Location: /result/' . $slug . '/' . $session['session_token']);
+            exit;
+        }
 
         // Collect all answers from POST
         $answers = $_POST['answers'] ?? [];
@@ -187,9 +231,6 @@ class TestController extends BaseController
 
         // Merge demographics from form into answers (for calculateResults)
         $formDemographics = $_POST['demographics'] ?? [];
-        if (!empty($formDemographics)) {
-            $this->sessionManager->saveDemographics($sessionId, $formDemographics);
-        }
         // Also merge demographics from session (saved via AJAX)
         if (!empty($session['demographics'])) {
             $allAnswers = AnswerMerger::overlay($allAnswers, $session['demographics']);
@@ -203,19 +244,20 @@ class TestController extends BaseController
             $this->errorResponse('Invalid or incomplete answers', 422);
         }
 
-        // Save final answers
-        $this->sessionManager->saveAnswers($sessionId, $allAnswers);
-
         // Calculate results
         $rawResults = $module->calculateResults($allAnswers);
 
         // Generate interpretation
         $interpretation = $module->generateInterpretation($rawResults);
 
-        // Complete session
-        $this->sessionManager->completeSession($sessionId, array_merge($rawResults, [
-            'interpretation' => $interpretation,
-        ]));
+        // Persist answers and result in one conditional transition. A second
+        // concurrent submit cannot alter an already completed clinical record.
+        $this->sessionManager->finalizeSession(
+            $sessionId,
+            $allAnswers,
+            array_merge($rawResults, ['interpretation' => $interpretation]),
+            $formDemographics !== [] ? $formDemographics : null,
+        );
 
         // Redirect to results page
         header('Location: /result/' . $slug . '/' . $session['session_token']);
@@ -322,6 +364,10 @@ class TestController extends BaseController
             $this->errorResponse('Парное прохождение не найдено', 404);
             return;
         }
+        if ($session['status'] === 'completed') {
+            header('Location: /result/' . $slug . '/' . $session['session_token']);
+            exit;
+        }
 
         // Collect & normalize answers (same logic as submit()).
         $answers = $_POST['answers'] ?? [];
@@ -336,9 +382,6 @@ class TestController extends BaseController
 
         $allAnswers = AnswerMerger::overlay($session['answers'], $normalizedAnswers);
         $formDemographics = $_POST['demographics'] ?? [];
-        if (!empty($formDemographics)) {
-            $this->sessionManager->saveDemographics($sessionId, $formDemographics);
-        }
         if (!empty($session['demographics'])) {
             $allAnswers = AnswerMerger::overlay($allAnswers, $session['demographics']);
         }
@@ -348,15 +391,19 @@ class TestController extends BaseController
         if (AnswerValidator::validate($module, $allAnswers, true) !== []) {
             $this->errorResponse('Некорректные или неполные ответы', 422);
         }
-        $this->sessionManager->saveAnswers($sessionId, $allAnswers);
-
         // Calculate results & complete this (second partner's) session.
         $rawResults = $module->calculateResults($allAnswers);
         $rawResults['is_pair_partner'] = true;
         $interpretation = $module->generateInterpretation($rawResults);
-        $this->sessionManager->completeSession($sessionId, array_merge($rawResults, [
-            'interpretation' => $interpretation,
-        ]));
+        if (!$this->sessionManager->finalizeSession(
+            $sessionId,
+            $allAnswers,
+            array_merge($rawResults, ['interpretation' => $interpretation]),
+            $formDemographics !== [] ? $formDemographics : null,
+        )) {
+            header('Location: /result/' . $slug . '/' . $session['session_token']);
+            exit;
+        }
 
         // Resolve the first partner by their own result-access token. A
         // partner_token is a relationship reference, never an access token.

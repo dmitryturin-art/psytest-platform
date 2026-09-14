@@ -1,0 +1,56 @@
+{% extends "layout.twig" %}
+
+{% block title %}Кейс по приглашению — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}<a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a>{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-case-title">
+    <p class="owner-panel-eyebrow">Кейс по приглашению</p>
+    <h1 id="owner-case-title">{{ case.test_name }}</h1>
+    <dl class="owner-case-details">
+        <div><dt>Статус</dt><dd>{{ case.status }}</dd></div>
+        <div><dt>Открыто</dt><dd>{{ case.claimed_at|date("d.m.Y H:i") }}</dd></div>
+        <div><dt>Завершено</dt><dd>{% if case.completed_at %}{{ case.completed_at|date("d.m.Y H:i") }}{% else %}ещё нет{% endif %}</dd></div>
+        {% if case.owner_note %}<div><dt>Заметка специалиста</dt><dd>{{ case.owner_note }}</dd></div>{% endif %}
+    </dl>
+    {% if case.completed_at %}
+        <section class="owner-case-result" aria-labelledby="owner-case-result-title">
+            <h2 id="owner-case-result-title">Базовый результат</h2>
+            {% for section in case.result_sections %}
+                <section class="results-section results-section--{{ section.type }}">
+                    {% if section.title %}<h3 class="section-title">{{ section.title }}</h3>{% endif %}
+                    <div class="section-body">
+                        {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
+                    </div>
+                </section>
+            {% else %}
+                <p class="owner-help">Для этой методики пока нет отдельного отображения базового результата.</p>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="owner-case-answers" aria-labelledby="owner-case-answers-title">
+        <h2 id="owner-case-answers-title">Анкета</h2>
+        {% if case.answer_rows is empty %}
+            <p class="owner-help">Клиент ещё не сохранил ответы.</p>
+        {% else %}
+            <ol class="owner-answer-list">
+                {% for row in case.answer_rows %}
+                    <li class="owner-answer-row">
+                        <p class="owner-answer-question">{{ row.question }}</p>
+                        {% if row.self_answer is defined %}
+                            <dl class="owner-answer-dual">
+                                <div><dt>Я</dt><dd>{{ row.self_answer }}</dd></div>
+                                <div><dt>Партнёр (по мнению респондента)</dt><dd>{{ row.partner_answer }}</dd></div>
+                            </dl>
+                        {% else %}
+                            <p class="owner-answer-value">{{ row.answer }}{% if row.score is not null %}<span> · {{ row.score }} балл.</span>{% endif %}</p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ol>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

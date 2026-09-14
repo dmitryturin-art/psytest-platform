@@ -17,6 +17,126 @@
 - Следующий шаг:
 ```
 
+
+## 2026-09-13
+
+### 07.K1a — читаемая карточка кейса по приглашению
+
+- Этап / ветка / commit: этап 07, `codex/07-completed-session-immutable`; commit указан после финальной проверки.
+- Цель: по прямому запросу владельца заменить raw JSON в защищённом кейсе специалиста нормальной карточкой базового результата и заполненной анкеты для каждой поддерживаемой методики, не меняя scoring, AI-flow или клиентскую страницу результата.
+- Сделано: `InvitedCasePresenter` сопоставляет уже сохранённые ответы с текстами вопросов и выбранными вариантами; шкалы с options показывают человеческий текст и балл, СМИЛ — «Верно/Неверно/Не знаю», Лазарус — отдельные оценки «Я» и «Партнёр». `OwnerController` получает только существующий модуль и сохранённые results, затем использует его проверенные `buildSections()` для базовой интерпретации; client-only Lazarus pair invitation отфильтрован, чтобы owner card не генерировала bearer-link action. JSON-поля больше не передаются в Twig и не отображаются.
+- Проверки и evidence: RED — новый `InvitedCasePresenterTest` падал без presenter; GREEN — targeted PHPUnit **5 tests / 38 assertions, OK** для BAI, BDI, HADS, Лазаруса, СМИЛ и owner contract. Browser QA на локальном синтетическом завершённом BAI case: показаны 21 текстовый ответ и базовый результат, raw JSON blocks отсутствуют; desktop 1440×1000 и mobile 390×844 имеют `scrollWidth = innerWidth`, console errors/warnings отсутствуют. Синтетические invite/session после QA удалены. Свежий `bin/local-gate.sh` — **OK**: validate/audit, PHPStan 6, CS Fixer, architecture, baseline, MySQL 5.7.44 migrations и полный PHPUnit.
+- Решения и границы: BAI/клиентский extended-report block не менялись. Для `therapist_case` расширенный AI draft по D-034 остаётся отдельным будущим flow: сначала просмотр/правка/одобрение специалистом, затем явная отправка. Внешний AI не вызывался и новые данные не передавались.
+- Graphify: freshness после пакета — **STALE**: 181 changed (112 code, 69 documents), 26 deleted. Incremental semantic update не запускался, чтобы не расходовать внешний лимит без следующего architectural query; stale graph не используется как evidence. Fallback — прямое чтение controller/module/template, module-wide regression и browser QA; обновить до CURRENT перед следующим architectural query, ориентир 14.09.2026.
+- Следующий шаг: владелец проверяет эту карточку после controlled staging deployment; затем K2 (клиенты/назначения) либо отдельно принимает модель редактирования/одобрения AI-разбора.
+
+### 08.B3 — ротация пароля кабинета владельца на staging
+
+- Этап / ветка / commit: этап 08, `codex/07-completed-session-immutable`; operational configuration change, runtime code не менялся.
+- Цель: по прямому запросу владельца заменить забытый временный пароль `/admin` на тестовом сайте без помещения пароля или Argon2id-хэша в Git, логи или документацию.
+- Сделано: штатный `bin/owner-password.php` с интерактивным скрытым вводом сформировал Argon2id-строку на сервере; в `current/.env` заменено только значение dashboard hash. До замены создана закрытая backup-копия конфигурации, временный файл hash сразу удалён. Пароль и hash не выводились и не сохранялись в репозитории.
+- Проверки и evidence: config распознаёт Argon2id hash; mode server `.env` — `600`; HTTPS `/admin/login` — `200`. Логин POST намеренно не автоматизировался, чтобы не передавать пароль в команду/логи; generator до записи подтверждает созданный hash через `password_verify`.
+- Следующий шаг: владелец входит в `/admin`, создаёт invitation; самостоятельная смена пароля в UI — отдельный security work package, если потребуется.
+
+### 08.B2 — контролируемая staging-выкладка R6/R8/K1
+
+- Этап / ветка / commit: этап 08, `codex/07-completed-session-immutable`, deployed runtime `c8e2b28` (R6 `92206fc`, R8 `ac77df0`, K1 `3db772e`).
+- Цель: безопасно перенести проверенный release на рабочий `test.23time.ru`, применить универсальные invitations migration и сохранить мгновенный откат.
+- Сделано: локальный artifact `release-c8e2b28` собран только из tracked Git tree, SHA-256 совпал после upload; перед миграцией создан и проверен сжатый pre-deploy dump. `AddTestInvites` применена, затем `public_html` и `current` атомарно переведены на новый release. Предыдущий runtime `2e276b3` сохранён как rollback target; releases и backup не удалялись.
+- Проверки и evidence: локальный `bin/local-gate.sh` для runtime уже **OK** (validate/audit, PHPStan 6, CS Fixer, architecture, baseline, MySQL 5.7.44 migrations и полный PHPUnit). На сервере entrypoint синтаксически валиден PHP 8.3; встроенный architecture checker не применим без PATH override, поскольку shared-hosting default CLI — PHP 5.6. После switch HTTPS `/`, `/tests`, `/api/health`, `/privacy`, `/terms` — все `200`; error logs, изменённых в окно smoke, нет. Маршруты прохождения не открывались, поэтому synthetic/клиентские сессии не создавались.
+- Ограничения: это staging/рабочий сайт, не production go-live; payment, AI и новый full E2E не включались. Ротация временно переданных SSH-credentials остаётся действием владельца после завершения доступа.
+- Следующий шаг: K2 — клиенты и назначения поверх invitation flow; отдельный production gate остаётся вне этого пакета.
+
+### 07.K4a — R8: completed-сессия неизменяема
+
+- Этап / ветка / commit: этап 07, `codex/07-completed-session-immutable`, runtime commit `ac77df0`.
+- Цель: до следующей выкладки запретить повторному или конкурентному submit менять клинические ответы, демографию и рассчитанный результат уже завершённой сессии.
+- Сделано: `SessionManager` теперь ограничивает все mutable operations статусом `partial`; новый `finalizeSession()` одной условной SQL-операцией записывает final answers/results и переводит состояние в `completed`. Обычный и парный flows используют этот переход; completed-запрос сразу ведёт к существующему result, а проигравший concurrent pair submit не создаёт повторное comparison.
+- Проверки и evidence: до исправления новый DB regression падал на первом `assertFalse` (saveAnswers возвращал true). После: `composer migrate && composer test -- SessionSubmissionImmutabilityTest LazarusE2ETest TestInviteServiceTest` — **11 tests / 65 assertions, OK**; PHP syntax — OK; `composer analyse` — OK. Свежий `bin/local-gate.sh` — **OK**: Composer validate/audit, PHPStan level 6, CS Fixer, architecture, baseline, MySQL 5.7.44 migrations и полный PHPUnit.
+- Документация: STATUS, phase 07, AUDIT_TRACEABILITY и ARCHITECTURE синхронизированы; R8 закрыт. `CHANGELOG.md` не менялся: результат для посетителя не меняет видимый сценарий, но теперь гарантированно стабилен.
+- Graphify: freshness после пакета — **STALE**: 179 changed (110 code, 69 documents), 26 deleted. Incremental semantic update не запускался; до CURRENT graph не используется как evidence. Fallback — исходники lifecycle и DB regression; обновить до следующего architectural query.
+- Следующий шаг: staging release с R6 + R8 по отдельному подтверждению владельца; R2 snapshot остаётся отдельным большим AI-пакетом.
+
+### 08.B1 — R6: артефакт только из tracked Git tree
+
+- Этап / ветка / commit: этап 08, `codex/08-release-artifact-whitelist`, runtime commit `92206fc`.
+- Цель: устранить R6 до следующей выкладки — ignored/untracked файл из рабочей копии не должен попадать в release archive, но tracked public assets должны сохраняться.
+- Сделано: `bin/build-release.sh` сначала получает source через `git archive HEAD`, потом применяет существующий whitelist/exclude-проход к этому source. Путь вывода ограничен формой `tmp/release-<safe-name>`, поэтому builder не удалит произвольный путь. Проверка каждого tracked `public/` файла и production `composer install` сохранены.
+- Проверки и evidence: `DeploymentArtifactContractTest` — **2 tests / 6 assertions, OK**. Небезопасный output path отклонён. Реальная сборка `tmp/release-r6-proof.tar.gz` прошла, SHA-256 `88c870d0805e885bd4958f5fa060ffae36a5d7162538d8f0d3328d4f7595d64c`; специально созданный ignored `node_modules/r6-ignored-release-sentinel` отсутствовал и в staged release, и в архиве. Свежий `bin/local-gate.sh` — **OK**: Composer validate/audit, PHPStan level 6, CS Fixer, architecture, baseline, MySQL 5.7.44 migrations и полный PHPUnit.
+- Документация: STATUS, phase 08, staging runbook и AUDIT_TRACEABILITY синхронизированы; R6 закрыт. `CHANGELOG.md` не менялся: эффект технический, без изменения пользовательского поведения.
+- Graphify: freshness после пакета — **STALE**: 178 changed (109 code, 69 documents), 26 deleted. Incremental semantic update не запускался; до CURRENT graph не используется как evidence. Fallback — прямое чтение builder, archive smoke и tests; обновить до следующего architectural query.
+- Следующий шаг: по отдельному подтверждению владельца подготовить контролируемую staging-вкладку с backup/rollback и smoke; production go-live этим пакетом не разрешён и не выполнялся.
+
+## 2026-09-09
+
+### 07.K1 — универсальные одноразовые приглашения
+
+- Этап / ветка / commit: 07, `codex/07-universal-test-invites`; commit указан после финального review.
+- Цель: дать специалисту один вертикальный сценарий «создать → скопировать → пройти выбранную методику → увидеть открытие/завершение, ответы и результат» для любой поддерживаемой методики, не смешивая его с Lazarus pair token.
+- Сделано: migration `20260909010000` создаёт `test_invites`: test scope, SHA-256 хеш bearer-токена, owner-only note, pending/claimed/revoked, expiry и one-to-one claimed session. Владелец выбирает методику из runtime-supported ModuleLoader list, получает ссылку только во flash copy-field, отзывает неоткрытую ссылку и видит последние состояния. GET `/invite/{token}` не меняет БД и показывает утверждённое информирование; CSRF-protected POST `/invite/{token}/start` в транзакции atomically claim-ит invite и создаёт `therapist_case`. Защищённый owner route показывает raw answers/results по session ID без result token в URL. Legacy visibility key не удалён: его безопасный вывод из обращения без обрыва действующих ссылок — отдельный compatibility package.
+- Решения: D-051 — 14 календарных дней и утверждённая клиентская формулировка. Контакты клиента не добавлялись; AI/scoring/нормы не менялись.
+- Проверки и evidence: `composer migrate && composer test -- tests/Integration/TestInviteServiceTest.php tests/Integration/MigratedSchemaTest.php tests/OwnerDashboardContractTest.php tests/Mysql57SchemaCompatibilityTest.php` — 8 tests / 73 assertions OK; `composer analyse` — OK; `composer lint` первоначально нашёл порядок import, затем исправлен. Финальный `bin/local-gate.sh` — **OK** на MySQL 5.7.44 (validate, audit, PHPStan, CS Fixer, architecture, baseline, migrations, полный PHPUnit). В браузере проверен preview и CSRF-старт синтетического BDI invite; после проверки synthetic row/session и временный localhost server удалены.
+- Graphify: freshness — STALE (177 changed / 26 deleted); incremental semantic update не запускался, чтобы не расходовать внешний лимит без отдельной необходимости. До CURRENT graph не используется как evidence; fallback — прямое чтение исходников, applied schema и regression tests. Повторить freshness/update до следующего architectural query, ориентир 10.09.2026.
+- Следующий шаг: K2 — клиенты/назначения поверх invitation flow, отдельным work package. Push/merge/deploy не выполнялись.
+
+### 07.K0b — согласие на внешний AI и граница клиентского черновика
+
+- Этап / ветка / commit: 07, `codex/07-ai-consent-draft-boundary`; commit указан после финального review.
+- Сделано: форма разборов содержит утверждённое just-in-time согласие. `ResultController` повторно проверяет `ai_consent=1` до постановки задания, поэтому поддельный POST без согласия не вызывает провайдера. Для `therapist_case` HTML показывает только ограничение, `report-status` отвечает `restricted`, а запрос нового разбора отвергается; базовый результат не затронут.
+- Проверки и evidence: syntax PHP — OK; targeted `SessionTestIntegrityTest` + `SessionCookiePolicyTest` — 10 tests / 31 assertions OK; полный `bin/local-gate.sh` — OK на MySQL 5.7.44.
+- Решение: D-050. Согласие не сохраняет имя, email или result token и не расширяет AI-context; публичная формулировка утверждена владельцем.
+- Следующий шаг: K1 — универсальные приглашения для всех поддерживаемых тестов. Push/merge/deploy не выполнялись.
+
+### 07.K0a — soft-delete удаляет AI-артефакты
+
+- Этап / ветка / commit: 07, `codex/07-delete-ai-artifacts`; commit указан после финального review.
+- Сделано: `SessionManager::deleteSession()` в одной транзакции удаляет все `ai_reports` сессии и затем обезличивает сессию. Удалённая строка не может быть обновлена запоздавшим worker.
+- Проверки и evidence: DB regression создаёт ready/pending/running отчёты и owner_context, вызывает публично используемый `deleteSession`, проверяет удаление всех трёх и невозможность resurrection через `markReady`; `composer migrate && composer test -- tests/AiReportQueueTest.php` — 9 tests / 44 assertions OK; полный `bin/local-gate.sh` — OK на MySQL 5.7.44.
+- Решение владельца D-049: K1 универсален для любого поддерживаемого теста; весь трек дополнительных шкал СМИЛ отложен после основного пользовательского и кабинетного контура.
+- Следующий шаг: K0b, затем универсальный K1. Push/merge/deploy не выполнялись.
+
+### 05.S1 — реестр приложения Собчик и сверка 23 runtime-шкал
+
+- Этап / ветка / commit: 05, `codex/05-additional-scales-inventory`; commit указан после финального review.
+- Цель: получить проверяемый знаменатель дополнительных шкал выбранного источника и сверить действующие 23 только чтением, не трогая защищённый scoring core.
+- Сделано: создан [реестр приложения](../smil-additional-scales-registry.md). Визуально просмотрены PDF-стр. 196–217 скана Собчик; ключи занимают 197–216 (печатные 195–214), а 217 — профильный бланк. В источнике 113 отдельных записей с номерами 1–212 и пропусками, а не доказанные «200+». У каждой записи есть стабильный ID, название, PDF/печатная страница, происхождение, статус ключей/норм и runtime-статус. True/false и M/σ оставлены `source-present / not-transcribed` для отдельного S2, чтобы OCR/ручная перепись не стала неявной публикацией непроверенных данных.
+- Сверка: настоящий calculator получает ровно 23 определения только из `additional-scales-norms.json`; `additional-scales.json` в текущем `SmilModule` не вызывается и не является вторым calculator. Итог текущих 23: **0 verified, 9 disputed, 14 missing**. Для A, R, Es, Do, Re, MAC, O-H и CYN есть проверяемые расхождения с соответствующими записями; у R, Es и Do `M >` число реальных runtime-ключей. Это evidence неподтверждённости, не основание самовольно менять ключи, нормы или fixtures.
+- Решения: знаменатель S2/S3 — 113 записей именно этого приложения. Правовой статус публикации русской формы остаётся `unconfirmed`. S2 транскрибирует PDF-стр. 197–216 и сверяет глазами; S3 допускается только отдельными утверждёнными партиями 10–20 шкал с независимыми reference cases.
+- Проверки и evidence: структурная проверка реестра — 113 ID, 0 дублей, 23 runtime-строки; `git diff --check` — OK; `composer test -- tests/Smil/AdditionalScalesCalculatorTest.php` — **4 tests / 103 assertions, OK**; полный `bin/local-gate.sh` вне sandbox — **OK** (Composer validate/audit, PHPStan, CS Fixer, architecture, baseline, миграции и полный PHPUnit на MySQL 5.7.44). Изменений в `modules/smil/` или `tests/fixtures/` нет.
+- Graphify: freshness после пакета остаётся STALE; массовый update намеренно не запускался по прямому правилу START_HERE, а stale-граф не использовался как evidence. Fallback — визуальная проверка PDF, исходники и targeted/full tests; обновить до CURRENT до первого архитектурного query, не позднее 10.09.2026.
+- Изменённые файлы: `docs/smil-additional-scales-registry.md`, `docs/roadmap/STATUS.md`, `docs/roadmap/phases/05-smil-professional-parity.md`, `docs/roadmap/WORKLOG.md`.
+- Следующий шаг: S2; независимо от него безопасно продолжать K0a в отдельном work package. Push/merge/deploy не выполнялись.
+
+### 07.19 — завершение после лимита: инструкция исполнителю и R3
+
+- Этап/ветка: 07, `codex/07-actionable-handoff`, поверх `be84cbb`; commit пакета `fix(ai): terminate exhausted jobs and finalize agent handoff`.
+- Прерывание: 08.09 были готовы незакоммиченные START_HERE/AGENTS/правила и исправление AiReportRepository с тестом. 09.09 владелец попросил коротко завершить для передачи дешёвой модели; новые продуктовые пакеты не начинались.
+- Сделано: START_HERE содержит исходные файлы, приёмку S1/K0a и очередь. AGENTS/индексы ведут к нему. Убрано безусловное Graphify/memory чтение из инженерного алгоритма; закреплены поведенческие проверки доступа/удаления и сквозная приёмка кабинетов.
+- R3: releaseStuck переводит stale running с attempts >= MAX_ATTEMPTS в failed, остальные в pending. UPDATE повторно проверяет running/stale и не затирает уже ready. Полный lease-протокол не реализован. DB regression последней попытки добавлен. Отдельный запуск теста на исходном коде до правки не зафиксирован; первопричина подтверждена условиями releaseStuck/claimNext.
+- Свежие проверки 09.09: **bin/local-gate.sh — весь gate пройден**, включая audit, analyse, lint, architecture, baseline, миграции и полный PHPUnit на изолированном MySQL 5.7.44. Штатный wrapper не выводит число тестов. Предыдущие DNS/Docker ограничения сняты разрешённым запуском вне sandbox. Production не затронут. Итоговый diff check выполнен перед коммитом.
+- Graphify: STALE (повторная проверка выполнена); массовая extraction документов отложена по просьбе экономить лимит. До следующего graph query обновить, ориентир 10.09; до CURRENT — rg/исходники/тесты. Манифест не меняли.
+- Прочитанное: AGENTS, START_HERE, новейший WORKLOG, STATUS, phase 07, ROADMAP, ENGINEERING_RULES, CHECKPOINT, AUDIT_TRACEABILITY для R3, diff/целевые исходники/тесты. Клинические источники и другие phase повторно не читались. Сохранение в agentmemory не завершено; каноническая инструкция сохранена в Git.
+- Отдельный запрос о клиенте: поиск Лазаруса за **08.09 по Москве** не завершён. Первоначальный key/batch SSH отклонён; владелец уточнил парольный вход и явно разрешил безопасно использовать прежний пароль. Результата DB lookup после лимита нет; отсутствие прохождения не утверждается. Реквизиты/клиентские данные в Git не сохраняются.
+- Следующий шаг: S1 для одного агента; K0a отдельно параллельно, если доступен. Повторный аудит не нужен. Push/merge/deploy не выполнялись.
+
+## 2026-09-08
+
+### 07.18 — аудит, три линии развития и исправление CI scope
+
+- Этап / ветка / commit: 07, `codex/07-cabinets-audit`, исходный `d9999af`; commit этого пакета — `fix(ci): cover AI persistence and record delivery review` (SHA в Git, чтобы не создавать self-reference).
+- Цель: оценить готовность к работе психолога и передать ограниченные пакеты следующим агентам; учтены уточнения владельца про все дополнительные шкалы СМИЛ, параллельные кабинеты и свободные аналоги.
+- Сделано: выборочное ревью с проверкой исходников, отдельный инвентарь кабинетов; план S1–S4 / K0–K5 / O1–O3.n с зависимостями и приёмкой. D-048 фиксирует согласованную параллельность. STATUS сокращён до текущей сводки, исторические противоречия сняты; phase 05/07/09 и индексы синхронизированы, архитектурная сводка исправлена, migrate добавлен в оставшиеся примеры gate. Прежние записи WORKLOG не переписаны.
+- Исправление: CI scope не включал DB matrix для `core/Ai/AiReportRepository.php`. Воспроизведение до правки: классификатор возвращал `database=false`; после добавления `core/Ai/` — `database=true`. Regression test в существующем CiScopeClassifierTest.
+- Проверки и evidence: узкий PHPUnit — 7 tests / 28 assertions; итоговый `composer test:fast` — **337 tests / 3063 assertions, OK**, PHP 8.5.3; `git diff --check` — OK. Baseline до правки: validate, architecture, baseline guard 147 — OK; PHPStan level 6 и CS Fixer — OK в последовательном режиме (штатный multiprocessing ограничен sandbox EPERM). Финальная проверка изменённого PHP: `php -l` обоих файлов — OK; CS Fixer с явным config и `--sequential` — 0/2 исправлений. Первый targeted lint без `--config` отказал из-за нескольких путей; повтор с config успешен.
+- Ограничения: `composer audit` — DNS Packagist/curl 6; Docker недоступен, migrate и DB integration gate не запускались. Полный gate не зелёный по результатам этого сеанса; DB/production/scoring/UI изменения не выполнялись. Браузерный и клинический аудит не заявляются.
+- Найдено, не исправлялось в runtime: R1 consent/клиентский draft, R2 snapshot, R3 stuck attempts, R6 release из рабочего дерева, R7 soft-delete AI artifact, R8 повторный submit. До внедрения кабинетов — K0 и отдельные regression fixes. Не смешиваем их с фиксом CI и не выдаём статическое ревью за воспроизведение реальной утечки.
+- Расхождение хронологии: верхняя дата журнала была 26.08, но commits `2e276b3` и `d9999af` от 27.08 фиксируют исправление блокировки PHP-сессии при генерации и запись выкладки. В STATUS внесён последний документированный release `2e276b3`/rollback `78bdf24`; текущий сервер этим аудитом не подтверждён.
+- Graphify: на старте STALE 166 changed/26 deleted; после документов STALE 168 changed/26 deleted. Обновление требует смысловой extraction изменённых документов; при ограниченном лимите владельца массовый LLM-пересчёт отложен. Срок: до первого архитектурного query следующей сессии, ориентир 09.09.2026. Fallback: rg, прямое чтение исходников, тесты; stale-граф не использован как evidence, manifest не менялся.
+- Фактически прочитанное и границы перечислены в `docs/audit/2026-09-08-delivery-review.md`. AUDIT_TRACEABILITY прежнего аудита и agentmemory не читались; прежние audit findings не закрываем. Уточнение владельца сохранено в DECISIONS, не только в переписке.
+- Делегирование: два Terra — независимые ревью, Luna — baseline и узкий CI fix; ведущий интегрировал выводы/документы. Субагенты не коммитили.
+- Дополнительный запрос владельца: проверка сегодняшнего Лазаруса на живом `test.23time.ru` поручена Terra read-only; SSH отказал до DB query. Данные, идентификаторы и ссылки клиентов в документацию не записываются. Продолжение требует рабочего доступа.
+- Следующий шаг: **S1 и K0 параллельно**, затем K1 с индивидуальным Лазарусом; O1 свободным агентом без вытеснения двух главных линий. Push/merge/deploy в этот пакет не входят.
+
 ## 2026-08-26
 
 ### 00P — порядок работ, правило неприкосновенности СМИЛ, два кабинета и опись элементов
