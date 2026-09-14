@@ -20,6 +20,15 @@
 
 ## 2026-09-14
 
+### 07.K4 — неизменяемый снимок задания ИИ-разбора (R2)
+
+- Этап / ветка / commit: этап 07, `codex/07-k4-ai-snapshot` от `main` `840b1f2`; commits `1d7ecfa`, `273f31c`, `9f4bd2c`.
+- Цель: закрыть R2 — задание фиксирует реально отправленный вход, а не номер версии промпта, который обработчик потом заменял живыми данными.
+- Сделано: миграция `20260915020000_add_ai_report_snapshots` (`ai_reports.context_snapshot`, `prompt_snapshot` MEDIUMTEXT NULL); `AiReportContextBuilder` строит разрешённый структурированный контекст при постановке; `AiReportRepository::request` пишет оба снимка в ту же INSERT, повтор failed-задания снимок не пересобирает; `Prompt::toSnapshot()/fromSnapshot()`; `AiReportGenerator` использует только снимок, legacy-строки без снимка идут прежним путём с одной строкой в логе без клинических данных; `bin/generate-ai-reports.php` и `ResultController::requestReport` обновлены.
+- Проверки и evidence: исполнитель — `composer test` (полный, изолированная БД) **413 tests / 3674 assertions OK** (+6 в `AiReportSnapshotTest`: v1 → publish v2 → отправлена v1; изменённый SQL-результат не влияет; legacy-путь; повтор failed без пересборки; >64 КБ без усечения; удаление сессии уносит снимок); analyse/lint/architecture/baseline OK; rollback/migrate OK. Реальный провайдер не вызывался. Ведущий: `bin/local-gate.sh` на Docker MySQL 5.7.44 — см. итог.
+- Решения: старые строки миграцией не заполняются (исторический вход восстановить нельзя, подставлять текущий — ложь). Снимок хранится столько же, сколько отчёт, и удаляется с ним.
+- Следующий шаг: выкладка на staging; затем K5 — редактор разборов, revisions и явная отправка клиенту.
+
 ### 08.B5 — staging-выкладка K3 (`4e63510`)
 
 - Этап / ветка / commit: этап 08, `codex/08-deploy-4e63510`; deployed runtime `4e63510` (merge PR #72; включает #71 карточку клиента без дубля).
