@@ -102,7 +102,17 @@ final class VisitorAccountService
             ],
         );
 
-        $this->mailer->send($email, self::loginSubject(), self::loginBody($this->appUrl, $token));
+        // Сбой отправки не меняет ответ формы: иначе ошибка SMTP отличала бы
+        // известный адрес от неизвестного ровно так же, как это делало бы
+        // честное сообщение «такого адреса нет». Токен при этом остаётся в
+        // базе — он никому не известен и через 15 минут истекает сам.
+        try {
+            $this->mailer->send($email, self::loginSubject(), self::loginBody($this->appUrl, $token));
+        } catch (\Throwable) {
+            // В сообщение не попадают ни адрес, ни ссылка: лог не является
+            // местом хранения credential и персональных данных (ER §9).
+            LoggerFactory::getLogger('mail')->error('login mail delivery failed');
+        }
     }
 
     public static function loginSubject(): string

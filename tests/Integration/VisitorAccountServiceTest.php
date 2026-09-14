@@ -12,6 +12,7 @@ use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\SessionLifecycleService;
 use PsyTest\Core\SessionManager;
 use PsyTest\Core\VisitorAccountService;
+use PsyTest\Tests\Support\FailingMailer;
 use PsyTest\Tests\Support\RecordingMailer;
 
 #[Group('database')]
@@ -167,6 +168,35 @@ final class VisitorAccountServiceTest extends TestCase
         } finally {
             $this->db->execute('DELETE FROM visitor_login_tokens');
         }
+    }
+
+    /**
+     * Сбой отправки не виден снаружи.
+     *
+     * Иначе недоступный SMTP отличал бы один адрес от другого ровно так же,
+     * как отличало бы честное «такого адреса нет».
+     */
+    public function testAFailedDeliveryNeitherThrowsNorChangesTheAnswer(): void
+    {
+        $accounts = new VisitorAccountService(
+            $this->db,
+            new FailingMailer(),
+            $this->lifecycle,
+            'https://example.test',
+        );
+
+        $accounts->requestLogin($this->email);
+
+        // Оставшийся токен допустим: он никому не известен и истекает сам.
+        self::assertSame(
+            1,
+            (int) $this->db->selectOne(
+                'SELECT COUNT(*) AS count FROM visitor_login_tokens WHERE email = ?',
+                [$this->email],
+            )['count'],
+        );
+
+        $this->db->delete('visitor_login_tokens', 'email = ?', [$this->email]);
     }
 
     public function testInvalidAddressNeitherStoresATokenNorSendsMail(): void
