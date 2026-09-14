@@ -4,7 +4,7 @@
 
 ## Обзор
 
-PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платёжный контур и YooKassa не реализованы; старые payment endpoints отвечают `410 Gone`. Новый бесплатный AI-контур работает через `core/Ai/`: реестр промптов, адаптер, очередь `ai_reports`, генерация после HTTP-ответа и polling. Политика согласия, клиентских черновиков, snapshot и удаления имеет открытые дефекты [ревью 08.09](docs/audit/2026-09-08-delivery-review.md).
+PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платёжный контур и YooKassa не реализованы; старые payment endpoints отвечают `410 Gone`. Новый бесплатный AI-контур работает через `core/Ai/`: реестр промптов, адаптер, очередь `ai_reports`, генерация после HTTP-ответа и polling. Вход задания заморожен при постановке: `AiReportContextBuilder` собирает разрешённый контекст, и он вместе с промптом пишется в `context_snapshot`/`prompt_snapshot`, а обработчик отправляет провайдеру именно снимок (аудит R2); задания без снимка — только те, что поставлены до миграции. Политика согласия, клиентских черновиков и удаления имеет открытые дефекты [ревью 08.09](docs/audit/2026-09-08-delivery-review.md).
 
 | Слой | Фактическая технология |
 |---|---|
@@ -173,7 +173,7 @@ interface TestModuleInterface
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, `test_invites`, `visitor_accounts`/`visitor_login_tokens`, pair comparisons, activity log, новую ai_reports и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, `test_invites`, `visitor_accounts`/`visitor_login_tokens`, pair comparisons, activity log, новую `ai_reports` (со снимком входа задания) и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 
