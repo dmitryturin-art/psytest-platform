@@ -74,14 +74,20 @@ final class SessionCookiePolicyTest extends TestCase
      */
     public function testBackgroundReportReleasesTheSessionBeforeGenerating(): void
     {
-        $source = (string) file_get_contents(dirname(__DIR__) . '/controllers/ResultController.php');
+        $finisher = (string) file_get_contents(dirname(__DIR__) . '/core/ResponseFinisher.php');
+        self::assertStringContainsString('session_write_close();', $finisher, 'Сессия должна закрываться перед фоновой работой.');
 
-        $closed = strpos($source, 'session_write_close();');
-        $generated = strpos($source, '$reports->claimNext();');
+        // И страница результата, и кабинет специалиста отдают ответ через
+        // общий finisher до того, как взять задание в работу.
+        foreach (['ResultController', 'OwnerController'] as $controller) {
+            $source = (string) file_get_contents(dirname(__DIR__) . "/controllers/{$controller}.php");
+            $finished = strpos($source, 'ResponseFinisher::finish();');
+            $generated = strpos($source, '$reports->claimNext();');
 
-        self::assertNotFalse($closed, 'Сессия должна закрываться перед фоновой работой.');
-        self::assertNotFalse($generated);
-        self::assertLessThan($generated, $closed);
+            self::assertNotFalse($finished, "{$controller}: ответ должен уходить до фоновой работы.");
+            self::assertNotFalse($generated, "{$controller}: фоновая обработка очереди не найдена.");
+            self::assertLessThan($generated, $finished);
+        }
     }
 
     private function closeSession(): void
