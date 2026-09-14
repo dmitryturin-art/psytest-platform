@@ -1,0 +1,94 @@
+{% extends "layout.twig" %}
+
+{% block title %}Карточка клиента — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">Приглашения</a><a class="nav-link" href="{{ basePath }}/admin/clients">К списку клиентов</a></nav>{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-client-title">
+    <p class="owner-panel-eyebrow">Карточка клиента</p>
+    <h1 id="owner-client-title">{{ client.label }}</h1>
+    <p class="owner-panel-intro">Подпись и заметка видны только в кабинете: они не попадают в ссылку, на страницу клиента и во внешние сервисы.</p>
+
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+        {% if flash.invite_url %}<p class="owner-invite-url"><input aria-label="Ссылка-приглашение" type="text" readonly value="{{ flash.invite_url }}"></p>{% endif %}
+    {% endif %}
+
+    <section class="owner-invites" aria-labelledby="owner-client-edit-title">
+        <h2 id="owner-client-edit-title">Подпись и заметка</h2>
+        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/update" class="owner-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="client-label">Подпись клиента</label>
+            <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off" value="{{ client.label }}">
+            <label for="client-note">Заметка о работе</label>
+            <textarea id="client-note" name="note" maxlength="1000" rows="3">{{ client.note }}</textarea>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+    </section>
+
+    <section class="owner-invites" aria-labelledby="owner-client-assign-title">
+        <h2 id="owner-client-assign-title">Новое назначение</h2>
+        <p class="owner-help">Ссылка действует 14 дней и открывается один раз. Отправьте её клиенту сами — платформа ничего не отправляет.</p>
+        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/invites/create" class="owner-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="assignment-test">Методика</label>
+            <select id="assignment-test" name="test_id" required>
+                {% for test in invite_tests %}<option value="{{ test.id }}">{{ test.name }}</option>{% endfor %}
+            </select>
+            <label for="assignment-note">Заметка к назначению (не показывается клиенту)</label>
+            <textarea id="assignment-note" name="owner_note" maxlength="1000" rows="3"></textarea>
+            <button type="submit" class="btn btn-primary">Создать назначение</button>
+        </form>
+    </section>
+
+    <section class="owner-invites" aria-labelledby="owner-client-assignments-title">
+        <h2 id="owner-client-assignments-title">Назначения</h2>
+        {% if assignments %}
+            <ul class="owner-invite-list">
+            {% for assignment in assignments %}
+                <li>
+                    <strong>{{ assignment.test_name }}</strong> —
+                    {% if assignment.display_status == 'completed' %}завершено
+                    {% elseif assignment.display_status == 'opened' %}открыто
+                    {% elseif assignment.display_status == 'revoked' %}отозвано
+                    {% elseif assignment.display_status == 'expired' %}срок истёк
+                    {% elseif assignment.display_status == 'result_deleted' %}результат удалён
+                    {% else %}ожидает открытия{% endif %}
+                    <small>создано {{ assignment.created_at|date("d.m.Y H:i") }}{% if assignment.completed_at %} · завершено {{ assignment.completed_at|date("d.m.Y H:i") }}{% endif %}</small>
+                    {% if assignment.owner_note %}<p>{{ assignment.owner_note }}</p>{% endif %}
+                    {% if assignment.claimed_session_id %}
+                        <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ assignment.claimed_session_id }}">Открыть кейс</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}<p class="owner-help">Назначений пока нет.</p>{% endif %}
+    </section>
+
+    <section class="owner-invites" aria-labelledby="owner-client-history-title">
+        <h2 id="owner-client-history-title">История результатов</h2>
+        {% if history %}
+            <ol class="owner-invite-list">
+            {% for item in history %}
+                <li>
+                    <strong>{{ item.test_name }}</strong>
+                    <small>завершено {{ item.completed_at|date("d.m.Y H:i") }}</small>
+                    <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ item.claimed_session_id }}">Открыть результат</a>
+                </li>
+            {% endfor %}
+            </ol>
+        {% else %}<p class="owner-help">Завершённых прохождений пока нет.</p>{% endif %}
+    </section>
+
+    <section class="owner-case" aria-labelledby="owner-client-delete-title">
+        <h2 id="owner-client-delete-title">Удаление клиента</h2>
+        <p class="owner-help">Удаляются карточка, все её назначения, заметки, результаты и сгенерированные файлы. Восстановить их нельзя.</p>
+        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/delete" class="owner-action-form owner-delete-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label><input type="checkbox" name="confirm_delete" value="delete" required> Я понимаю, что удаление необратимо.</label>
+            <button type="submit" class="btn btn-danger">Удалить клиента полностью</button>
+        </form>
+    </section>
+</section>
+{% endblock %}

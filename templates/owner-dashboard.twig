@@ -3,10 +3,13 @@
 {% block title %}Кабинет владельца — {{ appName }}{% endblock %}
 {% block body_class %}owner-dashboard-page{% endblock %}
 {% block header_nav %}
-<form method="post" action="{{ basePath }}/admin/logout">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <button type="submit" class="nav-link owner-logout">Выйти</button>
-</form>
+<nav class="owner-nav">
+    <a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a>
+    <form method="post" action="{{ basePath }}/admin/logout">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="nav-link owner-logout">Выйти</button>
+    </form>
+</nav>
 {% endblock %}
 
 {% block content %}
@@ -32,6 +35,11 @@
             <select id="invite-test" name="test_id" required>
                 {% for test in invite_tests %}<option value="{{ test.id }}">{{ test.name }}</option>{% endfor %}
             </select>
+            <label for="invite-client">Клиент (необязательно)</label>
+            <select id="invite-client" name="client_id">
+                <option value="">Без карточки клиента</option>
+                {% for client in clients %}<option value="{{ client.id }}">{{ client.label }}</option>{% endfor %}
+            </select>
             <label for="invite-note">Заметка для себя (не показывается клиенту)</label>
             <textarea id="invite-note" name="owner_note" maxlength="1000" rows="3"></textarea>
             <button type="submit" class="btn btn-primary">Создать ссылку</button>
@@ -49,8 +57,9 @@
                     {% elseif invite.display_status == 'opened' %}открыто
                     {% elseif invite.display_status == 'revoked' %}отозвано
                     {% elseif invite.display_status == 'expired' %}срок истёк
+                    {% elseif invite.display_status == 'result_deleted' %}результат удалён
                     {% else %}ожидает открытия{% endif %}
-                    <small>создано {{ invite.created_at|date("d.m.Y H:i") }}</small>
+                    <small>создано {{ invite.created_at|date("d.m.Y H:i") }}{% if invite.client_label %} · клиент: <a href="{{ basePath }}/admin/clients/{{ invite.client_id }}">{{ invite.client_label }}</a>{% endif %}</small>
                     {% if invite.owner_note %}<p>{{ invite.owner_note }}</p>{% endif %}
                     {% if invite.status == 'pending' %}
                         <form method="post" action="{{ basePath }}/admin/invites/revoke" class="owner-action-form">
@@ -58,7 +67,7 @@
                             <input type="hidden" name="invite_id" value="{{ invite.id }}">
                             <button type="submit" class="btn btn-outline">Отозвать</button>
                         </form>
-                    {% elseif invite.status == 'claimed' %}
+                    {% elseif invite.claimed_session_id %}
                         <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ invite.claimed_session_id }}">Открыть кейс</a>
                     {% endif %}
                 </li>
