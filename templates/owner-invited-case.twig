@@ -59,6 +59,13 @@
         {% endif %}
     </section>
 
+    {% if case.completed_at and not ai.available %}
+    <section class="owner-case-ai" aria-labelledby="owner-case-ai-title">
+        <h2 id="owner-case-ai-title">ИИ-разбор</h2>
+        <p class="owner-help">Для этой методики расширенный разбор пока не настроен: опубликованных промптов нет. Сейчас разбор доступен для Лазаруса и СМИЛ.</p>
+    </section>
+    {% endif %}
+
     {% if case.completed_at and ai.available %}
     <section class="owner-case-ai" aria-labelledby="owner-case-ai-title" data-case-reports>
         <h2 id="owner-case-ai-title">ИИ-разбор</h2>
