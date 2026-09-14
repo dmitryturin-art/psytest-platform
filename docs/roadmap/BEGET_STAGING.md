@@ -106,4 +106,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 18. Выкладка `c9cff61` (14.09) добавила email клиента и уведомление, фоновую обработку черновиков из кабинета и подсказку раздела ИИ (`AddClientEmail`). SHA-256 `30f230489e05b52ede123882d3ec24f68f9af4d2b72189b952dfcb3d4847a00c` совпал; dump `backups/pre-deploy-c9cff61.sql.gz` проверен. Smoke: основные маршруты — `200`, `/test/smil` — `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/c8b5feb/public` и `current` на `releases/c8b5feb`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+19. Выкладка `869986d` (14.09) добавила привязку найденной сессии к карточке клиента; миграций нет. SHA-256 `821567385776c7b7215050f3207cb772bd785291855312c78c28c12a20871f7e` совпал; dump `backups/pre-deploy-869986d.sql.gz` проверен.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/c9cff61/public` и `current` на `releases/c9cff61`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
