@@ -20,6 +20,14 @@
 
 ## 2026-09-14
 
+### 08.B7 — staging-выкладка K5a (`c8b5feb`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-c8b5feb`; deployed runtime `c8b5feb` (merge PR #77).
+- Сделано: артефакт `release-c8b5feb.tar.gz`, SHA-256 `4da6fc01…37bf` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-c8b5feb.sql.gz` (13 таблиц, gzip -t OK); `AddAiReportRevisions` применена; `public_html`/`current` атомарно на `releases/c8b5feb`.
+- Проверки: HTTPS `/`, `/tests`, health, `/privacy`, `/admin/login`, `/account/login` — `200`; `/test/smil` — `404`. Заказ черновиков на staging не делался: доступность AI-провайдера с сервера проверяется отдельно (08.4 фиксировал недоступность OpenRouter).
+- Rollback: `public_html` → `releases/66df1cb/public`, `current` → `releases/66df1cb`; `phinx rollback -t 20260915020000` из `releases/c8b5feb`.
+- Следующий шаг: K5b — email клиента в карточке и уведомление о готовом разборе.
+
 ### 07.K5a — редактор разбора, версии и публикация на странице клиента
 
 - Этап / ветка / commit: этап 07, `codex/07-k5a-report-editor` от `main` `d036ff7`; commits `b907273`, `b70a38b`, `055da47`, `1ff031b`.
