@@ -20,6 +20,17 @@
 
 ## 2026-09-14
 
+### 07.K2 — карточки клиентов и назначения в кабинете специалиста
+
+- Этап / ветка / commit: этап 07, `codex/07-k2-therapist-clients` поверх `codex/02-remove-shared-access-key`; commits `d5da370`, `32ebf67`, `718abc8`, `93187ac`, `1f16c2a`.
+- Цель: специалист ведёт карточку клиента с несколькими назначениями (приглашениями), видит их состояния и историю результатов, удаляет клиента целиком. Контакты клиента не хранятся; подпись владельца не покидает кабинет.
+- Сделано: миграция `20260914020000_add_therapist_clients` (`therapist_clients`: подпись ≤120, заметка ≤1000; `test_invites.client_id` FK ON DELETE CASCADE, старые приглашения без клиента валидны); `TherapistClientService` (create/update/list/card/delete в одной транзакции с `SessionLifecycleService`); маршруты `/admin/clients`, `/admin/clients/{id}` (карточка, изменение, назначение из карточки, удаление с подтверждением), `POST /admin/invited-case/{id}/delete`; в `/admin` — опциональный выбор клиента при быстром приглашении и подпись клиента в списке. `SessionLifecycleService::deleteSessionAndArtifacts` и `SessionManager::deleteSession` (путь посетителя) удаляют строку `test_invites` вместе с сессией, чтобы owner_note не пережила кейс; статус «результат удалён» без ссылки для осиротевших и soft-deleted кейсов.
+- Решения: клиентская сущность отделена от `retention_class`; label никогда не попадает на страницу респондента, в URL, AI-контекст, activity_log. Независимое ревью (субагент): находка про путь самоудаления посетителем исправлена в этом же пакете (`1f16c2a`); 404 для несуществующих карточек унифицирован.
+- Проверки и evidence: исполнитель (изолированная БД) — полный `composer test` 383 tests / 3426 assertions OK, analyse/lint/architecture/baseline OK, rollback/migrate OK; browser QA полного сценария (клиент → назначение BDI → прохождение → «завершено» → кейс → удаление) на desktop и 390×844 без console errors и горизонтальной прокрутки. Ведущий: после rebase и переименования миграции `bin/local-gate.sh` на Docker MySQL 5.7.44 — **пройден**; после fix ревью targeted `composer test` — 17 tests / 167 assertions OK, analyse/lint OK; `composer test:fast` — см. итог ниже.
+- Изменённые файлы: `core/TherapistClientService.php`, `core/TestInviteService.php`, `core/SessionLifecycleService.php`, `core/SessionManager.php`, `controllers/OwnerController.php`, `public/index.php`, `public/css/main.css`, `templates/owner-clients.twig`, `templates/owner-client.twig`, `templates/owner-dashboard.twig`, `templates/owner-invited-case.twig`, миграция, тесты `TherapistClientServiceTest`, `OwnerDashboardContractTest`, `MigratedSchemaTest`, `ARCHITECTURE.md`, `DATA_MAP_CURRENT.md`.
+- Не сделано / риски (долг): PDF-файлы удаляются до транзакции БД, поэтому при сбое на N-й сессии клиента файлы предыдущих уже стёрты (согласованность БД сохраняется) — вынести unlink после commit отдельным пакетом; `created_at` (MySQL NOW) и `completed_at` (PHP date) расходятся на часовой пояс в карточке — отдельный фикс TZ. Graphify не обновлялся и как evidence не используется.
+- Следующий шаг: выкладка на staging (02.11 + K2), затем K3 — кабинет посетителя.
+
 ### 02.11 — снятие общего ключа доступа к закрытой методике
 
 - Этап / ветка / commit: этап 02 (доступ), `codex/02-remove-shared-access-key`, `fd94074` + docs.

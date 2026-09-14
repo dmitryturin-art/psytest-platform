@@ -242,4 +242,5 @@ Qwen напрямую у Alibaba, DeepSeek напрямую, либо росси
 - [x] K1a: `/admin/invited-case/{sessionId}` больше не печатает stored JSON. Карточка использует current module только для view-мэппинга: базовые result sections без client-only bearer-link actions и текст вопроса с выбранным ответом/баллом; Лазарус сохраняет две оценки. Scoring и stored clinical record не меняются; BAI client extended-report block и AI-flow не входят в этот пакет.
 - [x] R8 / 07.K4a: `finalizeSession()` атомарно записывает final answers/results и переводит только `partial` → `completed`; повторная или конкурентная отправка не может изменить clinical record. Обычный и парный submit перенаправляют completed-сессию на уже готовый result без новой пары.
 - [x] 02.11: общий ключ `?key=` и `bin/test-access-link.php` сняты; `visibility = invite` отвечает 404 по прямой ссылке, вход только через `/invite/{token}`.
-- [ ] Далее K2: клиенты/назначения поверх готового invitation flow.
+- [x] K2: `therapist_clients` + `test_invites.client_id`; карточка клиента с назначениями, историей и удалением; приглашение не переживает кейс ни при owner-, ни при visitor-удалении.
+- [ ] Далее K3: кабинет посетителя (email magic-link, история, удаление) — identity/recovery/retention сначала.
