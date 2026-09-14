@@ -22,6 +22,7 @@ final class OwnerDashboardContractTest extends TestCase
 
         self::assertStringContainsString("\$router->post('/admin/login'", $routes);
         self::assertStringContainsString("\$router->post('/admin/case/assign'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/case/attach'", $routes);
         self::assertStringContainsString("\$router->post('/admin/case/delete'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invites/create'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invites/revoke'", $routes);
@@ -59,6 +60,27 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString('name="result_reference"', $template);
         self::assertStringContainsString('name="owner_note"', $template);
         self::assertStringNotContainsString('invite.token', $template);
+    }
+
+    /**
+     * Привязка найденной сессии к карточке клиента (07.K2c).
+     *
+     * Форма живёт на той же странице, что и разовый поиск по токену, поэтому
+     * подчиняется тем же правилам: токен результата не рендерится, действие
+     * идёт POST-ом под общим CSRF, а сессия посетителя сюда не попадает.
+     */
+    public function testAttachingAFoundSessionIsAPostFormWithoutTheResultToken(): void
+    {
+        $template = (string) file_get_contents($this->projectRoot . '/templates/owner-dashboard.twig');
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+
+        self::assertStringContainsString('/admin/case/attach', $template);
+        self::assertStringContainsString('name="new_client_label"', $template);
+        self::assertStringContainsString('name="session_id" value="{{ case.id }}"', $template);
+        self::assertStringNotContainsString('case.session_token', $template);
+        self::assertStringNotContainsString('session_token', $template);
+        self::assertStringContainsString("case.retention_class != 'account'", $template);
+        self::assertStringContainsString('attachToClient', $controller);
     }
 
     public function testInvitedCaseRendersReadableDataInsteadOfStoredJson(): void
