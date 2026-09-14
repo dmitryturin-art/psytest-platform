@@ -20,6 +20,17 @@
 
 ## 2026-09-14
 
+### 08.B4 — staging-выкладка 02.11 + K2 (`a7999f0`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-a7999f0`; deployed runtime `a7999f0` (merge PR #69; включает #67 стек недели, #68 снятие ключа, #69 K2).
+- Цель: перенести на `test.23time.ru` снятие общего ключа СМИЛ и карточки клиентов с мгновенным откатом.
+- Сделано: артефакт `release-a7999f0.tar.gz` собран `bin/build-release.sh` из tracked tree, SHA-256 `58fb45e4…12bd8` совпал после загрузки; распакован в `releases/a7999f0`, `.env` скопирован из прежнего релиза (600); pre-deploy dump `backups/pre-deploy-a7999f0.sql.gz` (gzip -t OK, 10 таблиц); `DropTestAccessKey` и `AddTherapistClients` применены Phinx под PHP 8.3; `public_html` и `current` атомарно переведены на `releases/a7999f0`.
+- Проверки и evidence: сервер — MySQL 5.7.21 (матрица CI 5.7/8.0 остаётся), PHP 8.3.20. Smoke HTTPS: `/`, `/tests`, `/api/health` (`status: ok`), `/privacy`, `/terms`, `/admin/login` — `200`; `/test/smil` — `404` (закрыт, вход только по приглашению); HTTP → `301`. Без входа `/admin/clients` и `/admin/clients/{uuid}` — `303` на `/admin/login`. Свежих ошибок в `storage/logs` нет. Прохождения и синтетические сессии на staging не создавались.
+- Наблюдение (не дефект приложения): точный путь `/admin` без cookie отдаёт 273-байтовую заглушку nginx Beget (anti-bot cookie `beget=begetok` + reload); с cookie маршрут работает штатно. Остальные пути кабинета заглушкой не затронуты.
+- Эксплуатация: home deploy-аккаунта `qdesign_gpt2` — это корень сайта (`/home/q/qdesign/test.23time.ru`), `~/test.23time.ru` не существует; `cd current` затем `..` ведёт в `releases/`, для backups использовать `~/backups`. Значение `DEPLOY_SSH_PASSWORD` в локальном `.env` содержало `\r` — при чтении обрезать.
+- Rollback: `public_html` → `releases/release-c8e2b28/public`, `current` → `releases/release-c8e2b28`; dump и прежние releases сохранены. Откат миграций: `phinx rollback -t 20260909010000` из `releases/a7999f0` (вернёт пустую колонку `access_key` без ключа — прежние `?key=` ссылки всё равно не заработают).
+- Следующий шаг: K3 — кабинет посетителя (identity/recovery/retention → magic-link → история).
+
 ### 07.K2 — карточки клиентов и назначения в кабинете специалиста
 
 - Этап / ветка / commit: этап 07, `codex/07-k2-therapist-clients` поверх `codex/02-remove-shared-access-key`; commits `d5da370`, `32ebf67`, `718abc8`, `93187ac`, `1f16c2a`.
