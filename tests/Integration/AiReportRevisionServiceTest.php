@@ -13,6 +13,7 @@ use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Database;
 use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\SessionManager;
+use Ramsey\Uuid\Uuid;
 
 /**
  * История версий разбора и публикация одобренной редакции (D-054).
@@ -52,6 +53,31 @@ final class AiReportRevisionServiceTest extends TestCase
             $this->db->delete('test_sessions', 'id = ?', [$sessionId]);
         }
         $this->createdSessions = [];
+    }
+
+    public function testAConcurrentSaveWithTheSameNumberFailsSoftlyInsteadOfCrashing(): void
+    {
+        $reportId = $this->readyReport(Prompt::KIND_CLEAR, RetentionPolicy::THERAPIST_CASE, 'черновик модели');
+        $this->revisions->save($reportId, 'первая правка');
+        $latest = $this->revisions->latest($reportId);
+        self::assertNotNull($latest);
+
+        // Имитация гонки: второй писатель уже занял следующий номер.
+        $this->db->insert('ai_report_revisions', [
+            'id' => Uuid::uuid4()->toString(),
+            'report_id' => $reportId,
+            'revision_no' => (int) $latest['revision_no'] + 1,
+            'content' => 'параллельная правка',
+            'source' => 'owner',
+        ]);
+
+        $reflection = new \ReflectionMethod($this->revisions, 'append');
+        try {
+            $reflection->invoke($this->revisions, $reportId, 'проигравшая правка', 'owner', (int) $latest['revision_no'] + 1);
+            self::fail('Дубль номера версии должен быть отвергнут понятной ошибкой.');
+        } catch (\InvalidArgumentException $exception) {
+            self::assertStringContainsString('обновите страницу', $exception->getMessage());
+        }
     }
 
     public function testMarkReadyStoresTheModelDraftAsRevisionOne(): void

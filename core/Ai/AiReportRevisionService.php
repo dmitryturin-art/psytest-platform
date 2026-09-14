@@ -207,16 +207,29 @@ final class AiReportRevisionService
             && (string) $row['retention_class'] === RetentionPolicy::THERAPIST_CASE;
     }
 
+    /**
+     * @throws \InvalidArgumentException если номер версии уже занят: два
+     *     одновременных сохранения (двойной клик, две вкладки) — уникальный
+     *     индекс не даст записать дубль, а специалист получает понятный ответ.
+     */
     private function append(string $reportId, string $content, string $source, int $revisionNo): string
     {
         $id = Uuid::uuid4()->toString();
-        $this->db->insert('ai_report_revisions', [
-            'id' => $id,
-            'report_id' => $reportId,
-            'revision_no' => $revisionNo,
-            'content' => $content,
-            'source' => $source,
-        ]);
+        try {
+            $this->db->insert('ai_report_revisions', [
+                'id' => $id,
+                'report_id' => $reportId,
+                'revision_no' => $revisionNo,
+                'content' => $content,
+                'source' => $source,
+            ]);
+        } catch (\PDOException $exception) {
+            if ((string) $exception->getCode() === '23000') {
+                throw new \InvalidArgumentException('версия уже изменилась, обновите страницу и повторите.');
+            }
+
+            throw $exception;
+        }
 
         return $id;
     }
