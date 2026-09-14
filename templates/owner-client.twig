@@ -58,27 +58,12 @@
                     <small>создано {{ assignment.created_at|date("d.m.Y H:i") }}{% if assignment.completed_at %} · завершено {{ assignment.completed_at|date("d.m.Y H:i") }}{% endif %}</small>
                     {% if assignment.owner_note %}<p>{{ assignment.owner_note }}</p>{% endif %}
                     {% if assignment.claimed_session_id %}
-                        <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ assignment.claimed_session_id }}">Открыть кейс</a>
+                        <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ assignment.claimed_session_id }}">Ответы и результат</a>
                     {% endif %}
                 </li>
             {% endfor %}
             </ul>
         {% else %}<p class="owner-help">Назначений пока нет.</p>{% endif %}
-    </section>
-
-    <section class="owner-invites" aria-labelledby="owner-client-history-title">
-        <h2 id="owner-client-history-title">История результатов</h2>
-        {% if history %}
-            <ol class="owner-invite-list">
-            {% for item in history %}
-                <li>
-                    <strong>{{ item.test_name }}</strong>
-                    <small>завершено {{ item.completed_at|date("d.m.Y H:i") }}</small>
-                    <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ item.claimed_session_id }}">Открыть результат</a>
-                </li>
-            {% endfor %}
-            </ol>
-        {% else %}<p class="owner-help">Завершённых прохождений пока нет.</p>{% endif %}
     </section>
 
     <section class="owner-case" aria-labelledby="owner-client-delete-title">
