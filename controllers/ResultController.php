@@ -21,6 +21,7 @@ use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\PDFGenerator;
 use PsyTest\Core\ReportMarkdown;
+use PsyTest\Core\ResponseFinisher;
 use PsyTest\Core\ResultPresenter;
 use PsyTest\Core\ResultSectionRenderer;
 use PsyTest\Core\VisitorAccountService;
@@ -109,29 +110,7 @@ class ResultController extends BaseController
     {
         header('Location: ' . $path, true, 303);
         header('Content-Length: 0');
-
-        // Посетитель ушёл со страницы — работа всё равно доводится до конца,
-        // иначе разбор терялся бы при каждом закрытии вкладки.
-        ignore_user_abort(true);
-        @set_time_limit(0);
-
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        } else {
-            // Под обычным CGI остаётся только выпихнуть ответ и продолжить.
-            @ob_end_flush();
-            flush();
-        }
-
-        // Файл сессии заперт с проверки CSRF и держался бы все минуты работы
-        // модели. Следующий запрос браузера — переход по 303 на страницу
-        // результата — ждал бы этот замок, и страница выглядела бы зависшей:
-        // ни ожидания, ни опроса состояния посетитель не видел, разбор просто
-        // появлялся через несколько минут. Дальше сессия не нужна, поэтому
-        // замок отпускается сразу после ответа.
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            session_write_close();
-        }
+        ResponseFinisher::finish();
 
         $job = $reports->claimNext();
         if ($job !== null) {

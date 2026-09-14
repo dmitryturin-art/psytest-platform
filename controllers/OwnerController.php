@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
+use PsyTest\Core\Ai\AiClient;
 use PsyTest\Core\Ai\AiProviderException;
+use PsyTest\Core\Ai\AiProviderSettings;
 use PsyTest\Core\Ai\AiReportContextBuilder;
+use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiReportRevisionService;
+use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\OwnerDashboardAuthenticator;
 use PsyTest\Core\ReportMarkdown;
+use PsyTest\Core\ResponseFinisher;
 use PsyTest\Core\ResultPresenter;
 use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\Security;
@@ -452,12 +457,39 @@ final class OwnerController extends BaseController
             $queued++;
         }
 
-        $this->caseFlashBack(
-            $sessionId,
-            $queued > 0,
-            $queued > 0
-                ? 'Черновики поставлены в очередь. Обновите страницу через несколько минут.'
-                : 'Для этой методики и режима разбор пока не открыт.',
+        if ($queued === 0) {
+            $this->caseFlashBack($sessionId, false, 'Для этой методики и режима разбор пока не открыт.');
+        }
+
+        // На shared-хостинге нет cron-обработчика очереди: как и на странице
+        // результата, задания доводятся до конца в этом же процессе после
+        // того, как ответ уже отдан браузеру (07.16–07.17).
+        $this->setFlash(['type' => 'success', 'message' => 'Черновики поставлены в очередь. Обновите страницу через несколько минут.']);
+        header('Location: /admin/invited-case/' . $sessionId, true, 303);
+        header('Content-Length: 0');
+        ResponseFinisher::finish();
+
+        $generator = $this->reportGenerator();
+        for ($i = 0; $i < $queued; $i++) {
+            $job = $reports->claimNext();
+            if ($job === null) {
+                break;
+            }
+            $generator->process($job);
+        }
+
+        exit;
+    }
+
+    private function reportGenerator(): AiReportGenerator
+    {
+        $settings = AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php');
+
+        return new AiReportGenerator(
+            new AiReportRepository($this->db),
+            new AiReportContextBuilder($this->sessionManager, $this->moduleLoader),
+            PromptRegistry::default(),
+            new AiClient($settings, new CurlTransport()),
         );
     }
 
