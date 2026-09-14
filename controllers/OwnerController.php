@@ -63,9 +63,9 @@ final class OwnerController extends BaseController
             new RetentionPolicy($config->anonymousRetentionDays()),
             $config->pdfStoragePath(),
         );
-        $this->cases = new TherapistCaseService($this->db, $lifecycle);
         $this->clients = new TherapistClientService($this->db, $lifecycle);
         $this->invites = new TestInviteService($this->db, $this->sessionManager);
+        $this->cases = new TherapistCaseService($this->db, $lifecycle, $this->invites, $this->clients);
         $this->appUrl = $config->appUrl();
     }
 
@@ -769,8 +769,63 @@ final class OwnerController extends BaseController
 
         echo $this->view->render('owner-dashboard', [
             'case' => $case,
+            'case_attached' => $case === null ? false : $this->invites->claimedCaseForOwner((string) $case['id']) !== null,
             'lookup_error' => $case === null ? 'Сессия не найдена или уже удалена.' : null,
+            'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
+            'invites' => $this->invites->recentForOwner(),
+            'clients' => $this->clients->listForOwner(),
         ]);
+    }
+
+    /**
+     * Привязать найденную сессию к карточке клиента.
+     * POST /admin/case/attach
+     *
+     * Сессия, пройденная без приглашения, иначе остаётся видимой только через
+     * разовый поиск по токену результата. Привязка даёт ей то же место, что и
+     * назначенной: карточку кейса и историю клиента.
+     */
+    public function attachCase(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $sessionId = $_POST['session_id'] ?? '';
+        $rawClientId = $_POST['client_id'] ?? '';
+        $label = $_POST['new_client_label'] ?? '';
+        $note = $_POST['owner_note'] ?? '';
+
+        if (!is_string($sessionId) || !Security::isValidUuid($sessionId) || !is_string($rawClientId) || !is_string($note)) {
+            $this->attachFailed();
+        }
+
+        $clientId = $rawClientId === '' ? null : $rawClientId;
+        if ($clientId !== null && !Security::isValidUuid($clientId)) {
+            $this->attachFailed();
+        }
+        if ($clientId === null && !$this->isValidClientInput($label, '')) {
+            $this->attachFailed();
+        }
+        if (mb_strlen(trim($note)) > TherapistClientService::NOTE_MAX_LENGTH) {
+            $this->attachFailed();
+        }
+
+        if (!$this->cases->attachToClient($sessionId, $clientId, trim($note), trim((string) $label))) {
+            $this->attachFailed();
+        }
+
+        $this->setFlash(['type' => 'success', 'message' => 'Сессия привязана к карточке клиента. Она больше не участвует в автоматической 180-дневной очистке.']);
+        $this->redirect('/admin/invited-case/' . $sessionId);
+    }
+
+    private function attachFailed(): never
+    {
+        $this->setFlash([
+            'type' => 'error',
+            'message' => 'Не удалось привязать сессию: нужна завершённая сессия без приглашения, существующая карточка клиента или подпись новой (до 120 символов) и заметка до 1000 символов.',
+        ]);
+        $this->redirect('/admin');
     }
 
     public function assignCase(): void

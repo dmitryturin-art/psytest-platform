@@ -16,6 +16,8 @@ final class TherapistCaseService
     public function __construct(
         private readonly Database $db,
         private readonly SessionLifecycleService $lifecycle,
+        private readonly TestInviteService $invites,
+        private readonly TherapistClientService $clients,
     ) {
     }
 
@@ -57,6 +59,81 @@ final class TherapistCaseService
                 $this->writeOwnerAuditEvent('therapist_case_assigned');
             }
 
+            $this->db->commit();
+
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * Привязывает уже пройденную сессию к карточке клиента.
+     *
+     * Сессия могла состояться до всякого приглашения — по обычной публичной
+     * ссылке. Такой кейс виден специалисту только через разовый поиск по
+     * токену результата, поэтому здесь он один раз получает погашенное
+     * приглашение: после этого он открывается в `/admin/invited-case/` и
+     * попадает в историю карточки клиента наравне с назначенными.
+     *
+     * Ограничения намеренно узкие. Привязывается только завершённая сессия,
+     * только один раз (`claimed_session_id` уникален) и только не удалённая.
+     * Сессия из кабинета посетителя (`account`) не привязывается вовсе: она
+     * принадлежит человеку, который её сохранил, а не специалисту
+     * (PRODUCT_RULES §11). В парном Лазарусе привязывается ровно та сессия,
+     * чей токен ввели: партнёрская остаётся чужой.
+     *
+     * @param string|null $clientId существующая карточка либо NULL, и тогда
+     *                              карточка создаётся из `$newClientLabel`.
+     */
+    public function attachToClient(
+        string $sessionId,
+        ?string $clientId,
+        string $note,
+        string $newClientLabel = '',
+    ): bool {
+        $session = $this->db->selectOne(
+            'SELECT id, test_id, status, retention_class FROM test_sessions WHERE id = :id',
+            ['id' => $sessionId],
+        );
+        if (
+            $session === null
+            || $session['status'] !== 'completed'
+            || !in_array($session['retention_class'], [RetentionPolicy::ANONYMOUS, RetentionPolicy::THERAPIST_CASE], true)
+        ) {
+            return false;
+        }
+
+        $alreadyBound = $this->db->selectOne(
+            'SELECT id FROM test_invites WHERE claimed_session_id = :session_id',
+            ['session_id' => $sessionId],
+        );
+        if ($alreadyBound !== null) {
+            return false;
+        }
+
+        if ($clientId !== null && !$this->clients->exists($clientId)) {
+            return false;
+        }
+
+        $this->db->beginTransaction();
+        try {
+            if ($clientId === null) {
+                $clientId = $this->clients->create($newClientLabel, '');
+            }
+
+            $this->invites->bindExistingSession($sessionId, (int) $session['test_id'], $clientId, $note);
+            $this->db->update(
+                'test_sessions',
+                ['retention_class' => RetentionPolicy::THERAPIST_CASE],
+                'id = ? AND status = ?',
+                [$sessionId, 'completed'],
+            );
+            $this->writeOwnerAuditEvent('therapist_case_attached');
             $this->db->commit();
 
             return true;

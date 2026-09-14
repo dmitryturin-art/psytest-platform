@@ -95,23 +95,52 @@
                 <div><dt>Режим хранения</dt><dd>{{ case.retention_class }}</dd></div>
             </dl>
 
-            {% if case.retention_class == 'anonymous' and case.status == 'completed' %}
-                <form method="post" action="{{ basePath }}/admin/case/assign" class="owner-action-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <input type="hidden" name="session_id" value="{{ case.id }}">
-                    <button type="submit" class="btn btn-success">Назначить как кейс клиента</button>
-                </form>
-                <p class="owner-help">После назначения эта сессия перестанет участвовать в автоматической 180-дневной очистке.</p>
-            {% elseif case.retention_class == 'therapist_case' %}
-                <p class="owner-notice owner-notice--success">Это уже кейс клиента терапевта. Он хранится, пока вы не удалите его вручную.</p>
-                <form method="post" action="{{ basePath }}/admin/case/delete" class="owner-action-form owner-delete-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <input type="hidden" name="session_id" value="{{ case.id }}">
-                    <label><input type="checkbox" name="confirm_delete" value="delete" required> Я понимаю, что удаление необратимо.</label>
-                    <button type="submit" class="btn btn-danger">Удалить кейс полностью</button>
-                </form>
+            {% if case_attached %}
+                <p class="owner-notice owner-notice--success">Эта сессия уже привязана к карточке клиента.</p>
+                <p><a class="btn btn-primary" href="{{ basePath }}/admin/invited-case/{{ case.id }}">Открыть кейс</a></p>
             {% else %}
-                <p class="owner-notice owner-notice--error">Назначить можно только завершённую анонимную сессию.</p>
+                {% if case.retention_class == 'anonymous' and case.status == 'completed' %}
+                    <form method="post" action="{{ basePath }}/admin/case/assign" class="owner-action-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="session_id" value="{{ case.id }}">
+                        <button type="submit" class="btn btn-success">Назначить как кейс клиента</button>
+                    </form>
+                    <p class="owner-help">После назначения эта сессия перестанет участвовать в автоматической 180-дневной очистке.</p>
+                {% elseif case.retention_class == 'therapist_case' %}
+                    <p class="owner-notice owner-notice--success">Это уже кейс клиента терапевта. Он хранится, пока вы не удалите его вручную.</p>
+                {% elseif case.retention_class != 'account' %}
+                    <p class="owner-notice owner-notice--error">Назначить можно только завершённую анонимную сессию.</p>
+                {% endif %}
+
+                {% if case.status == 'completed' and case.retention_class != 'account' %}
+                    <form method="post" action="{{ basePath }}/admin/case/attach" class="owner-form owner-attach-form">
+                        <h3>Привязать к клиенту</h3>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="session_id" value="{{ case.id }}">
+                        <label for="attach-client">Карточка клиента</label>
+                        <select id="attach-client" name="client_id">
+                            <option value="">Новый клиент</option>
+                            {% for client in clients %}<option value="{{ client.id }}">{{ client.label }}</option>{% endfor %}
+                        </select>
+                        <label for="attach-label">Подпись нового клиента (нужна только для варианта «Новый клиент»)</label>
+                        <input id="attach-label" name="new_client_label" type="text" maxlength="120" autocomplete="off">
+                        <label for="attach-note">Заметка для себя (не показывается клиенту)</label>
+                        <textarea id="attach-note" name="owner_note" maxlength="1000" rows="3"></textarea>
+                        <button type="submit" class="btn btn-primary">Привязать к клиенту</button>
+                    </form>
+                    <p class="owner-help">Привязывается только эта сессия: в парном Лазарусе партнёрская остаётся отдельной и не попадает в карточку. Ссылка-приглашение при этом не создаётся — открыть кейс можно только здесь, в кабинете.</p>
+                {% elseif case.retention_class == 'account' %}
+                    <p class="owner-notice owner-notice--error">Эта сессия сохранена в кабинете посетителя и принадлежит ему: привязать её к карточке клиента нельзя.</p>
+                {% endif %}
+
+                {% if case.retention_class == 'therapist_case' %}
+                    <form method="post" action="{{ basePath }}/admin/case/delete" class="owner-action-form owner-delete-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="session_id" value="{{ case.id }}">
+                        <label><input type="checkbox" name="confirm_delete" value="delete" required> Я понимаю, что удаление необратимо.</label>
+                        <button type="submit" class="btn btn-danger">Удалить кейс полностью</button>
+                    </form>
+                {% endif %}
             {% endif %}
         </section>
     {% endif %}

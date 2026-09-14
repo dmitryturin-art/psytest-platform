@@ -99,6 +99,7 @@ $router->post('/admin/logout', [OwnerController::class, 'logout']);
 $router->get('/admin', [OwnerController::class, 'dashboard']);
 $router->post('/admin/case/lookup', [OwnerController::class, 'lookupCase']);
 $router->post('/admin/case/assign', [OwnerController::class, 'assignCase']);
+$router->post('/admin/case/attach', [OwnerController::class, 'attachCase']);
 $router->post('/admin/case/delete', [OwnerController::class, 'deleteCase']);
 $router->post('/admin/invites/create', [OwnerController::class, 'createInvite']);
 $router->post('/admin/invites/revoke', [OwnerController::class, 'revokeInvite']);
