@@ -20,6 +20,14 @@
 
 ## 2026-09-14
 
+### 08.B10 — staging-выкладка K1b (`be4342e`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-be4342e`; deployed runtime `be4342e` (merge PR #85). Новых миграций нет.
+- Сделано: артефакт `release-be4342e.tar.gz`, SHA-256 `96e154b9…cef1` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-be4342e.sql.gz` (gzip -t OK); `public_html`/`current` атомарно на `releases/be4342e`.
+- Проверки: HTTPS `/`, `/tests`, health, `/admin/login`, `/account/login` — `200`; `/test/smil` — `404`.
+- Rollback: `public_html` → `releases/869986d/public`, `current` → `releases/869986d`.
+- Следующий шаг: владелец проверяет парную карточку кейса «Дмитрий», ротирует SSH-пароль; решение WP9 или O1.
+
 ### 07.K1b — парное прохождение в карточке кейса специалиста
 
 - Этап / ветка / commit: этап 07, `codex/07-k1b-pair-case-card` от `main` `92ecb57`; commits `9136d68`, `e6d5ae3`.
