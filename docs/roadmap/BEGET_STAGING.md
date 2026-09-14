@@ -104,4 +104,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 17. Выкладка `c8b5feb` (14.09) добавила версии разбора и публикацию клиенту (`AddAiReportRevisions`). SHA-256 `4da6fc01842dbfbec62f55aa269f50924ddcc8ae2c12d9d442e48e11bb7537bf` совпал; dump `backups/pre-deploy-c8b5feb.sql.gz` проверен. Smoke: основные маршруты — `200`, `/test/smil` — `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/66df1cb/public` и `current` на `releases/66df1cb`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+18. Выкладка `c9cff61` (14.09) добавила email клиента и уведомление, фоновую обработку черновиков из кабинета и подсказку раздела ИИ (`AddClientEmail`). SHA-256 `30f230489e05b52ede123882d3ec24f68f9af4d2b72189b952dfcb3d4847a00c` совпал; dump `backups/pre-deploy-c9cff61.sql.gz` проверен. Smoke: основные маршруты — `200`, `/test/smil` — `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/c8b5feb/public` и `current` на `releases/c8b5feb`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
