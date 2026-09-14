@@ -104,6 +104,13 @@ $router->post('/admin/invites/create', [OwnerController::class, 'createInvite'])
 $router->post('/admin/invites/revoke', [OwnerController::class, 'revokeInvite']);
 $router->get('/admin/invited-case/{sessionId}', [OwnerController::class, 'viewInvitedCase']);
 $router->post('/admin/invited-case/{sessionId}/delete', [OwnerController::class, 'deleteInvitedCase']);
+$router->post('/admin/invited-case/{sessionId}/reports/request', [OwnerController::class, 'requestCaseReports']);
+$router->get('/admin/invited-case/{sessionId}/reports/status', [OwnerController::class, 'caseReportStatus']);
+$router->get('/admin/invited-case/{sessionId}/reports/{reportId}/edit', [OwnerController::class, 'editCaseReport']);
+$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/revisions', [OwnerController::class, 'saveCaseReportRevision']);
+$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/restore', [OwnerController::class, 'restoreCaseReportRevision']);
+$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/publish', [OwnerController::class, 'publishCaseReport']);
+$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/unpublish', [OwnerController::class, 'unpublishCaseReport']);
 $router->get('/admin/clients', [OwnerController::class, 'clients']);
 $router->post('/admin/clients/create', [OwnerController::class, 'createClient']);
 $router->get('/admin/clients/{clientId}', [OwnerController::class, 'viewClient']);

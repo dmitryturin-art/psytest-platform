@@ -3977,3 +3977,112 @@ body {
 }
 
 .result-account--saved { border-style: solid; }
+
+/* ---------------------------------------------------------------- 07.K5a
+   Редактор разбора в кабинете специалиста и опубликованная версия у клиента.
+   Длинный Markdown прокручивается внутри своих блоков: страница на 390×844
+   не должна получать горизонтальную прокрутку. */
+
+.owner-case-ai {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.owner-case-ai-item {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.owner-case-ai-item h3 {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 1.0625rem;
+}
+
+.owner-case-ai-details summary,
+.owner-revision-details summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.owner-field {
+    display: grid;
+    gap: var(--spacing-xs);
+}
+
+.owner-editor-edit,
+.owner-editor-preview,
+.owner-editor-history {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.owner-editor-textarea {
+    width: 100%;
+    max-width: 100%;
+    min-height: 60vh;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.owner-revision-list {
+    display: grid;
+    gap: var(--spacing-md);
+    margin: var(--spacing-md) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.owner-revision {
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.owner-revision--published {
+    border-color: #17693a;
+    background: #f5fbf7;
+}
+
+.owner-revision-head {
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.owner-revision-text {
+    margin: var(--spacing-sm) 0 0;
+    padding: var(--spacing-sm);
+    max-height: 40vh;
+    overflow: auto;
+    background: #f7f7f9;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.owner-revision-actions {
+    display: grid;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.owner-revision-actions .owner-action-form {
+    margin-top: 0;
+}
+
+.ai-report__published-at {
+    margin: 0 0 var(--spacing-sm);
+    color: var(--color-text-light);
+    font-size: 0.9375rem;
+}

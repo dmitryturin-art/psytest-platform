@@ -1,0 +1,80 @@
+{% extends "layout.twig" %}
+{# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
+{% set ownerArea = true %}
+
+{% block title %}Редактор разбора — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a><a class="nav-link" href="{{ basePath }}/admin/invited-case/{{ session_id }}">К кейсу</a></nav>{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-editor-title">
+    <p class="owner-panel-eyebrow">Понятный разбор для клиента</p>
+    <h1 id="owner-editor-title">Редактор разбора</h1>
+
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
+
+    {% if published %}
+        <p class="owner-notice owner-notice--success">Клиенту опубликована версия №{{ published.revision_no }} от {{ published.published_at|date("d.m.Y H:i") }}.</p>
+        <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/unpublish" class="owner-action-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn">Снять с публикации</button>
+        </form>
+    {% else %}
+        <p class="owner-help">Клиенту пока ничего не опубликовано: на своей странице он видит ожидание.</p>
+    {% endif %}
+
+    <section class="owner-editor-edit" aria-labelledby="owner-editor-edit-title">
+        <h2 id="owner-editor-edit-title">Текст последней версии</h2>
+        <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/revisions" class="owner-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label class="owner-field">
+                <span>Markdown разбора (до {{ content_max }} символов)</span>
+                <textarea name="content" class="owner-editor-textarea" rows="24" maxlength="{{ content_max }}" required>{{ latest ? latest.content : '' }}</textarea>
+            </label>
+            <button type="submit" class="btn btn-primary">Сохранить как новую версию</button>
+        </form>
+    </section>
+
+    {% if latest_html %}
+    <section class="owner-editor-preview" aria-labelledby="owner-editor-preview-title">
+        <h2 id="owner-editor-preview-title">Предпросмотр последней версии</h2>
+        {# Тот же белый список разметки, что и на странице клиента. #}
+        <div class="ai-report__body">{{ latest_html|raw }}</div>
+    </section>
+    {% endif %}
+
+    <section class="owner-editor-history" aria-labelledby="owner-editor-history-title">
+        <h2 id="owner-editor-history-title">Версии</h2>
+        <ol class="owner-revision-list">
+            {% for revision in revisions %}
+            <li class="owner-revision{% if published and published.revision_no == revision.revision_no %} owner-revision--published{% endif %}">
+                <p class="owner-revision-head">
+                    Версия №{{ revision.revision_no }} · {{ revision.source == 'ai' ? 'черновик модели' : 'правка специалиста' }} · {{ revision.created_at|date("d.m.Y H:i") }}
+                </p>
+                <details class="owner-revision-details">
+                    <summary>Посмотреть</summary>
+                    <pre class="owner-revision-text">{{ revision.content }}</pre>
+                </details>
+                <div class="owner-revision-actions">
+                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/restore" class="owner-action-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="revision_id" value="{{ revision.id }}">
+                        <button type="submit" class="btn">Восстановить</button>
+                    </form>
+                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/publish" class="owner-action-form owner-publish-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="revision_id" value="{{ revision.id }}">
+                        <label><input type="checkbox" name="confirm_publish" value="publish" required> Клиент увидит ровно эту версию на своей странице результата и в PDF.</label>
+                        <button type="submit" class="btn btn-primary">Опубликовать клиенту</button>
+                    </form>
+                </div>
+            </li>
+            {% else %}
+            <li><p class="owner-help">Версий пока нет.</p></li>
+            {% endfor %}
+        </ol>
+    </section>
+</section>
+{% endblock %}

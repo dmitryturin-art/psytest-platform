@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 namespace PsyTest\Controllers;
 
+use PsyTest\Core\Ai\AiProviderException;
+use PsyTest\Core\Ai\AiReportContextBuilder;
+use PsyTest\Core\Ai\AiReportRepository;
+use PsyTest\Core\Ai\AiReportRevisionService;
+use PsyTest\Core\Ai\Prompt;
+use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\OwnerDashboardAuthenticator;
+use PsyTest\Core\ReportMarkdown;
+use PsyTest\Core\ResultPresenter;
 use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\Security;
 use PsyTest\Core\SessionLifecycleService;
@@ -21,6 +29,9 @@ use PsyTest\Core\TherapistClientService;
  */
 final class OwnerController extends BaseController
 {
+    /** Клинический контекст для модели: короткая справка специалиста, а не файл истории болезни. */
+    public const OWNER_CONTEXT_MAX_LENGTH = 4000;
+
     private OwnerDashboardAuthenticator $authenticator;
     private TherapistCaseService $cases;
     private TherapistClientService $clients;
@@ -320,7 +331,340 @@ final class OwnerController extends BaseController
         $case['answer_rows'] = $presenter->answers($module, $case['answers']);
         $case['result_sections'] = $presenter->resultSections($module, $case['calculated_results']);
 
-        echo $this->view->render('owner-invited-case', ['case' => $case]);
+        echo $this->view->render('owner-invited-case', [
+            'flash' => $this->takeFlash(),
+            'case' => $case,
+            'ai' => $this->aiSection($sessionId, (string) $case['test_slug']),
+        ]);
+    }
+
+    /**
+     * Состояние ИИ-разборов кейса для карточки специалиста.
+     *
+     * Здесь, в отличие от страницы клиента, показывается всё: и статусы
+     * заданий, и профессиональное заключение, и неопубликованные правки. Это
+     * рабочий материал специалиста, и он закрыт `requireOwner()`.
+     *
+     * @return array<string, mixed>
+     */
+    private function aiSection(string $sessionId, string $testSlug): array
+    {
+        $session = $this->sessionManager->getSessionById($sessionId);
+        $mode = $session === null
+            ? 'individual'
+            : (new ResultPresenter($this->db, $this->sessionManager))->reportMode($session);
+
+        $reports = new AiReportRepository($this->db);
+        $revisions = new AiReportRevisionService($this->db);
+        $registry = PromptRegistry::default();
+
+        $kinds = [];
+        $anyJob = false;
+        foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
+            if ($registry->published($testSlug, $mode, $kind) === null) {
+                continue;
+            }
+
+            $report = $reports->findFor($sessionId, $mode, $kind);
+            $anyJob = $anyJob || $report !== null;
+            $published = $report === null ? null : $revisions->published((string) $report['id']);
+
+            $kinds[] = [
+                'kind' => $kind,
+                'title' => $kind === Prompt::KIND_CLEAR ? 'Понятный разбор' : 'Профессиональное заключение',
+                'report_id' => $report['id'] ?? null,
+                'status' => $report['status'] ?? 'none',
+                'failure_reason' => $report['failure_reason'] ?? null,
+                'html' => $kind === Prompt::KIND_PROFESSIONAL && ($report['status'] ?? '') === AiReportRepository::STATUS_READY
+                    ? ReportMarkdown::toHtml((string) $report['content'])
+                    : null,
+                'published' => $published,
+            ];
+        }
+
+        return [
+            'available' => $kinds !== [],
+            'mode' => $mode,
+            'has_jobs' => $anyJob,
+            'kinds' => $kinds,
+            'owner_context_max' => self::OWNER_CONTEXT_MAX_LENGTH,
+        ];
+    }
+
+    /**
+     * Заказать черновики обоих видов.
+     * POST /admin/invited-case/{sessionId}/reports/request
+     */
+    public function requestCaseReports(string $sessionId): void
+    {
+        $case = $this->ownedCase($sessionId);
+        if ($case === null) {
+            return;
+        }
+
+        if (($_POST['ai_consent'] ?? null) !== '1') {
+            $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: нужно подтвердить передачу обезличенных результатов внешнему AI-сервису.');
+        }
+
+        $ownerContext = $_POST['owner_context'] ?? '';
+        if (!is_string($ownerContext) || mb_strlen(trim($ownerContext)) > self::OWNER_CONTEXT_MAX_LENGTH) {
+            $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: клинический контекст длиннее ' . self::OWNER_CONTEXT_MAX_LENGTH . ' символов.');
+        }
+        $ownerContext = trim((string) $ownerContext);
+
+        $session = $this->sessionManager->getSessionById($sessionId);
+        if ($session === null) {
+            $this->notFound();
+
+            return;
+        }
+
+        $slug = (string) $case['test_slug'];
+        $mode = (new ResultPresenter($this->db, $this->sessionManager))->reportMode($session);
+        $registry = PromptRegistry::default();
+        $reports = new AiReportRepository($this->db);
+
+        try {
+            $context = (new AiReportContextBuilder($this->sessionManager, $this->moduleLoader))
+                ->build($sessionId, $slug, $mode);
+        } catch (AiProviderException $e) {
+            $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: ' . $e->getMessage());
+        }
+
+        $queued = 0;
+        foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
+            $prompt = $registry->published($slug, $mode, $kind);
+            if ($prompt === null) {
+                continue;
+            }
+
+            // Клинический контекст пишет специалист и адресует специалисту: в
+            // понятный клиентский разбор он не подмешивается (phase 07, WP3).
+            $reports->request(
+                $sessionId,
+                $slug,
+                $mode,
+                $kind,
+                $prompt,
+                $context,
+                $prompt->allowsOwnerContext && $ownerContext !== '' ? $ownerContext : null,
+            );
+            $queued++;
+        }
+
+        $this->caseFlashBack(
+            $sessionId,
+            $queued > 0,
+            $queued > 0
+                ? 'Черновики поставлены в очередь. Обновите страницу через несколько минут.'
+                : 'Для этой методики и режима разбор пока не открыт.',
+        );
+    }
+
+    /**
+     * Состояние заданий кейса для опроса из кабинета.
+     * GET /admin/invited-case/{sessionId}/reports/status
+     */
+    public function caseReportStatus(string $sessionId): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        header('Content-Type: application/json');
+
+        $case = Security::isValidUuid($sessionId) ? $this->invites->claimedCaseForOwner($sessionId) : null;
+        if ($case === null) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not found']);
+
+            return;
+        }
+
+        $section = $this->aiSection($sessionId, (string) $case['test_slug']);
+        $statuses = [];
+        foreach ($section['kinds'] as $kind) {
+            // Только статусы: текст черновика в опрос не отдаётся, его читают
+            // на самой карточке и в редакторе.
+            $statuses[] = [
+                'kind' => $kind['kind'],
+                'status' => $kind['status'],
+                'published' => $kind['published'] !== null,
+            ];
+        }
+
+        echo json_encode(['kinds' => $statuses], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Редактор понятного разбора.
+     * GET /admin/invited-case/{sessionId}/reports/{reportId}/edit
+     */
+    public function editCaseReport(string $sessionId, string $reportId): void
+    {
+        $report = $this->editableReport($sessionId, $reportId);
+        if ($report === null) {
+            return;
+        }
+
+        $revisions = new AiReportRevisionService($this->db);
+        // Готовые отчёты, поставленные до введения истории версий, получают
+        // версию №1 при первом открытии редактора. Идемпотентно.
+        $revisions->seedFromContent($reportId, (string) ($report['content'] ?? ''));
+
+        $latest = $revisions->latest($reportId);
+        $published = $revisions->published($reportId);
+
+        echo $this->view->render('owner-report-editor', [
+            'flash' => $this->takeFlash(),
+            'session_id' => $sessionId,
+            'report' => $report,
+            'revisions' => array_reverse($revisions->revisions($reportId)),
+            'latest' => $latest,
+            'latest_html' => $latest === null ? null : ReportMarkdown::toHtml((string) $latest['content']),
+            'published' => $published,
+            'content_max' => AiReportRevisionService::CONTENT_MAX_LENGTH,
+        ]);
+    }
+
+    /**
+     * Сохранить правку как новую версию.
+     * POST /admin/invited-case/{sessionId}/reports/{reportId}/revisions
+     */
+    public function saveCaseReportRevision(string $sessionId, string $reportId): void
+    {
+        if ($this->editableReport($sessionId, $reportId) === null) {
+            return;
+        }
+
+        $markdown = $_POST['content'] ?? '';
+        try {
+            (new AiReportRevisionService($this->db))->save($reportId, is_string($markdown) ? $markdown : '');
+            $this->setFlash(['type' => 'success', 'message' => 'Сохранена новая версия. Клиент увидит её только после публикации.']);
+        } catch (\InvalidArgumentException $e) {
+            $this->setFlash(['type' => 'error', 'message' => 'Версия не сохранена: ' . $e->getMessage()]);
+        }
+
+        $this->redirect('/admin/invited-case/' . $sessionId . '/reports/' . $reportId . '/edit');
+    }
+
+    /**
+     * Восстановить старую версию как новую.
+     * POST /admin/invited-case/{sessionId}/reports/{reportId}/restore
+     */
+    public function restoreCaseReportRevision(string $sessionId, string $reportId): void
+    {
+        if ($this->editableReport($sessionId, $reportId) === null) {
+            return;
+        }
+
+        $revisionId = $_POST['revision_id'] ?? '';
+        $restored = is_string($revisionId)
+            && Security::isValidUuid($revisionId)
+            && (new AiReportRevisionService($this->db))->restore($reportId, $revisionId) !== null;
+
+        $this->setFlash($restored
+            ? ['type' => 'success', 'message' => 'Версия восстановлена как новая. Прежние версии сохранены.']
+            : ['type' => 'error', 'message' => 'Не удалось восстановить версию.']);
+        $this->redirect('/admin/invited-case/' . $sessionId . '/reports/' . $reportId . '/edit');
+    }
+
+    /**
+     * Опубликовать версию клиенту.
+     * POST /admin/invited-case/{sessionId}/reports/{reportId}/publish
+     */
+    public function publishCaseReport(string $sessionId, string $reportId): void
+    {
+        if ($this->editableReport($sessionId, $reportId) === null) {
+            return;
+        }
+
+        $revisionId = $_POST['revision_id'] ?? '';
+        $confirmed = ($_POST['confirm_publish'] ?? null) === 'publish';
+        $published = $confirmed
+            && is_string($revisionId)
+            && Security::isValidUuid($revisionId)
+            && (new AiReportRevisionService($this->db))->publish($reportId, $revisionId);
+
+        $this->setFlash($published
+            ? ['type' => 'success', 'message' => 'Версия опубликована. Клиент видит её на своей странице результата и в PDF.']
+            : ['type' => 'error', 'message' => 'Публикация не выполнена. Подтвердите её галочкой и выберите существующую версию.']);
+        $this->redirect('/admin/invited-case/' . $sessionId . '/reports/' . $reportId . '/edit');
+    }
+
+    /**
+     * Снять разбор с публикации.
+     * POST /admin/invited-case/{sessionId}/reports/{reportId}/unpublish
+     */
+    public function unpublishCaseReport(string $sessionId, string $reportId): void
+    {
+        if ($this->editableReport($sessionId, $reportId) === null) {
+            return;
+        }
+
+        (new AiReportRevisionService($this->db))->unpublish($reportId);
+        $this->setFlash(['type' => 'success', 'message' => 'Разбор снят с публикации. Клиент снова видит ожидание.']);
+        $this->redirect('/admin/invited-case/' . $sessionId . '/reports/' . $reportId . '/edit');
+    }
+
+    /**
+     * Кейс по приглашению, доступный владельцу, или 404.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function ownedCase(string $sessionId): ?array
+    {
+        if (!$this->requireOwner()) {
+            return null;
+        }
+
+        $case = Security::isValidUuid($sessionId) ? $this->invites->claimedCaseForOwner($sessionId) : null;
+        if ($case === null) {
+            $this->notFound();
+
+            return null;
+        }
+
+        return $case;
+    }
+
+    /**
+     * Понятный разбор этого кейса, который разрешено редактировать.
+     *
+     * Редактор открыт только для понятной редакции: профессиональное
+     * заключение остаётся материалом специалиста и не правится под клиента
+     * (PRODUCT_RULES §4).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function editableReport(string $sessionId, string $reportId): ?array
+    {
+        if ($this->ownedCase($sessionId) === null) {
+            return null;
+        }
+
+        $report = Security::isValidUuid($reportId)
+            ? (new AiReportRepository($this->db))->find($reportId)
+            : null;
+
+        if (
+            $report === null
+            || (string) $report['session_id'] !== $sessionId
+            || (string) $report['report_kind'] !== Prompt::KIND_CLEAR
+            || (string) $report['status'] !== AiReportRepository::STATUS_READY
+        ) {
+            $this->notFound();
+
+            return null;
+        }
+
+        return $report;
+    }
+
+    private function caseFlashBack(string $sessionId, bool $success, string $message): never
+    {
+        $this->setFlash(['type' => $success ? 'success' : 'error', 'message' => $message]);
+        $this->redirect('/admin/invited-case/' . $sessionId);
     }
 
     public function lookupCase(): void
