@@ -100,4 +100,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 15. Выкладка `4e63510` (14.09) добавила кабинет посетителя (`AddVisitorAccounts`). SHA-256 `c0a55a044f1a2275ebf40ef03917c95834810023794786683076a02432557748` совпал; dump `backups/pre-deploy-4e63510.sql.gz` проверен. В `.env` релиза добавлены `MAIL_TRANSPORT=mail` и `MAIL_FROM=info@23time.ru` (локальный `mail()` хостинга, без пароля; запасной вариант — SMTP Beget через `MAIL_HOST/PORT/USER/PASS/ENCRYPTION`). Smoke: основные маршруты и `/account/login` — `200`, кабинет без входа — `303`, `/test/smil` — `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/a7999f0/public` и `current` на `releases/a7999f0`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+16. Выкладка `66df1cb` (14.09) добавила снимки заданий ИИ (`AddAiReportSnapshots`). SHA-256 `daa225712a7bcc6344ba57ff8bd437fb06103589d239476e60a5ba1d009dc655` совпал; dump `backups/pre-deploy-66df1cb.sql.gz` проверен. Smoke: основные маршруты — `200`, `/test/smil` — `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/4e63510/public` и `current` на `releases/4e63510`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.

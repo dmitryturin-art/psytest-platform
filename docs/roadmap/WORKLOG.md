@@ -20,6 +20,14 @@
 
 ## 2026-09-14
 
+### 08.B6 — staging-выкладка K4 (`66df1cb`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-66df1cb`; deployed runtime `66df1cb` (merge PR #75).
+- Сделано: артефакт `release-66df1cb.tar.gz`, SHA-256 `daa22571…dc655` совпал; `.env` из прежнего релиза (MAIL_TRANSPORT=mail, MAIL_FROM сохранены); pre-deploy dump `backups/pre-deploy-66df1cb.sql.gz` (13 таблиц, gzip -t OK); `AddAiReportSnapshots` применена; `public_html`/`current` атомарно на `releases/66df1cb`.
+- Проверки: HTTPS `/`, `/tests`, health (`ok`), `/privacy`, `/admin/login`, `/account/login` — `200`; `/test/smil` — `404`. Реальный ИИ-заказ на staging не делался.
+- Rollback: `public_html` → `releases/4e63510/public`, `current` → `releases/4e63510`; `phinx rollback -t 20260915010000` из `releases/66df1cb`.
+- Следующий шаг: K5 — редактор разборов, revisions, одобрение и доставка клиенту.
+
 ### 07.K4 — неизменяемый снимок задания ИИ-разбора (R2)
 
 - Этап / ветка / commit: этап 07, `codex/07-k4-ai-snapshot` от `main` `840b1f2`; commits `1d7ecfa`, `273f31c`, `9f4bd2c`.
