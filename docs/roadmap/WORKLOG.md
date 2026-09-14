@@ -20,6 +20,16 @@
 
 ## 2026-09-14
 
+### 07.K5a — редактор разбора, версии и публикация на странице клиента
+
+- Этап / ветка / commit: этап 07, `codex/07-k5a-report-editor` от `main` `d036ff7`; commits `b907273`, `b70a38b`, `055da47`, `1ff031b`.
+- Цель (D-054): специалист заказывает черновики для кейса по приглашению, правит понятную версию с историей версий и публикует её; клиент видит одобренный текст на своей единственной странице результата и в PDF, отдельных ссылок нет.
+- Сделано: миграция `20260915030000_add_ai_report_revisions` (`ai_report_revisions` неизменяемые, `ai_reports.published_revision_id/published_at`); `AiReportRepository::markReady` создаёт ревизию №1 `ai` в той же транзакции; `AiReportRevisionService` (revisions/save/restore/publish только clear+therapist_case/unpublish/publishedContent); карточка кейса: заказ черновиков с чекбоксом передачи обезличенных данных и `owner_context` (уходит только в профессиональный промпт), статусы, owner-only JSON статуса; редактор `owner-report-editor.twig` с версиями, предпросмотром, публикацией и снятием; `ResultPresenter` показывает клиенту `therapist_case` только опубликованную ревизию, PDF получает раздел «Разбор специалиста»; черновики/статусы/профессиональное заключение клиенту по-прежнему недоступны (K0b).
+- Проверки и evidence: исполнитель — `composer test` (полный, изолированная БД) **426 tests / 3788 assertions OK**; analyse/lint/architecture/baseline OK; rollback/migrate OK; браузер на Лазарусе (BDI без промптов — отрицательный контроль): заказ → синтетический ready через `markReady` → редактор → версия → публикация → страница клиента с ровно опубликованным текстом → PDF 200 application/pdf → снятие → ожидание; desktop и 390×844 без console errors. Ведущий: `bin/local-gate.sh` на Docker MySQL 5.7.44 — **пройден** (после rebase, до fix ревью). Независимое ревью границы клиента (субагент): изоляция клиента, публикация только clear+therapist_case, IDOR по reportId/revisionId, CSRF, Markdown — без находок; одна находка (гонка двух одновременных сохранений давала 500) закрыта fix-коммитом с regression-тестом; targeted `AiReportRevisionServiceTest` — 8 tests / 33 assertions OK, analyse/lint OK.
+- Решения: D-054; ревизии никогда не изменяются, удаляются только каскадом; поллинг в кабинете без JS.
+- Не сделано: email-уведомление клиента и поле email в карточке — K5b; промпты из кабинета (WP9) — позже.
+- Следующий шаг: выкладка; K5b.
+
 ### 08.B6 — staging-выкладка K4 (`66df1cb`)
 
 - Этап / ветка / commit: этап 08, `codex/08-deploy-66df1cb`; deployed runtime `66df1cb` (merge PR #75).
