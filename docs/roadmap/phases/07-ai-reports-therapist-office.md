@@ -243,4 +243,5 @@ Qwen напрямую у Alibaba, DeepSeek напрямую, либо росси
 - [x] R8 / 07.K4a: `finalizeSession()` атомарно записывает final answers/results и переводит только `partial` → `completed`; повторная или конкурентная отправка не может изменить clinical record. Обычный и парный submit перенаправляют completed-сессию на уже готовый result без новой пары.
 - [x] 02.11: общий ключ `?key=` и `bin/test-access-link.php` сняты; `visibility = invite` отвечает 404 по прямой ссылке, вход только через `/invite/{token}`.
 - [x] K2: `therapist_clients` + `test_invites.client_id`; карточка клиента с назначениями, историей и удалением; приглашение не переживает кейс ни при owner-, ни при visitor-удалении.
-- [ ] Далее K3: кабинет посетителя (email magic-link, история, удаление) — identity/recovery/retention сначала.
+- [x] K3: `visitor_accounts`/`visitor_login_tokens`, magic-link с подтверждением, явная привязка результата, история без токена, отвязка и удаление; D-053 предварительное.
+- [ ] Далее K4: immutable snapshot промпта/результата при enqueue (R2), затем K5 — редактор, revisions, явная отправка.
