@@ -4,7 +4,7 @@
 
 ## Обзор
 
-PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платёжный контур и YooKassa не реализованы; старые payment endpoints отвечают `410 Gone`. Новый бесплатный AI-контур работает через `core/Ai/`: реестр промптов, адаптер, очередь `ai_reports`, генерация после HTTP-ответа и polling. Вход задания заморожен при постановке: `AiReportContextBuilder` собирает разрешённый контекст, и он вместе с промптом пишется в `context_snapshot`/`prompt_snapshot`, а обработчик отправляет провайдеру именно снимок (аудит R2); задания без снимка — только те, что поставлены до миграции. Политика согласия, клиентских черновиков и удаления имеет открытые дефекты [ревью 08.09](docs/audit/2026-09-08-delivery-review.md).
+PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платёжный контур и YooKassa не реализованы; старые payment endpoints отвечают `410 Gone`. Новый бесплатный AI-контур работает через `core/Ai/`: реестр промптов, адаптер, очередь `ai_reports`, генерация после HTTP-ответа и polling. Вход задания заморожен при постановке: `AiReportContextBuilder` собирает разрешённый контекст, и он вместе с промптом пишется в `context_snapshot`/`prompt_snapshot`, а обработчик отправляет провайдеру именно снимок (аудит R2); задания без снимка — только те, что поставлены до миграции. Готовый черновик становится версией №1 в `ai_report_revisions`; специалист правит понятный разбор в карточке кейса, каждая правка — новая неизменяемая версия, и клиент видит только ту, что специалист явно опубликовал (`ai_reports.published_revision_id`, D-054) — на своей единственной странице результата и в её PDF. Профессиональное заключение остаётся только в кабинете. Политика согласия, клиентских черновиков и удаления имеет открытые дефекты [ревью 08.09](docs/audit/2026-09-08-delivery-review.md).
 
 | Слой | Фактическая технология |
 |---|---|
@@ -87,6 +87,13 @@ HTTP request
 | POST | `/admin/invites/revoke` | `OwnerController::revokeInvite` | отозвать неоткрытое invitation |
 | GET | `/admin/invited-case/{sessionId}` | `OwnerController::viewInvitedCase` | защищённо показать базовый результат и читаемую анкету invitation case |
 | POST | `/admin/invited-case/{sessionId}/delete` | `OwnerController::deleteInvitedCase` | удалить кейс приглашения с его карточки (с подтверждением) |
+| POST | `/admin/invited-case/{sessionId}/reports/request` | `OwnerController::requestCaseReports` | заказать оба черновика ИИ-разбора по кейсу (согласие + клинический контекст) |
+| GET | `/admin/invited-case/{sessionId}/reports/status` | `OwnerController::caseReportStatus` | owner-only JSON со статусами заданий (без текста черновика) |
+| GET | `/admin/invited-case/{sessionId}/reports/{reportId}/edit` | `OwnerController::editCaseReport` | редактор понятного разбора: текст, предпросмотр, история версий |
+| POST | `/admin/invited-case/{sessionId}/reports/{reportId}/revisions` | `OwnerController::saveCaseReportRevision` | сохранить правку как новую версию |
+| POST | `/admin/invited-case/{sessionId}/reports/{reportId}/restore` | `OwnerController::restoreCaseReportRevision` | восстановить старую версию копией в новую |
+| POST | `/admin/invited-case/{sessionId}/reports/{reportId}/publish` | `OwnerController::publishCaseReport` | опубликовать выбранную версию клиенту (с подтверждением) |
+| POST | `/admin/invited-case/{sessionId}/reports/{reportId}/unpublish` | `OwnerController::unpublishCaseReport` | снять разбор с публикации |
 | GET | `/admin/clients` | `OwnerController::clients` | список карточек клиентов и форма создания |
 | POST | `/admin/clients/create` | `OwnerController::createClient` | создать карточку клиента (подпись владельца) |
 | GET | `/admin/clients/{clientId}` | `OwnerController::viewClient` | карточка клиента: назначения, история, удаление |
@@ -173,7 +180,7 @@ interface TestModuleInterface
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, `test_invites`, `visitor_accounts`/`visitor_login_tokens`, pair comparisons, activity log, новую `ai_reports` (со снимком входа задания) и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, `test_invites`, `visitor_accounts`/`visitor_login_tokens`, pair comparisons, activity log, новую `ai_reports` (со снимком входа задания и указателем опубликованной версии), `ai_report_revisions` (неизменяемая история разбора) и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 

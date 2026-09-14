@@ -160,7 +160,8 @@ final class AccountController extends BaseController
         $pdfPath = (new PDFGenerator())->generateTestResult(
             $session,
             $test,
-            ResultSectionRenderer::forView($this->view)->renderToHtml($printable['sections']),
+            ResultSectionRenderer::forView($this->view)->renderToHtml($printable['sections'])
+                . $printable['published_report_html'],
             $printable['includes_pair_comparison'],
         );
 

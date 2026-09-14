@@ -10,6 +10,9 @@
 <section class="owner-panel" aria-labelledby="owner-case-title">
     <p class="owner-panel-eyebrow">Кейс по приглашению</p>
     <h1 id="owner-case-title">{{ case.test_name }}</h1>
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
     <dl class="owner-case-details">
         <div><dt>Статус</dt><dd>{{ case.status }}</dd></div>
         <div><dt>Открыто</dt><dd>{{ case.claimed_at|date("d.m.Y H:i") }}</dd></div>
@@ -55,6 +58,60 @@
             </ol>
         {% endif %}
     </section>
+
+    {% if case.completed_at and ai.available %}
+    <section class="owner-case-ai" aria-labelledby="owner-case-ai-title" data-case-reports>
+        <h2 id="owner-case-ai-title">ИИ-разбор</h2>
+
+        {% if not ai.has_jobs %}
+            <p class="owner-help">Черновики заказываются один раз на оба вида: понятный разбор для клиента и профессиональное заключение для вас.</p>
+            <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-form owner-action-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label class="owner-field">
+                    <span>Клинический контекст для модели (необязательно, до {{ ai.owner_context_max }} символов)</span>
+                    <textarea name="owner_context" rows="5" maxlength="{{ ai.owner_context_max }}" placeholder="Запрос клиента, данные интервью, особенности — то, что вы обычно дописываете к промпту."></textarea>
+                </label>
+                <p class="owner-help">Этот блок уходит только в профессиональное заключение и заполняется вручную: подпись и заметка карточки клиента в него не подставляются.</p>
+                <label><input type="checkbox" name="ai_consent" value="1" required> Передать обезличенные структурированные результаты внешнему AI-сервису; имя, email, подпись клиента и ссылка не передаются.</label>
+                <button type="submit" class="btn btn-primary">Заказать черновики</button>
+            </form>
+        {% else %}
+            <p class="owner-help">Разбор готовится несколько минут. Нажмите «Обновить», чтобы увидеть текущее состояние.</p>
+            <p><a class="btn" href="{{ basePath }}/admin/invited-case/{{ case.id }}">Обновить</a></p>
+
+            {% for item in ai.kinds %}
+            <article class="owner-case-ai-item" data-kind="{{ item.kind }}" data-status="{{ item.status }}">
+                <h3>{{ item.title }}</h3>
+                {% if item.status == 'pending' or item.status == 'running' %}
+                    <p class="owner-help" role="status">Задание в работе.</p>
+                {% elseif item.status == 'failed' %}
+                    <p class="owner-notice owner-notice--error" role="alert">Не получилось подготовить черновик{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}.</p>
+                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="ai_consent" value="1">
+                        <button type="submit" class="btn">Повторить</button>
+                    </form>
+                {% elseif item.status == 'none' %}
+                    <p class="owner-help">Задание не создавалось.</p>
+                {% elseif item.kind == 'clear' %}
+                    {% if item.published %}
+                        <p class="owner-notice owner-notice--success">Опубликована версия №{{ item.published.revision_no }} от {{ item.published.published_at|date("d.m.Y H:i") }}.</p>
+                    {% else %}
+                        <p class="owner-help">Клиенту пока ничего не опубликовано.</p>
+                    {% endif %}
+                    <p><a class="btn btn-primary" href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/edit">Редактировать и публиковать</a></p>
+                {% else %}
+                    {# Только чтение: профессиональное заключение не правится под клиента. #}
+                    <details class="owner-case-ai-details">
+                        <summary>Показать заключение</summary>
+                        <div class="ai-report__body">{{ item.html|raw }}</div>
+                    </details>
+                {% endif %}
+            </article>
+            {% endfor %}
+        {% endif %}
+    </section>
+    {% endif %}
 
     <section class="owner-case" aria-labelledby="owner-case-delete-title">
         <h2 id="owner-case-delete-title">Удаление кейса</h2>

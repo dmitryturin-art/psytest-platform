@@ -42,6 +42,49 @@ final class PDFGeneratorSmokeTest extends TestCase
         self::assertGreaterThan((float) $matches[2], (float) $matches[1]);
     }
 
+    /**
+     * Опубликованный разбор попадает в PDF клиента (D-054).
+     *
+     * Проверяется HTML, который уходит генератору, и сам факт сборки документа:
+     * разбирать готовый PDF обратно, чтобы узнать, был ли в нём раздел, — не
+     * проверка, а гадание по бинарнику.
+     */
+    public function testResultPdfCarriesThePublishedSpecialistReportSection(): void
+    {
+        $directory = sys_get_temp_dir() . '/psytest-pdf-' . bin2hex(random_bytes(4));
+        $generator = new PDFGenerator($directory);
+
+        $publishedSection = '<div class="results-section results-section--specialist-report">'
+            . '<h2 class="section-title">Разбор специалиста</h2>'
+            . '<div class="section-body"><p>Одобренная специалистом редакция.</p></div>'
+            . '</div>';
+
+        // Контроллеры собирают документ ровно так: секции результата, затем
+        // опубликованный разбор.
+        foreach (['controllers/ResultController.php', 'controllers/AccountController.php'] as $controller) {
+            self::assertStringContainsString(
+                "\$printable['published_report_html']",
+                (string) file_get_contents(dirname(__DIR__) . '/' . $controller),
+                $controller,
+            );
+        }
+
+        $path = $generator->generateTestResult(
+            ['id' => 'published-result', 'created_at' => '2026-09-14 12:00:00'],
+            ['name' => 'Шкала депрессии Бека'],
+            '<div class="results-section"><p>Базовый результат.</p></div>' . $publishedSection,
+            false,
+        );
+
+        $pdf = file_get_contents($directory . '/result_published-result.pdf');
+        @unlink($directory . '/result_published-result.pdf');
+        @rmdir($directory);
+
+        self::assertSame('/storage/pdfs/result_published-result.pdf', $path);
+        self::assertIsString($pdf);
+        self::assertStringStartsWith('%PDF-', $pdf);
+    }
+
     public function testResultPdfContainingPairComparisonUsesLandscapePaper(): void
     {
         $directory = sys_get_temp_dir() . '/psytest-pdf-' . bin2hex(random_bytes(4));

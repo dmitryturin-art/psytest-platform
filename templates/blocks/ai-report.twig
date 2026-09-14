@@ -6,7 +6,18 @@
     </p>
 
     {% if ai_report.restricted %}
-        <p class="ai-report__waiting" role="status">Расширенный черновик доступен специалисту после проверки и одобрения.</p>
+        {% if ai_report.published %}
+            {# Ровно та версия, которую специалист опубликовал. Черновик модели,
+               профессиональное заключение и неопубликованные правки сюда не
+               попадают: presenter их не возвращает. #}
+            <div class="ai-report__item ai-report__item--published" data-kind="specialist">
+                <h3 class="ai-report__item-title">Разбор специалиста</h3>
+                <p class="ai-report__published-at">Опубликован {{ ai_report.published.published_at|date("d.m.Y") }}</p>
+                <div class="ai-report__body">{{ ai_report.published.html|raw }}</div>
+            </div>
+        {% else %}
+            <p class="ai-report__waiting" role="status">Расширенный разбор появится после проверки специалиста.</p>
+        {% endif %}
     {% else %}
 
     {% for item in ai_report.kinds %}
