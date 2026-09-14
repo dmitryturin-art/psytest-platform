@@ -54,15 +54,26 @@ final class SessionLifecycleService
             $this->deleteArtifact($filename);
         }
 
-        $this->db->beginTransaction();
+        // A caller may already be deleting a whole client card in one
+        // transaction; joining it keeps that deletion atomic.
+        $ownsTransaction = !$this->db->inTransaction();
+        if ($ownsTransaction) {
+            $this->db->beginTransaction();
+        }
         try {
             // Keep no session-bound technical record after a clinical record
             // is erased. General operational retention is handled separately.
             $this->db->delete('activity_log', 'session_id = ?', [$sessionId]);
+            // The owner note of an invitation is clinical context about the
+            // client, so it must not outlive the case it describes
+            // (PRODUCT_RULES §11). ON DELETE SET NULL would keep the note.
+            $this->db->delete('test_invites', 'claimed_session_id = ?', [$sessionId]);
             $this->db->delete('test_sessions', 'id = ?', [$sessionId]);
-            $this->db->commit();
+            if ($ownsTransaction) {
+                $this->db->commit();
+            }
         } catch (\Throwable $exception) {
-            if ($this->db->inTransaction()) {
+            if ($ownsTransaction && $this->db->inTransaction()) {
                 $this->db->rollback();
             }
             throw $exception;
