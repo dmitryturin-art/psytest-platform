@@ -7,19 +7,24 @@ namespace PsyTest\Core;
 use Ramsey\Uuid\Uuid;
 
 /**
- * Client cards of the single owner: a label, an optional note, and the
- * assignments (invitations) made for that person.
+ * Client cards of the single owner: a label, an optional note, an optional
+ * email and the assignments (invitations) made for that person.
  *
- * The card deliberately stores no contact data at all — no email, phone or
- * messenger account — because the platform never sends anything itself
- * (INVITE_FLOW, PRODUCT_RULES §11). The label is the owner's own note about
- * their client: it stays inside the dashboard, never reaches the respondent
- * page, an invitation URL, an AI context or the activity log.
+ * The only contact the card may hold is an email, and only because the
+ * specialist typed it in there: it exists for exactly one short letter —
+ * "your report is ready" — which is never sent automatically (D-054,
+ * PRODUCT_RULES §4, §11). No phone and no messenger account are stored.
+ *
+ * The label, the note and the email stay inside the dashboard: none of them
+ * reaches the respondent page, an invitation URL, an AI context or the
+ * activity log, and all three are deleted together with the card.
  */
 final class TherapistClientService
 {
     public const LABEL_MAX_LENGTH = 120;
     public const NOTE_MAX_LENGTH = 1000;
+    /** Предел адреса по RFC 5321; та же длина стоит в колонке. */
+    public const EMAIL_MAX_LENGTH = 254;
 
     public function __construct(
         private readonly Database $db,
@@ -27,28 +32,36 @@ final class TherapistClientService
     ) {
     }
 
-    public function create(string $label, string $note): string
+    public function create(string $label, string $note, string $email = ''): string
     {
         $label = $this->normaliseLabel($label);
+        $email = $this->normaliseEmail($email);
         $id = Uuid::uuid4()->toString();
         $this->db->insert('therapist_clients', [
             'id' => $id,
             'label' => $label,
             'note' => $this->normaliseNote($note),
+            'email' => $email,
         ]);
 
         return $id;
     }
 
-    public function update(string $id, string $label, string $note): bool
+    public function update(string $id, string $label, string $note, string $email = ''): bool
     {
         $label = $this->normaliseLabel($label);
         $note = $this->normaliseNote($note);
+        $email = $this->normaliseEmail($email);
         if (!$this->exists($id)) {
             return false;
         }
 
-        $this->db->update('therapist_clients', ['label' => $label, 'note' => $note], 'id = ?', [$id]);
+        $this->db->update(
+            'therapist_clients',
+            ['label' => $label, 'note' => $note, 'email' => $email],
+            'id = ?',
+            [$id],
+        );
 
         return true;
     }
@@ -77,7 +90,7 @@ final class TherapistClientService
     public function findForOwner(string $id): ?array
     {
         $client = $this->db->selectOne(
-            'SELECT id, label, note, created_at, updated_at FROM therapist_clients WHERE id = :id',
+            'SELECT id, label, note, email, created_at, updated_at FROM therapist_clients WHERE id = :id',
             ['id' => $id],
         );
         if ($client === null) {
@@ -153,6 +166,24 @@ final class TherapistClientService
         }
     }
 
+    /**
+     * Есть ли в карточке адрес для уведомления.
+     *
+     * Возвращается именно факт, а не сам адрес: карточке кейса он не нужен, а
+     * лишний раз показывать контакт на соседней странице незачем.
+     */
+    public function hasEmail(?string $id): bool
+    {
+        if ($id === null || !Security::isValidUuid($id)) {
+            return false;
+        }
+
+        return $this->db->selectOne(
+            'SELECT id FROM therapist_clients WHERE id = :id AND email IS NOT NULL',
+            ['id' => $id],
+        ) !== null;
+    }
+
     public function exists(string $id): bool
     {
         return $this->db->selectOne('SELECT id FROM therapist_clients WHERE id = :id', ['id' => $id]) !== null;
@@ -166,6 +197,28 @@ final class TherapistClientService
         }
 
         return $label;
+    }
+
+    /**
+     * Адрес уведомления или NULL.
+     *
+     * Пустое поле — осознанный выбор специалиста «письмо не нужно», а не
+     * ошибка ввода: оно очищает адрес, и кнопка уведомления гаснет. Регистр
+     * приводится к нижнему, чтобы один и тот же ящик не хранился дважды.
+     *
+     * @throws \InvalidArgumentException адрес непохож на адрес или длиннее колонки.
+     */
+    private function normaliseEmail(string $email): ?string
+    {
+        $email = mb_strtolower(trim($email));
+        if ($email === '') {
+            return null;
+        }
+        if (mb_strlen($email) > self::EMAIL_MAX_LENGTH || !Security::isValidEmail($email)) {
+            throw new \InvalidArgumentException('Client email must be a valid address of at most 254 characters');
+        }
+
+        return $email;
     }
 
     private function normaliseNote(string $note): ?string
