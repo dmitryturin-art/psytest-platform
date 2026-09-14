@@ -40,6 +40,7 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/restore'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/publish'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/unpublish'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/notify'", $routes);
         self::assertStringContainsString("\$router->post('/invite/{token}/start'", $routes);
         self::assertStringContainsString('CsrfMiddleware', $routes);
         self::assertStringContainsString('ownerDashboardPasswordHash()', (string) file_get_contents($this->projectRoot . '/config.php'));
@@ -173,6 +174,71 @@ final class OwnerDashboardContractTest extends TestCase
         foreach (glob($this->projectRoot . '/core/Ai/*.php') ?: [] as $aiSource) {
             self::assertStringNotContainsString('therapist_clients', (string) file_get_contents($aiSource), $aiSource);
             self::assertStringNotContainsString('client_label', (string) file_get_contents($aiSource), $aiSource);
+        }
+    }
+
+    /**
+     * Email клиента живёт только в кабинете (D-054, PRODUCT_RULES §11).
+     *
+     * Он появился ради одного письма, поэтому проверяется именно то, что он
+     * никуда больше не утекает: ни на страницу респондента, ни в контекст
+     * модели, ни в презентер кейса, ни в журнал действий.
+     */
+    public function testClientEmailNeverLeavesTheDashboard(): void
+    {
+        $respondentPage = (string) file_get_contents($this->projectRoot . '/templates/test-invite-start.twig');
+        $presenter = (string) file_get_contents($this->projectRoot . '/core/InvitedCasePresenter.php');
+
+        foreach (['client_email', 'clients.email', 'client.email'] as $ownerOnlyField) {
+            self::assertStringNotContainsString($ownerOnlyField, $respondentPage, $ownerOnlyField);
+            self::assertStringNotContainsString($ownerOnlyField, $presenter, $ownerOnlyField);
+        }
+        self::assertStringNotContainsString('email', $presenter);
+
+        foreach (glob($this->projectRoot . '/core/Ai/*.php') ?: [] as $aiSource) {
+            self::assertStringNotContainsString('email', (string) file_get_contents($aiSource), $aiSource);
+        }
+
+        // Карточка кейса знает только «адрес есть/нет», сам адрес там не рендерится.
+        $invitedCase = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        self::assertStringContainsString('notify.has_email', $invitedCase);
+        self::assertStringNotContainsString('client.email', $invitedCase);
+        self::assertStringNotContainsString('notify.email', $invitedCase);
+
+        // В журнал действий адрес не пишется: он вообще не проходит через него.
+        $clientService = (string) file_get_contents($this->projectRoot . '/core/TherapistClientService.php');
+        $auditEvent = substr(
+            $clientService,
+            (int) strpos($clientService, 'private function writeOwnerAuditEvent('),
+        );
+        self::assertStringNotContainsString('email', $auditEvent);
+    }
+
+    /**
+     * Уведомление — отдельное явное действие специалиста (D-054).
+     *
+     * Автоматической отправки нет: письмо уходит только из своего маршрута под
+     * `requireOwner()`, и ни публикация, ни готовность черновика его не зовут.
+     */
+    public function testTheClientNotificationIsOwnerOnlyManualAndCarriesNeitherLinkNorReport(): void
+    {
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        $notifier = (string) file_get_contents($this->projectRoot . '/core/ClientReportNotifier.php');
+
+        self::assertStringContainsString('public function notifyClientAboutReport(', $controller);
+        self::assertStringContainsString('ownedCase($sessionId)', $controller);
+
+        foreach (['publishCaseReport', 'saveCaseReportRevision', 'requestCaseReports'] as $action) {
+            $start = (int) strpos($controller, 'public function ' . $action . '(');
+            $body = substr($controller, $start, 1600);
+            self::assertStringNotContainsString('ClientReportNotifier', $body, $action);
+        }
+        self::assertStringNotContainsString('ClientReportNotifier', (string) file_get_contents($this->projectRoot . '/core/Ai/AiReportRepository.php'));
+
+        // Ссылка на результат — bearer-токен, и в письме ей не место.
+        $body = substr($notifier, (int) strpos($notifier, 'public static function body('));
+        foreach (['session_token', '/result/', 'appUrl', 'http'] as $forbidden) {
+            self::assertStringNotContainsString($forbidden, $body, $forbidden);
         }
     }
 

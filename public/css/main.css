@@ -270,6 +270,7 @@ body {
 }
 
 .owner-form input[type="text"],
+.owner-form input[type="email"],
 .owner-form input[type="password"],
 .owner-form select,
 .owner-form textarea,

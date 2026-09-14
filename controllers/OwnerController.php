@@ -14,6 +14,7 @@ use PsyTest\Core\Ai\AiReportRevisionService;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
+use PsyTest\Core\ClientReportNotifier;
 use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\OwnerDashboardAuthenticator;
 use PsyTest\Core\ReportMarkdown;
@@ -143,12 +144,13 @@ final class OwnerController extends BaseController
 
         $label = $_POST['label'] ?? '';
         $note = $_POST['note'] ?? '';
-        if (!$this->isValidClientInput($label, $note)) {
-            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать карточку: подпись обязательна (до 120 символов), заметка — до 1000 символов.']);
+        $email = $_POST['email'] ?? '';
+        if (!$this->isValidClientInput($label, $note, $email)) {
+            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать карточку: подпись обязательна (до 120 символов), заметка — до 1000 символов, email — корректный адрес или пусто.']);
             $this->redirect('/admin/clients');
         }
 
-        $clientId = $this->clients->create((string) $label, (string) $note);
+        $clientId = $this->clients->create((string) $label, (string) $note, (string) $email);
         $this->setFlash(['type' => 'success', 'message' => 'Карточка клиента создана.']);
         $this->redirect('/admin/clients/' . $clientId);
     }
@@ -188,12 +190,13 @@ final class OwnerController extends BaseController
 
         $label = $_POST['label'] ?? '';
         $note = $_POST['note'] ?? '';
-        $updated = $this->isValidClientInput($label, $note)
-            && $this->clients->update($clientId, (string) $label, (string) $note);
+        $email = $_POST['email'] ?? '';
+        $updated = $this->isValidClientInput($label, $note, $email)
+            && $this->clients->update($clientId, (string) $label, (string) $note, (string) $email);
 
         $this->setFlash($updated
             ? ['type' => 'success', 'message' => 'Карточка клиента обновлена.']
-            : ['type' => 'error', 'message' => 'Не удалось обновить карточку: подпись обязательна (до 120 символов), заметка — до 1000 символов.']);
+            : ['type' => 'error', 'message' => 'Не удалось обновить карточку: подпись обязательна (до 120 символов), заметка — до 1000 символов, email — корректный адрес или пусто.']);
         $this->redirect('/admin/clients/' . $clientId);
     }
 
@@ -336,11 +339,66 @@ final class OwnerController extends BaseController
         $case['answer_rows'] = $presenter->answers($module, $case['answers']);
         $case['result_sections'] = $presenter->resultSections($module, $case['calculated_results']);
 
+        $ai = $this->aiSection($sessionId, (string) $case['test_slug']);
+
         echo $this->view->render('owner-invited-case', [
             'flash' => $this->takeFlash(),
             'case' => $case,
-            'ai' => $this->aiSection($sessionId, (string) $case['test_slug']),
+            'ai' => $ai,
+            'notify' => $this->notifySection($sessionId, $case, $ai),
         ]);
+    }
+
+    /**
+     * Состояние кнопки «Уведомить клиента на email».
+     *
+     * Письмо предлагается только когда разбор уже опубликован: до этого
+     * уведомлять не о чем. Без адреса в карточке кнопка остаётся видимой, но
+     * неактивной — специалисту нужно понимать, почему она не работает, и как
+     * это исправить (D-054).
+     *
+     * @param array<string, mixed> $case
+     * @param array<string, mixed> $ai
+     * @return array{published: bool, has_email: bool, client_id: ?string, last_at: ?string}
+     */
+    private function notifySection(string $sessionId, array $case, array $ai): array
+    {
+        $published = false;
+        /** @var list<array<string, mixed>> $kinds */
+        $kinds = $ai['kinds'] ?? [];
+        foreach ($kinds as $kind) {
+            if (($kind['kind'] ?? null) === Prompt::KIND_CLEAR && ($kind['published'] ?? null) !== null) {
+                $published = true;
+            }
+        }
+
+        $clientId = isset($case['client_id']) && is_string($case['client_id']) ? $case['client_id'] : null;
+
+        return [
+            'published' => $published,
+            'has_email' => $this->clients->hasEmail($clientId),
+            'client_id' => $clientId,
+            'last_at' => $published
+                ? ClientReportNotifier::fromConfig($this->db)->lastNotifiedAt($sessionId)
+                : null,
+        ];
+    }
+
+    /**
+     * Отправить клиенту письмо «разбор готов».
+     * POST /admin/invited-case/{sessionId}/reports/notify
+     */
+    public function notifyClientAboutReport(string $sessionId): void
+    {
+        if ($this->ownedCase($sessionId) === null) {
+            return;
+        }
+
+        $sent = ClientReportNotifier::fromConfig($this->db)->notify($sessionId);
+        $this->setFlash($sent
+            ? ['type' => 'success', 'message' => 'Письмо отправлено. В нём нет текста разбора и ссылки: клиент открывает свою страницу результата.']
+            : ['type' => 'error', 'message' => 'Письмо не отправлено. Нужны опубликованный разбор и email в карточке клиента; повторное уведомление возможно через ' . ClientReportNotifier::MIN_INTERVAL_MINUTES . ' минут.']);
+        $this->redirect('/admin/invited-case/' . $sessionId);
     }
 
     /**
@@ -762,13 +820,27 @@ final class OwnerController extends BaseController
         return is_int($testId) && in_array($testId, $availableIds, true) ? $testId : null;
     }
 
-    private function isValidClientInput(mixed $label, mixed $note): bool
+    /**
+     * Проверка полей карточки до записи.
+     *
+     * Пустой email допустим и означает «уведомлять некуда»: контакт клиента
+     * остаётся необязательным (D-054).
+     */
+    private function isValidClientInput(mixed $label, mixed $note, mixed $email = ''): bool
     {
+        if (!is_string($email)) {
+            return false;
+        }
+        $email = trim($email);
+        $emailIsValid = $email === ''
+            || (mb_strlen($email) <= TherapistClientService::EMAIL_MAX_LENGTH && Security::isValidEmail($email));
+
         return is_string($label)
             && is_string($note)
             && trim($label) !== ''
             && mb_strlen(trim($label)) <= TherapistClientService::LABEL_MAX_LENGTH
-            && mb_strlen(trim($note)) <= TherapistClientService::NOTE_MAX_LENGTH;
+            && mb_strlen(trim($note)) <= TherapistClientService::NOTE_MAX_LENGTH
+            && $emailIsValid;
     }
 
     private function requireOwner(): bool

@@ -106,6 +106,7 @@ $router->get('/admin/invited-case/{sessionId}', [OwnerController::class, 'viewIn
 $router->post('/admin/invited-case/{sessionId}/delete', [OwnerController::class, 'deleteInvitedCase']);
 $router->post('/admin/invited-case/{sessionId}/reports/request', [OwnerController::class, 'requestCaseReports']);
 $router->get('/admin/invited-case/{sessionId}/reports/status', [OwnerController::class, 'caseReportStatus']);
+$router->post('/admin/invited-case/{sessionId}/reports/notify', [OwnerController::class, 'notifyClientAboutReport']);
 $router->get('/admin/invited-case/{sessionId}/reports/{reportId}/edit', [OwnerController::class, 'editCaseReport']);
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/revisions', [OwnerController::class, 'saveCaseReportRevision']);
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/restore', [OwnerController::class, 'restoreCaseReportRevision']);
