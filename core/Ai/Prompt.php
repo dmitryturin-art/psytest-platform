@@ -46,4 +46,55 @@ final class Prompt
     {
         return $this->status === self::STATUS_PUBLISHED;
     }
+
+    /**
+     * Снимок промпта для задания (аудит R2).
+     *
+     * Сохраняется всё, что читает `AiClient::complete` — текст, статус и
+     * разрешение на контекст специалиста, — чтобы обработчик воссоздал ровно
+     * тот промпт, который был опубликован при постановке, не обращаясь ни к
+     * манифесту, ни к файлам.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSnapshot(): array
+    {
+        return [
+            'key' => $this->key(),
+            'test' => $this->test,
+            'mode' => $this->mode,
+            'kind' => $this->kind,
+            'version' => $this->version,
+            'status' => $this->status,
+            'text' => $this->text,
+            'allows_owner_context' => $this->allowsOwnerContext,
+            'source' => $this->source,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $snapshot
+     *
+     * @throws \InvalidArgumentException если снимок неполон — молча подставлять
+     *                                   «что-нибудь» здесь нельзя.
+     */
+    public static function fromSnapshot(array $snapshot): self
+    {
+        foreach (['test', 'mode', 'kind', 'version', 'status', 'text'] as $required) {
+            if (!isset($snapshot[$required])) {
+                throw new \InvalidArgumentException("В снимке промпта нет поля «{$required}».");
+            }
+        }
+
+        return new self(
+            test: (string) $snapshot['test'],
+            mode: (string) $snapshot['mode'],
+            kind: (string) $snapshot['kind'],
+            version: (int) $snapshot['version'],
+            status: (string) $snapshot['status'],
+            text: (string) $snapshot['text'],
+            allowsOwnerContext: (bool) ($snapshot['allows_owner_context'] ?? false),
+            source: (string) ($snapshot['source'] ?? ''),
+        );
+    }
 }
