@@ -20,6 +20,14 @@
 
 ## 2026-09-14
 
+### 08.B5 — staging-выкладка K3 (`4e63510`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-4e63510`; deployed runtime `4e63510` (merge PR #72; включает #71 карточку клиента без дубля).
+- Сделано: артефакт `release-4e63510.tar.gz`, SHA-256 `c0a55a04…7748` совпал; `.env` скопирован из прежнего релиза, добавлены `MAIL_TRANSPORT=mail`, `MAIL_FROM=info@23time.ru`; pre-deploy dump `backups/pre-deploy-4e63510.sql.gz` (11 таблиц, gzip -t OK); `AddVisitorAccounts` применена; `public_html` и `current` атомарно на `releases/4e63510`.
+- Проверки и evidence: HTTPS `/`, `/tests`, health, `/privacy`, `/admin/login`, `/account/login` — `200`; `/account` и `/account/results/{uuid}` без входа — `303` на `/account/login`; `/account/login/zzzz` — `404`; `/test/smil` — `404`; на страницах кабинета `X-Robots-Tag: noindex`, `Cache-Control: no-store`; политика приватности содержит текст о кабинете. Реальная доставка письма через `mail()` хостинга ещё не подтверждена: проверка владельцем с его адреса — следующий шаг; запасной вариант — SMTP Beget настройками `MAIL_HOST/PORT/USER/PASS`.
+- Rollback: `public_html` → `releases/a7999f0/public`, `current` → `releases/a7999f0`; откат миграции `phinx rollback -t 20260914020000` из `releases/4e63510`.
+- Следующий шаг: подтверждение доставки письма и D-053 владельцем; K4.
+
 ### 07.K3 — добровольный кабинет посетителя (вход по email)
 
 - Этап / ветка / commit: этап 07, `codex/07-k3-visitor-account` от `main` `bab48a8`; commits `21e4548`, `9f7047f`, `617bb9a`, `f83e1b2`, `fb496d6`, `fc3b0aa`, `64cf75c`, `53e1961`.
