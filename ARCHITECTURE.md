@@ -66,6 +66,16 @@ HTTP request
 | POST | `/result/{slug}/{token}/report` | `ResultController::requestReport` | заказ расширенного разбора: ставит задание в очередь |
 | GET | `/result/{slug}/{token}/report-status` | `ResultController::reportStatus` | состояние разбора для опроса со страницы |
 | POST | `/result/{token}/delete` | `ResultController::delete` | отдельный delete route; token без slug |
+| GET | `/account/login` | `AccountController::loginForm` | форма добровольного входа посетителя по email |
+| POST | `/account/login` | `AccountController::requestLogin` | запрос одноразовой ссылки; ответ одинаков для любого адреса |
+| GET | `/account/login/{token}` | `AccountController::login` | вход по одноразовой ссылке (15 минут, одно открытие) |
+| POST | `/account/logout` | `AccountController::logout` | выход посетителя |
+| GET | `/account` | `AccountController::index` | история сохранённых результатов и удаление аккаунта |
+| GET | `/account/results/{sessionId}` | `AccountController::showResult` | тот же результат по владению аккаунтом, без bearer-токена |
+| GET | `/account/results/{sessionId}/pdf` | `AccountController::resultPdf` | PDF того же результата по владению аккаунтом |
+| POST | `/account/results/{sessionId}/detach` | `AccountController::detach` | отвязать результат; он возвращается в класс `anonymous` |
+| POST | `/account/attach` | `AccountController::attach` | явное сохранение результата в кабинет по кнопке на его странице |
+| POST | `/account/delete` | `AccountController::delete` | удалить аккаунт вместе с сохранёнными результатами |
 | GET | `/admin/login` | `OwnerController::login` | owner login; выключен без Argon2id hash в server env |
 | POST | `/admin/login` | `OwnerController::authenticate` | проверка owner credentials |
 | POST | `/admin/logout` | `OwnerController::logout` | завершение owner session |
@@ -140,6 +150,8 @@ interface TestModuleInterface
 
 `therapist_clients` — карточка клиента специалиста: подпись владельца и необязательная заметка, без единого контакта клиента. `core/TherapistClientService.php` создаёт и изменяет карточку, собирает её назначения (`test_invites.client_id`) со статусами и историю завершённых прохождений, а при удалении одной транзакцией проводит каждую связанную session через `SessionLifecycleService` и удаляет карточку, унося приглашения каскадом. Приглашение без карточки остаётся полноправным: связь необязательна. Полный кабинет с отчётами относится к этапу 07. Фактические границы — в [DATA_MAP_CURRENT.md](docs/roadmap/DATA_MAP_CURRENT.md), policy — в [RETENTION_POLICY.md](docs/roadmap/RETENTION_POLICY.md).
 
+`visitor_accounts` — добровольный кабинет посетителя (07.K3, D-053). Идентичность — только нормализованный email; пароля и профиля нет, вход идёт по одноразовой ссылке, от которой в `visitor_login_tokens` хранится лишь SHA-256, срок 15 минут и отметка использования. `core/VisitorAccountService.php` гасит токен одним атомарным `UPDATE`, ограничивает 3 запросами на адрес за 15 минут и отвечает одинаково для любого email. Привязка результата (`test_sessions.account_id`, `retention_class = account`) возможна только при одновременном владении аккаунтом и точным `session_token` завершённой anonymous-сессии: email, cookie и IP связь не создают, а `therapist_case` в кабинет посетителя не переходит. Отвязка возвращает сессию в `anonymous` без продления срока; удаление аккаунта проводит каждую привязанную session через `SessionLifecycleService` и удаляет аккаунт с его токенами. Сессия посетителя и owner-сессия независимы: вход посетителя не даёт ничего в `/admin`. Страницы кабинета отдаются с `Cache-Control: no-store, private` и `X-Robots-Tag: noindex`, а `session_token` в их HTML не выводится — общий рендер результата вынесен в `core/ResultPresenter.php`.
+
 ## Безопасность и privacy границы
 
 - state-changing browser routes защищены CSRF;
@@ -161,7 +173,7 @@ interface TestModuleInterface
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, `test_invites`, pair comparisons, activity log, новую ai_reports и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, `test_invites`, `visitor_accounts`/`visitor_login_tokens`, pair comparisons, activity log, новую ai_reports и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 
