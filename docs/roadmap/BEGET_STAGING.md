@@ -108,4 +108,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 19. Выкладка `869986d` (14.09) добавила привязку найденной сессии к карточке клиента; миграций нет. SHA-256 `821567385776c7b7215050f3207cb772bd785291855312c78c28c12a20871f7e` совпал; dump `backups/pre-deploy-869986d.sql.gz` проверен.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/c9cff61/public` и `current` на `releases/c9cff61`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+20. Выкладка `be4342e` (15.09) добавила парное прохождение в карточке кейса; миграций нет. SHA-256 `96e154b91bd3738909914a89e8af75b1838af2e930c497fddd1286125581cef1` совпал; dump `backups/pre-deploy-be4342e.sql.gz` проверен.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/869986d/public` и `current` на `releases/869986d`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
