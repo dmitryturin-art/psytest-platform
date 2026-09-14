@@ -95,6 +95,31 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString('InvitedCasePresenter', $controller);
     }
 
+    /**
+     * Парное прохождение в карточке кейса (07.K1b).
+     *
+     * Парный блок кабинета собирается тем же презентером, что и страница
+     * клиента, но остаётся кабинетом: ни bearer-токена, ни адреса клиентского
+     * результата, ни приглашения второму партнёру здесь быть не может.
+     */
+    public function testPairCaseCardReusesTheClientRenderWithoutClientOnlyActions(): void
+    {
+        $template = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        $presenter = (string) file_get_contents($this->projectRoot . '/core/ResultPresenter.php');
+
+        self::assertStringContainsString('case.pair.sections', $template);
+        self::assertStringContainsString('case.pair.questionnaires', $template);
+        self::assertStringNotContainsString('session_token', $template);
+        self::assertStringNotContainsString('/result/', $template);
+        self::assertStringNotContainsString('pair-invite', $template);
+
+        // Расчёт не дублируется: карточка берёт готовые парные секции.
+        self::assertStringContainsString('pairViewData', $controller);
+        self::assertStringContainsString('pairViewData', $presenter);
+        self::assertStringNotContainsString('comparePairResults', $controller);
+    }
+
     public function testClientCardsStayInsideTheDashboardAndAlwaysConfirmDeletion(): void
     {
         $clientsList = (string) file_get_contents($this->projectRoot . '/templates/owner-clients.twig');

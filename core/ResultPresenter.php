@@ -8,6 +8,7 @@ use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiReportRevisionService;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
+use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\TestModuleInterface;
 
 /**
@@ -56,6 +57,69 @@ final class ResultPresenter
         );
 
         return $results;
+    }
+
+    /**
+     * Парная часть страницы результата без клиентских действий и токена.
+     *
+     * Кабинет специалиста показывает тот же парный результат, что и клиент, но
+     * не имеет права показать bearer-ссылку: поэтому наружу отдаются только
+     * парные секции (график и сравнение), без приглашения партнёру и без
+     * каких-либо полей сессии. Расчёт остаётся один — `comparePairResults()`.
+     *
+     * Порядок партнёров канонический: `session_1_id` — тот, кто начал
+     * опросник, `session_2_id` — приглашённый. Ровно так же пара уходит во
+     * внешний разбор (`AiReportContextBuilder`), и ровно так подписаны
+     * колонки блока сравнения.
+     *
+     * @param array<string, mixed> $session
+     * @return array{
+     *     position: int,
+     *     partner_position: int,
+     *     partner_session_id: string,
+     *     sections: list<ResultSection>
+     * }|null
+     */
+    public function pairViewData(array $session, TestModuleInterface $module): ?array
+    {
+        if (!$module->supportsPairMode()) {
+            return null;
+        }
+
+        $comparison = $this->sessions->getPairComparisonBySession((string) $session['id']);
+        if ($comparison === null) {
+            return null;
+        }
+
+        $firstId = (string) $comparison['session_1_id'];
+        $secondId = (string) $comparison['session_2_id'];
+        $first = $this->sessions->getSessionById($firstId);
+        $second = $this->sessions->getSessionById($secondId);
+        if ($first === null || $second === null) {
+            return null;
+        }
+
+        $position = $firstId === (string) $session['id'] ? 1 : 2;
+
+        /** @var array<string, mixed> $results */
+        $results = $first['calculated_results'] ?? [];
+        $results['pair_comparison'] = $module->comparePairResults(
+            $first['calculated_results'] ?? [],
+            $second['calculated_results'] ?? [],
+        );
+
+        $pairTypes = [ResultSection::TYPE_PAIR_CHART, ResultSection::TYPE_PAIR_COMPARISON];
+        $sections = array_values(array_filter(
+            $module->buildSections($results),
+            static fn (ResultSection $section): bool => in_array($section->type, $pairTypes, true),
+        ));
+
+        return [
+            'position' => $position,
+            'partner_position' => $position === 1 ? 2 : 1,
+            'partner_session_id' => $position === 1 ? $secondId : $firstId,
+            'sections' => $sections,
+        ];
     }
 
     /**

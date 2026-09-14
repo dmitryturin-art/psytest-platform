@@ -26,6 +26,7 @@ use PsyTest\Core\SessionLifecycleService;
 use PsyTest\Core\TestInviteService;
 use PsyTest\Core\TherapistCaseService;
 use PsyTest\Core\TherapistClientService;
+use PsyTest\Modules\TestModuleInterface;
 
 /**
  * Small, single-owner dashboard for explicit therapist-case lifecycle work.
@@ -338,6 +339,7 @@ final class OwnerController extends BaseController
         $presenter = new InvitedCasePresenter();
         $case['answer_rows'] = $presenter->answers($module, $case['answers']);
         $case['result_sections'] = $presenter->resultSections($module, $case['calculated_results']);
+        $case['pair'] = $this->pairSection($sessionId, $module, $presenter, $case);
 
         $ai = $this->aiSection($sessionId, (string) $case['test_slug']);
 
@@ -347,6 +349,49 @@ final class OwnerController extends BaseController
             'ai' => $ai,
             'notify' => $this->notifySection($sessionId, $case, $ai),
         ]);
+    }
+
+    /**
+     * Парное прохождение в карточке кейса (07.K1b).
+     *
+     * Контроллер только собирает участников: парные секции считает
+     * `ResultPresenter::pairViewData()` — тем же модулем и тем же расчётом,
+     * что у клиента, — а подписи и обе анкеты собирает
+     * `InvitedCasePresenter::pair()`.
+     *
+     * Вторая сессия остаётся чужой: её идентификатор дальше контроллера не
+     * уходит, `retention_class` не меняется, токен и ссылки не выводятся.
+     *
+     * @param array<string, mixed> $case
+     * @return array<string, mixed>|null
+     */
+    private function pairSection(
+        string $sessionId,
+        TestModuleInterface $module,
+        InvitedCasePresenter $presenter,
+        array $case,
+    ): ?array {
+        $session = $this->sessionManager->getSessionById($sessionId);
+        if ($session === null) {
+            return null;
+        }
+
+        $pair = (new ResultPresenter($this->db, $this->sessionManager))->pairViewData($session, $module);
+        if ($pair === null) {
+            return null;
+        }
+
+        $partner = $this->sessionManager->getSessionById($pair['partner_session_id']);
+        if ($partner === null) {
+            return null;
+        }
+
+        /** @var array<string|int, mixed> $caseAnswers */
+        $caseAnswers = $case['answers'] ?? [];
+        /** @var array<string|int, mixed> $partnerAnswers */
+        $partnerAnswers = $partner['answers'] ?? [];
+
+        return $presenter->pair($module, $pair, $caseAnswers, $partnerAnswers);
     }
 
     /**
