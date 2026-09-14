@@ -19,11 +19,41 @@
     {% endif %}
 
     <div class="results-actions">
-        <a href="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/pdf"
+        <a href="{{ basePath }}{{ result_base }}/pdf"
            class="btn btn-secondary" target="_blank">📄 Скачать PDF</a>
+        {% if account_view %}
+        <a href="{{ basePath }}/account" class="btn btn-outline">← Мои результаты</a>
+        {% else %}
         <button class="btn btn-outline" onclick="copyResultLink()">🔗 Копировать ссылку</button>
         <button class="btn btn-outline" onclick="openDeleteModal()">🗑️ Удалить данные</button>
+        {% endif %}
     </div>
+
+    {# Сохранение в кабинет — только явное действие посетителя на своей же
+       странице результата: ни email, ни cookie, ни IP связь не создают
+       (PRODUCT_RULES §11, D-053). #}
+    {% if not account_view and session.status == 'completed' %}
+        {% if session.account_id %}
+        <p class="result-account result-account--saved">
+            ✓ Сохранено в кабинете. <a href="{{ basePath }}/account">Мои результаты</a>
+        </p>
+        {% elseif session.retention_class == 'anonymous' %}
+            {% if visitor_account|default(null) %}
+            <form method="post" action="{{ basePath }}/account/attach" class="result-account">
+                {{ csrf_field() }}
+                <input type="hidden" name="session_id" value="{{ session.id }}">
+                <input type="hidden" name="result_token" value="{{ session.session_token }}">
+                <input type="hidden" name="return" value="/result/{{ test.slug }}/{{ session.session_token }}">
+                <button type="submit" class="btn btn-outline">💾 Сохранить в мой кабинет</button>
+            </form>
+            {% else %}
+            <p class="result-account">
+                <a href="{{ basePath }}/account/login?return=/result/{{ test.slug }}/{{ session.session_token }}">Войти, чтобы сохранить</a>
+                результат в личный кабинет. Вход по ссылке на почту, без пароля и регистрации.
+            </p>
+            {% endif %}
+        {% endif %}
+    {% endif %}
 
     <div class="results-content">
         {% for section in sections %}
@@ -47,15 +77,17 @@
     </div>
 </div>
 
-{{ include('blocks/_delete-modal.twig') }}
+{% if not account_view %}{{ include('blocks/_delete-modal.twig') }}{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// Кабинет открывает тот же результат без bearer-токена, поэтому адреса
+// собираются от общего основания, а сам токен в HTML кабинета не попадает.
 const RESULT_CONFIG = {
     sessionId: '{{ session.id }}',
-    sessionToken: '{{ session.session_token }}',
-    testSlug: '{{ test.slug }}',
+    resultBase: '{{ basePath }}{{ result_base }}',
+    accountView: {{ account_view ? 'true' : 'false' }},
     basePath: '{{ basePath }}',
 };
 
@@ -67,6 +99,7 @@ function copySessionId(id) {
     });
 }
 
+{% if not account_view %}
 function copyResultLink() {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
@@ -88,7 +121,7 @@ function closeDeleteModal() {
 }
 
 function confirmDelete() {
-    fetch(`${RESULT_CONFIG.basePath}/result/${RESULT_CONFIG.sessionToken}/delete`, {
+    fetch(`${RESULT_CONFIG.basePath}/result/{{ session.session_token }}/delete`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -107,6 +140,7 @@ function confirmDelete() {
         alert('Ошибка при удалении: ' + err.message);
     });
 }
+{% endif %}
 
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
@@ -143,6 +177,8 @@ function showToast(message, type = 'success') {
 // Пока разбор готовится, страница спрашивает состояние и сама показывает
 // готовый текст. Разметку строит сервер: ответ модели — внешний текст.
 (function () {
+    // В кабинете опрос не нужен: заказ разбора живёт на странице результата.
+    if (RESULT_CONFIG.accountView) return;
     const waiting = document.querySelectorAll('.ai-report__item[data-status="pending"], .ai-report__item[data-status="running"]');
     if (!waiting.length) return;
 
@@ -150,7 +186,7 @@ function showToast(message, type = 'success') {
         const kind = item.dataset.kind;
 
         const check = function () {
-            fetch(`${RESULT_CONFIG.basePath}/result/${RESULT_CONFIG.testSlug}/${RESULT_CONFIG.sessionToken}/report-status?kind=${encodeURIComponent(kind)}`)
+            fetch(`${RESULT_CONFIG.resultBase}/report-status?kind=${encodeURIComponent(kind)}`)
                 .then(r => r.json())
                 .then(data => {
                     if (data.status === 'ready' && data.html) {
@@ -176,11 +212,12 @@ function showToast(message, type = 'success') {
 
 // Poll for pair comparison status (Lazarus: first partner waiting for second).
 (function () {
+    if (RESULT_CONFIG.accountView) return;
     const inviteBlock = document.querySelector('.pair-invite-block');
     if (!inviteBlock) return;
 
     setInterval(function () {
-        fetch(`${RESULT_CONFIG.basePath}/result/${RESULT_CONFIG.testSlug}/${RESULT_CONFIG.sessionToken}/pair-status`)
+        fetch(`${RESULT_CONFIG.resultBase}/pair-status`)
             .then(r => r.json())
             .then(data => {
                 if (data.has_comparison) {

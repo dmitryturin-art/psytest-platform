@@ -32,6 +32,15 @@
                     {% if showTestsLink|default(true) %}
                     <a href="{{ basePath }}/tests" class="nav-link">Все тесты</a>
                     {% endif %}
+                    {# Кабинет владельца живёт отдельной сессией: подмешивать в
+                       него навигацию посетителя нельзя. #}
+                    {% if not ownerArea|default(false) %}
+                        {% if visitor_account|default(null) %}
+                        <a href="{{ basePath }}/account" class="nav-link">Мои результаты</a>
+                        {% else %}
+                        <a href="{{ basePath }}/account/login" class="nav-link">Войти</a>
+                        {% endif %}
+                    {% endif %}
                 </nav>
                 {% endblock %}
             </div>

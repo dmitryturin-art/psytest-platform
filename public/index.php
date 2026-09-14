@@ -30,6 +30,7 @@ use PsyTest\Controllers\HomeController;
 use PsyTest\Controllers\TestController;
 use PsyTest\Controllers\ResultController;
 use PsyTest\Controllers\ApiController;
+use PsyTest\Controllers\AccountController;
 use PsyTest\Controllers\OwnerController;
 use PsyTest\Controllers\RetiredPaymentController;
 
@@ -72,6 +73,23 @@ $router->get('/result/{slug}/{token}/pair-status', [ResultController::class, 'pa
 $router->post('/result/{slug}/{token}/report', [ResultController::class, 'requestReport']);
 $router->get('/result/{slug}/{token}/report-status', [ResultController::class, 'reportStatus']);
 $router->post('/result/{token}/delete', [ResultController::class, 'delete']);
+
+// Добровольный кабинет посетителя. Регистрации нет: вход только по
+// одноразовой ссылке на email, и ни один результат не попадает в кабинет без
+// явного действия самого посетителя (D-053).
+$router->get('/account/login', [AccountController::class, 'loginForm']);
+$router->post('/account/login', [AccountController::class, 'requestLogin']);
+// GET показывает кнопку, POST погашает ссылку: почтовые сканеры префетчат
+// ссылки из писем и сжигали бы одноразовый токен до самого посетителя.
+$router->get('/account/login/{token}', [AccountController::class, 'loginConfirm']);
+$router->post('/account/login/{token}', [AccountController::class, 'login']);
+$router->post('/account/logout', [AccountController::class, 'logout']);
+$router->get('/account', [AccountController::class, 'index']);
+$router->get('/account/results/{sessionId}', [AccountController::class, 'showResult']);
+$router->get('/account/results/{sessionId}/pdf', [AccountController::class, 'resultPdf']);
+$router->post('/account/results/{sessionId}/detach', [AccountController::class, 'detach']);
+$router->post('/account/attach', [AccountController::class, 'attach']);
+$router->post('/account/delete', [AccountController::class, 'delete']);
 
 // Owner-only clinical lifecycle controls. The routes fail closed until an
 // Argon2id password hash is configured outside Git.

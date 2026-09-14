@@ -3879,3 +3879,101 @@ body {
     padding: var(--spacing-lg);
     border-top: 1px solid var(--color-border);
 }
+
+/* ============================================
+   Кабинет посетителя (07.K3)
+   ============================================ */
+
+.account-wrapper {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--spacing-lg) 0;
+}
+
+.account-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    align-items: center;
+    justify-content: space-between;
+}
+
+.account-note {
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+.account-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+    margin: var(--spacing-lg) 0;
+}
+
+.account-form input[type="email"] {
+    width: 100%;
+    max-width: 360px;
+    min-height: 44px;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: var(--font-size-base);
+}
+
+.account-form label { font-weight: 600; }
+
+.account-inline-form { margin: 0; }
+
+.account-flash {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: 8px;
+    background: #eaf6ef;
+}
+
+.account-flash--error { background: #fdecea; }
+
+.account-history {
+    list-style: none;
+    margin: var(--spacing-lg) 0;
+    padding: 0;
+}
+
+.account-history__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.account-history__main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.account-history__link { font-weight: 600; }
+
+.account-history__date {
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+.account-danger {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.result-account {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    border: 1px dashed var(--color-border);
+    border-radius: 8px;
+}
+
+.result-account--saved { border-style: solid; }

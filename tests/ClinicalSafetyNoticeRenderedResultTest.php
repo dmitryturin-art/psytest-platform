@@ -65,9 +65,15 @@ final class ClinicalSafetyNoticeRenderedResultTest extends TestCase
                 'id' => 'synthetic-session-id',
                 'session_token' => 'synthetic-result-token',
                 'created_at' => '2026-08-22 12:00:00',
+                'status' => 'completed',
+                'retention_class' => 'anonymous',
+                'account_id' => null,
             ],
             'sections' => [],
             'clinical_safety_notice' => $notice,
+            'result_base' => '/result/bdi/synthetic-result-token',
+            'account_view' => false,
+            'visitor_account' => null,
         ]);
     }
 

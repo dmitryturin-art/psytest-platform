@@ -1,4 +1,6 @@
 {% extends "layout.twig" %}
+{# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
+{% set ownerArea = true %}
 
 {% block title %}Клиенты — {{ appName }}{% endblock %}
 {% block body_class %}owner-dashboard-page{% endblock %}

@@ -34,6 +34,13 @@
                     Не получилось подготовить разбор{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}. Можно попробовать снова.
                 </p>
                 {% endif %}
+                {% if ai_report.readonly %}
+                {# В кабинете нет bearer-токена результата, а форма заказа его
+                   несёт: разбор заказывается на странице по своей ссылке. #}
+                <p class="ai-report__waiting" role="status">
+                    Разбор заказывается на странице результата — откройте её по своей ссылке.
+                </p>
+                {% else %}
                 <form method="post" action="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/report" data-ai-report-form>
                     {{ csrf_field() }}
                     <input type="hidden" name="kind" value="{{ item.kind }}">
@@ -45,6 +52,7 @@
                         {{ item.status == 'failed' ? 'Попробовать снова' : 'Получить разбор' }}
                     </button>
                 </form>
+                {% endif %}
             {% endif %}
         {% endif %}
     </div>

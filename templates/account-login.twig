@@ -1,0 +1,30 @@
+{% extends "layout.twig" %}
+
+{% block title %}Вход в личный кабинет — {{ appName }}{% endblock %}
+{% block body_class %}account-page{% endblock %}
+
+{% block content %}
+<div class="account-wrapper">
+    <h1>Вход в личный кабинет</h1>
+
+    <p>Введите адрес почты — мы пришлём ссылку для входа. Пароль не нужен.</p>
+
+    <p class="account-note">
+        Email используется только для входа в личный кабинет и не передаётся ИИ и третьим лицам.
+        Результаты не привязываются автоматически — только по вашей кнопке на странице результата.
+    </p>
+
+    <form method="post" action="{{ basePath }}/account/login" class="account-form">
+        {{ csrf_field() }}
+        {% if return_to %}<input type="hidden" name="return" value="{{ return_to }}">{% endif %}
+        <label for="account-email">Электронная почта</label>
+        <input type="email" id="account-email" name="email" required autocomplete="email"
+               inputmode="email" maxlength="254" placeholder="you@example.com">
+        <button type="submit" class="btn btn-primary">Получить ссылку для входа</button>
+    </form>
+
+    <p class="account-note">
+        Кабинет не обязателен: любой тест можно пройти и открыть результат без входа.
+    </p>
+</div>
+{% endblock %}

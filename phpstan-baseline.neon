@@ -31,16 +31,6 @@ parameters:
 			path: controllers/BaseController.php
 
 		-
-			message: "#^Method PsyTest\\\\Controllers\\\\ResultController\\:\\:getPartnerResults\\(\\) has parameter \\$comparison with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: controllers/ResultController.php
-
-		-
-			message: "#^Method PsyTest\\\\Controllers\\\\ResultController\\:\\:getPartnerResults\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: controllers/ResultController.php
-
-		-
 			message: "#^Method PsyTest\\\\Core\\\\Database\\:\\:__construct\\(\\) has parameter \\$config with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: core/Database.php

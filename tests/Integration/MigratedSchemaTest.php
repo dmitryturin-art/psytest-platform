@@ -36,6 +36,21 @@ final class MigratedSchemaTest extends TestCase
         $this->assertColumns('test_invites', ['client_id']);
         $this->assertIndex('test_invites', 'idx_test_invites_client', false);
         $this->assertColumns('therapist_clients', ['label', 'note', 'created_at', 'updated_at']);
+        $this->assertColumns('visitor_accounts', ['email', 'created_at', 'last_login_at']);
+        $this->assertIndex('visitor_accounts', 'uq_visitor_accounts_email', true);
+        $this->assertColumns('visitor_login_tokens', ['email', 'rate_key', 'token_hash', 'expires_at', 'used_at', 'created_at']);
+        $this->assertIndex('visitor_login_tokens', 'uq_visitor_login_tokens_hash', true);
+        $this->assertIndex('visitor_login_tokens', 'idx_visitor_login_tokens_email_created', false);
+        $this->assertIndex('visitor_login_tokens', 'idx_visitor_login_tokens_rate_key_created', false);
+        $this->assertColumns('test_sessions', ['account_id']);
+        $this->assertIndex('test_sessions', 'idx_test_sessions_account', false);
+
+        // Кабинет посетителя не заводит собственных технических метаданных:
+        // IP и user-agent не хранятся нигде (ER §9, D-035).
+        foreach (['visitor_accounts', 'visitor_login_tokens'] as $table) {
+            $this->assertMissingColumn($table, 'ip_address');
+            $this->assertMissingColumn($table, 'user_agent');
+        }
 
         $this->assertMissingTable('ai_processing_consents');
         $this->assertMissingTable('crisis_resources');

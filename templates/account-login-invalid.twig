@@ -1,0 +1,12 @@
+{% extends "layout.twig" %}
+
+{% block title %}Ссылка не подошла — {{ appName }}{% endblock %}
+{% block body_class %}account-page{% endblock %}
+
+{% block content %}
+<div class="account-wrapper">
+    <h1>Ссылка не подошла</h1>
+    <p>Ссылка уже использована, просрочена или неверна. Каждая ссылка действует 15 минут и срабатывает один раз.</p>
+    <a href="{{ basePath }}/account/login" class="btn btn-primary">Запросить новую ссылку</a>
+</div>
+{% endblock %}
