@@ -79,7 +79,10 @@ $router->post('/result/{token}/delete', [ResultController::class, 'delete']);
 // явного действия самого посетителя (D-053).
 $router->get('/account/login', [AccountController::class, 'loginForm']);
 $router->post('/account/login', [AccountController::class, 'requestLogin']);
-$router->get('/account/login/{token}', [AccountController::class, 'login']);
+// GET показывает кнопку, POST погашает ссылку: почтовые сканеры префетчат
+// ссылки из писем и сжигали бы одноразовый токен до самого посетителя.
+$router->get('/account/login/{token}', [AccountController::class, 'loginConfirm']);
+$router->post('/account/login/{token}', [AccountController::class, 'login']);
 $router->post('/account/logout', [AccountController::class, 'logout']);
 $router->get('/account', [AccountController::class, 'index']);
 $router->get('/account/results/{sessionId}', [AccountController::class, 'showResult']);

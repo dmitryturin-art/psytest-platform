@@ -126,7 +126,8 @@ final class VisitorAccountService
 
         return "Ссылка для входа в личный кабинет PsyTest:\n\n"
             . $link . "\n\n"
-            . 'Ссылка действует ' . self::LOGIN_TOKEN_TTL_MINUTES . " минут и открывается один раз.\n\n"
+            . "Откройте её и нажмите кнопку «Войти в кабинет».\n\n"
+            . 'Ссылка действует ' . self::LOGIN_TOKEN_TTL_MINUTES . " минут и срабатывает один раз.\n\n"
             . "Если вы не запрашивали вход — просто проигнорируйте письмо.\n";
     }
 
@@ -140,7 +141,7 @@ final class VisitorAccountService
      */
     public function consumeLogin(string $token): ?array
     {
-        if (preg_match('/\A[a-f0-9]{64}\z/i', $token) !== 1) {
+        if (!self::isLoginTokenFormat($token)) {
             return null;
         }
 
@@ -422,4 +423,14 @@ final class VisitorAccountService
         return ($plus === false ? $local : substr($local, 0, $plus)) . substr($email, $at);
     }
 
+    /**
+     * Формат ссылки входа — 64 hex.
+     *
+     * Проверка вынесена сюда, чтобы страница подтверждения отсеивала мусор,
+     * не обращаясь к базе и ничего не погашая.
+     */
+    public static function isLoginTokenFormat(string $token): bool
+    {
+        return preg_match('/\A[a-f0-9]{64}\z/i', $token) === 1;
+    }
 }

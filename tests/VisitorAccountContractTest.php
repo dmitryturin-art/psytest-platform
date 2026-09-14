@@ -34,6 +34,7 @@ final class VisitorAccountContractTest extends TestCase
             "\$router->get('/account/login'",
             "\$router->post('/account/login'",
             "\$router->get('/account/login/{token}'",
+            "\$router->post('/account/login/{token}'",
             "\$router->post('/account/logout'",
             "\$router->get('/account'",
             "\$router->get('/account/results/{sessionId}'",
@@ -57,6 +58,41 @@ final class VisitorAccountContractTest extends TestCase
 
             self::assertStringContainsString('csrf_field()', $contents, basename($template));
         }
+    }
+
+    /**
+     * Ссылка входа погашается только нажатой кнопкой.
+     *
+     * Почтовые сканеры и превью-боты префетчат GET-ссылки из письма: если бы
+     * вход происходил на GET, одноразовый токен сгорал бы до самого посетителя.
+     */
+    public function testOpeningTheMailedLinkOnlyShowsAConfirmationAndNeverConsumesIt(): void
+    {
+        $routes = (string) file_get_contents($this->projectRoot . '/public/index.php');
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/AccountController.php');
+        $confirm = (string) file_get_contents($this->projectRoot . '/templates/account-login-confirm.twig');
+
+        self::assertStringContainsString(
+            "\$router->get('/account/login/{token}', [AccountController::class, 'loginConfirm']);",
+            $routes,
+        );
+        self::assertStringContainsString(
+            "\$router->post('/account/login/{token}', [AccountController::class, 'login']);",
+            $routes,
+        );
+
+        $confirmAction = self::methodBody($controller, 'loginConfirm');
+        self::assertStringNotContainsString('consumeLogin', $confirmAction, 'GET не погашает ссылку.');
+        self::assertStringContainsString('isLoginTokenFormat', $confirmAction);
+        self::assertStringContainsString('account-login-invalid', $confirmAction);
+
+        self::assertStringContainsString('consumeLogin', self::methodBody($controller, 'login'));
+
+        self::assertStringContainsString('method="post"', $confirm);
+        self::assertStringContainsString('/account/login/{{ token }}', $confirm);
+        self::assertStringContainsString('csrf_field()', $confirm);
+        self::assertStringContainsString('Войти в кабинет', $confirm);
+        self::assertStringContainsString('Ссылка одноразовая и действует 15 минут', $confirm);
     }
 
     public function testCabinetPagesAreNeitherCachedNorIndexed(): void
@@ -89,6 +125,19 @@ final class VisitorAccountContractTest extends TestCase
         self::assertNull(AccountController::safeReturnPath('/admin'));
         self::assertNull(AccountController::safeReturnPath('/result/bdi/short'));
         self::assertNull(AccountController::safeReturnPath(null));
+    }
+
+    /**
+     * Тело метода контроллера от его объявления до следующего объявления.
+     */
+    private static function methodBody(string $source, string $method): string
+    {
+        $start = strpos($source, 'public function ' . $method . '(');
+        self::assertIsInt($start, 'Метод ' . $method . ' не найден.');
+
+        $next = strpos($source, "\n    public function ", $start + 1);
+
+        return $next === false ? substr($source, $start) : substr($source, $start, $next - $start);
     }
 
     public function testVisitorAndOwnerSessionsStayIndependent(): void

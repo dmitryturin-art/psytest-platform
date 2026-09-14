@@ -64,6 +64,34 @@ final class AccountController extends BaseController
         echo $this->view->render('account-login-sent');
     }
 
+    /**
+     * Страница подтверждения входа.
+     *
+     * GET ничего не погашает намеренно: почтовые сканеры и превью-боты
+     * открывают ссылки из письма раньше человека, и одноразовый токен сгорал
+     * бы до того, как посетитель до него дойдёт. Вход происходит только по
+     * явной отправке формы ниже.
+     */
+    public function loginConfirm(string $token): void
+    {
+        $this->privateHeaders();
+
+        if (!VisitorAccountService::isLoginTokenFormat($token)) {
+            http_response_code(404);
+            echo $this->view->render('account-login-invalid');
+
+            return;
+        }
+
+        echo $this->view->render('account-login-confirm', ['token' => $token]);
+    }
+
+    /**
+     * Вход по нажатой кнопке подтверждения.
+     *
+     * Ссылка погашается здесь, а не в GET: POST не выполняется префетчем
+     * почтового клиента и защищён общим CSRF-middleware.
+     */
     public function login(string $token): void
     {
         $this->privateHeaders();
