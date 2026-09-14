@@ -144,18 +144,46 @@ final class AiReportRepository
         return $claimed->rowCount() === 1 ? $this->find((string) $candidate['id']) : null;
     }
 
+    /**
+     * Записать готовый разбор и зафиксировать его как версию №1.
+     *
+     * Текст модели с этого момента живёт в истории версий: специалист правит
+     * понятный разбор, не затирая то, что вернула модель, и любую его правку
+     * видно рядом с исходником (D-054). Обе записи делаются одной транзакцией —
+     * готовый отчёт без первой версии оставил бы редактор без точки отсчёта.
+     */
     public function markReady(string $id, AiCompletion $completion): void
     {
-        $this->db->update('ai_reports', [
-            'status' => self::STATUS_READY,
-            'content' => $completion->text,
-            'served_model' => $completion->servedModel,
-            'requested_model' => $completion->requestedModel,
-            'prompt_tokens' => $completion->promptTokens,
-            'completion_tokens' => $completion->completionTokens,
-            'failure_reason' => null,
-            'completed_at' => date('Y-m-d H:i:s'),
-        ], 'id = ?', [$id]);
+        $owned = !$this->db->inTransaction() && $this->db->beginTransaction();
+
+        try {
+            $this->db->update('ai_reports', [
+                'status' => self::STATUS_READY,
+                'content' => $completion->text,
+                'served_model' => $completion->servedModel,
+                'requested_model' => $completion->requestedModel,
+                'prompt_tokens' => $completion->promptTokens,
+                'completion_tokens' => $completion->completionTokens,
+                'failure_reason' => null,
+                'completed_at' => date('Y-m-d H:i:s'),
+            ], 'id = ?', [$id]);
+
+            // Запоздалый обработчик может прийти к уже удалённому кейсу (K0a):
+            // тогда обновлять нечего и версию заводить не от чего.
+            if ($this->find($id) !== null) {
+                (new AiReportRevisionService($this->db))->seedFromContent($id, $completion->text);
+            }
+
+            if ($owned) {
+                $this->db->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($owned) {
+                $this->db->rollback();
+            }
+
+            throw $e;
+        }
     }
 
     public function markFailed(string $id, string $reason): void
