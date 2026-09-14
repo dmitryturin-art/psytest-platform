@@ -47,6 +47,31 @@ final class PrivacyClaimsTruthfulnessTest extends TestCase
         self::assertStringNotContainsString('REMOTE_ADDR', $service);
     }
 
+    /**
+     * Текст про специалиста обязан совпадать с кодом 07.K5b (D-054).
+     *
+     * Обещание «адрес только по решению специалиста, письмо без разбора и без
+     * ссылки» проверяется не только в копирайте, но и в самом отправителе.
+     */
+    public function testTherapistEmailCopyMatchesTheImplementedNotification(): void
+    {
+        $projectRoot = dirname(__DIR__);
+        $copy = (string) file_get_contents($projectRoot . '/controllers/HomeController.php');
+        $notifier = (string) file_get_contents($projectRoot . '/core/ClientReportNotifier.php');
+
+        self::assertStringContainsString('только если он сам его', $copy);
+        self::assertStringContainsString('ни текста', $copy);
+        self::assertStringContainsString('ни ссылки на результат', $copy);
+
+        // Обещанное поведение существует в коде, а не только в тексте.
+        self::assertStringContainsString('Ваш разбор готов', $notifier);
+        self::assertStringContainsString('published_revision_id IS NOT NULL', $notifier);
+        self::assertStringContainsString('MIN_INTERVAL_MINUTES = 10', $notifier);
+        $body = substr($notifier, (int) strpos($notifier, 'public static function body('));
+        self::assertStringNotContainsString('http', $body);
+        self::assertStringNotContainsString('session_token', $body);
+    }
+
     public function testPublicDeleteCopyDescribesTheCurrentSoftDeleteBoundary(): void
     {
         $projectRoot = dirname(__DIR__);
