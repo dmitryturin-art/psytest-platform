@@ -72,5 +72,31 @@ final class SessionTestIntegrityTest extends TestCase
         self::assertStringContainsString("=== 'therapist_case'", $controller);
         self::assertStringContainsString("['status' => 'restricted']", $controller);
         self::assertStringContainsString('name="ai_consent"', $template);
+
+        // Публикация одобренной редакции (D-054) не открыла клиенту статусы
+        // заданий: `report-status` по-прежнему отвечает только «restricted».
+        $statusAction = substr(
+            $controller,
+            (int) strpos($controller, 'public function reportStatus('),
+            (int) strpos($controller, 'private function reportSessionOrFail(') - (int) strpos($controller, 'public function reportStatus('),
+        );
+        self::assertStringNotContainsString('published', $statusAction);
+        self::assertStringNotContainsString('AiReportRevisionService', $statusAction);
+
+        // На клиентской странице публикуется только понятный разбор и только
+        // через presenter: черновиков и профессионального заключения в
+        // restricted-ветке шаблона нет.
+        $presenter = (string) file_get_contents(dirname(__DIR__) . '/core/ResultPresenter.php');
+        self::assertStringContainsString('publishedContent', $presenter);
+        self::assertStringContainsString("'restricted' => true", $presenter);
+
+        $restrictedBranch = substr(
+            $template,
+            (int) strpos($template, '{% if ai_report.restricted %}'),
+            (int) strpos($template, '{% for item in ai_report.kinds %}') - (int) strpos($template, '{% if ai_report.restricted %}'),
+        );
+        self::assertStringContainsString('ai_report.published.html', $restrictedBranch);
+        self::assertStringNotContainsString('item.html', $restrictedBranch);
+        self::assertStringNotContainsString('ai_consent', $restrictedBranch);
     }
 }

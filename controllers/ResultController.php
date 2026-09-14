@@ -356,7 +356,10 @@ class ResultController extends BaseController
     private function streamPdf(array $session, array $test, TestModuleInterface $module): never
     {
         $printable = $this->presenter->pdfSections($session, $module);
-        $resultsHtml = $this->sectionRenderer->renderToHtml($printable['sections']);
+        // Опубликованный специалистом разбор идёт после результата — клиенту он
+        // приходит в том же документе, отдельной ссылки для него нет (D-054).
+        $resultsHtml = $this->sectionRenderer->renderToHtml($printable['sections'])
+            . $printable['published_report_html'];
 
         // Generate PDF
         $pdfPath = $this->pdfGenerator->generateTestResult(

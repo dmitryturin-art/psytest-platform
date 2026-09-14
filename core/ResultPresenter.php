@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PsyTest\Core;
 
 use PsyTest\Core\Ai\AiReportRepository;
+use PsyTest\Core\Ai\AiReportRevisionService;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Modules\TestModuleInterface;
@@ -87,7 +88,16 @@ final class ResultPresenter
     {
         $mode = $this->reportMode($session);
         if (($session['retention_class'] ?? null) === RetentionPolicy::THERAPIST_CASE) {
-            return ['restricted' => true, 'mode' => $mode, 'kinds' => [], 'readonly' => $readonly];
+            // Черновики, их статусы и профессиональное заключение сюда не
+            // попадают вовсе (K0b). Единственное, что клиент может увидеть, —
+            // версия, которую специалист явно опубликовал (D-054).
+            return [
+                'restricted' => true,
+                'mode' => $mode,
+                'kinds' => [],
+                'readonly' => $readonly,
+                'published' => $this->publishedReport((string) $session['id']),
+            ];
         }
 
         $registry = PromptRegistry::default();
@@ -113,6 +123,24 @@ final class ResultPresenter
         }
 
         return $kinds === [] ? null : ['mode' => $mode, 'kinds' => $kinds, 'readonly' => $readonly];
+    }
+
+    /**
+     * Одобренная специалистом редакция разбора для страницы клиента.
+     *
+     * Рендерится тем же белым списком разметки, что и остальной разбор: текст
+     * пришёл от модели, пусть и после правки человеком.
+     *
+     * @return array{html: string, published_at: string}|null
+     */
+    public function publishedReport(string $sessionId): ?array
+    {
+        $published = (new AiReportRevisionService($this->db))->publishedContent($sessionId);
+
+        return $published === null ? null : [
+            'html' => ReportMarkdown::toHtml($published['content']),
+            'published_at' => $published['published_at'],
+        ];
     }
 
     /**
@@ -150,7 +178,7 @@ final class ResultPresenter
      * распечатанном документе бессмысленна и опасна.
      *
      * @param array<string, mixed> $session
-     * @return array{sections: list<mixed>, includes_pair_comparison: bool}
+     * @return array{sections: list<mixed>, includes_pair_comparison: bool, published_report_html: string}
      */
     public function pdfSections(array $session, TestModuleInterface $module): array
     {
@@ -161,6 +189,31 @@ final class ResultPresenter
         return [
             'sections' => $module->buildSections($results),
             'includes_pair_comparison' => $includesPairComparison,
+            'published_report_html' => $this->publishedReportPdfHtml($session),
         ];
+    }
+
+    /**
+     * Раздел «Разбор специалиста» в печатном документе.
+     *
+     * Клиент специалиста получает ровно ту редакцию, которую специалист
+     * опубликовал; без публикации в PDF ничего не добавляется (D-054).
+     *
+     * @param array<string, mixed> $session
+     */
+    private function publishedReportPdfHtml(array $session): string
+    {
+        if (($session['retention_class'] ?? null) !== RetentionPolicy::THERAPIST_CASE) {
+            return '';
+        }
+
+        $published = $this->publishedReport((string) $session['id']);
+
+        return $published === null
+            ? ''
+            : '<div class="results-section results-section--specialist-report">'
+                . '<h2 class="section-title">Разбор специалиста</h2>'
+                . '<div class="section-body">' . $published['html'] . '</div>'
+                . '</div>';
     }
 }
