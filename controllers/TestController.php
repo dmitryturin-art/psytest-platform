@@ -96,45 +96,18 @@ class TestController extends BaseController
     }
 
     /**
-     * Доступ к методике, закрытой ссылкой-приглашением.
+     * Доступ к методике по прямой ссылке `/test/{slug}`.
      *
-     * Публичная методика доступна всем. Закрытая требует ключ в адресе
-     * (`?key=…`); успешный ключ запоминается в сессии браузера, чтобы
-     * перезагрузка страницы и переход по шагам не выбрасывали респондента.
-     *
-     * Это шлюз, а не опознание конкретного человека: персональные приглашения
-     * появятся вместе с купонным контуром.
+     * Публичная методика доступна всем. Закрытая не открывается этим путём
+     * никогда: единственный вход в неё — личное одноразовое приглашение из
+     * кабинета специалиста (`/invite/{token}`), которое само создаёт сессию.
+     * Общий ключ доступа снят решением владельца 14.09.2026.
      *
      * @param array<string, mixed> $test Строка методики из БД.
      */
     private function grantsInviteAccess(array $test): bool
     {
-        if (($test['visibility'] ?? 'public') !== 'invite') {
-            return true;
-        }
-
-        $expected = (string) ($test['access_key'] ?? '');
-        if ($expected === '') {
-            // Закрытая методика без ключа недоступна никому: это безопаснее,
-            // чем открыть её из-за незаполненной настройки.
-            return false;
-        }
-
-        $slug = (string) $test['slug'];
-        $sessionKey = 'psytest_invite_' . $slug;
-
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $provided = $_GET['key'] ?? null;
-        if (is_string($provided) && hash_equals($expected, $provided)) {
-            $_SESSION[$sessionKey] = true;
-
-            return true;
-        }
-
-        return ($_SESSION[$sessionKey] ?? false) === true;
+        return ($test['visibility'] ?? 'public') !== 'invite';
     }
 
     private function notFoundTest(string $slug): void
