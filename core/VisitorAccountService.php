@@ -22,7 +22,17 @@ use Ramsey\Uuid\Uuid;
 final class VisitorAccountService
 {
     public const LOGIN_TOKEN_TTL_MINUTES = 15;
+    public const RATE_LIMIT_WINDOW_MINUTES = 15;
     public const MAX_LOGIN_REQUESTS_PER_WINDOW = 3;
+    /**
+     * Потолок на всю платформу внутри того же окна.
+     *
+     * Лимит на адрес сам по себе останавливает только перебор одного ящика:
+     * рассылку по тысяче чужих адресов он пропускает, потому что каждый из них
+     * укладывается в свои три запроса. IP для этого не хранится (ER §9) —
+     * общий счётчик стоит вместо него.
+     */
+    public const MAX_LOGIN_REQUESTS_GLOBAL_PER_WINDOW = 20;
 
     public function __construct(
         private readonly Database $db,
@@ -69,7 +79,11 @@ final class VisitorAccountService
         if ($email === '' || !Security::isValidEmail($email)) {
             return;
         }
-        if ($this->recentRequestCount($email) >= self::MAX_LOGIN_REQUESTS_PER_WINDOW) {
+        $rateKey = self::rateKey($email);
+        if ($this->recentRequestCount($rateKey) >= self::MAX_LOGIN_REQUESTS_PER_WINDOW) {
+            return;
+        }
+        if ($this->recentGlobalRequestCount() >= self::MAX_LOGIN_REQUESTS_GLOBAL_PER_WINDOW) {
             return;
         }
 
@@ -78,11 +92,12 @@ final class VisitorAccountService
         // поясах, а пятнадцатиминутное окно такой сдвиг переживает плохо: срок,
         // посчитанный на стороне PHP, мог бы истечь ещё до отправки письма.
         $this->db->execute(
-            'INSERT INTO visitor_login_tokens (id, email, token_hash, expires_at)
-             VALUES (:id, :email, :token_hash, NOW() + INTERVAL ' . self::LOGIN_TOKEN_TTL_MINUTES . ' MINUTE)',
+            'INSERT INTO visitor_login_tokens (id, email, rate_key, token_hash, expires_at)
+             VALUES (:id, :email, :rate_key, :token_hash, NOW() + INTERVAL ' . self::LOGIN_TOKEN_TTL_MINUTES . ' MINUTE)',
             [
                 'id' => Uuid::uuid4()->toString(),
                 'email' => $email,
+                'rate_key' => $rateKey,
                 'token_hash' => hash('sha256', $token),
             ],
         );
@@ -349,13 +364,23 @@ final class VisitorAccountService
         return true;
     }
 
-    private function recentRequestCount(string $email): int
+    private function recentRequestCount(string $rateKey): int
     {
         // Окно тоже считает БД: `created_at` пишется её часами.
         $row = $this->db->selectOne(
             'SELECT COUNT(*) AS count FROM visitor_login_tokens
-             WHERE email = :email AND created_at > NOW() - INTERVAL ' . self::LOGIN_TOKEN_TTL_MINUTES . ' MINUTE',
-            ['email' => $email],
+             WHERE rate_key = :rate_key AND created_at > NOW() - INTERVAL ' . self::RATE_LIMIT_WINDOW_MINUTES . ' MINUTE',
+            ['rate_key' => $rateKey],
+        );
+
+        return (int) ($row['count'] ?? 0);
+    }
+
+    private function recentGlobalRequestCount(): int
+    {
+        $row = $this->db->selectOne(
+            'SELECT COUNT(*) AS count FROM visitor_login_tokens
+             WHERE created_at > NOW() - INTERVAL ' . self::RATE_LIMIT_WINDOW_MINUTES . ' MINUTE',
         );
 
         return (int) ($row['count'] ?? 0);
@@ -365,4 +390,26 @@ final class VisitorAccountService
     {
         return mb_strtolower(trim($email));
     }
+
+    /**
+     * Канонический адрес для счётчика запросов.
+     *
+     * Отбрасывается только `+suffix`: точки в локальной части у большинства
+     * провайдеров значимы, и «канонизировать» их означало бы считать письма
+     * разных людей одним ящиком.
+     */
+    public static function rateKey(string $email): string
+    {
+        $email = self::normalizeEmail($email);
+        $at = strrpos($email, '@');
+        if ($at === false) {
+            return $email;
+        }
+
+        $local = substr($email, 0, $at);
+        $plus = strpos($local, '+');
+
+        return ($plus === false ? $local : substr($local, 0, $plus)) . substr($email, $at);
+    }
+
 }

@@ -103,6 +103,72 @@ final class VisitorAccountServiceTest extends TestCase
         $this->db->delete('visitor_login_tokens', 'email = ?', [$this->email]);
     }
 
+    /**
+     * Лимит считается по каноническому адресу.
+     *
+     * `+suffix` и регистр не создают нового ящика: без канонизации счётчик
+     * обходился бы одной лишней буквой в адресе.
+     */
+    public function testPlusAliasesAndLetterCaseShareOneRateLimitKey(): void
+    {
+        $local = 'visitor-' . bin2hex(random_bytes(6));
+        $canonical = $local . '@example.test';
+
+        $this->accounts->requestLogin($local . '+1@example.test');
+        $this->accounts->requestLogin($local . '+2@example.test');
+        $this->accounts->requestLogin(strtoupper($local) . '@EXAMPLE.TEST');
+        $this->accounts->requestLogin($local . '+3@example.test');
+
+        self::assertCount(VisitorAccountService::MAX_LOGIN_REQUESTS_PER_WINDOW, $this->mailer->sent);
+        self::assertSame(
+            VisitorAccountService::MAX_LOGIN_REQUESTS_PER_WINDOW,
+            (int) $this->db->selectOne(
+                'SELECT COUNT(*) AS count FROM visitor_login_tokens WHERE rate_key = ?',
+                [$canonical],
+            )['count'],
+            'Четвёртый запрос не создаёт токена: ключ у всех четырёх один.',
+        );
+        self::assertSame(
+            $local . '+1@example.test',
+            $this->mailer->sent[0]['to'],
+            'Письмо уходит на исходный адрес, а не на канонический ключ.',
+        );
+
+        $this->db->delete('visitor_login_tokens', 'rate_key = ?', [$canonical]);
+    }
+
+    /**
+     * Потолок на всю платформу.
+     *
+     * Лимит на адрес не мешает рассылать ссылки по чужим ящикам: каждый из них
+     * укладывается в свои три запроса. IP не хранится (ER §9), поэтому границу
+     * держит общий счётчик окна.
+     */
+    public function testGlobalCeilingStopsALinkFloodSpreadAcrossManyAddresses(): void
+    {
+        $this->db->execute('DELETE FROM visitor_login_tokens');
+        $prefix = 'flood-' . bin2hex(random_bytes(6)) . '-';
+
+        try {
+            for ($i = 0; $i <= VisitorAccountService::MAX_LOGIN_REQUESTS_GLOBAL_PER_WINDOW; ++$i) {
+                $this->accounts->requestLogin($prefix . $i . '@example.test');
+            }
+
+            self::assertCount(
+                VisitorAccountService::MAX_LOGIN_REQUESTS_GLOBAL_PER_WINDOW,
+                $this->mailer->sent,
+                'Запрос сверх потолка не отправляет письма.',
+            );
+            self::assertSame(
+                VisitorAccountService::MAX_LOGIN_REQUESTS_GLOBAL_PER_WINDOW,
+                (int) $this->db->selectOne('SELECT COUNT(*) AS count FROM visitor_login_tokens')['count'],
+                'Запрос сверх потолка не создаёт токена.',
+            );
+        } finally {
+            $this->db->execute('DELETE FROM visitor_login_tokens');
+        }
+    }
+
     public function testInvalidAddressNeitherStoresATokenNorSendsMail(): void
     {
         $this->accounts->requestLogin('not-an-email');

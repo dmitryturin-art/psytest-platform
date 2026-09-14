@@ -38,9 +38,10 @@ final class MigratedSchemaTest extends TestCase
         $this->assertColumns('therapist_clients', ['label', 'note', 'created_at', 'updated_at']);
         $this->assertColumns('visitor_accounts', ['email', 'created_at', 'last_login_at']);
         $this->assertIndex('visitor_accounts', 'uq_visitor_accounts_email', true);
-        $this->assertColumns('visitor_login_tokens', ['email', 'token_hash', 'expires_at', 'used_at', 'created_at']);
+        $this->assertColumns('visitor_login_tokens', ['email', 'rate_key', 'token_hash', 'expires_at', 'used_at', 'created_at']);
         $this->assertIndex('visitor_login_tokens', 'uq_visitor_login_tokens_hash', true);
         $this->assertIndex('visitor_login_tokens', 'idx_visitor_login_tokens_email_created', false);
+        $this->assertIndex('visitor_login_tokens', 'idx_visitor_login_tokens_rate_key_created', false);
         $this->assertColumns('test_sessions', ['account_id']);
         $this->assertIndex('test_sessions', 'idx_test_sessions_account', false);
 

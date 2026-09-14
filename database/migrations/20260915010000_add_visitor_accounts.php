@@ -12,6 +12,12 @@ use Phinx\Migration\AbstractMigration;
  * Токены входа хранятся только хешем; IP и user-agent не записываются вовсе
  * (ER §9, миграция `drop_legacy_ip_user_agent_columns`).
  *
+ * `rate_key` — канонический вид того же адреса (локальная часть до первого
+ * `+`, домен в нижнем регистре). Лимит запросов считается по нему, потому что
+ * `a+1@x` и `a+2@x` доставляются в один ящик: без канонизации счётчик
+ * обходился бы добавлением любого суффикса. Письмо при этом уходит на
+ * исходный нормализованный `email` — канонический ключ адресом не является.
+ *
  * `test_sessions.account_id` — ТОЛЬКО явная привязка по кнопке посетителя.
  * ON DELETE SET NULL здесь не «сирота»: отвязанная сессия возвращается в
  * анонимный класс и снова подпадает под 180 дней от `created_at`.
@@ -38,12 +44,14 @@ final class AddVisitorAccounts extends AbstractMigration
             "CREATE TABLE visitor_login_tokens (
                 id CHAR(36) PRIMARY KEY,
                 email VARCHAR(254) NOT NULL,
+                rate_key VARCHAR(254) NOT NULL,
                 token_hash CHAR(64) NOT NULL,
                 expires_at DATETIME NOT NULL,
                 used_at DATETIME NULL DEFAULT NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE KEY uq_visitor_login_tokens_hash (token_hash),
-                INDEX idx_visitor_login_tokens_email_created (email, created_at)
+                INDEX idx_visitor_login_tokens_email_created (email, created_at),
+                INDEX idx_visitor_login_tokens_rate_key_created (rate_key, created_at)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         );
 
