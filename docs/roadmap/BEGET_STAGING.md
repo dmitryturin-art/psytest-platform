@@ -102,4 +102,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 16. Выкладка `66df1cb` (14.09) добавила снимки заданий ИИ (`AddAiReportSnapshots`). SHA-256 `daa225712a7bcc6344ba57ff8bd437fb06103589d239476e60a5ba1d009dc655` совпал; dump `backups/pre-deploy-66df1cb.sql.gz` проверен. Smoke: основные маршруты — `200`, `/test/smil` — `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/4e63510/public` и `current` на `releases/4e63510`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+17. Выкладка `c8b5feb` (14.09) добавила версии разбора и публикацию клиенту (`AddAiReportRevisions`). SHA-256 `4da6fc01842dbfbec62f55aa269f50924ddcc8ae2c12d9d442e48e11bb7537bf` совпал; dump `backups/pre-deploy-c8b5feb.sql.gz` проверен. Smoke: основные маршруты — `200`, `/test/smil` — `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/66df1cb/public` и `current` на `releases/66df1cb`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
