@@ -174,6 +174,11 @@ return new class {
         return $this->getString('MAIL_FROM', 'noreply@psytest.local');
     }
     
+    /** `smtp` (по умолчанию при заданном MAIL_HOST) или `mail` — локальный mail() хостинга. */
+    public function mailTransport(): string {
+        return strtolower($this->getString('MAIL_TRANSPORT', 'smtp'));
+    }
+
     public function mailConfig(): array {
         return [
             'host' => $this->getString('MAIL_HOST'),
