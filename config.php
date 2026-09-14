@@ -184,9 +184,29 @@ return new class {
         ];
     }
     
+    /**
+     * Полный текст письма пишется в файл только для локальной проверки.
+     * В production режим выключен безусловно: иначе ссылка входа осела бы
+     * в логах и стала бы вторым способом попасть в чужой кабинет.
+     */
+    public function mailDebugFileEnabled(): bool {
+        return !$this->isProduction() && $this->getBool('MAIL_DEBUG_FILE', false);
+    }
+
     // File storage
     public function pdfStoragePath(): string {
-        return $this->getString('PDF_STORAGE_PATH', __DIR__ . '/storage/pdfs');
+        return $this->resolvePath($this->getString('PDF_STORAGE_PATH', __DIR__ . '/storage/pdfs'));
+    }
+
+    /**
+     * Относительный путь из .env считается от корня проекта, а не от текущего
+     * каталога процесса. Под встроенным сервером PHP рабочий каталог равен
+     * `public/`, и без этого одни и те же «./storage/...» означали бы разные
+     * каталоги для web-запроса и для CLI: удаление файлов промахивалось бы
+     * мимо созданных, а логи оказывались бы внутри web root.
+     */
+    private function resolvePath(string $path): string {
+        return str_starts_with($path, '/') ? $path : __DIR__ . '/' . ltrim($path, './');
     }
     
     public function uploadMaxSize(): int {
@@ -199,6 +219,6 @@ return new class {
     }
     
     public function logPath(): string {
-        return $this->getString('LOG_PATH', __DIR__ . '/storage/logs');
+        return $this->resolvePath($this->getString('LOG_PATH', __DIR__ . '/storage/logs'));
     }
 };
