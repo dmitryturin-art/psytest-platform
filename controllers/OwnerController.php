@@ -164,7 +164,7 @@ final class OwnerController extends BaseController
         if (!$this->requireOwner()) {
             return;
         }
-        if (!Security::isValidUuid($clientId)) {
+        if (!Security::isValidUuid($clientId) || !$this->clients->exists($clientId)) {
             $this->notFound();
 
             return;
@@ -213,7 +213,7 @@ final class OwnerController extends BaseController
         if (!$this->requireOwner()) {
             return;
         }
-        if (!Security::isValidUuid($clientId)) {
+        if (!Security::isValidUuid($clientId) || !$this->clients->exists($clientId)) {
             $this->notFound();
 
             return;

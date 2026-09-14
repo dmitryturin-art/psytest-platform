@@ -189,7 +189,7 @@ final class TestInviteService
         foreach ($invites as &$invite) {
             $invite['display_status'] = match ($invite['status']) {
                 'claimed' => match (true) {
-                    $invite['claimed_session_id'] === null => 'result_deleted',
+                    $invite['claimed_session_id'] === null, $invite['session_status'] === 'deleted' => 'result_deleted',
                     $invite['session_status'] === 'completed' => 'completed',
                     default => 'opened',
                 },

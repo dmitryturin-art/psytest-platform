@@ -171,6 +171,34 @@ final class TherapistClientServiceTest extends TestCase
         self::assertSame([], $card['history']);
     }
 
+    public function testVisitorSelfDeletionAlsoRemovesTheInvitationAndShowsTheCaseAsDeleted(): void
+    {
+        $clientId = $this->createClient('Клиент, удаливший результат сам', '');
+        $invite = $this->invites->create($this->testId('bdi'), 'Заметка владельца', $clientId);
+        $claim = $this->invites->claim($invite['token']);
+        self::assertNotNull($claim);
+        $sessionId = (string) $claim['session']['id'];
+        $this->sessionIds[] = $sessionId;
+
+        // Путь посетителя: soft-delete через SessionManager, а не lifecycle.
+        self::assertTrue($this->sessions->deleteSession($sessionId));
+
+        self::assertNull($this->db->selectOne('SELECT id FROM test_invites WHERE id = ?', [$invite['id']]));
+        self::assertNull($this->invites->claimedCaseForOwner($sessionId));
+        $card = $this->clients->findForOwner($clientId);
+        self::assertNotNull($card);
+        self::assertSame([], $card['assignments']);
+
+        $deleted = TestInviteService::withDisplayStatus([[
+            'id' => 'soft-deleted',
+            'status' => 'claimed',
+            'claimed_session_id' => $sessionId,
+            'session_status' => 'deleted',
+            'expires_at' => '2000-01-01 00:00:00',
+        ]]);
+        self::assertSame('result_deleted', $deleted[0]['display_status']);
+    }
+
     public function testAClaimedInviteWithoutItsSessionIsShownAsDeletedResultWithoutACaseLink(): void
     {
         $orphan = TestInviteService::withDisplayStatus([[
