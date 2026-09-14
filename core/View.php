@@ -88,6 +88,11 @@ class View
         // Add CSRF token
         $data['csrf_token'] = $this->generateCsrfToken();
 
+        // Навигация общая для всех страниц, поэтому снимок вошедшего
+        // посетителя берётся из PHP-сессии, а не запросом в базу на каждой
+        // странице. Права по нему не выдаются.
+        $data['visitor_account'] ??= VisitorAccountSession::snapshot();
+
         return $this->twig->render($template . '.twig', $data);
     }
 

@@ -1,0 +1,13 @@
+{% extends "layout.twig" %}
+
+{% block title %}Ссылка отправлена — {{ appName }}{% endblock %}
+{% block body_class %}account-page{% endblock %}
+
+{% block content %}
+<div class="account-wrapper">
+    <h1>Проверьте почту</h1>
+    <p>Если адрес верный, письмо со ссылкой отправлено. Проверьте почту и папку «Спам».</p>
+    <p class="account-note">Ссылка действует 15 минут и открывается один раз.</p>
+    <a href="{{ basePath }}/account/login" class="btn btn-outline">Ввести другой адрес</a>
+</div>
+{% endblock %}

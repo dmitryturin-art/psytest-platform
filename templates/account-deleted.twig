@@ -1,0 +1,13 @@
+{% extends "layout.twig" %}
+
+{% block title %}Аккаунт удалён — {{ appName }}{% endblock %}
+{% block body_class %}account-page{% endblock %}
+
+{% block content %}
+<div class="account-wrapper">
+    <h1>Аккаунт удалён</h1>
+    <p>Адрес почты, ссылки входа и все сохранённые в кабинете результаты удалены без возможности восстановления.</p>
+    <p class="account-note">Результаты, которые вы не сохраняли в кабинет, это удаление не затронуло.</p>
+    <a href="{{ basePath }}/tests" class="btn btn-primary">Пройти тест</a>
+</div>
+{% endblock %}

@@ -17,21 +17,26 @@ use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
-use PsyTest\Core\ClinicalSafetyNotice;
 use PsyTest\Core\PDFGenerator;
 use PsyTest\Core\ReportMarkdown;
+use PsyTest\Core\ResultPresenter;
 use PsyTest\Core\ResultSectionRenderer;
+use PsyTest\Core\VisitorAccountService;
+use PsyTest\Core\VisitorAccountSession;
+use PsyTest\Modules\TestModuleInterface;
 
 class ResultController extends BaseController
 {
     private PDFGenerator $pdfGenerator;
     private ResultSectionRenderer $sectionRenderer;
+    private ResultPresenter $presenter;
 
     public function __construct()
     {
         parent::__construct();
         $this->pdfGenerator = new PDFGenerator();
         $this->sectionRenderer = ResultSectionRenderer::forView($this->view);
+        $this->presenter = new ResultPresenter($this->db, $this->sessionManager);
     }
 
     /**
@@ -60,22 +65,30 @@ class ResultController extends BaseController
         // Get module
         $module = $this->getModuleOrFail($slug);
 
-        // Get results
-        $results = $session['calculated_results'];
+        echo $this->view->render('result-layout', $this->presenter->viewData(
+            $session,
+            $test,
+            $module,
+            '/result/' . $slug . '/' . $token,
+        ) + ['visitor_account' => $this->visitorAccount()]);
+    }
 
-        // Attach pair comparison data (if any) so buildSections can render it.
-        $this->enrichWithPairComparison($results, $session, $module);
+    /**
+     * Вошедший посетитель, если он есть.
+     *
+     * Страница результата открывается по ссылке и без входа; аккаунт нужен ей
+     * только чтобы показать кнопку сохранения вместо приглашения войти. Права
+     * по этому значению не выдаются — привязку отдельно проверяет сервис.
+     *
+     * @return array{id: string, email: string}|null
+     */
+    private function visitorAccount(): ?array
+    {
+        $accountId = VisitorAccountSession::accountId();
 
-        $sections = $module->buildSections($results);
-
-        echo $this->view->render('result-layout', [
-            'test' => $test,
-            'session' => $session,
-            'sections' => $sections,
-            'results' => $results,
-            'clinical_safety_notice' => ClinicalSafetyNotice::fromResults($results),
-            'ai_report' => $this->reportViewData($slug, $session),
-        ]);
+        return $accountId === null
+            ? null
+            : VisitorAccountService::fromConfig($this->db)->find($accountId);
     }
 
     /**
@@ -152,49 +165,6 @@ class ResultController extends BaseController
     }
 
     /**
-     * Данные блока расширенного разбора для страницы результата.
-     *
-     * Блок показывается, только если для этой методики и режима действительно
-     * опубликован промпт: иначе посетителю предлагалась бы кнопка, которая
-     * ничего не сделает.
-     *
-     * @param array<string, mixed> $session
-     *
-     * @return array<string, mixed>|null
-     */
-    private function reportViewData(string $slug, array $session): ?array
-    {
-        if (($session['retention_class'] ?? null) === 'therapist_case') {
-            return ['restricted' => true, 'mode' => $this->reportMode($session), 'kinds' => []];
-        }
-
-        $mode = $this->reportMode($session);
-        $registry = PromptRegistry::default();
-        $reports = new AiReportRepository($this->db);
-
-        $kinds = [];
-        foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
-            if ($registry->published($slug, $mode, $kind) === null) {
-                continue;
-            }
-
-            $report = $reports->findFor((string) $session['id'], $mode, $kind);
-
-            $kinds[] = [
-                'kind' => $kind,
-                'title' => $kind === Prompt::KIND_CLEAR ? 'Понятный разбор' : 'Профессиональное заключение',
-                'status' => $report['status'] ?? 'none',
-                'html' => ($report['status'] ?? '') === AiReportRepository::STATUS_READY
-                    ? ReportMarkdown::toHtml((string) $report['content'])
-                    : null,
-                'failure_reason' => $report['failure_reason'] ?? null,
-            ];
-        }
-
-        return $kinds === [] ? null : ['mode' => $mode, 'kinds' => $kinds];
-    }
-
-    /**
      * Заказать расширенный разбор.
      * POST /result/{slug}/{token}/report
      *
@@ -224,7 +194,7 @@ class ResultController extends BaseController
             $this->redirect('/result/' . $slug . '/' . $token);
         }
 
-        $mode = $this->reportMode($session);
+        $mode = $this->presenter->reportMode($session);
 
         // Промпт спрашивается здесь, а не в обработчике: если разбор для этой
         // методики не открыт, посетитель узнаёт об этом сразу, а не через
@@ -262,7 +232,7 @@ class ResultController extends BaseController
 
         $kind = $_GET['kind'] ?? Prompt::KIND_CLEAR;
         $reports = new AiReportRepository($this->db);
-        $report = $reports->findFor((string) $session['id'], $this->reportMode($session), (string) $kind);
+        $report = $reports->findFor((string) $session['id'], $this->presenter->reportMode($session), (string) $kind);
 
         if ($report === null) {
             echo json_encode(['status' => 'none']);
@@ -279,18 +249,6 @@ class ResultController extends BaseController
                 : null,
             'failure_reason' => $report['failure_reason'] ?? null,
         ], JSON_UNESCAPED_UNICODE);
-    }
-
-    /**
-     * Парный разбор делается, когда сравнение уже собрано; иначе одиночный.
-     *
-     * @param array<string, mixed> $session
-     */
-    private function reportMode(array $session): string
-    {
-        return $this->sessionManager->getPairComparisonBySession((string) $session['id']) !== null
-            ? 'pair'
-            : 'individual';
     }
 
     /**
@@ -368,37 +326,41 @@ class ResultController extends BaseController
         // Get module
         $module = $this->getModuleOrFail($slug);
 
-        // Get results
-        $results = $session['calculated_results'];
+        $this->streamPdf($session, $test, $module);
+    }
 
-        // Attach pair comparison (if any) so the PDF includes it, and mark
-        // as PDF so buildSections suppresses the invite-to-partner block
-        // (an invite link has no place in a printed document).
-        $this->enrichWithPairComparison($results, $session, $module);
-        $includesPairComparison = isset($results['pair_comparison']);
-        $results['is_pdf'] = true;
-
-        $sections = $module->buildSections($results);
-        $resultsHtml = $this->sectionRenderer->renderToHtml($sections);
+    /**
+     * Собирает и отдаёт PDF результата.
+     *
+     * Выделено отдельно, потому что тот же документ отдаётся и по ссылке, и по
+     * владению аккаунтом; различается только проверка доступа.
+     *
+     * @param array<string, mixed> $session
+     * @param array<string, mixed> $test
+     */
+    private function streamPdf(array $session, array $test, TestModuleInterface $module): never
+    {
+        $printable = $this->presenter->pdfSections($session, $module);
+        $resultsHtml = $this->sectionRenderer->renderToHtml($printable['sections']);
 
         // Generate PDF
         $pdfPath = $this->pdfGenerator->generateTestResult(
             $session,
             $test,
             $resultsHtml,
-            $includesPairComparison,
+            $printable['includes_pair_comparison'],
         );
 
         // Send file
         $fullPath = dirname(__DIR__) . $pdfPath;
         if (!file_exists($fullPath)) {
             http_response_code(500);
-            echo 'PDF generation failed: ' . $fullPath;
-            return;
+            echo 'PDF generation failed';
+            exit;
         }
 
         header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="result_' . $slug . '_' . date('YmdHis') . '.pdf"');
+        header('Content-Disposition: inline; filename="result_' . $test['slug'] . '_' . date('YmdHis') . '.pdf"');
         header('Content-Length: ' . filesize($fullPath));
         readfile($fullPath);
         exit;
@@ -563,42 +525,4 @@ class ResultController extends BaseController
         ]);
     }
 
-    /**
-     * Get partner results for comparison
-     */
-    private function getPartnerResults(array $comparison, string $currentSessionId): array
-    {
-        $partnerSessionId = $comparison['session_1_id'] === $currentSessionId
-            ? $comparison['session_2_id']
-            : $comparison['session_1_id'];
-
-        $partnerSession = $this->sessionManager->getSessionById($partnerSessionId);
-
-        return $partnerSession['calculated_results'] ?? [];
-    }
-
-    /**
-     * Attach pair comparison data to $results (in place) when a pair
-     * comparison exists for this session. Shared by show() and pdf() so
-     * both render the comparison block consistently.
-     *
-     * @param array<string, mixed>                &$results Calculated results (modified).
-     * @param array<string, mixed>                $session  Session row.
-     * @param \PsyTest\Modules\TestModuleInterface $module   Module instance.
-     */
-    private function enrichWithPairComparison(array &$results, array $session, \PsyTest\Modules\TestModuleInterface $module): void
-    {
-        if (!$module->supportsPairMode()) {
-            return;
-        }
-        $pairComparison = $this->sessionManager->getPairComparisonBySession($session['id']);
-        if (!$pairComparison) {
-            return;
-        }
-        $partnerResults = $this->getPartnerResults($pairComparison, $session['id']);
-        $results['pair_comparison'] = $module->comparePairResults(
-            $session['calculated_results'],
-            $partnerResults
-        );
-    }
 }

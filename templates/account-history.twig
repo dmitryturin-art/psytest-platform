@@ -1,0 +1,63 @@
+{% extends "layout.twig" %}
+
+{% block title %}Мои результаты — {{ appName }}{% endblock %}
+{% block body_class %}account-page{% endblock %}
+
+{% block content %}
+<div class="account-wrapper">
+    <div class="account-header">
+        <h1>Мои результаты</h1>
+        <form method="post" action="{{ basePath }}/account/logout" class="account-inline-form">
+            {{ csrf_field() }}
+            <button type="submit" class="btn btn-outline">Выйти</button>
+        </form>
+    </div>
+
+    <p class="account-note">Вход выполнен: {{ account.email }}</p>
+
+    {% if flash %}
+    <p class="account-flash account-flash--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
+
+    {% if history is empty %}
+        <div class="empty-state">
+            <h3>Здесь пока пусто</h3>
+            <p>Результаты не попадают сюда сами. Пройдите тест, откройте его результат по своей ссылке
+               и нажмите «Сохранить в мой кабинет» — после этого он появится в этом списке.</p>
+            <a href="{{ basePath }}/tests" class="btn btn-primary">Пройти тест</a>
+        </div>
+    {% else %}
+        <ul class="account-history">
+            {% for item in history %}
+            <li class="account-history__item">
+                <div class="account-history__main">
+                    <a href="{{ basePath }}/account/results/{{ item.id }}" class="account-history__link">{{ item.test_name }}</a>
+                    <span class="account-history__date">
+                        {{ (item.completed_at ?: item.created_at)|date("d.m.Y H:i") }}
+                    </span>
+                </div>
+                <form method="post" action="{{ basePath }}/account/results/{{ item.id }}/detach" class="account-inline-form">
+                    {{ csrf_field() }}
+                    <button type="submit" class="btn btn-outline">Отвязать</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <section class="account-danger">
+        <h2>Удалить аккаунт</h2>
+        <p>Будут удалены адрес почты, ссылки входа и все результаты, сохранённые в этом кабинете —
+           вместе с ответами, расчётом, разборами и созданными PDF. Восстановить их нельзя.
+           Результаты, которые вы сюда не сохраняли, останутся нетронутыми.</p>
+        <form method="post" action="{{ basePath }}/account/delete" class="account-form">
+            {{ csrf_field() }}
+            <label>
+                <input type="checkbox" name="confirm_delete" value="delete" required>
+                Подтверждаю безвозвратное удаление аккаунта и сохранённых результатов
+            </label>
+            <button type="submit" class="btn btn-danger">Удалить аккаунт</button>
+        </form>
+    </section>
+</div>
+{% endblock %}
