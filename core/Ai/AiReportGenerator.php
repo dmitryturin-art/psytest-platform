@@ -4,23 +4,21 @@ declare(strict_types=1);
 
 namespace PsyTest\Core\Ai;
 
-use PsyTest\Core\ModuleLoader;
-use PsyTest\Core\SessionManager;
-
 /**
  * Превращает задание в готовый разбор.
  *
- * Здесь нет ни клинической логики, ни знания о конкретных методиках: контекст
- * собирает сам модуль (`aiReportContext()`), текст промпта приходит из реестра,
- * вызов делает адаптер провайдера. Задача этого класса — связать их и честно
- * записать исход.
+ * Здесь нет ни клинической логики, ни знания о конкретных методиках: вход
+ * задания заморожен при постановке (аудит R2), вызов делает адаптер провайдера.
+ * Задача этого класса — связать их и честно записать исход.
+ *
+ * Задания, поставленные до появления снимков, обрабатываются по-прежнему —
+ * через реестр промптов и живой результат сессии.
  */
 final class AiReportGenerator
 {
     public function __construct(
         private readonly AiReportRepository $reports,
-        private readonly SessionManager $sessions,
-        private readonly ModuleLoader $modules,
+        private readonly AiReportContextBuilder $contextBuilder,
         private readonly PromptRegistry $prompts,
         private readonly AiClient $client,
     ) {
@@ -34,18 +32,7 @@ final class AiReportGenerator
         $id = (string) $report['id'];
 
         try {
-            $context = $this->buildContext($report);
-            $prompt = $this->prompts->published(
-                (string) $report['test_slug'],
-                (string) $report['mode'],
-                (string) $report['report_kind'],
-            );
-
-            if ($prompt === null) {
-                throw new AiProviderException(
-                    "Промпт «{$report['prompt_key']}» не опубликован — разбор не делается.",
-                );
-            }
+            [$prompt, $context] = $this->input($report);
 
             $ownerContext = $report['owner_context'] ?? null;
             $completion = $this->client->complete($prompt, $context, is_string($ownerContext) ? $ownerContext : null);
@@ -61,61 +48,60 @@ final class AiReportGenerator
     }
 
     /**
+     * Что именно уходит провайдеру.
+     *
      * @param array<string, mixed> $report
      *
-     * @return array<string, mixed>
+     * @return array{0: Prompt, 1: array<string, mixed>}
      */
-    private function buildContext(array $report): array
+    private function input(array $report): array
     {
-        $session = $this->sessions->getSessionById((string) $report['session_id']);
-        if ($session === null) {
-            throw new AiProviderException('Сессия разбора не найдена.');
+        $context = self::decodeSnapshot($report['context_snapshot'] ?? null);
+        $promptSnapshot = self::decodeSnapshot($report['prompt_snapshot'] ?? null);
+
+        if ($context !== null && $promptSnapshot !== null) {
+            // Снимок самодостаточен: промпт восстанавливается без реестра и
+            // файлов, а проверка публикации уже была сделана при постановке.
+            return [Prompt::fromSnapshot($promptSnapshot), $context];
         }
 
-        $module = $this->modules->getModule((string) $report['test_slug']);
-        if ($module === null) {
-            throw new AiProviderException("Методика «{$report['test_slug']}» не найдена.");
+        // Задание старше миграции снимков. Запись одной строкой, без каких-либо
+        // клинических данных: в логах не должно быть ни контекста, ни отчёта.
+        error_log(sprintf('AI report %s: legacy job without snapshot', $report['id']));
+
+        $prompt = $this->prompts->published(
+            (string) $report['test_slug'],
+            (string) $report['mode'],
+            (string) $report['report_kind'],
+        );
+
+        if ($prompt === null) {
+            throw new AiProviderException(
+                "Промпт «{$report['prompt_key']}» не опубликован — разбор не делается.",
+            );
         }
 
-        $mode = (string) $report['mode'];
-        $results = $mode === 'pair'
-            ? $this->pairResults($module, $session)
-            : (array) $session['calculated_results'];
-
-        if ($results === []) {
-            throw new AiProviderException('Результат сессии пуст — разбирать нечего.');
-        }
-
-        $context = $module->aiReportContext($results, $mode);
-        if ($context === null) {
-            throw new AiProviderException("Методика «{$report['test_slug']}» не отдаёт данные в режиме «{$mode}».");
-        }
-
-        return $context;
+        return [
+            $prompt,
+            $this->contextBuilder->build(
+                (string) $report['session_id'],
+                (string) $report['test_slug'],
+                (string) $report['mode'],
+            ),
+        ];
     }
 
     /**
-     * @param array<string, mixed> $session
-     *
-     * @return array<string, mixed>
+     * @return array<string, mixed>|null
      */
-    private function pairResults(object $module, array $session): array
+    private static function decodeSnapshot(mixed $raw): ?array
     {
-        $comparison = $this->sessions->getPairComparisonBySession((string) $session['id']);
-        if ($comparison === null) {
-            throw new AiProviderException('Парное сравнение для этой сессии не найдено.');
+        if (!is_string($raw) || trim($raw) === '') {
+            return null;
         }
 
-        $first = $this->sessions->getSessionById((string) $comparison['session_1_id']);
-        $second = $this->sessions->getSessionById((string) $comparison['session_2_id']);
+        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 
-        if ($first === null || $second === null) {
-            throw new AiProviderException('Одна из сессий пары не найдена.');
-        }
-
-        return $module->comparePairResults(
-            (array) $first['calculated_results'],
-            (array) $second['calculated_results'],
-        );
+        return is_array($decoded) && $decoded !== [] ? $decoded : null;
     }
 }

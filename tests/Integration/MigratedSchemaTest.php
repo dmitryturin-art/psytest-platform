@@ -42,6 +42,7 @@ final class MigratedSchemaTest extends TestCase
         $this->assertIndex('visitor_login_tokens', 'uq_visitor_login_tokens_hash', true);
         $this->assertIndex('visitor_login_tokens', 'idx_visitor_login_tokens_email_created', false);
         $this->assertIndex('visitor_login_tokens', 'idx_visitor_login_tokens_rate_key_created', false);
+        $this->assertColumns('ai_reports', ['context_snapshot', 'prompt_snapshot']);
         $this->assertColumns('test_sessions', ['account_id']);
         $this->assertIndex('test_sessions', 'idx_test_sessions_account', false);
 

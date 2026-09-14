@@ -21,7 +21,9 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use PsyTest\Core\Ai\AiClient;
+use PsyTest\Core\Ai\AiProviderException;
 use PsyTest\Core\Ai\AiProviderSettings;
+use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\CurlTransport;
@@ -55,10 +57,14 @@ if ($released !== []) {
     $log(sprintf('Возвращено в очередь зависших заданий: %d', count($released)));
 }
 
-$generator = new AiReportGenerator(
-    $reports,
+$contextBuilder = new AiReportContextBuilder(
     new SessionManager($db),
     (new ModuleLoader(null, $db))->discover(),
+);
+
+$generator = new AiReportGenerator(
+    $reports,
+    $contextBuilder,
     PromptRegistry::default(),
     new AiClient($settings, new CurlTransport()),
 );
@@ -86,12 +92,21 @@ if (isset($options['request'])) {
         exit(1);
     }
 
+    // Снимок входа собирается при постановке — как и на странице результата.
+    try {
+        $context = $contextBuilder->build((string) $session['id'], $slug, $mode);
+    } catch (AiProviderException $e) {
+        $log('Задание не поставлено: ' . $e->getMessage());
+        exit(1);
+    }
+
     $job = $reports->request(
         (string) $session['id'],
         $slug,
         $mode,
         $kind,
         $prompt,
+        $context,
         isset($options['context']) ? (string) $options['context'] : null,
     );
 

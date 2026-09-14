@@ -51,9 +51,23 @@ final class AiReportQueueTest extends TestCase
         return new Prompt('lazarus', 'individual', 'clear', 2, Prompt::STATUS_PUBLISHED, 'текст', false, 'test');
     }
 
+    /** @return array<string, mixed> */
+    private function context(): array
+    {
+        return ['test' => 'lazarus', 'mode' => 'individual', 'totals' => ['self' => 120]];
+    }
+
+    /** @return array<string, mixed> */
     private function request(): array
     {
-        return $this->reports->request($this->sessionId, 'lazarus', 'individual', 'clear', $this->prompt());
+        return $this->reports->request(
+            $this->sessionId,
+            'lazarus',
+            'individual',
+            'clear',
+            $this->prompt(),
+            $this->context(),
+        );
     }
 
     public function testRepeatedRequestReusesTheSameJobInsteadOfDuplicating(): void
@@ -203,6 +217,7 @@ final class AiReportQueueTest extends TestCase
             'individual',
             'professional',
             new Prompt('lazarus', 'individual', 'professional', 2, Prompt::STATUS_PUBLISHED, 'текст', false, 'test'),
+            $this->context(),
             'Заметка владельца, которую нельзя сохранять.',
         );
         $running = $this->reports->request(
@@ -211,6 +226,7 @@ final class AiReportQueueTest extends TestCase
             'pair',
             'clear',
             new Prompt('lazarus', 'pair', 'clear', 2, Prompt::STATUS_PUBLISHED, 'текст', false, 'test'),
+            $this->context(),
         );
         $this->db->update('ai_reports', ['status' => AiReportRepository::STATUS_RUNNING], 'id = ?', [$running['id']]);
 

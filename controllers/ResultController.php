@@ -11,7 +11,9 @@ declare(strict_types=1);
 namespace PsyTest\Controllers;
 
 use PsyTest\Core\Ai\AiClient;
+use PsyTest\Core\Ai\AiProviderException;
 use PsyTest\Core\Ai\AiProviderSettings;
+use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\CurlTransport;
@@ -145,11 +147,15 @@ class ResultController extends BaseController
 
         return new AiReportGenerator(
             new AiReportRepository($this->db),
-            $this->sessionManager,
-            $this->moduleLoader,
+            $this->contextBuilder(),
             PromptRegistry::default(),
             new AiClient($settings, new CurlTransport()),
         );
+    }
+
+    private function contextBuilder(): AiReportContextBuilder
+    {
+        return new AiReportContextBuilder($this->sessionManager, $this->moduleLoader);
     }
 
     /**
@@ -205,8 +211,17 @@ class ResultController extends BaseController
             $this->redirect('/result/' . $slug . '/' . $token);
         }
 
+        // Контекст собирается здесь же, а не в обработчике: снимок задания
+        // обязан описывать результат на момент нажатия кнопки (аудит R2).
+        // Если разбирать нечего, задание не создаётся вовсе.
+        try {
+            $context = $this->contextBuilder()->build((string) $session['id'], $slug, $mode);
+        } catch (AiProviderException) {
+            $this->redirect('/result/' . $slug . '/' . $token);
+        }
+
         $reports = new AiReportRepository($this->db);
-        $reports->request((string) $session['id'], $slug, $mode, $kind, $prompt);
+        $reports->request((string) $session['id'], $slug, $mode, $kind, $prompt, $context);
 
         $this->respondThenGenerate('/result/' . $slug . '/' . $token, $reports);
     }

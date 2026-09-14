@@ -34,6 +34,13 @@ final class AiReportRepository
      * Повторное нажатие кнопки не должно ни плодить записи, ни перезапускать
      * готовый отчёт — за это отвечает уникальный индекс по сессии, режиму и виду.
      *
+     * Вместе с заданием замораживается снимок входа (аудит R2): промпт и
+     * разрешённый контекст на момент постановки. Обработчик отправляет
+     * провайдеру именно их, поэтому публикация новой версии промпта или правка
+     * результата после нажатия кнопки уже не меняет содержание запроса.
+     *
+     * @param array<string, mixed> $context Разрешённый контекст модуля, ровно то, что уйдёт провайдеру.
+     *
      * @return array<string, mixed>
      */
     public function request(
@@ -42,12 +49,15 @@ final class AiReportRepository
         string $mode,
         string $reportKind,
         Prompt $prompt,
+        array $context,
         ?string $ownerContext = null,
     ): array {
         $existing = $this->findFor($sessionId, $mode, $reportKind);
 
         if ($existing !== null) {
-            // Неудавшееся задание можно попросить заново, пока не исчерпаны попытки.
+            // Неудавшееся задание можно попросить заново, пока не исчерпаны
+            // попытки. Снимок при этом не пересобирается: повтор обязан идти с
+            // тем же входом, иначе «повтор» стал бы другим запросом.
             if ($existing['status'] === self::STATUS_FAILED && (int) $existing['attempts'] < self::MAX_ATTEMPTS) {
                 $this->db->update(
                     'ai_reports',
@@ -71,11 +81,24 @@ final class AiReportRepository
             'report_kind' => $reportKind,
             'prompt_key' => $prompt->key(),
             'prompt_version' => $prompt->version,
+            'context_snapshot' => self::encodeSnapshot($context),
+            'prompt_snapshot' => self::encodeSnapshot($prompt->toSnapshot()),
             'status' => self::STATUS_PENDING,
             'owner_context' => $ownerContext,
         ]);
 
         return (array) $this->find($id);
+    }
+
+    /**
+     * @param array<string, mixed> $snapshot
+     *
+     * @throws \JsonException снимок обязан быть записываемым; молчаливо
+     *                        поставить задание без него нельзя.
+     */
+    private static function encodeSnapshot(array $snapshot): string
+    {
+        return json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
     /** @return array<string, mixed>|null */
