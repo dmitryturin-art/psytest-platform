@@ -18,6 +18,6 @@ final class PhpStanBaselineCheckTest extends TestCase
         $report = implode("\n", $output);
 
         self::assertSame(0, $exitCode, $report);
-        self::assertStringContainsString('145 entries (cap 145)', $report);
+        self::assertStringContainsString('141 entries (cap 141)', $report);
     }
 }

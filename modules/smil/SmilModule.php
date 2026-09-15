@@ -226,7 +226,7 @@ class SmilModule extends BaseTestModule
             'clinical_scales' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
             'full_version' => true,
             'total_questions' => 566,
-            'additional_scales_count' => 200,
+            'additional_scales_count' => 16,
         ]);
     }
 
@@ -289,20 +289,6 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Load additional scales from JSON
-     */
-    protected function loadAdditionalScales(): array
-    {
-        $filepath = $this->modulePath . '/additional-scales.json';
-        if (!file_exists($filepath)) {
-            return [];
-        }
-        $content = file_get_contents($filepath);
-        $data = json_decode($content, true) ?? [];
-        return $data['scales'] ?? [];
-    }
-
-    /**
      * Load interpretations from JSON
      */
     protected function loadInterpretations(): array
@@ -348,44 +334,23 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Load additional scales norms from JSON
+     * Определения дополнительных шкал партии 05.S3.1.
+     *
+     * Файл собирается bin/smil-build-batch.php из транскрипции приложения
+     * Собчик; руками ключи и нормы не правятся.
+     *
+     * @return list<array<string, mixed>>
      */
     protected function loadAdditionalScalesNorms(): array
     {
-        $filepath = $this->modulePath . '/additional-scales-norms.json';
+        $filepath = $this->modulePath . '/additional-scales-v2.json';
         if (!file_exists($filepath)) {
             return [];
         }
         $content = file_get_contents($filepath);
-        $data = json_decode($content, true) ?? [];
+        $data = json_decode((string) $content, true) ?? [];
 
-        // Extract scales from the data structure
-        return $data['scales'] ?? [];
-    }
-
-    /**
-     * Get interpretation for additional scale
-     */
-    protected function getAdditionalScaleInterpretation(string $code, float $tScore, string $category = ''): string
-    {
-        $interpretations = $this->loadInterpretations();
-        $level = $this->getScoreLevel($tScore);
-
-        // Try to find interpretation in additional_scales section
-        if (isset($interpretations['additional_scales'][$category][$code]['levels'][$level])) {
-            return $interpretations['additional_scales'][$category][$code]['levels'][$level];
-        }
-
-        // Fallback: try to find in any category
-        if (isset($interpretations['additional_scales'])) {
-            foreach ($interpretations['additional_scales'] as $cat => $scales) {
-                if (isset($scales[$code]['levels'][$level])) {
-                    return $scales[$code]['levels'][$level];
-                }
-            }
-        }
-
-        return 'Интерпретация отсутствует';
+        return array_values($data['scales'] ?? []);
     }
 
     /**
@@ -941,59 +906,64 @@ class SmilModule extends BaseTestModule
         return ['scales' => $scales];
     }
 
+    /**
+     * Секция «Дополнительные шкалы»: одна группа проверенных по источнику шкал.
+     *
+     * Клинических текстов здесь нет: только название, raw/T, нормы применённого
+     * пола и ссылка на страницу источника.
+     *
+     * @param array<string, array<string, mixed>> $additionalScores
+     *
+     * @return array<string, mixed>
+     */
     private function buildAdditionalScalesData(array $additionalScores): array
     {
         if (empty($additionalScores)) {
             return ['categories' => []];
         }
 
-        $normsData = $this->loadAdditionalScalesNorms();
-        $categoryNames = [
-            'factor' => 'Факторные шкалы',
-            'special' => 'Специальные шкалы',
-            'content' => 'Контент-шкалы',
-        ];
-
-        $categories = [];
-        foreach ($normsData as $category => $scales) {
-            if (empty($scales)) {
+        $items = [];
+        foreach ($this->loadAdditionalScalesNorms() as $definition) {
+            $code = (string) ($definition['code'] ?? '');
+            if ($code === '' || !isset($additionalScores[$code])) {
                 continue;
             }
 
-            $items = [];
-            foreach ($scales as $code => $info) {
-                if (!isset($additionalScores[$code])) {
-                    continue;
-                }
+            $score = $additionalScores[$code];
+            $tScore = $score['t'] ?? 50;
+            $source = $score['source'] ?? [];
 
-                $score = $additionalScores[$code];
-                $tScore = $score['t'] ?? 50;
-                $level = $this->getScoreLevel($tScore);
-                $markerPos = $this->calculateMarkerPosition($tScore);
-
-                $items[] = [
-                    'code' => $code,
-                    'name' => $info['name'] ?? $code,
-                    'description' => $info['description'] ?? '',
-                    'raw' => $score['raw'] ?? 0,
-                    't_score' => $tScore,
-                    'level' => $level,
-                    'level_name' => $this->getLevelName($level),
-                    'marker_position' => round($markerPos, 2),
-                    'interpretation' => $score['interpretation'] ?? $this->getAdditionalScaleInterpretation($code, $tScore, $category),
-                ];
-            }
-
-            if (!empty($items)) {
-                $categories[] = [
-                    'name' => $categoryNames[$category] ?? $category,
-                    'count' => count($items),
-                    'items' => $items,
-                ];
-            }
+            $items[] = [
+                'code' => $code,
+                'name' => $score['name'] ?? $code,
+                'raw' => $score['raw'] ?? 0,
+                'max_raw' => $score['max_raw'] ?? 0,
+                'answered' => $score['answered'] ?? 0,
+                't_score' => $tScore,
+                'level' => $score['level'] ?? 'normal',
+                'level_name' => $score['level_name'] ?? '',
+                'norm' => sprintf('M %s / σ %s', $score['M'] ?? '—', $score['sigma'] ?? '—'),
+                'source_note' => isset($source['page_print'])
+                    ? sprintf('Собчик, 2003, прил., стр. %d, зап. №%d', (int) $source['page_print'], (int) ($source['entry'] ?? 0))
+                    : '',
+                'status' => $score['status'] ?? 'unverified',
+            ];
         }
 
-        return ['categories' => $categories];
+        if (empty($items)) {
+            return ['categories' => []];
+        }
+
+        return [
+            'categories' => [
+                [
+                    'name' => 'Проверенные по Собчик (2003)',
+                    'note' => 'Ключи и нормы перенесены из приложения руководства; нормы применены по полу респондента.',
+                    'count' => count($items),
+                    'items' => $items,
+                ],
+            ],
+        ];
     }
 
     private function buildInterpretationData(array $profile, array $interpretation): array
