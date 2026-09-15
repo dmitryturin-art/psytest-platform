@@ -29,12 +29,14 @@
         <h2 id="owner-editor-edit-title">Текст последней версии</h2>
         <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/revisions" class="owner-form" data-markdown-editor-form>
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <label class="owner-field">
-                {# Поле остаётся источником правды: визуальный редактор только
-                   правит его содержимое, а без JS страница работает как прежде. #}
-                <span>Текст разбора (до {{ content_max }} символов)</span>
-                <textarea name="content" class="owner-editor-textarea" rows="24" maxlength="{{ content_max }}" required data-markdown-editor>{{ latest ? latest.content : '' }}</textarea>
-            </label>
+            {# Поле остаётся источником правды: визуальный редактор только
+               правит его содержимое, а без JS страница работает как прежде.
+               Не <label>-обёртка: клик внутри label уходил первой кнопке
+               тулбара редактора и открывал список заголовков. #}
+            <div class="owner-field">
+                <label for="owner-editor-content">Текст разбора (до {{ content_max }} символов)</label>
+                <textarea id="owner-editor-content" name="content" class="owner-editor-textarea" rows="24" maxlength="{{ content_max }}" required data-markdown-editor>{{ latest ? latest.content : '' }}</textarea>
+            </div>
             <button type="submit" class="btn btn-primary">Сохранить как новую версию</button>
         </form>
     </section>
