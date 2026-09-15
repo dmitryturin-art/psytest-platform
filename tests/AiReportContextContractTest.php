@@ -107,7 +107,10 @@ final class AiReportContextContractTest extends TestCase
 
         self::assertIsArray($payload);
         self::assertSame(
-            ['test', 'mode', 'form', 'validity', 'profile', 'indices', 'additional_scales', 'completeness'],
+            [
+                'test', 'mode', 'form', 'validity', 'profile', 'indices',
+                'additional_scales', 'additional_scales_glossary', 'levels', 'completeness',
+            ],
             array_keys($payload),
         );
         self::assertSame('smil', $payload['test']);
@@ -174,6 +177,92 @@ final class AiReportContextContractTest extends TestCase
         foreach ($payload['additional_scales'] as $scale) {
             self::assertSame(['code', 'name', 't', 'raw'], array_keys($scale));
         }
+    }
+
+    public function testSmilExplainsEveryAdditionalScaleItSendsOut(): void
+    {
+        // Голое число модель трактует по названию шкалы, и клиническая часть
+        // разбора выходит поверхностной (решение владельца 15.09).
+        $payload = $this->smil()->aiReportContext($this->smilResults(), 'individual');
+
+        self::assertIsArray($payload);
+        self::assertNotEmpty($payload['additional_scales']);
+        self::assertNotEmpty($payload['additional_scales_glossary']);
+
+        foreach ($payload['additional_scales'] as $scale) {
+            $code = (string) $scale['code'];
+            self::assertArrayHasKey(
+                $code,
+                $payload['additional_scales_glossary'],
+                "Шкала {$code} уходит наружу числом без пояснения.",
+            );
+
+            $entry = $payload['additional_scales_glossary'][$code];
+            self::assertSame(
+                ['meaning', 'high', 'low', 'relates_to', 'western_name', 'source'],
+                array_keys($entry),
+            );
+            self::assertNotSame('', (string) $entry['meaning']);
+            self::assertNotSame('', (string) $entry['high']);
+        }
+
+        // Пояснение по шкале, которой в нагрузке нет, наружу не уходит.
+        $codes = array_map(static fn (array $scale): string => (string) $scale['code'], $payload['additional_scales']);
+        self::assertSame($codes, array_keys($payload['additional_scales_glossary']));
+    }
+
+    public function testSmilShipsTheLevelRuleSoTheModelDoesNotInventItsOwn(): void
+    {
+        $payload = $this->smil()->aiReportContext($this->smilResults(), 'individual');
+
+        self::assertIsArray($payload);
+        self::assertSame(['scale', 'normative_range', 'bands', 'principles'], array_keys($payload['levels']));
+        self::assertSame('T', $payload['levels']['scale']);
+        self::assertNotEmpty($payload['levels']['bands']);
+        self::assertNotEmpty($payload['levels']['principles']);
+
+        foreach ($payload['levels']['bands'] as $band) {
+            self::assertSame(['from', 'to', 'label', 'means'], array_keys($band));
+        }
+    }
+
+    public function testGlossaryCarriesNoItemWordingAndNoPerItemAnswers(): void
+    {
+        $module = $this->smil();
+        $payload = $module->aiReportContext($this->smilResults(), 'individual');
+
+        self::assertIsArray($payload);
+        $json = (string) json_encode(
+            ['glossary' => $payload['additional_scales_glossary'], 'levels' => $payload['levels']],
+            JSON_UNESCAPED_UNICODE,
+        );
+
+        foreach (array_slice($module->getQuestions(), 0, 60) as $question) {
+            $text = (string) ($question['text'] ?? '');
+            if (mb_strlen($text) > 15) {
+                self::assertStringNotContainsString(
+                    mb_substr($text, 0, 15),
+                    $json,
+                    'В глоссарий не должна попадать формулировка пункта.',
+                );
+            }
+        }
+
+        foreach (['key', 'true', 'false', 'answers', 'raw_scores', 'sigma'] as $forbidden) {
+            self::assertNotContains($forbidden, $this->collectKeys((array) $payload['additional_scales_glossary']));
+        }
+    }
+
+    public function testGlossaryKeepsTheContextSmallEnoughToSend(): void
+    {
+        // Контекст уходит провайдеру целиком: разрастание глоссария оплачивается
+        // токенами каждого разбора.
+        $json = (string) json_encode(
+            $this->smil()->aiReportContext($this->smilResults(), 'individual'),
+            JSON_UNESCAPED_UNICODE,
+        );
+
+        self::assertLessThan(24000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
     }
 
     public function testSmilReportsTheFormInsteadOfBareGender(): void
