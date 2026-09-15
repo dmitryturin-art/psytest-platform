@@ -131,4 +131,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 30. Выкладка `63f9057` (15.09): воркер с `--limit=10` и самоперезапуск из карточки кейса; миграций нет. SHA-256 `07b0b83601b6224eef64bda41588bf4a9c7083333195173be5c4bb6150a859d5` совпал; dump проверен. Ручной запуск воркера по SSH на Beget невозможен: процесс убивается при закрытии сессии даже с `setsid`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/0f32c96/public` и `current` на `releases/0f32c96`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+31. Выкладка `9d52345` (15.09): выгрузка кейса в PDF и версия для печати, русские статусы; миграций нет. SHA-256 `a7efb2f3837624afa6d9cf11687151d5ce885afe7a1c3ab71b9c446cc6378714` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/63f9057/public` и `current` на `releases/63f9057`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
