@@ -1,6 +1,6 @@
 # Реестр дополнительных шкал СМИЛ — S1
 
-**Статус:** инвентарь S1 от 09.09.2026; транскрипция S2 от 15.09.2026 — [smil-additional-scales-transcription.json](smil-additional-scales-transcription.json). Это не публикация новых ключей, не корректировка
+**Статус:** инвентарь S1 от 09.09.2026; транскрипция S2 и первая партия S3.1 от 15.09.2026 — [smil-additional-scales-transcription.json](smil-additional-scales-transcription.json). Это не публикация новых ключей, не корректировка
 расчёта и не проверка базовых 13 шкал. Все runtime-значения ниже остаются неизменными.
 
 ## Граница и схема реестра
@@ -19,12 +19,14 @@ _Стандартизированный многофакторный метод 
 Их построчная транскрипция, контроль числа пунктов, диапазона 1–566 и визуальная сверка —
 отдельный пакет S2. Происхождение всех строк — указанный скан; статус всех новых строк —
 `missing` (в runtime не включены), а правовой статус публикации русской формы — `unconfirmed`.
+Пакетом 05.S3.1 шестнадцать записей переведены в `verified (S3.1)` и включены в runtime;
+остальные 97 остаются `missing` до следующих партий.
 
 | ID | № в источнике | Название | PDF / печатная стр. | true/false keys и нормы по полу | Статус |
 |---|---:|---|---|---|---|
-| sobchik-001 | 1 | А — первый фактор | 197 / 195 | transcribed (A=B) | missing |
-| sobchik-002 | 2 | Способности к обучению | 197 / 195 | transcribed (A=B) | missing |
-| sobchik-006 | 6 | Зрелость | 197 / 195 | transcribed (A=B) | missing |
+| sobchik-001 | 1 | А — первый фактор | 197 / 195 | transcribed (A=B) | verified (S3.1), runtime-код `A` |
+| sobchik-002 | 2 | Способности к обучению | 197 / 195 | transcribed (A=B) | verified (S3.1), runtime-код `LRN` |
+| sobchik-006 | 6 | Зрелость | 197 / 195 | transcribed (A=B) | verified (S3.1), runtime-код `MAT` |
 | sobchik-007 | 7 | Алкогольная дифференциация | 197 / 195 | transcribed (A=B) | missing |
 | sobchik-009 | 9 | Алкоголизм | 197 / 195 | transcribed (A=B) | missing |
 | sobchik-019 | 19 | Черта ответственности | 198 / 196 | transcribed (A=B) | missing |
@@ -34,26 +36,26 @@ _Стандартизированный многофакторный метод 
 | sobchik-036 | 36 | Соперничество | 198 / 196 | transcribed (A=B) | missing |
 | sobchik-037 | 37 | Конверсионная реакция | 199 / 197 | transcribed (A=B) | missing |
 | sobchik-038 | 38 | Адвокатский тип личности | 199 / 197 | transcribed (A=B) | missing |
-| sobchik-039 | 39 | Цинизм | 199 / 197 | transcribed (A=B) | missing |
-| sobchik-041 | 41 | Чистая депрессия | 199 / 197 | transcribed (A=B) | missing |
-| sobchik-042 | 42 | Субъективная депрессия | 199 / 197 | transcribed (A=B) | missing |
-| sobchik-043 | 43 | Психическая заторможенность | 199 / 197 | transcribed (A=B) | missing |
+| sobchik-039 | 39 | Цинизм | 199 / 197 | transcribed (A=B) | verified (S3.1), runtime-код `CYN` |
+| sobchik-041 | 41 | Чистая депрессия | 199 / 197 | transcribed (A=B) | verified (S3.1), runtime-код `DPR` |
+| sobchik-042 | 42 | Субъективная депрессия | 199 / 197 | transcribed (A=B) | verified (S3.1), runtime-код `DSU` |
+| sobchik-043 | 43 | Психическая заторможенность | 199 / 197 | transcribed (A=B) | verified (S3.1), runtime-код `DRT` |
 | sobchik-046 | 46 | Мрачность (угрюмость) | 200 / 198 | transcribed (A=B) | missing |
 | sobchik-047 | 47 | Преступность | 200 / 198 | transcribed (A=B) | missing |
 | sobchik-048 | 48 | Отрицание симптомов | 200 / 198 | transcribed (A=B) | missing |
-| sobchik-049 | 49 | Доминирование | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-049 | 49 | Доминирование | 200 / 198 | transcribed (A=B) | verified (S3.1), runtime-код `Do` |
 | sobchik-050 | 50 | Доминирование | 200 / 198 | transcribed (A=B) | missing |
-| sobchik-051 | 51 | Явная депрессия | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-051 | 51 | Явная депрессия | 200 / 198 | transcribed (A=B) | verified (S3.1), runtime-код `DOV` |
 | sobchik-052 | 52 | Преступность | 201 / 199 | transcribed (A=B) | missing |
-| sobchik-053 | 53 | Депрессивные реакции | 201 / 199 | transcribed (A=B) | missing |
+| sobchik-053 | 53 | Депрессивные реакции | 201 / 199 | transcribed (A=B) | verified (S3.1), runtime-код `DRX` |
 | sobchik-055 | 55 | Диссимуляция | 201 / 199 | transcribed (A=B) | missing |
 | sobchik-056 | 56 | Мягкая депрессия | 201 / 199 | transcribed (A=B) | missing |
-| sobchik-057 | 57 | Зависимость | 201 / 199 | transcribed (A=B) | missing |
+| sobchik-057 | 57 | Зависимость | 201 / 199 | transcribed (A=B) | verified (S3.1), runtime-код `DPN` |
 | sobchik-058 | 58 | Эскапизм (бегство от решения проблем) | 202 / 200 | transcribed (A=B) | missing |
 | sobchik-059 | 59 | Эмоциональная незрелость | 202 / 200 | transcribed (A=B) | missing |
 | sobchik-060 | 60 | Сверхконтроль «Я» (зажатость) | 202 / 200 | transcribed (A=B) | missing |
 | sobchik-061 | 61 | Эпилепсия | 202 / 200 | transcribed (A=B) | missing |
-| sobchik-062 | 62 | Сила Эго | 202 / 200 | transcribed (A=B) | missing |
+| sobchik-062 | 62 | Сила Эго | 202 / 200 | transcribed (A=B) | verified (S3.1), runtime-код `EGO` |
 | sobchik-064 | 64 | Оценка улучшения | 203 / 201 | transcribed (A=B) | missing |
 | sobchik-066 | 66 | Женственность | 203 / 201 | transcribed (A=B) | missing |
 | sobchik-070 | 70 | Общая плохая приспособляемость | 203 / 201 | transcribed (A=B) | missing |
@@ -61,7 +63,7 @@ _Стандартизированный многофакторный метод 
 | sobchik-073 | 73 | Предрасположенность к головным болям | 203 / 201 | transcribed (A=B) | missing |
 | sobchik-074 | 74 | Контроль над враждебностью | 203 / 201 | transcribed (A=B) | missing |
 | sobchik-075 | 75 | Сосредоточенность на здоровье | 204 / 202 | transcribed (A=B) | missing |
-| sobchik-077 | 77 | Враждебность | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-077 | 77 | Враждебность | 204 / 202 | transcribed (A=B) | verified (S3.1), runtime-код `OH` |
 | sobchik-080 | 80 | Чистая ипохондрия | 204 / 202 | transcribed (A=B) | missing |
 | sobchik-081 | 81 | Выраженная враждебность | 204 / 202 | transcribed (A=B) | missing |
 | sobchik-083 | 83 | Чистая истерия | 204 / 202 | transcribed (A=B) | missing |
@@ -71,7 +73,7 @@ _Стандартизированный многофакторный метод 
 | sobchik-088 | 88 | Подавленная агрессия | 205 / 203 | transcribed (A=B) | missing |
 | sobchik-089 | 89 | Явная истерия | 205 / 203 | transcribed (A=B) | missing |
 | sobchik-090 | 90 | Скрытая истерия | 205 / 203 | transcribed (A=B) | missing |
-| sobchik-092 | 92 | Интеллектуальная эффективность (условия для мыслительной деятельности) | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-092 | 92 | Интеллектуальная эффективность (условия для мыслительной деятельности) | 205 / 203 | transcribed (A=B) | verified (S3.1), runtime-код `Es` |
 | sobchik-093 | 93 | Импульсивность | 206 / 204 | transcribed (A=B) | missing |
 | sobchik-094 | 94 | Внутренняя плохая приспособляемость (внутренняя рассогласованность) | 206 / 204 | transcribed (A=B) | missing |
 | sobchik-095 | 95 | Интеллектуальный коэффициент (реальная продуктивность интеллекта) | 206 / 204 | transcribed (A=B) | missing |
@@ -110,9 +112,9 @@ _Стандартизированный многофакторный метод 
 | sobchik-167 | 167 | Фарисейство | 212 / 210 | transcribed (A=B) | missing |
 | sobchik-169 | 169 | Психологические интересы | 212 / 210 | transcribed (A=B) | missing |
 | sobchik-170 | 170 | Параноидальная шизофрения | 212 / 210 | transcribed (A=B) | missing |
-| sobchik-171 | 171 | R — второй фактор | 212 / 210 | transcribed (A=B) | missing |
+| sobchik-171 | 171 | R — второй фактор | 212 / 210 | transcribed (A=B) | verified (S3.1), runtime-код `R` |
 | sobchik-172 | 172 | Рецидивизм | 212 / 210 | transcribed (A=B) | missing |
-| sobchik-174 | 174 | Социальная ответственность | 213 / 211 | transcribed (A=B) | missing |
+| sobchik-174 | 174 | Социальная ответственность | 213 / 211 | transcribed (A=B) | verified (S3.1), runtime-код `Re` |
 | sobchik-175 | 175 | Ригидность (женская) | 213 / 211 | transcribed (A=B) | missing |
 | sobchik-176 | 176 | Ригидность (мужская) | 213 / 211 | transcribed (A=B) | missing |
 | sobchik-177 | 177 | Играния роли | 213 / 211 | transcribed (A=B) | missing |
@@ -136,50 +138,58 @@ _Стандартизированный многофакторный метод 
 | sobchik-211 | 211 | Отношение к работе | 216 / 214 | transcribed (A=B) | missing |
 | sobchik-212 | 212 | Стремление наговорить на себя | 216 / 214 | transcribed (A=B) | missing |
 
-## Что действительно рассчитывается сейчас
+## Что рассчитывается сейчас (после 05.S3.1)
 
-`SmilModule` создаёт `AdditionalScalesCalculator` только из
-`additional-scales-norms.json → scales`: это 2 факторные, 6 специальные и 15 контент-шкал,
-всего **23**. Именно этот файл содержит действующие true/false key и нормы. Его
-`maxRaw` не является числом реально перечисленных ключей и сам по себе не доказательство
-корректности. `additional-scales.json` содержит 13 базовых, 2 факторные, 6 специальных и
-15 контент-метаданных; его `loadAdditionalScales()` в текущем `SmilModule` не вызывается,
-поэтому это не второй активный calculator и не источник для удаления/слияния данных.
+`SmilModule` создаёт `AdditionalScalesCalculator` из
+`modules/smil/additional-scales-v2.json` — **16 шкал партии 05.S3.1**, все со статусом
+`verified`. Файл генерируется `bin/smil-build-batch.php` прямо из
+[транскрипции](smil-additional-scales-transcription.json), поэтому ключи и нормы
+нельзя перепечатать руками; `AdditionalScalesInvariantsTest` проверяет равенство
+источнику при каждом прогоне.
 
-Ниже `n` — число реально перечисленных runtime-ключей (`true + false`). Поля M/σ одинаково
-применяются к обоим полам в коде. `Источник-кандидат` — только совпадение названия/назначения,
-не доказательство идентичности шкалы.
+| Runtime ID | Запись | Название источника | n (true+false) | M/σ муж. | M/σ жен. |
+|---|---:|---|---:|---|---|
+| A | 1 | А-первый фактор | 39 | 11.0 / 6.2 | 16.48 / 6.94 |
+| LRN | 2 | Шкала способностей к обучению | 18 | 3.1 / 2.91 | 11.9 / 2.78 |
+| MAT | 6 | Шкала зрелости | 140 | 72.8 / 7.5 | 73.5 / 8.3 |
+| CYN | 39 | Шкала «Цинизм» | 7 | 3.3 / 2.5 | 3.6 / 1.96 |
+| DPR | 41 | Шкала «Чистая депрессия» | 24 | 11.45 / 2.49 | 12.13 / 2.36 |
+| DSU | 42 | Шкала «Субъективная депрессия» | 32 | 9.57 / 3.15 | 13.59 / 3.49 |
+| DRT | 43 | Шкала «Психическая заторможенность» | 15 | 5.7 / 1.84 | 6.52 / 2.2 |
+| Do | 49 | Шкала «Доминирование» | 28 | 16.25 / 2.94 | 15.22 / 3.04 |
+| DOV | 51 | Шкала «Явная депрессия» | 40 | 9.85 / 3.66 | 14.48 / 4.36 |
+| DRX | 53 | Шкала «Депрессивные реакции» | 42 | 26.22 / 3.44 | 24.04 / 3.09 |
+| DPN | 57 | Шкала «Зависимость» | 57 | 21.25 / 7.9 | 27.1 / 8.0 |
+| EGO | 62 | Шкала «Сила Эго» | 68 | 47.7 / 5.6 | 41.8 / 6.2 |
+| OH | 77 | Шкала «Враждебность» | 50 | 20.53 / 7.43 | 21.91 / 6.08 |
+| Es | 92 | Шкала «Интелектуальная эффективность» | 39 | 28.67 / 3.75 | 27.14 / 3.14 |
+| R | 171 | Шкала «R — второй фактор» | 40 | 16.8 / 4.04 | 17.05 / 3.55 |
+| Re | 174 | Шкала «Социальная ответственность» | 32 | 13.92 / 2.76 | 13.68 / 2.49 |
 
-| Runtime ID | n | Runtime M/σ | Источник-кандидат | Статус сверки |
-|---|---:|---|---|---|
-| A | 30 | 16.48 / 6.94 | 1, «А — первый фактор» | disputed: ключи не совпадают; мужские нормы источника 11.0/6.2, в runtime применены женские |
-| R | 15 | 17.05 / 3.55 | 171, «R — второй фактор» | disputed: в источнике 0 true / 40 false; в runtime 15 true; мужские нормы различаются |
-| Es | 6 | 27.14 / 3.14 | 92, «Интеллектуальная эффективность» | disputed: в источнике 15 true / 24 false; `M > n` в runtime |
-| Do | 8 | 15.22 / 3.04 | 49 или 50, «Доминирование» | disputed: ни один ключ не совпадает; `M > n`; runtime повторяет женские нормы №49 обоим полам |
-| Re | 16 | 13.68 / 2.49 | 174, «Социальная ответственность» | disputed: источник 8 true / 24 false; runtime 0 true / 16 false; мужские нормы различаются |
-| Pk | 18 | 7.90 / 3.40 | — | missing: безопасного прямого соответствия не установлено |
-| MAC | 30 | 11.97 / 2.88 | 9, «Алкоголизм» | disputed: источник уже содержит 80 true, runtime — 30 true |
-| O-H | 30 | 10.86 / 3.81 | 77, «Враждебность» | disputed: источник 47 true / 3 false и другие нормы |
-| ANX | 30 | 12.13 / 2.36 | — | missing |
-| FRS | 23 | 5.24 / 2.73 | — | missing |
-| OBS | 26 | 13.59 / 3.49 | — | missing |
-| DEP | 30 | 14.48 / 4.36 | — | missing: несколько разных депрессивных шкал, прямое сопоставление не доказано |
-| HEA | 29 | 12.90 / 4.83 | — | missing |
-| BIZ | 30 | 22.73 / 6.36 | — | missing |
-| ANG | 28 | 10.86 / 3.81 | — | missing |
-| CYN | 8 | 3.60 / 1.96 | 39, «Цинизм» | disputed: источник 7 true / 0 false и отдельные нормы по полу |
-| ASP | 30 | 10.86 / 3.81 | — | missing |
-| TPA | 24 | 12.80 / 2.63 | — | missing |
-| LSE | 21 | 13.59 / 3.49 | — | missing |
-| SOD | 25 | 17.03 / 4.53 | — | missing |
-| FAM | 28 | 10.86 / 3.81 | — | missing |
-| WRK | 24 | 14.37 / 6.05 | — | missing |
-| TRT | 26 | 11.40 / 4.27 | — | missing |
+Статус всех 16 записей в реестре источника — `verified (S3.1)`. У каждой M ≤ n и σ > 0
+для обоих полов; нормы применяются **по полу респондента**, а не мужские обоим.
 
-Итог сверки: **0 verified, 9 disputed, 14 missing**. В частности, `R`, `Es` и `Do`
-имеют `M > n`; это инвентарное доказательство неподтверждённости, а не разрешение менять
-работающий scoring. Ни key, ни норма, ни fixture этим пакетом не менялись.
+### Что выведено из расчёта тем же пакетом
 
+Прежние 23 runtime-кода (`A`, `R`, `Es`, `Do`, `Re`, `Pk`, `MAC`, `O-H`, `ANX`, `FRS`,
+`OBS`, `DEP`, `HEA`, `BIZ`, `ANG`, `CYN`, `ASP`, `TPA`, `LSE`, `SOD`, `FAM`, `WRK`,
+`TRT` в прежних определениях) удалены вместе с файлами `additional-scales-norms.json`
+и неиспользуемым `additional-scales.json`, а также с их текстами в
+`interpretations.json`. Основание — сверка S2: пересечение их ключей с источником
+практически нулевое (таблица ниже сохранена как evidence). Коды `A`, `R`, `Es`, `Do`,
+`Re`, `CYN` в runtime остались, но это **новые определения по источнику**, а не
+прежние списки. `additional_scales_count` в metadata модуля — 16, число «200+» из
+модуля и README убрано.
+
+### Независимая проверка (WP5)
+
+`bin/smil-additional-reference.py` (только stdlib) считает ожидаемые raw/T по
+транскрипции, вне PHP и вне runtime-файла шкал, для четырёх наборов ответов (все
+«верно», все «неверно», `tests/fixtures/smil-reference-answers-valid.json`,
+псевдослучайный seed 20260915) и обоих полов; результат —
+`tests/fixtures/smil-additional-batch1-reference.json` с provenance.
+`tests/Smil/AdditionalScalesReferenceTest.php` сравнивает с ним расчёт PHP: raw точно,
+T с допуском 0.01. Самопорождённый `smil-additional-reference-scores.json` удалён.
 
 ## S2: результат транскрипции (15.09.2026)
 

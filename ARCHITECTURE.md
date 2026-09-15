@@ -146,11 +146,13 @@ interface TestModuleInterface
 
 | Модуль | Каталог | Вопросов | Особенность |
 |---|---|---:|---|
-| СМИЛ | `modules/smil/` | 566 | protected канонический profile chart и базовый scoring |
+| СМИЛ | `modules/smil/` | 566 | protected канонический profile chart и базовый scoring; дополнительные шкалы — партия 05.S3.1 |
 | BDI | `modules/beck-depression/` | 21 | machine-readable item-9 safety signal и утверждённое generic notice после валидированного положительного ответа |
 | HADS | `modules/hads/` | 14 | две подшкалы |
 | BAI | `modules/beck-anxiety/` | 21 | суммарная шкала |
 | Lazarus | `modules/lazarus/` | 16 | одиночный и pair flow |
+
+Дополнительные шкалы СМИЛ живут отдельно от замороженных базовых 13: `modules/smil/additional-scales-v2.json` генерируется `bin/smil-build-batch.php` из транскрипции приложения Собчик (`docs/smil-additional-scales-transcription.json`), а `AdditionalScalesCalculator` считает по нему raw и T по нормам пола, без клинических текстов. В runtime попадают только записи со статусом `verified`; на 15.09.2026 это 16 шкал партии 05.S3.1, прежние 23 неподтверждённых кода выведены из расчёта. Ожидаемые значения проверяются независимым эталоном `bin/smil-additional-reference.py` → `tests/fixtures/smil-additional-batch1-reference.json`.
 
 Происхождение текстов, норм и коммерческие права методик ведутся в [реестре методик](docs/roadmap/METHODOLOGY_REGISTRY.md).
 

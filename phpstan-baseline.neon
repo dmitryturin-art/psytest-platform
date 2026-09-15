@@ -416,16 +416,6 @@ parameters:
 			path: modules/smil/SmilModule.php
 
 		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildAdditionalScalesData\\(\\) has parameter \\$additionalScores with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildAdditionalScalesData\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
 			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:buildInterpretationData\\(\\) has parameter \\$interpretation with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/smil/SmilModule.php
@@ -562,16 +552,6 @@ parameters:
 
 		-
 			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:getQuestionsForGender\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:loadAdditionalScales\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: modules/smil/SmilModule.php
-
-		-
-			message: "#^Method PsyTest\\\\Modules\\\\Smil\\\\SmilModule\\:\\:loadAdditionalScalesNorms\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: modules/smil/SmilModule.php
 

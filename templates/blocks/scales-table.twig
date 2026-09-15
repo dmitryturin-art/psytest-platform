@@ -14,14 +14,23 @@
             {# Additional scales with categories #}
             {% for category in categories %}
                 <tr class="category-header">
-                    <td colspan="{{ show_viz|default(false) ? '6' : '5' }}"><strong>{{ category.name }}</strong></td>
+                    <td colspan="{{ show_viz|default(false) ? '6' : '5' }}">
+                        <strong>{{ category.name }}</strong>
+                        {% if category.note is defined %}<span class="category-note">{{ category.note }}</span>{% endif %}
+                    </td>
                 </tr>
                 {% for item in category.items %}
                 <tr class="level--{{ item.level }}">
                     <td><strong>{{ item.code }}</strong></td>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.raw|default('—') }}</td>
-                    <td>{{ item.t_score }}</td>
+                    <td>
+                        {{ item.name }}
+                        {% if item.source_note is defined and item.source_note %}<span class="scale-source">{{ item.source_note }}</span>{% endif %}
+                    </td>
+                    <td>{{ item.raw|default('—') }}{% if item.max_raw is defined and item.max_raw %} / {{ item.max_raw }}{% endif %}</td>
+                    <td>
+                        {{ item.t_score }}
+                        {% if item.norm is defined and item.norm %}<span class="scale-norm">{{ item.norm }}</span>{% endif %}
+                    </td>
                     <td>{{ item.level_name|default('—') }}</td>
                     {% if show_viz|default(false) %}
                         <td class="viz-cell">
