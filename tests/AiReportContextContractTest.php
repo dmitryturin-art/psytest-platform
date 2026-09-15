@@ -109,7 +109,7 @@ final class AiReportContextContractTest extends TestCase
         self::assertSame(
             [
                 'test', 'mode', 'form', 'validity', 'profile', 'indices',
-                'additional_scales', 'additional_scales_glossary', 'levels', 'completeness',
+                'additional_scales', 'additional_scales_glossary', 'additional_scales_without_glossary', 'levels', 'completeness',
             ],
             array_keys($payload),
         );
@@ -189,13 +189,21 @@ final class AiReportContextContractTest extends TestCase
         self::assertNotEmpty($payload['additional_scales']);
         self::assertNotEmpty($payload['additional_scales_glossary']);
 
+        // Глоссарий утверждается владельцем по партиям: шкала без записи не
+        // остаётся молчаливой дырой, а явно перечисляется, чтобы модель не
+        // гадала по названию. Каждая переданная шкала — либо с пояснением,
+        // либо в этом списке, и никогда в обоих.
+        $glossaryFile = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-glossary.json'), true, 512, JSON_THROW_ON_ERROR);
+        $explainedIds = array_keys((array) $glossaryFile['scales']);
+        self::assertGreaterThanOrEqual(16, count($explainedIds));
         foreach ($payload['additional_scales'] as $scale) {
             $code = (string) $scale['code'];
-            self::assertArrayHasKey(
-                $code,
-                $payload['additional_scales_glossary'],
-                "Шкала {$code} уходит наружу числом без пояснения.",
-            );
+            $hasEntry = array_key_exists($code, $payload['additional_scales_glossary']);
+            $listedMissing = in_array($code, $payload['additional_scales_without_glossary'], true);
+            self::assertTrue($hasEntry xor $listedMissing, "Шкала {$code}: либо пояснение, либо явная пометка об его отсутствии.");
+            if (!$hasEntry) {
+                continue;
+            }
 
             $entry = $payload['additional_scales_glossary'][$code];
             self::assertSame(
@@ -208,7 +216,8 @@ final class AiReportContextContractTest extends TestCase
 
         // Пояснение по шкале, которой в нагрузке нет, наружу не уходит.
         $codes = array_map(static fn (array $scale): string => (string) $scale['code'], $payload['additional_scales']);
-        self::assertSame($codes, array_keys($payload['additional_scales_glossary']));
+        self::assertSame([], array_diff(array_keys($payload['additional_scales_glossary']), $codes));
+        self::assertSame([], array_diff($payload['additional_scales_without_glossary'], $codes));
     }
 
     public function testSmilShipsTheLevelRuleSoTheModelDoesNotInventItsOwn(): void

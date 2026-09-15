@@ -1141,6 +1141,10 @@ class SmilModule extends BaseTestModule
             // и правило уровней идут рядом с цифрами — и только по тем шкалам,
             // которые в этой нагрузке действительно есть (07.G1).
             'additional_scales_glossary' => $this->aiAdditionalScalesGlossary($results['additional_scores'] ?? []),
+            // Шкалы, для которых пояснения пока нет (глоссарий партии ждёт
+            // утверждения владельца): модель обязана ограничиться числом и
+            // связью с профилем, а не догадываться по названию.
+            'additional_scales_without_glossary' => $this->aiAdditionalScalesWithoutGlossary($results['additional_scores'] ?? []),
             'levels' => $this->aiAdditionalScalesLevels(),
             'completeness' => [
                 'answered' => $results['answered_count'] ?? null,
@@ -1293,6 +1297,25 @@ class SmilModule extends BaseTestModule
         }
 
         return $selected;
+    }
+
+    /**
+     * Коды переданных шкал, у которых нет записи в глоссарии.
+     *
+     * @param array<string, array<string, mixed>> $additional
+     * @return list<string>
+     */
+    private function aiAdditionalScalesWithoutGlossary(array $additional): array
+    {
+        $entries = (array) ($this->loadAdditionalScalesGlossary()['scales'] ?? []);
+        $missing = [];
+        foreach ($additional as $code => $scale) {
+            if (!isset($entries[(string) ($scale['id'] ?? '')])) {
+                $missing[] = (string) $code;
+            }
+        }
+
+        return $missing;
     }
 
     /**
