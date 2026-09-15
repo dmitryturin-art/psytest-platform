@@ -210,9 +210,12 @@ body {
 }
 
 .btn-outline {
+    /* Контурная кнопка должна читаться как действие, а не как серый блок:
+       замечание владельца 15.09 — «Заказать заново» не находилась глазами. */
     background: transparent;
-    color: var(--color-text);
-    border-color: var(--color-border);
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    font-weight: 600;
 }
 
 .btn-outline:hover:not(:disabled) {

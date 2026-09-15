@@ -19,7 +19,7 @@
         <p class="owner-notice owner-notice--success">Клиенту опубликована версия №{{ published.revision_no }} от {{ published.published_at|date("d.m.Y H:i") }}.</p>
         <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/unpublish" class="owner-action-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <button type="submit" class="btn">Снять с публикации</button>
+            <button type="submit" class="btn btn-outline">Снять с публикации</button>
         </form>
     {% else %}
         <p class="owner-help">Клиенту пока ничего не опубликовано: на своей странице он видит ожидание.</p>
@@ -65,7 +65,7 @@
                     <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/restore" class="owner-action-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="revision_id" value="{{ revision.id }}">
-                        <button type="submit" class="btn">Восстановить</button>
+                        <button type="submit" class="btn btn-outline">Восстановить</button>
                     </form>
                     <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/publish" class="owner-action-form owner-publish-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

@@ -154,13 +154,13 @@
             {% endif %}
             {# Ссылка на тот же адрес с якорем страницу не перезагружает: браузер
                просто прокручивает к разделу. Поэтому обновление — кнопка. #}
-            <p><button type="button" class="btn" data-reload>Обновить</button></p>
+            <p><button type="button" class="btn btn-outline" data-reload>Обновить</button></p>
             <noscript>
                 {# Без JS тот же смысл даёт GET с меняющимся параметром: адрес
                    отличается от текущего, и браузер идёт на сервер. #}
                 <form method="get" action="{{ basePath }}/admin/invited-case/{{ case.id }}" class="owner-action-form">
                     <input type="hidden" name="_" value="{{ "now"|date("U") }}">
-                    <button type="submit" class="btn">Обновить</button>
+                    <button type="submit" class="btn btn-outline">Обновить</button>
                 </form>
             </noscript>
 
@@ -174,7 +174,7 @@
                     <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="ai_consent" value="1">
-                        <button type="submit" class="btn">Заказать заново</button>
+                        <button type="submit" class="btn btn-primary">Заказать заново</button>
                     </form>
                 {% elseif item.status == 'none' %}
                     <p class="owner-help">Задание не создавалось.</p>
@@ -185,11 +185,11 @@
                         {% if notify.has_email %}
                             <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/notify" class="owner-action-form">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                <button type="submit" class="btn">Уведомить клиента на email</button>
+                                <button type="submit" class="btn btn-primary">Уведомить клиента на email</button>
                             </form>
                             <p class="owner-help">В письме нет текста разбора и ссылки: клиент открывает ту же страницу результата, которую получил после прохождения.{% if notify.last_at %} Последнее уведомление: {{ notify.last_at|date("d.m.Y H:i") }}.{% endif %}</p>
                         {% else %}
-                            <button type="button" class="btn" disabled>Уведомить клиента на email</button>
+                            <button type="button" class="btn btn-outline" disabled>Уведомить клиента на email</button>
                             <p class="owner-help">Уведомить некуда: {% if notify.client_id %}<a href="{{ basePath }}/admin/clients/{{ notify.client_id }}">добавьте email в карточке клиента</a>{% else %}добавьте email в карточке клиента{% endif %}.</p>
                         {% endif %}
                     {% else %}

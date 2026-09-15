@@ -445,7 +445,7 @@ final class OwnerDashboardContractTest extends TestCase
         $case = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
         $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-case.js');
 
-        self::assertStringContainsString('<button type="button" class="btn" data-reload>Обновить</button>', $case);
+        self::assertStringContainsString('<button type="button" class="btn btn-outline" data-reload>Обновить</button>', $case);
         self::assertStringNotContainsString('#owner-case-ai">Обновить</a>', $case);
 
         // Без JS ту же работу делает GET с меняющимся параметром: адрес
