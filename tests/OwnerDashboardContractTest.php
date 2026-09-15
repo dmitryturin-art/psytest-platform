@@ -432,4 +432,63 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringNotContainsString('session_token', $case);
         self::assertStringContainsString('/reports/status', $case);
     }
+
+    /**
+     * «Обновить» действительно обновляет страницу (07.K5d).
+     *
+     * Раньше это была ссылка на текущий адрес с якорем: браузер по ней только
+     * прокручивает страницу и ничего не перезапрашивает, поэтому специалист
+     * нажимал кнопку и видел прежнее состояние черновиков.
+     */
+    public function testTheRefreshControlReloadsThePageInsteadOfJumpingToTheAnchor(): void
+    {
+        $case = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-case.js');
+
+        self::assertStringContainsString('<button type="button" class="btn" data-reload>Обновить</button>', $case);
+        self::assertStringNotContainsString('#owner-case-ai">Обновить</a>', $case);
+
+        // Без JS ту же работу делает GET с меняющимся параметром: адрес
+        // отличается от текущего, и браузер идёт на сервер.
+        self::assertStringContainsString('<noscript>', $case);
+        self::assertStringContainsString('<input type="hidden" name="_" value="{{ "now"|date("U") }}">', $case);
+
+        self::assertStringContainsString("querySelectorAll('[data-reload]')", $script);
+        self::assertStringContainsString('window.location.reload()', $script);
+    }
+
+    /**
+     * Опрос реагирует на изменение статуса любого вида разбора (07.K5d).
+     *
+     * Прежний скрипт перезагружал страницу, только когда не осталось ни одного
+     * незавершённого задания. Понятный разбор при этом мог быть готов минутами
+     * раньше профессионального заключения, а специалист всё это время видел
+     * «задание в работе» и не получал ссылку на редактор.
+     */
+    public function testThePollReloadsOnAnyStatusChangeAndKeepsPollingWhileWorkRemains(): void
+    {
+        $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-case.js');
+        $case = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+
+        // Решение оформлено отдельными функциями, поэтому его видно по тексту.
+        self::assertMatchesRegularExpression(
+            '/var statusChanged = function \(before, after\) \{.*?return before\[kind\] !== after\[kind\];.*?\};/s',
+            $script,
+        );
+        self::assertMatchesRegularExpression(
+            '/if \(statusChanged\(initial, current\)\) \{.*?window\.location\.reload\(\);/s',
+            $script,
+        );
+        // Пока есть незавершённые задания, опрос продолжается.
+        self::assertMatchesRegularExpression(
+            '/if \(!stillWorking\(current\)\) \{\s*stop\(\);/s',
+            $script,
+        );
+        self::assertStringContainsString('if (!stillWorking(initial)) return;', $script);
+
+        // Снимок статусов берётся из разметки карточки, а адрес опроса — из секции.
+        self::assertStringContainsString('.owner-case-ai-item[data-kind]', $script);
+        self::assertStringContainsString('data-kind="{{ item.kind }}" data-status="{{ item.status }}"', $case);
+        self::assertStringContainsString('data-status-url="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/status"', $case);
+    }
 }
