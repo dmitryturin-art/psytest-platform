@@ -44,19 +44,21 @@
     {% set first = comparison.results_1|default({}) %}
     {% set second = comparison.results_2|default({}) %}
     {% set max_score = first.max_score|default(second.max_score|default(160)) %}
+    {# Колонка смотрящего: 1 — начавший, 2 — приглашённый, null — общий вид. #}
+    {% set viewer = viewer_position is defined ? viewer_position : null %}
     {% set thresholds = { dissatisfied: { min: 16, max: 79 }, satisfied: { min: 80, max: 160 } } %}
 
     <section class="pair-comparison__scores" aria-labelledby="pair-scores-title">
         <h3 id="pair-scores-title" class="pair-comparison__subtitle">Как каждый оценивает отношения</h3>
         <div class="pair-score-grid">
-            <article class="pair-score-card score-badge score-badge--{{ first.level|default('dissatisfied') }}">
-                <p class="pair-score-card__label">Начавший опросник</p>
+            <article class="pair-score-card score-badge score-badge--{{ first.level|default('dissatisfied') }}{{ viewer == 1 ? ' pair-score-card--you' : '' }}">
+                <p class="pair-score-card__label">Начавший опросник{% if viewer == 1 %} <span class="pair-score-card__you">это вы</span>{% endif %}</p>
                 <div class="pair-score-card__value">{{ first.total_self|default('—') }}<span>/{{ max_score }}</span></div>
                 {% include 'blocks/score-scale.twig' with { score: first.total_self|default(0), max: max_score, thresholds: thresholds, label: 'Оценка начавшего опросник' } only %}
                 <p class="pair-score-card__level">{{ first.level_name|default('Нет данных') }}</p>
             </article>
-            <article class="pair-score-card score-badge score-badge--{{ second.level|default('dissatisfied') }}">
-                <p class="pair-score-card__label">Приглашённый участник</p>
+            <article class="pair-score-card score-badge score-badge--{{ second.level|default('dissatisfied') }}{{ viewer == 2 ? ' pair-score-card--you' : '' }}">
+                <p class="pair-score-card__label">Приглашённый участник{% if viewer == 2 %} <span class="pair-score-card__you">это вы</span>{% endif %}</p>
                 <div class="pair-score-card__value">{{ second.total_self|default('—') }}<span>/{{ max_score }}</span></div>
                 {% include 'blocks/score-scale.twig' with { score: second.total_self|default(0), max: max_score, thresholds: thresholds, label: 'Оценка приглашённого участника' } only %}
                 <p class="pair-score-card__level">{{ second.level_name|default('Нет данных') }}</p>

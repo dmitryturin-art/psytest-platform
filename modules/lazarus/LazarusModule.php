@@ -239,6 +239,11 @@ final class LazarusModule extends BaseTestModule
                 title: 'Сравнение с партнёром',
                 data: [
                     'comparison' => $results['pair_comparison'],
+                    // Какая из двух колонок принадлежит смотрящему (1 или 2);
+                    // null — общий вид без «своей» колонки (кабинет, /pair/{id}).
+                    'viewer_position' => isset($results['pair_viewer_position'])
+                        ? (int) $results['pair_viewer_position']
+                        : null,
                     'is_pdf' => !empty($results['is_pdf']),
                     'is_result_pdf' => !empty($results['is_pdf']),
                 ],

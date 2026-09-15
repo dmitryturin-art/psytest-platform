@@ -30,6 +30,17 @@ final class ResultPresenter
     /**
      * Рассчитанные результаты вместе с парным сравнением, если оно собрано.
      *
+     * Порядок партнёров в сравнении канонический и не зависит от того, чью
+     * страницу мы собираем: `session_1_id` — начавший опросник, `session_2_id`
+     * — приглашённый. Раньше сюда подставлялась текущая сессия как «первая», и
+     * у приглашённого партнёра его собственные оценки оказывались подписаны
+     * «Начавший». Тот же канонический порядок используют `pairViewData()`,
+     * `AiReportContextBuilder` и маршруты `/pair/{id}`.
+     *
+     * Чтобы страница знала, какая колонка принадлежит смотрящему, рядом
+     * кладётся `pair_viewer_position` (1 или 2). Числа и scoring от этого не
+     * меняются: `comparePairResults()` получает те же два набора результатов.
+     *
      * @param array<string, mixed> $session
      * @return array<string, mixed>
      */
@@ -46,15 +57,20 @@ final class ResultPresenter
             return $results;
         }
 
-        $partnerSessionId = (string) $comparison['session_1_id'] === (string) $session['id']
-            ? (string) $comparison['session_2_id']
-            : (string) $comparison['session_1_id'];
-        $partnerSession = $this->sessions->getSessionById($partnerSessionId);
+        $sessionId = (string) $session['id'];
+        $firstId = (string) $comparison['session_1_id'];
+        $secondId = (string) $comparison['session_2_id'];
+        $position = $firstId === $sessionId ? 1 : 2;
 
-        $results['pair_comparison'] = $module->comparePairResults(
-            $results,
-            $partnerSession['calculated_results'] ?? [],
-        );
+        $partnerSessionId = $position === 1 ? $secondId : $firstId;
+        $partnerSession = $this->sessions->getSessionById($partnerSessionId);
+        /** @var array<string, mixed> $partnerResults */
+        $partnerResults = $partnerSession['calculated_results'] ?? [];
+
+        $results['pair_comparison'] = $position === 1
+            ? $module->comparePairResults($results, $partnerResults)
+            : $module->comparePairResults($partnerResults, $results);
+        $results['pair_viewer_position'] = $position;
 
         return $results;
     }
