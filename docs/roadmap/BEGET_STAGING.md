@@ -114,4 +114,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 22. Выкладка `e223062` (15.09) заменила дополнительные шкалы СМИЛ на 16 verified по Собчик; миграций нет. SHA-256 `28535fd1bbff3cbff39840afb979028e22346e72eeb75be27d640cc69e95fc6b` совпал; dump `backups/pre-deploy-e223062.sql.gz` проверен.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/2bd89f4/public` и `current` на `releases/2bd89f4`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+23. Выкладка `8d3ccfa` (15.09): вторая партия дополнительных шкал СМИЛ (35 verified) и глоссарий для ИИ; миграций нет. SHA-256 `a436f06360bae0bcc72a5ecfcbbecbb30f1ea083dc17e55e99f7c5b311cd29ba` совпал; dump `backups/pre-deploy-8d3ccfa.sql.gz` проверен.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/e223062/public` и `current` на `releases/e223062`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
