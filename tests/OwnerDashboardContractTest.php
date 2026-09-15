@@ -376,4 +376,60 @@ final class OwnerDashboardContractTest extends TestCase
             );
         }
     }
+
+    /**
+     * Заказ черновиков возвращает к разделу «ИИ-разбор» (07.K5a3).
+     *
+     * Карточка кейса — это результат теста целиком; без якоря специалист после
+     * заказа видит верх страницы, а сообщение об успехе или отказе остаётся вне
+     * поля зрения. Поэтому и редирект, и флеш привязаны к самому разделу.
+     */
+    public function testOrderingDraftsReturnsToTheAiSectionWithItsOwnFlash(): void
+    {
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        $template = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+
+        self::assertStringContainsString("'#owner-case-ai'", $controller);
+        self::assertStringContainsString('caseAiAnchor($sessionId)', $controller);
+        self::assertStringContainsString('id="owner-case-ai"', $template);
+        // Флеш живёт внутри раздела; наверху он остаётся только когда раздела нет.
+        self::assertStringContainsString('{% if flash and not aiSectionShown %}', $template);
+        self::assertStringContainsString('owner-case-ai-waiting', $template);
+        self::assertStringContainsString('owner-spinner', $template);
+        self::assertStringContainsString(
+            'Черновики готовятся, обычно 2–5 минут. Страница обновится сама.',
+            $template,
+        );
+        self::assertStringContainsString('.owner-spinner', (string) file_get_contents($this->projectRoot . '/public/css/main.css'));
+    }
+
+    /**
+     * Опрос состояния черновиков — owner-only и только на карточке кейса.
+     *
+     * Токен результата в кабинете не рендерится (см. тест выше), и опрос не
+     * должен становиться вторым способом его раздать: запрос идёт сессией
+     * кабинета на owner-only JSON.
+     */
+    public function testTheCaseStatusPollIsOwnerOnlyAndLoadedOnlyOnTheCaseCard(): void
+    {
+        $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-case.js');
+
+        self::assertStringNotContainsString('session_token', $script);
+        self::assertStringNotContainsString('Bearer', $script);
+        self::assertStringNotContainsString('/result/', $script);
+        self::assertStringContainsString('data-case-reports', $script);
+
+        foreach (['owner-dashboard', 'owner-clients', 'owner-client', 'owner-report-editor'] as $template) {
+            self::assertStringNotContainsString(
+                'js/owner-case.js',
+                (string) file_get_contents($this->projectRoot . '/templates/' . $template . '.twig'),
+                "Опрос состояния подключён вне карточки кейса ({$template}).",
+            );
+        }
+
+        $case = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        self::assertStringContainsString("asset('js/owner-case.js')", $case);
+        self::assertStringNotContainsString('session_token', $case);
+        self::assertStringContainsString('/reports/status', $case);
+    }
 }

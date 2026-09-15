@@ -31,7 +31,10 @@
     {% if case.pair %}
         <p class="owner-case-pair-badge">Парное прохождение · этот кейс — {{ case.pair.label }}</p>
     {% endif %}
-    {% if flash %}
+    {# Заказ черновиков отвечает якорем на раздел «ИИ-разбор»: флеш показывается
+       там же, рядом с кнопкой. Наверх он попадает только когда раздела нет. #}
+    {% set aiSectionShown = case.completed_at and ai.available %}
+    {% if flash and not aiSectionShown %}
         <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
     {% endif %}
     <dl class="owner-case-details">
@@ -116,8 +119,14 @@
     {% endif %}
 
     {% if case.completed_at and ai.available %}
-    <section class="owner-case-ai" aria-labelledby="owner-case-ai-title" data-case-reports>
+    <section id="owner-case-ai" class="owner-case-ai" aria-labelledby="owner-case-ai-title"
+             data-case-reports
+             data-status-url="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/status">
         <h2 id="owner-case-ai-title">ИИ-разбор</h2>
+
+        {% if flash %}
+            <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+        {% endif %}
 
         {% if not ai.has_jobs %}
             <p class="owner-help">Черновики заказываются один раз на оба вида: понятный разбор для клиента и профессиональное заключение для вас.</p>
@@ -132,8 +141,18 @@
                 <button type="submit" class="btn btn-primary">Заказать черновики</button>
             </form>
         {% else %}
-            <p class="owner-help">Разбор готовится несколько минут. Нажмите «Обновить», чтобы увидеть текущее состояние.</p>
-            <p><a class="btn" href="{{ basePath }}/admin/invited-case/{{ case.id }}">Обновить</a></p>
+            {% set aiWaiting = ai.kinds|filter(item => item.status == 'pending' or item.status == 'running')|length > 0 %}
+
+            {% if aiWaiting %}
+                {# Спиннер на CSS: внешних библиотек в кабинете нет. #}
+                <p class="owner-case-ai-waiting" role="status" data-case-reports-waiting>
+                    <span class="owner-spinner" aria-hidden="true"></span>
+                    Черновики готовятся, обычно 2–5 минут. Страница обновится сама.
+                </p>
+            {% else %}
+                <p class="owner-help">Состояние черновиков ниже.</p>
+            {% endif %}
+            <p><a class="btn" href="{{ basePath }}/admin/invited-case/{{ case.id }}#owner-case-ai">Обновить</a></p>
 
             {% for item in ai.kinds %}
             <article class="owner-case-ai-item" data-kind="{{ item.kind }}" data-status="{{ item.status }}">
@@ -191,4 +210,10 @@
         </form>
     </section>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+{# Подключается только на карточке кейса: опрос состояния черновиков нужен
+   лишь здесь и не должен висеть на остальных страницах кабинета. #}
+<script src="{{ asset('js/owner-case.js') }}"></script>
 {% endblock %}

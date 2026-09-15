@@ -4087,6 +4087,37 @@ body {
     font-weight: 600;
 }
 
+/* Ожидание черновиков (07.K5a3): заказ уходит в отдельный процесс, страница
+   возвращается мгновенно и сама показывает, что работа идёт. Спиннер на CSS —
+   внешних библиотек в кабинете нет. */
+.owner-case-ai-waiting {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+    color: var(--color-text-light);
+}
+
+.owner-spinner {
+    flex: 0 0 auto;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: owner-spinner-turn 0.9s linear infinite;
+}
+
+@keyframes owner-spinner-turn {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .owner-spinner {
+        animation: none;
+    }
+}
+
 .owner-field {
     display: grid;
     gap: var(--spacing-xs);
