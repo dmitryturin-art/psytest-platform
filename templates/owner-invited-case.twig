@@ -2,6 +2,18 @@
 {# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
 {% set ownerArea = true %}
 
+{% macro reorder_form(case, item, csrf_token, basePath) %}
+    {# Готовый черновик можно заказать заново: новый ответ модели ляжет следующей
+       версией, правки специалиста и публикация не затрагиваются. #}
+    <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form owner-reorder-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="ai_consent" value="1">
+        <input type="hidden" name="kind" value="{{ item.kind }}">
+        <button type="submit" class="btn btn-outline">Заказать заново</button>
+        <span class="owner-help">Новый текст модели добавится новой версией; ваши правки и публикация сохранятся.</span>
+    </form>
+{% endmacro %}
+
 {% macro answer_list(rows) %}
     <ol class="owner-answer-list">
         {% for row in rows %}
@@ -174,6 +186,7 @@
                     <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="ai_consent" value="1">
+                        <input type="hidden" name="kind" value="{{ item.kind }}">
                         <button type="submit" class="btn btn-primary">Заказать заново</button>
                     </form>
                 {% elseif item.status == 'none' %}
@@ -196,12 +209,14 @@
                         <p class="owner-help">Клиенту пока ничего не опубликовано.</p>
                     {% endif %}
                     <p><a class="btn btn-primary" href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/edit">Редактировать и публиковать</a></p>
+                    {{ _self.reorder_form(case, item, csrf_token, basePath) }}
                 {% else %}
                     {# Только чтение: профессиональное заключение не правится под клиента. #}
                     <details class="owner-case-ai-details">
                         <summary>Показать заключение</summary>
                         <div class="ai-report__body">{{ item.html|raw }}</div>
                     </details>
+                    {{ _self.reorder_form(case, item, csrf_token, basePath) }}
                 {% endif %}
             </article>
             {% endfor %}

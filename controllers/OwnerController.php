@@ -555,7 +555,13 @@ final class OwnerController extends BaseController
         }
 
         $queued = 0;
-        foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
+        // Из карточки можно перезаказать один вид («Заказать заново» у готового
+        // или неудавшегося черновика) либо оба сразу.
+        $onlyKind = $_POST['kind'] ?? null;
+        $kinds = in_array($onlyKind, [Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL], true)
+            ? [$onlyKind]
+            : [Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL];
+        foreach ($kinds as $kind) {
             $prompt = $registry->published($slug, $mode, $kind);
             if ($prompt === null) {
                 continue;
