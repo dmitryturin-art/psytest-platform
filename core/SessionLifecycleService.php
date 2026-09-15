@@ -11,11 +11,25 @@ use DateTimeImmutable;
  *
  * This service intentionally has no public-route knowledge. Callers decide
  * whether a session is eligible; this service guarantees that a known PDF is
- * removed before its database reference can be cascaded away.
+ * removed once its database row is really gone.
+ *
+ * Order matters and is the point of this class (debt K2): the file names are
+ * read *before* the deletion, because `pair_comparisons` rows cascade away
+ * with the session, but the files are unlinked only *after* the commit that
+ * removed the rows. Deleting a client card with several sessions used to wipe
+ * the PDFs of the first sessions and then roll the database back on the
+ * failing one, leaving rows that pointed at missing documents.
+ *
+ * When this service joins a caller's transaction it cannot know whether that
+ * transaction will commit, so it parks the names in `$pendingArtifacts`; the
+ * caller flushes them after its own commit and discards them on rollback.
  */
 final class SessionLifecycleService
 {
     private string $storagePath;
+
+    /** @var list<string> Artifacts of an outer transaction that has not committed yet. */
+    private array $pendingArtifacts = [];
 
     public function __construct(
         private readonly Database $db,
@@ -50,9 +64,9 @@ final class SessionLifecycleService
             return false;
         }
 
-        foreach ($this->artifactFileNames($sessionId) as $filename) {
-            $this->deleteArtifact($filename);
-        }
+        // Read the names first: the `pair_comparisons` rows they come from
+        // disappear with the session. Nothing is unlinked yet.
+        $artifacts = $this->artifactFileNames($sessionId);
 
         // A caller may already be deleting a whole client card in one
         // transaction; joining it keeps that deletion atomic.
@@ -79,7 +93,45 @@ final class SessionLifecycleService
             throw $exception;
         }
 
+        if ($ownsTransaction) {
+            // The rows are gone for good; the documents may follow.
+            foreach ($artifacts as $filename) {
+                $this->deleteArtifact($filename);
+            }
+        } else {
+            // The outer transaction still decides. Files stay on disk until
+            // `flushPendingArtifacts()`; `discardPendingArtifacts()` keeps them.
+            foreach ($artifacts as $filename) {
+                $this->pendingArtifacts[] = $filename;
+            }
+        }
+
         return true;
+    }
+
+    /**
+     * Removes the artifacts collected inside a caller-owned transaction.
+     *
+     * Call it after the outer `commit()` and never before: until then the
+     * database may still roll back and the documents must survive.
+     */
+    public function flushPendingArtifacts(): void
+    {
+        $artifacts = $this->pendingArtifacts;
+        $this->pendingArtifacts = [];
+
+        foreach (array_unique($artifacts) as $filename) {
+            $this->deleteArtifact($filename);
+        }
+    }
+
+    /**
+     * Forgets the collected artifacts — the outer transaction rolled back, so
+     * the rows still reference these documents.
+     */
+    public function discardPendingArtifacts(): void
+    {
+        $this->pendingArtifacts = [];
     }
 
     /** @return list<string> */

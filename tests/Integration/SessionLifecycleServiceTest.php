@@ -75,4 +75,79 @@ final class SessionLifecycleServiceTest extends TestCase
         self::assertSame(0, (int) $this->db->selectOne('SELECT COUNT(*) AS count FROM activity_log WHERE session_id = ?', [$expired['id']])['count']);
         self::assertSame(0, $this->lifecycle->purgeExpiredAnonymousSessions(new DateTimeImmutable('2026-08-16 12:00:00')));
     }
+
+    /**
+     * Долг K2: файлы переживают откат чужой транзакции.
+     *
+     * Удаление карточки клиента с несколькими сессиями идёт одной транзакцией
+     * вызывающего. Раньше PDF стирались до неё, и сбой на N-й сессии
+     * откатывал БД, оставив строки без документов. Теперь имена собираются до
+     * удаления, а `unlink` делает только `flushPendingArtifacts()` после
+     * успешного commit.
+     */
+    public function testArtifactsOfAnOuterTransactionSurviveItsRollback(): void
+    {
+        $first = $this->sessions->createSession($this->testId);
+        $second = $this->sessions->createSession($this->testId);
+        $comparison = $this->sessions->createPairComparison(
+            $this->testId,
+            $first['id'],
+            $second['id'],
+            ['fixture' => true],
+        );
+
+        $files = [
+            $this->storagePath . '/result_' . $first['id'] . '.pdf',
+            $this->storagePath . '/result_' . $second['id'] . '.pdf',
+            $this->storagePath . '/pair_' . $comparison['id'] . '.pdf',
+        ];
+        foreach ($files as $file) {
+            file_put_contents($file, 'artifact');
+        }
+
+        $this->db->beginTransaction();
+        self::assertTrue($this->lifecycle->deleteSessionAndArtifacts((string) $first['id']));
+
+        // Транзакция ещё не закрыта — документы обязаны лежать на месте.
+        foreach ($files as $file) {
+            self::assertFileExists($file, 'Файл удалён до commit: ' . basename($file));
+        }
+
+        // Сбой на второй сессии: БД откатывается, файлы остаются.
+        $this->db->rollback();
+        $this->lifecycle->discardPendingArtifacts();
+
+        foreach ($files as $file) {
+            self::assertFileExists($file, 'Откат оставил строку без документа: ' . basename($file));
+        }
+        self::assertNotNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$first['id']]));
+
+        // Чистый путь: после commit документы уходят вместе со строками.
+        $this->db->beginTransaction();
+        self::assertTrue($this->lifecycle->deleteSessionAndArtifacts((string) $first['id']));
+        self::assertTrue($this->lifecycle->deleteSessionAndArtifacts((string) $second['id']));
+        $this->db->commit();
+        $this->lifecycle->flushPendingArtifacts();
+
+        foreach ($files as $file) {
+            self::assertFileDoesNotExist($file);
+        }
+        self::assertNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$first['id']]));
+        self::assertNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$second['id']]));
+    }
+
+    /**
+     * Без чужой транзакции сервис сам отвечает за порядок: сначала commit,
+     * потом файлы. Исключение внутри транзакции не должно стирать документы.
+     */
+    public function testOwnTransactionRemovesFilesOnlyAfterTheRowsAreGone(): void
+    {
+        $session = $this->sessions->createSession($this->testId);
+        $pdf = $this->storagePath . '/result_' . $session['id'] . '.pdf';
+        file_put_contents($pdf, 'artifact');
+
+        self::assertTrue($this->lifecycle->deleteSessionAndArtifacts((string) $session['id']));
+        self::assertFileDoesNotExist($pdf);
+        self::assertNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$session['id']]));
+    }
 }

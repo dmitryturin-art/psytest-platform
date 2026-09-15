@@ -287,6 +287,41 @@ final class TherapistClientServiceTest extends TestCase
         $this->clients->create('Длинный адрес', '', str_repeat('a', 250) . '@example.test');
     }
 
+    /**
+     * Долг K2: карточка с несколькими кейсами удаляет документы после commit.
+     *
+     * Удаление идёт одной транзакцией, а `unlink` — только после неё. Тест
+     * держит проводку: обе сессии ушли, оба PDF ушли следом, и список
+     * отложенных файлов не остался висеть внутри сервиса.
+     */
+    public function testDeletingACardWithSeveralCasesRemovesEveryArtifactAfterTheCommit(): void
+    {
+        $clientId = $this->createClient('Клиент с двумя кейсами', '');
+
+        $files = [];
+        foreach (['bdi', 'hads'] as $slug) {
+            $invite = $this->invites->create($this->testId($slug), 'Назначение ' . $slug, $clientId);
+            $claim = $this->invites->claim($invite['token']);
+            self::assertNotNull($claim);
+            $sessionId = (string) $claim['session']['id'];
+            $this->sessions->completeSession($sessionId, ['score' => 2]);
+
+            $file = $this->storagePath . '/result_' . $sessionId . '.pdf';
+            file_put_contents($file, 'result');
+            $files[$sessionId] = $file;
+        }
+
+        self::assertTrue($this->clients->delete($clientId));
+
+        foreach ($files as $sessionId => $file) {
+            self::assertNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$sessionId]));
+            self::assertFileDoesNotExist($file);
+        }
+
+        // Ничего не осталось в отложенном списке: повторный сброс — no-op.
+        $this->lifecycle->flushPendingArtifacts();
+    }
+
     private function createClient(string $label, string $note, string $email = ''): string
     {
         $id = $this->clients->create($label, $note, $email);

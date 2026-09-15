@@ -56,6 +56,32 @@ final class PublicWebRootTest extends TestCase
         self::assertStringNotContainsString('RewriteCond %{REQUEST_URI} !^/public/', $htaccess);
     }
 
+    /**
+     * Каждая страница раньше просила `/favicon.ico`, которого не было, и
+     * получала 404 в консоли. Иконка обязана лежать в web root и быть
+     * git-tracked — иначе она не попадёт в релизный артефакт
+     * (`bin/build-release.sh` сверяет артефакт с `git ls-files public`).
+     */
+    public function testFaviconIsServedFromTheWebRootAndIsTracked(): void
+    {
+        $publicRoot = dirname(__DIR__) . '/public';
+        $tracked = [];
+        exec('git -C ' . escapeshellarg(dirname(__DIR__)) . ' ls-files public', $tracked);
+
+        foreach (['favicon.svg', 'favicon-32.png', 'favicon.ico'] as $file) {
+            self::assertFileExists($publicRoot . '/' . $file);
+            self::assertContains('public/' . $file, $tracked, "public/$file не под контролем версий.");
+        }
+    }
+
+    public function testLayoutDeclaresTheFaviconInBothVectorAndRasterForm(): void
+    {
+        $layout = (string) file_get_contents(dirname(__DIR__) . '/templates/layout.twig');
+
+        self::assertStringContainsString('rel="icon" href="{{ basePath }}/favicon.svg"', $layout);
+        self::assertStringContainsString('rel="alternate icon" href="{{ basePath }}/favicon-32.png"', $layout);
+    }
+
     public function testHtaccessEnforcesHttpsBehindHostingProxy(): void
     {
         $htaccess = (string) file_get_contents(dirname(__DIR__) . '/public/.htaccess');

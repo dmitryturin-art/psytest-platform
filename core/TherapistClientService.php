@@ -147,6 +147,8 @@ final class TherapistClientService
             $deleted = $this->db->delete('therapist_clients', 'id = ?', [$id]);
             if ($deleted === 0) {
                 $this->db->rollback();
+                // The rows are back; their documents must be too.
+                $this->lifecycle->discardPendingArtifacts();
 
                 return false;
             }
@@ -155,15 +157,21 @@ final class TherapistClientService
             // happened without keeping the label, the card ID or any answer.
             $this->writeOwnerAuditEvent('therapist_client_deleted');
             $this->db->commit();
-
-            return true;
         } catch (\Throwable $exception) {
             if ($this->db->inTransaction()) {
                 $this->db->rollback();
             }
+            $this->lifecycle->discardPendingArtifacts();
 
             throw $exception;
         }
+
+        // Only now — after the commit that removed every session of the card —
+        // may the generated PDFs go. A failure on the N-th session used to
+        // roll the database back with the earlier files already erased (K2).
+        $this->lifecycle->flushPendingArtifacts();
+
+        return true;
     }
 
     /**

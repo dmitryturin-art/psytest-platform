@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PsyTest">
+  <title>PsyTest</title>
+  <rect width="64" height="64" rx="14" fill="#3498db"/>
+  <path d="M20 16h13c7.2 0 12 4.4 12 11.3 0 7-4.8 11.4-12 11.4h-5.6V50H20V16zm12.4 16.9c3.6 0 5.8-2.1 5.8-5.6 0-3.4-2.2-5.5-5.8-5.5h-5V33h5z" fill="#ffffff"/>
+  <circle cx="46" cy="46" r="5" fill="#ffffff" opacity=".85"/>
+</svg>

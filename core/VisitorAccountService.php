@@ -368,9 +368,15 @@ final class VisitorAccountService
             if ($this->db->inTransaction()) {
                 $this->db->rollback();
             }
+            // The sessions are back, so their documents must stay as well.
+            $this->lifecycle->discardPendingArtifacts();
 
             throw $exception;
         }
+
+        // The account and every one of its sessions are gone for good; the
+        // generated PDFs may follow only now (K2).
+        $this->lifecycle->flushPendingArtifacts();
 
         return true;
     }
