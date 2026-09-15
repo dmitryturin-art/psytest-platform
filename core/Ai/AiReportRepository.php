@@ -51,6 +51,7 @@ final class AiReportRepository
         Prompt $prompt,
         array $context,
         ?string $ownerContext = null,
+        bool $allowExhaustedRetry = false,
     ): array {
         $existing = $this->findFor($sessionId, $mode, $reportKind);
 
@@ -62,6 +63,20 @@ final class AiReportRepository
                 $this->db->update(
                     'ai_reports',
                     ['status' => self::STATUS_PENDING, 'failure_reason' => null],
+                    'id = ?',
+                    [$existing['id']],
+                );
+
+                return (array) $this->find((string) $existing['id']);
+            }
+
+            // Попытки исчерпаны: автоматически такое задание не оживает (R3),
+            // но специалист может явно заказать его заново — счётчик попыток
+            // обнуляется, снимок входа остаётся прежним.
+            if ($existing['status'] === self::STATUS_FAILED && $allowExhaustedRetry) {
+                $this->db->update(
+                    'ai_reports',
+                    ['status' => self::STATUS_PENDING, 'failure_reason' => null, 'attempts' => 0],
                     'id = ?',
                     [$existing['id']],
                 );
