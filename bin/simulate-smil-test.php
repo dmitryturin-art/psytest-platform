@@ -60,7 +60,6 @@ printHeader("SMIL/MMPI-566 Test Simulation");
 
 $answersFile = $fixturesDir . '/smil-reference-answers.json';
 $refScoresFile = $fixturesDir . '/smil-reference-scores.json';
-$refAdditionalFile = $fixturesDir . '/smil-additional-reference-scores.json';
 
 if (!file_exists($answersFile)) {
     echo RED . "ERROR: Missing $answersFile" . RESET . "\n";
@@ -73,8 +72,9 @@ if (!file_exists($refScoresFile)) {
 
 $answers = json_decode(file_get_contents($answersFile), true);
 $refScores = json_decode(file_get_contents($refScoresFile), true);
-$refAdditional = file_exists($refAdditionalFile)
-    ? json_decode(file_get_contents($refAdditionalFile), true)
+$refBatchFile = $fixturesDir . '/smil-additional-batch1-reference.json';
+$refBatch = file_exists($refBatchFile)
+    ? json_decode(file_get_contents($refBatchFile), true)
     : null;
 
 dim("Loaded " . count(array_filter($answers, fn ($k) => is_numeric($k), ARRAY_FILTER_USE_KEY)) . " answers (gender: " . ($answers['gender'] ?? 'N/A') . ")");
@@ -221,37 +221,22 @@ foreach ($indexLabels as $key => $label) {
 }
 
 // --- Additional Scales ---
-subheader("Additional Scales");
+subheader("Additional Scales (Sobchik 2003, batch 05.S3.1)");
 $additionalScores = $results['additional_scores'];
-$categoryNames = [
-    'factor' => 'Factor Scales',
-    'special' => 'Special Scales',
-    'content' => 'Content Scales',
-];
 
 if (empty($additionalScores)) {
     echo "  " . DIM . "(no additional scales returned)" . RESET . "\n";
 } else {
-    $grouped = [];
-    foreach ($additionalScores as $code => $scoreData) {
-        $cat = $scoreData['category'] ?? 'content';
-        $grouped[$cat][$code] = $scoreData;
-    }
-
-    foreach ($categoryNames as $cat => $catLabel) {
-        $items = $grouped[$cat] ?? [];
-        if (empty($items)) continue;
-
-        echo "\n  " . BOLD . "$catLabel (" . count($items) . " scales)" . RESET . "\n";
-        printf("    %-6s %-30s %8s %8s\n", "Code", "Name", "Raw", "T-score");
-        echo "    " . str_repeat("─", 56) . "\n";
-
-        foreach ($items as $code => $sd) {
-            $raw = $sd['raw'] ?? 0;
-            $t = $sd['t'] ?? 50;
-            $name = $sd['name'] ?? $code;
-            printf("    %-6s %-30s %8d %8d\n", $code, $name, $raw, (int) $t);
-        }
+    printf("    %-6s %-42s %8s %8s\n", "Code", "Name", "Raw", "T-score");
+    echo "    " . str_repeat("-", 68) . "\n";
+    foreach ($additionalScores as $code => $sd) {
+        printf(
+            "    %-6s %-42s %8s %8d\n",
+            $code,
+            mb_substr((string) ($sd['name'] ?? $code), 0, 42),
+            ($sd['raw'] ?? 0) . '/' . ($sd['max_raw'] ?? 0),
+            (int) ($sd['t'] ?? 50)
+        );
     }
 }
 
@@ -283,40 +268,17 @@ if (isset($refScores['bug'])) {
     echo "\n  " . DIM . "Note from reference: " . $refScores['bug'] . RESET . "\n";
 }
 
-// --- Validate additional scales ---
-if ($refAdditional !== null && !empty($additionalScores)) {
-    subheader("Validation: Additional Scale T-scores vs Reference (tolerance: ±2)");
-
-    // Support both old format (additional_scales[cat][code]) and new flat format (scales[code])
-    $refAdditionalScales = $refAdditional['scales'] ?? [];
-    if (empty($refAdditionalScales) && isset($refAdditional['additional_scales'])) {
-        foreach ($refAdditional['additional_scales'] as $cat => $scales) {
-            foreach ($scales as $code => $data) {
-                $refAdditionalScales[$code] = $data;
-            }
-        }
-    }
-
-    foreach ($refAdditionalScales as $code => $refData) {
-        $refT = (float) ($refData['t'] ?? $refData['t_score'] ?? 50);
-        $actualData = $additionalScores[$code] ?? null;
-
-        if ($actualData === null) {
-            warn("$code: not found in results, skipping");
-            continue;
-        }
-
-        $actualT = (float) ($actualData['t'] ?? 50);
-        $diff = abs($actualT - $refT);
-
-        $name = $refData['name'] ?? $code;
-        if ($diff <= 2) {
-            pass("$name ($code): expected T=$refT, got T=" . (int)$actualT . " (diff=$diff)");
-        } else {
-            $smilPass = false;
-            fail("$name ($code): expected T=$refT, got T=" . (int)$actualT . " (diff=$diff, exceeds ±2)");
-        }
-    }
+// --- Additional scales: батч и его происхождение ---
+// Численная сверка дополнительных шкал живёт в tests/Smil/AdditionalScalesReferenceTest.php:
+// там сравниваются восемь наборов ответов с независимым эталоном по источнику.
+// Здесь только напоминание, какой батч в runtime, чтобы симуляция не выдавала
+// сверку на чужом наборе ответов за доказательство.
+if ($refBatch !== null) {
+    dim(sprintf(
+        "  Additional scales batch: %d шкал, эталон — %s",
+        count($refBatch['provenance']['entries'] ?? []),
+        $refBatch['generated_by'] ?? 'n/a'
+    ));
 }
 
 // ============================================================

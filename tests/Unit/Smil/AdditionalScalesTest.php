@@ -7,40 +7,68 @@ namespace PsyTest\Tests\Unit\Smil;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Smil\SmilModule;
 
+/**
+ * Секция «Дополнительные шкалы» после пакета 05.S3.1: одна группа
+ * проверенных по источнику шкал, без клинических текстов.
+ */
 class AdditionalScalesTest extends TestCase
 {
-    public function testBuildAdditionalScalesDataReturnsCategories(): void
+    public function testBuildAdditionalScalesDataReturnsOneVerifiedGroup(): void
     {
         $module = new SmilModule();
         $additionalScores = [
-            'A' => ['name' => 'Тревожность', 'raw' => 13, 't' => 45, 'M' => 16.48, 'delta' => 6.94],
-            'R' => ['name' => 'Защитная реакция', 'raw' => 8, 't' => 25, 'M' => 17.05, 'delta' => 3.55],
-            'ANX' => ['name' => 'Тревога', 'raw' => 13, 't' => 54, 'M' => 12.13, 'delta' => 2.36],
-            'DEP' => ['name' => 'Депрессия', 'raw' => 10, 't' => 60, 'M' => 10.0, 'delta' => 2.0],
+            'A' => [
+                'id' => 'sobchik-001',
+                'code' => 'A',
+                'name' => 'А-первый фактор',
+                'raw' => 13,
+                't' => 53.0,
+                'M' => 11.0,
+                'sigma' => 6.2,
+                'max_raw' => 39,
+                'answered' => 39,
+                'level' => 'normal',
+                'level_name' => 'в пределах нормы',
+                'source' => ['entry' => 1, 'page_pdf' => 197, 'page_print' => 195],
+                'status' => 'verified',
+            ],
+            'Es' => [
+                'id' => 'sobchik-092',
+                'code' => 'Es',
+                'name' => 'Шкала «Интелектуальная эффективность»',
+                'raw' => 29,
+                't' => 51.0,
+                'M' => 28.67,
+                'sigma' => 3.75,
+                'max_raw' => 39,
+                'answered' => 39,
+                'level' => 'normal',
+                'level_name' => 'в пределах нормы',
+                'source' => ['entry' => 92, 'page_pdf' => 205, 'page_print' => 203],
+                'status' => 'verified',
+            ],
         ];
 
         $data = $this->invokeMethod($module, 'buildAdditionalScalesData', [$additionalScores]);
 
         $this->assertArrayHasKey('categories', $data);
-        $this->assertIsArray($data['categories']);
-        $this->assertGreaterThan(0, count($data['categories']));
+        $this->assertCount(1, $data['categories']);
 
-        // Check first category has required structure
-        $firstCategory = $data['categories'][0];
-        $this->assertArrayHasKey('name', $firstCategory);
-        $this->assertArrayHasKey('items', $firstCategory);
-        $this->assertIsArray($firstCategory['items']);
-        $this->assertGreaterThan(0, count($firstCategory['items']));
+        $category = $data['categories'][0];
+        $this->assertSame('Проверенные по Собчик (2003)', $category['name']);
+        $this->assertArrayHasKey('note', $category);
+        $this->assertSame(2, $category['count']);
+        $this->assertCount(2, $category['items']);
 
-        // Check item structure
-        $firstItem = $firstCategory['items'][0];
-        $this->assertArrayHasKey('code', $firstItem);
-        $this->assertArrayHasKey('name', $firstItem);
-        $this->assertArrayHasKey('raw', $firstItem);
-        $this->assertArrayHasKey('t_score', $firstItem);
-        $this->assertArrayHasKey('level', $firstItem);
-        $this->assertArrayHasKey('level_name', $firstItem);
-        $this->assertArrayHasKey('marker_position', $firstItem);
+        $first = $category['items'][0];
+        foreach (['code', 'name', 'raw', 'max_raw', 'answered', 't_score', 'level', 'level_name', 'norm', 'source_note', 'status'] as $key) {
+            $this->assertArrayHasKey($key, $first, "item.$key");
+        }
+        $this->assertSame('A', $first['code']);
+        $this->assertSame('verified', $first['status']);
+        $this->assertStringContainsString('M 11', $first['norm']);
+        $this->assertStringContainsString('стр. 195', $first['source_note']);
+        $this->assertArrayNotHasKey('interpretation', $first);
     }
 
     public function testBuildAdditionalScalesDataHandlesEmptyScores(): void
@@ -51,6 +79,16 @@ class AdditionalScalesTest extends TestCase
         $this->assertArrayHasKey('categories', $data);
         $this->assertIsArray($data['categories']);
         $this->assertCount(0, $data['categories']);
+    }
+
+    public function testUnknownCodesAreNotRendered(): void
+    {
+        $module = new SmilModule();
+        $data = $this->invokeMethod($module, 'buildAdditionalScalesData', [
+            ['ANX' => ['name' => 'Тревога', 'raw' => 13, 't' => 54.0]],
+        ]);
+
+        $this->assertSame([], $data['categories']);
     }
 
     private function invokeMethod($object, string $methodName, array $parameters = [])
