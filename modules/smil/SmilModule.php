@@ -226,7 +226,7 @@ class SmilModule extends BaseTestModule
             'clinical_scales' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
             'full_version' => true,
             'total_questions' => 566,
-            'additional_scales_count' => 16,
+            'additional_scales_count' => 36,
         ]);
     }
 
@@ -334,7 +334,7 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Определения дополнительных шкал партии 05.S3.1.
+     * Определения дополнительных шкал партий 05.S3.1 и 05.S3.2.
      *
      * Файл собирается bin/smil-build-batch.php из транскрипции приложения
      * Собчик; руками ключи и нормы не правятся.
@@ -906,6 +906,9 @@ class SmilModule extends BaseTestModule
         return ['scales' => $scales];
     }
 
+    /** Пометка у шкал со статусом verified-with-note — в результате и в PDF. */
+    private const ADDITIONAL_SCALE_FLAG = 'нормы требуют сверки';
+
     /**
      * Секция «Дополнительные шкалы»: одна группа проверенных по источнику шкал.
      *
@@ -947,6 +950,10 @@ class SmilModule extends BaseTestModule
                     ? sprintf('Собчик, 2003, прил., стр. %d, зап. №%d', (int) $source['page_print'], (int) ($source['entry'] ?? 0))
                     : '',
                 'status' => $score['status'] ?? 'unverified',
+                // Нейтральная пометка у записей, включённых владельцем с оговоркой;
+                // сама причина идёт рядом текстом, без клинических формулировок.
+                'flag' => ($score['status'] ?? '') === 'verified-with-note' ? self::ADDITIONAL_SCALE_FLAG : '',
+                'note' => (string) ($score['note'] ?? ''),
             ];
         }
 
@@ -958,7 +965,8 @@ class SmilModule extends BaseTestModule
             'categories' => [
                 [
                     'name' => 'Проверенные по Собчик (2003)',
-                    'note' => 'Ключи и нормы перенесены из приложения руководства; нормы применены по полу респондента.',
+                    'note' => 'Ключи и нормы перенесены из приложения руководства; нормы применены по полу респондента. '
+                        . 'Отдельные шкалы помечены «' . self::ADDITIONAL_SCALE_FLAG . '» — причина указана в строке.',
                     'count' => count($items),
                     'items' => $items,
                 ],

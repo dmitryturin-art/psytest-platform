@@ -24,7 +24,9 @@
                     <td><strong>{{ item.code }}</strong></td>
                     <td>
                         {{ item.name }}
+                        {% if item.flag is defined and item.flag %}<span class="scale-flag">{{ item.flag }}</span>{% endif %}
                         {% if item.source_note is defined and item.source_note %}<span class="scale-source">{{ item.source_note }}</span>{% endif %}
+                        {% if item.note is defined and item.note %}<span class="scale-note">{{ item.note }}</span>{% endif %}
                     </td>
                     <td>{{ item.raw|default('—') }}{% if item.max_raw is defined and item.max_raw %} / {{ item.max_raw }}{% endif %}</td>
                     <td>
