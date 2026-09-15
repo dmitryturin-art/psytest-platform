@@ -7,7 +7,7 @@ namespace PsyTest\Tests\Smil;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Инварианты партий дополнительных шкал 05.S3.1 и 05.S3.2 (WP4).
+ * Инварианты партий дополнительных шкал 05.S3.1, 05.S3.2 и 05.S3.3 (WP4).
  *
  * Runtime-файл modules/smil/additional-scales-v2.json собирается скриптом
  * bin/smil-build-batch.php из транскрипции приложения Собчик. Тест стережёт
@@ -67,10 +67,41 @@ final class AdditionalScalesInvariantsTest extends TestCase
         193 => 'SOR',
     ];
 
+    /**
+     * Партия 05.S3.3: 20 шкал психотического и психопатического спектра,
+     * утверждены владельцем 15.09.2026.
+     *
+     * Аномалий сверки (утраченные нормы, опечатки ключа) у этих записей нет:
+     * нормы по обоим полам присутствуют в источнике, поля note не требуется.
+     */
+    private const BATCH_3 = [
+        61 => 'EPI',
+        138 => 'PAR',
+        139 => 'PRS',
+        140 => 'POI',
+        141 => 'NAI',
+        142 => 'PAO',
+        143 => 'PAS',
+        144 => 'PRC',
+        146 => 'PPD',
+        147 => 'FMD',
+        148 => 'AUT',
+        152 => 'PDO',
+        153 => 'PDS',
+        156 => 'SZP',
+        157 => 'PFA',
+        158 => 'PNE',
+        170 => 'PSZ',
+        182 => 'SAL',
+        183 => 'EAL',
+        187 => 'BSE',
+    ];
+
     /** Партия => номера записей. */
     private const BATCH_LABELS = [
         '05.S3.1' => self::BATCH_1,
         '05.S3.2' => self::BATCH_2,
+        '05.S3.3' => self::BATCH_3,
     ];
 
     /**
@@ -120,18 +151,18 @@ final class AdditionalScalesInvariantsTest extends TestCase
     }
 
     /**
-     * Номер записи => runtime-код по обеим партиям.
+     * Номер записи => runtime-код по всем партиям.
      *
      * @return array<int, string>
      */
     private static function batch(): array
     {
-        return self::BATCH_1 + self::BATCH_2;
+        return self::BATCH_1 + self::BATCH_2 + self::BATCH_3;
     }
 
     public function testBothBatchesArePresentWithExpectedCodesAndOrder(): void
     {
-        self::assertCount(35, $this->scales);
+        self::assertCount(55, $this->scales);
 
         $expectedOrder = [];
         foreach (self::BATCH_LABELS as $label => $codes) {
@@ -148,7 +179,11 @@ final class AdditionalScalesInvariantsTest extends TestCase
 
         foreach ($this->scales as $scale) {
             $number = (int) $scale['source']['entry'];
-            $expectedBatch = isset(self::BATCH_1[$number]) ? '05.S3.1' : '05.S3.2';
+            $expectedBatch = match (true) {
+                isset(self::BATCH_1[$number]) => '05.S3.1',
+                isset(self::BATCH_2[$number]) => '05.S3.2',
+                default => '05.S3.3',
+            };
             self::assertSame($expectedBatch, $scale['batch'] ?? null, "№{$number}: партия");
         }
 
