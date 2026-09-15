@@ -186,4 +186,48 @@ final class ReportMarkdownTest extends TestCase
             self::assertContains(strtolower($m[1] ?? ''), self::ALLOWED_TAGS, "Чужой тег в выводе: {$tag}");
         }
     }
+
+    /**
+     * Текст, прошедший через визуальный редактор, рендерится так же (07.K5d).
+     *
+     * Toast UI Editor пересобирает Markdown по своим правилам: маркер списка
+     * становится `*`, разделитель таблицы выравнивается, а служебные знаки
+     * экранируются обратной чертой («## 1\. Результат»). Фикстура ниже — вывод
+     * `getMarkdown()` для настоящего отчёта модели; читатель не должен заметить,
+     * что специалист открывал редактор.
+     */
+    public function testTextRoundTrippedThroughTheVisualEditorRendersIdentically(): void
+    {
+        $original = (string) file_get_contents(__DIR__ . '/fixtures/ai-report-sample.md');
+        $roundTripped = (string) file_get_contents(__DIR__ . '/fixtures/ai-report-sample-toastui.md');
+
+        self::assertStringContainsString('1\\.', $roundTripped, 'Предусловие: фикстура — вывод редактора с экранированием.');
+        self::assertSame(ReportMarkdown::toHtml($original), ReportMarkdown::toHtml($roundTripped));
+    }
+
+    /**
+     * Экранированный знак остаётся знаком, а не пропадает и не становится разметкой.
+     */
+    public function testBackslashEscapedPunctuationBecomesPlainText(): void
+    {
+        $html = ReportMarkdown::toHtml("## 1\\. Итог\n\nШкала 5 \\* 2 и \\_подчёркивание\\_");
+
+        self::assertStringContainsString('<h3>1. Итог</h3>', $html);
+        self::assertStringContainsString('5 * 2', $html);
+        self::assertStringContainsString('_подчёркивание_', $html);
+        self::assertStringNotContainsString('\\', $html);
+        self::assertStringNotContainsString('<em>', $html);
+    }
+
+    /**
+     * Экранирование не становится дырой в защите: «\» перед чужой разметкой
+     * ничего не разэкранирует — к этому моменту `<` уже `&lt;`.
+     */
+    public function testBackslashDoesNotSmuggleMarkupThrough(): void
+    {
+        $html = ReportMarkdown::toHtml('Текст \\<script\\>alert(1)\\</script\\> дальше');
+
+        self::assertStringNotContainsString('<script', $html);
+        self::assertStringContainsString('&lt;script', $html);
+    }
 }

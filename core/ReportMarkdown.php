@@ -22,7 +22,9 @@ final class ReportMarkdown
 {
     public static function toHtml(string $markdown): string
     {
-        $escaped = htmlspecialchars($markdown, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // Нулевой байт убирается сразу: дальше он служит служебной меткой при
+        // разборе экранированных знаков и во входном тексте быть не должен.
+        $escaped = str_replace("\0", '', htmlspecialchars($markdown, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $lines = preg_split('/\R/u', $escaped) ?: [];
 
         $html = [];
@@ -157,10 +159,31 @@ final class ReportMarkdown
      */
     private static function inline(string $text): string
     {
+        // Визуальный редактор возвращает служебные знаки экранированными
+        // обратной чертой («1\.», «\*»), иначе при следующем разборе они снова
+        // стали бы разметкой. Такой знак прячется под метку до разбора выделения
+        // и возвращается в текст как обычный символ: `\*` — это звёздочка, а не
+        // начало курсива. Ничего нового в вывод это не добавляет, потому что
+        // возвращается ровно то, что было экранировано в уже безопасном тексте.
+        $literals = [];
+        $text = preg_replace_callback(
+            '/\\\\(&[a-z]+;|&#\d+;|[^\p{L}\p{N}\s])/u',
+            static function (array $match) use (&$literals): string {
+                $literals[] = $match[1];
+
+                return "\0" . count($literals) . "\0";
+            },
+            $text,
+        ) ?? $text;
+
         $text = preg_replace('/`([^`]+)`/u', '<code>$1</code>', $text) ?? $text;
         $text = preg_replace('/\*\*([^*]+)\*\*/u', '<strong>$1</strong>', $text) ?? $text;
         $text = preg_replace('/(?<!\*)\*([^*]+)\*(?!\*)/u', '<em>$1</em>', $text) ?? $text;
 
-        return $text;
+        return preg_replace_callback(
+            '/\0(\d+)\0/',
+            static fn (array $match): string => $literals[((int) $match[1]) - 1] ?? '',
+            $text,
+        ) ?? $text;
     }
 }

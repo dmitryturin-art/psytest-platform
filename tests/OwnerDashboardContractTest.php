@@ -432,4 +432,123 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringNotContainsString('session_token', $case);
         self::assertStringContainsString('/reports/status', $case);
     }
+
+    /**
+     * «Обновить» действительно обновляет страницу (07.K5d).
+     *
+     * Раньше это была ссылка на текущий адрес с якорем: браузер по ней только
+     * прокручивает страницу и ничего не перезапрашивает, поэтому специалист
+     * нажимал кнопку и видел прежнее состояние черновиков.
+     */
+    public function testTheRefreshControlReloadsThePageInsteadOfJumpingToTheAnchor(): void
+    {
+        $case = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-case.js');
+
+        self::assertStringContainsString('<button type="button" class="btn" data-reload>Обновить</button>', $case);
+        self::assertStringNotContainsString('#owner-case-ai">Обновить</a>', $case);
+
+        // Без JS ту же работу делает GET с меняющимся параметром: адрес
+        // отличается от текущего, и браузер идёт на сервер.
+        self::assertStringContainsString('<noscript>', $case);
+        self::assertStringContainsString('<input type="hidden" name="_" value="{{ "now"|date("U") }}">', $case);
+
+        self::assertStringContainsString("querySelectorAll('[data-reload]')", $script);
+        self::assertStringContainsString('window.location.reload()', $script);
+    }
+
+    /**
+     * Опрос реагирует на изменение статуса любого вида разбора (07.K5d).
+     *
+     * Прежний скрипт перезагружал страницу, только когда не осталось ни одного
+     * незавершённого задания. Понятный разбор при этом мог быть готов минутами
+     * раньше профессионального заключения, а специалист всё это время видел
+     * «задание в работе» и не получал ссылку на редактор.
+     */
+    public function testThePollReloadsOnAnyStatusChangeAndKeepsPollingWhileWorkRemains(): void
+    {
+        $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-case.js');
+        $case = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+
+        // Решение оформлено отдельными функциями, поэтому его видно по тексту.
+        self::assertMatchesRegularExpression(
+            '/var statusChanged = function \(before, after\) \{.*?return before\[kind\] !== after\[kind\];.*?\};/s',
+            $script,
+        );
+        self::assertMatchesRegularExpression(
+            '/if \(statusChanged\(initial, current\)\) \{.*?window\.location\.reload\(\);/s',
+            $script,
+        );
+        // Пока есть незавершённые задания, опрос продолжается.
+        self::assertMatchesRegularExpression(
+            '/if \(!stillWorking\(current\)\) \{\s*stop\(\);/s',
+            $script,
+        );
+        self::assertStringContainsString('if (!stillWorking(initial)) return;', $script);
+
+        // Снимок статусов берётся из разметки карточки, а адрес опроса — из секции.
+        self::assertStringContainsString('.owner-case-ai-item[data-kind]', $script);
+        self::assertStringContainsString('data-kind="{{ item.kind }}" data-status="{{ item.status }}"', $case);
+        self::assertStringContainsString('data-status-url="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/status"', $case);
+    }
+
+    /**
+     * Визуальный редактор разбора работает на локальной библиотеке (07.K5d).
+     *
+     * Кабинет не ходит во внешние сервисы, поэтому Toast UI Editor лежит в
+     * `public/vendor` и должен быть под контролем версий: иначе он не попадёт
+     * в релизный артефакт (`bin/build-release.sh` сверяет его с `git ls-files`).
+     * Textarea остаётся источником правды: без JS страница работает как прежде.
+     */
+    public function testTheVisualEditorIsLocalAndKeepsTheTextareaAsTheSourceOfTruth(): void
+    {
+        $editor = (string) file_get_contents($this->projectRoot . '/templates/owner-report-editor.twig');
+        $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-report-editor.js');
+
+        foreach (
+            [
+                'vendor/toastui-editor/toastui-editor-all.min.js',
+                'vendor/toastui-editor/toastui-editor.min.css',
+                'vendor/toastui-editor/i18n/ru-ru.min.js',
+            ] as $asset
+        ) {
+            self::assertStringContainsString("asset('" . $asset . "')", $editor);
+            self::assertFileExists($this->projectRoot . '/public/' . $asset);
+        }
+
+        $tracked = [];
+        exec('git -C ' . escapeshellarg($this->projectRoot) . ' ls-files public/vendor/toastui-editor', $tracked);
+        self::assertContains('public/vendor/toastui-editor/toastui-editor-all.min.js', $tracked);
+        self::assertContains('public/vendor/toastui-editor/LICENSE', $tracked, 'Лицензия библиотеки лежит рядом с файлами.');
+        self::assertContains('public/vendor/toastui-editor/VERSION.txt', $tracked, 'Источник и sha256 файлов зафиксированы.');
+
+        // Никаких внешних CDN в рантайме.
+        foreach ([$editor, $script] as $source) {
+            self::assertStringNotContainsString('cdn.', $source);
+            self::assertStringNotContainsString('//unpkg', $source);
+        }
+
+        // Поле формы остаётся прежним, а библиотека только правит его значение.
+        self::assertStringContainsString('name="content"', $editor);
+        self::assertStringContainsString('data-markdown-editor', $editor);
+        self::assertStringContainsString('data-markdown-editor-form', $editor);
+        self::assertStringNotContainsString('session_token', $editor);
+        self::assertStringContainsString('textarea.value = editor.getMarkdown();', $script);
+        self::assertStringContainsString("initialEditType: 'wysiwyg'", $script);
+        self::assertStringContainsString("previewStyle: 'tab'", $script);
+        self::assertStringContainsString("language: 'ru-RU'", $script);
+        self::assertStringContainsString('usageStatistics: false', $script);
+
+        // Тулбар не предлагает разметку, которую рендерер отчёта не поддерживает.
+        foreach (['link', 'image', 'codeblock', 'task', 'strike'] as $forbidden) {
+            self::assertStringNotContainsString("'" . $forbidden . "'", $script, "Кнопка «{$forbidden}» не поддерживается ReportMarkdown.");
+        }
+
+        // Серверный предпросмотр остаётся на том же белом списке разметки.
+        self::assertStringContainsString('latest_html|raw', $editor);
+        self::assertStringContainsString(
+            'ReportMarkdown::toHtml',
+            (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php'),
+        );
+    }
 }
