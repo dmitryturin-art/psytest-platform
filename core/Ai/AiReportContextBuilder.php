@@ -19,9 +19,15 @@ use PsyTest\Core\SessionManager;
  */
 final class AiReportContextBuilder
 {
+    /**
+     * @param AiSettings|null $ownerSettings Настройки кабинета; сейчас из них
+     *                                       берётся режим глоссария СМИЛ (07.G6).
+     *                                       Без них режим — полный, как до пакета.
+     */
     public function __construct(
         private readonly SessionManager $sessions,
         private readonly ModuleLoader $modules,
+        private readonly ?AiSettings $ownerSettings = null,
     ) {
     }
 
@@ -55,7 +61,9 @@ final class AiReportContextBuilder
             throw new AiProviderException("Методика «{$testSlug}» не отдаёт данные в режиме «{$mode}».");
         }
 
-        return $context;
+        // Сжатие идёт поверх готовой нагрузки: модуль решает, что вообще
+        // уходит наружу, а настройка владельца — сколько из этого пояснять.
+        return SmilGlossaryCompactor::fromSettings($this->ownerSettings)->apply($context);
     }
 
     /**

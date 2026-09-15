@@ -82,6 +82,12 @@
                 Ровно то, что уйдёт модели. Ответы придуманы этой страницей по схеме методики — ни одной реальной сессии здесь нет.
                 Провайдер при предпросмотре не вызывается.
             </p>
+            {% if preview.glossary_mode %}
+            <p class="owner-help">Глоссарий СМИЛ: {{ preview.glossary_mode == 'compact' ? 'компактный (краткое значение по шкалам 40–65T)' : 'полный' }}.</p>
+            {% endif %}
+            {% if preview.length %}
+            <p class="owner-help">Длина контекста: {{ preview.length }} знаков.</p>
+            {% endif %}
             <h3>system</h3>
             <pre class="owner-prompt-text">{{ preview.system }}</pre>
             <h3>user</h3>

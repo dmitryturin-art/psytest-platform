@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PsyTest\Tests;
 
 use PHPUnit\Framework\TestCase;
+use PsyTest\Core\Ai\SmilGlossaryCompactor;
 use PsyTest\Core\ModuleLoader;
 use PsyTest\Modules\Lazarus\LazarusModule;
 use PsyTest\Modules\Smil\SmilModule;
@@ -299,6 +300,58 @@ final class AiReportContextContractTest extends TestCase
         // закрывать не порогом, а компактным режимом глоссария (полные пояснения
         // только по шкалам вне 40–65T) — открытый вопрос владельца, см. D-055.
         self::assertLessThan(64000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
+    }
+
+    public function testCompactGlossaryModeCutsTheContextDownSubstantially(): void
+    {
+        // 07.G6: владелец сравнивает разборы одного кейса на полном и компактном
+        // глоссарии, поэтому важна не «красивая» экономия, а измеренная.
+        $context = $this->smil()->aiReportContext($this->smilResults(), 'individual');
+
+        $full = (string) json_encode((new SmilGlossaryCompactor(SmilGlossaryCompactor::MODE_FULL))->apply($context), JSON_UNESCAPED_UNICODE);
+        $compact = (string) json_encode((new SmilGlossaryCompactor(SmilGlossaryCompactor::MODE_COMPACT))->apply($context), JSON_UNESCAPED_UNICODE);
+
+        // Факт на эталонном профиле: 60 315 знаков в полном режиме против
+        // 43 211 в компактном (−28 %). Ориентир владельца был ≤ 35 000, но на
+        // этом синтетическом профиле он недостижим: ответы идут циклом 0-1-2,
+        // T разбегаются от 20 до 77, и половина шкал (38 из 75) оказывается вне
+        // среднего диапазона, то есть сохраняет полную запись. На живом профиле
+        // средних шкал заметно больше, и экономия выше. Порог 45 000 стережёт
+        // регресс, отношение к полному режиму — саму суть режима.
+        self::assertLessThan(45000, mb_strlen($compact), 'Компактный режим перестал быть компактным.');
+        self::assertLessThan(0.8 * mb_strlen($full), mb_strlen($compact), 'Компактный режим обязан заметно выигрывать у полного.');
+        self::assertLessThan(64000, mb_strlen($full), 'Полный режим остаётся под своим порогом.');
+    }
+
+    public function testCompactModeKeepsFullEntriesExactlyWhereTheProfileSpeaks(): void
+    {
+        $context = $this->smil()->aiReportContext($this->smilResults(), 'individual');
+        $compact = (new SmilGlossaryCompactor(SmilGlossaryCompactor::MODE_COMPACT))->apply($context);
+
+        self::assertSame('compact', $compact['glossary_mode']);
+
+        $tScores = [];
+        foreach ($compact['additional_scales'] as $scale) {
+            $tScores[(string) $scale['code']] = $scale['t'];
+        }
+
+        $short = 0;
+        foreach ($compact['additional_scales_glossary'] as $code => $entry) {
+            $t = $tScores[(string) $code];
+            $mid = $t >= SmilGlossaryCompactor::MID_RANGE_FROM && $t <= SmilGlossaryCompactor::MID_RANGE_TO;
+            self::assertSame(
+                $mid ? ['meaning'] : ['meaning', 'high', 'low', 'relates_to', 'western_name', 'source'],
+                array_keys($entry),
+                "Шкала {$code} с T={$t}: состав записи не соответствует режиму.",
+            );
+            $short += $mid ? 1 : 0;
+        }
+
+        self::assertSame(37, $short, 'Факт на эталонном профиле: 37 кратких записей из 75.');
+        self::assertSame($context['additional_scales'], $compact['additional_scales'], 'Сами шкалы режим не трогает.');
+        self::assertSame($context['additional_scales_without_glossary'], $compact['additional_scales_without_glossary']);
+        self::assertSame($context['levels']['bands'], $compact['levels']['bands'], 'Полосы уровней режим не трогает.');
+        self::assertContains(SmilGlossaryCompactor::COMPACT_PRINCIPLE, $compact['levels']['principles']);
     }
 
     public function testSmilReportsTheFormInsteadOfBareGender(): void

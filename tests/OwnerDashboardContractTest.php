@@ -360,6 +360,13 @@ final class OwnerDashboardContractTest extends TestCase
 
         self::assertStringContainsString('name="ai_enabled"', $list);
         self::assertStringContainsString('name="ai_model"', $list);
+        // Режим глоссария СМИЛ сохраняется рядом с моделью (07.G6), а
+        // предпросмотр показывает, каким режимом собрана нагрузка и сколько
+        // в ней знаков, — иначе сравнивать разборы не с чем.
+        self::assertStringContainsString('name="smil_glossary_mode" value="full"', $list);
+        self::assertStringContainsString('name="smil_glossary_mode" value="compact"', $list);
+        self::assertStringContainsString('preview.glossary_mode', $card);
+        self::assertStringContainsString('preview.length', $card);
         self::assertStringContainsString('name="confirm_publish" value="1" required', $card);
         self::assertStringContainsString('name="confirm_trial" value="1" required', $card);
         self::assertStringContainsString('/reset', $card);

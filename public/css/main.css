@@ -542,6 +542,17 @@ body {
     overflow-wrap: anywhere;
 }
 
+.owner-fieldset {
+    margin: 0;
+    padding: var(--spacing-sm) 0 0;
+    border: 0;
+}
+
+.owner-fieldset legend {
+    padding: 0;
+    font-weight: 600;
+}
+
 .owner-toggle {
     display: flex;
     align-items: flex-start;
