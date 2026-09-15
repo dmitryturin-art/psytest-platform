@@ -16,6 +16,7 @@ use PsyTest\Core\Ai\AiProviderSettings;
 use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
+use PsyTest\Core\Ai\AiSettings;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
@@ -122,13 +123,14 @@ class ResultController extends BaseController
 
     private function reportGenerator(): AiReportGenerator
     {
-        $settings = AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php');
+        $aiSettings = new AiSettings($this->db);
+        $settings = AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php', $aiSettings);
 
         return new AiReportGenerator(
             new AiReportRepository($this->db),
             $this->contextBuilder(),
-            PromptRegistry::default(),
-            new AiClient($settings, new CurlTransport()),
+            PromptRegistry::default($this->db),
+            new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings),
         );
     }
 
@@ -179,13 +181,19 @@ class ResultController extends BaseController
             $this->redirect('/result/' . $slug . '/' . $token);
         }
 
+        // Общий выключатель владельца (07.WP9): задание не ставится вовсе,
+        // иначе посетитель ждал бы отчёт, который заведомо уйдёт в отказ.
+        if (!(new AiSettings($this->db))->isAiEnabled()) {
+            $this->redirect('/result/' . $slug . '/' . $token);
+        }
+
         $mode = $this->presenter->reportMode($session);
 
         // Промпт спрашивается здесь, а не в обработчике: если разбор для этой
         // методики не открыт, посетитель узнаёт об этом сразу, а не через
         // несколько минут ожидания. Наличие опубликованного промпта и означает,
         // что разбор для этого сочетания методики, режима и вида разрешён.
-        $prompt = PromptRegistry::default()->published($slug, $mode, $kind);
+        $prompt = PromptRegistry::default($this->db)->published($slug, $mode, $kind);
         if ($prompt === null) {
             $this->redirect('/result/' . $slug . '/' . $token);
         }

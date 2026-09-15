@@ -519,6 +519,34 @@ body {
     line-height: 1.4;
 }
 
+/*
+ * Редактор промптов (07.WP9). Текст промпта и собранный запрос показываются
+ * как есть — с переносами и отступами: это исходник, а не вёрстка. На узком
+ * экране блок прокручивается сам, чтобы не растягивать страницу.
+ */
+.owner-prompt-text {
+    max-height: 26rem;
+    overflow: auto;
+    margin: var(--spacing-sm) 0 0;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.owner-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    min-height: 44px;
+    line-height: 1.4;
+}
+
 @media (max-width: 600px) {
     .owner-panel {
         margin: var(--spacing-md) 0;

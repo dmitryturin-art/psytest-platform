@@ -42,6 +42,14 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/publish'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/unpublish'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/notify'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/prompts'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/prompts/settings'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/prompts/{test}/{mode}/{kind}'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/prompts/{test}/{mode}/{kind}/preview'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/prompts/{test}/{mode}/{kind}/versions'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/prompts/{test}/{mode}/{kind}/publish'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/prompts/{test}/{mode}/{kind}/reset'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/prompts/{test}/{mode}/{kind}/trial'", $routes);
         self::assertStringContainsString("\$router->post('/invite/{token}/start'", $routes);
         self::assertStringContainsString('CsrfMiddleware', $routes);
         self::assertStringContainsString('ownerDashboardPasswordHash()', (string) file_get_contents($this->projectRoot . '/config.php'));
@@ -299,5 +307,73 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringNotContainsString('ip_address', $migration);
         self::assertStringNotContainsString('user_agent', $migration);
         self::assertStringNotContainsString('session_id', $migration);
+    }
+
+    /**
+     * Редактор промптов (07.WP9).
+     *
+     * Здесь редактируется рабочий инструмент владельца, а не чьи-то результаты:
+     * каждый маршрут закрыт `requireOwner()`, каждое изменяющее действие идёт
+     * POST-ом под общим CSRF, а на страницах нет ни одного поля с данными
+     * клиента — предпросмотр строится на синтетическом контексте.
+     */
+    public function testPromptEditorRoutesRequireTheOwnerAndChangeStateOnlyByPost(): void
+    {
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+
+        foreach ([
+            'public function prompts(): void',
+            'public function savePromptSettings(): void',
+            'public function createPromptVersion(string $test, string $mode, string $kind): void',
+            'public function publishPromptVersion(string $test, string $mode, string $kind): void',
+            'public function resetPromptVersion(string $test, string $mode, string $kind): void',
+        ] as $signature) {
+            $offset = strpos($controller, $signature);
+            self::assertIsInt($offset, "Нет действия {$signature}.");
+            self::assertStringContainsString(
+                'requireOwner()',
+                substr($controller, $offset, 260),
+                "Действие {$signature} обязано начинаться с проверки владельца.",
+            );
+        }
+
+        // Карточка ключа и предпросмотр закрыты той же проверкой через общий
+        // сборщик данных страницы.
+        $view = strpos($controller, 'private function promptKeyView(');
+        self::assertIsInt($view);
+        self::assertStringContainsString('requireOwner()', substr($controller, $view, 260));
+    }
+
+    public function testPromptTemplatesCarryCsrfAndNoClientData(): void
+    {
+        $list = (string) file_get_contents($this->projectRoot . '/templates/owner-prompts.twig');
+        $card = (string) file_get_contents($this->projectRoot . '/templates/owner-prompt-key.twig');
+
+        foreach ([$list, $card] as $template) {
+            self::assertStringContainsString('csrf_field()', $template);
+
+            // Ни сессий, ни клиентов, ни токенов результата на этих страницах нет.
+            foreach (['session_token', 'client.', 'case.', 'result_reference', 'invite.token'] as $forbidden) {
+                self::assertStringNotContainsString($forbidden, $template, "Шаблон промптов не должен упоминать «{$forbidden}».");
+            }
+        }
+
+        self::assertStringContainsString('name="ai_enabled"', $list);
+        self::assertStringContainsString('name="ai_model"', $list);
+        self::assertStringContainsString('name="confirm_publish" value="1" required', $card);
+        self::assertStringContainsString('name="confirm_trial" value="1" required', $card);
+        self::assertStringContainsString('/reset', $card);
+        self::assertStringContainsString('name="allows_owner_context"', $card);
+    }
+
+    public function testOwnerNavigationLinksThePromptEditor(): void
+    {
+        foreach (['owner-dashboard', 'owner-clients', 'owner-client', 'owner-invited-case'] as $template) {
+            self::assertStringContainsString(
+                '/admin/prompts',
+                (string) file_get_contents($this->projectRoot . '/templates/' . $template . '.twig'),
+                "В навигации кабинета ({$template}) нет ссылки на промпты.",
+            );
+        }
     }
 }

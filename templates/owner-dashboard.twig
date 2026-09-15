@@ -7,6 +7,7 @@
 {% block header_nav %}
 <nav class="owner-nav">
     <a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a>
+    <a class="nav-link" href="{{ basePath }}/admin/prompts">Промпты</a>
     <form method="post" action="{{ basePath }}/admin/logout">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="nav-link owner-logout">Выйти</button>

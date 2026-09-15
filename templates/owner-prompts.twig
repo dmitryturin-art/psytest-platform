@@ -1,0 +1,63 @@
+{% extends "layout.twig" %}
+{# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
+{% set ownerArea = true %}
+
+{% block title %}Промпты — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">Приглашения</a><a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a><a class="nav-link" href="{{ basePath }}/admin/prompts">Промпты</a></nav>{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-prompts-title">
+    <p class="owner-panel-eyebrow">Кабинет специалиста</p>
+    <h1 id="owner-prompts-title">Промпты разборов</h1>
+    <p class="owner-panel-intro">
+        Здесь редактируются формулировки, по которым модель готовит расширенный разбор.
+        Исходные тексты живут в репозитории, правки из кабинета ложатся поверх них и откатываются одной кнопкой.
+        Данных клиентов на этих страницах нет: предпросмотр работает на синтетическом наборе ответов.
+    </p>
+
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
+
+    <section class="owner-invites" aria-labelledby="owner-ai-settings-title">
+        <h2 id="owner-ai-settings-title">Настройки ИИ</h2>
+        <form method="post" action="{{ basePath }}/admin/prompts/settings" class="owner-form">
+            {{ csrf_field() }}
+            <label class="owner-toggle" for="ai-enabled-toggle">
+                <input type="checkbox" id="ai-enabled-toggle" name="ai_enabled" value="1"{% if ai_enabled %} checked{% endif %}>
+                ИИ-разборы включены
+            </label>
+            <p class="owner-help">Когда выключено, новые разборы не заказываются, а уже поставленные задания завершаются отказом с этой причиной.</p>
+
+            <label for="ai-model">Модель</label>
+            <input type="text" id="ai-model" name="ai_model" list="ai-model-list" maxlength="255" value="{{ ai_model }}" placeholder="{{ env_model }}">
+            <p class="owner-help">Пусто = из настроек сервера (сейчас {{ env_model }}). Ключ провайдера задаётся только в окружении и здесь не хранится.</p>
+            {% if models %}
+            <datalist id="ai-model-list">
+                {% for model in models %}<option value="{{ model.id }}">{{ model.name }}{% if model.free %} — бесплатная{% endif %}</option>{% endfor %}
+            </datalist>
+            {% else %}
+            <p class="owner-help">Список моделей провайдера сейчас недоступен — идентификатор можно вписать вручную.</p>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+        </form>
+    </section>
+
+    {% for group in groups %}
+    <section class="owner-invites" aria-labelledby="owner-prompts-{{ group.test }}">
+        <h2 id="owner-prompts-{{ group.test }}">{{ group.title }}</h2>
+        <ul class="owner-invite-list">
+            {% for key in group.keys %}
+            <li>
+                <p><strong><a href="{{ basePath }}/admin/prompts/{{ key.test }}/{{ key.mode }}/{{ key.kind }}">{{ key.kind_title|capitalize }}, {{ key.mode_title }}</a></strong></p>
+                <p>Опубликована версия {{ key.version }} — {{ key.source == 'owner' ? 'правка из кабинета' : 'файл в репозитории' }}{% if key.from_manifest %}, как задано в manifest.json{% endif %}.</p>
+                {% if key.created_at %}<small>Сохранена {{ key.created_at|date("d.m.Y H:i") }}</small>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endfor %}
+</section>
+{% endblock %}

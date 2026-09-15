@@ -45,7 +45,11 @@
                     Не получилось подготовить разбор{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}. Можно попробовать снова.
                 </p>
                 {% endif %}
-                {% if ai_report.readonly %}
+                {% if ai_report.ai_disabled|default(false) %}
+                {# Общий выключатель владельца (07.WP9): предлагать заказ,
+                   который сразу уйдёт в отказ, нечестно. #}
+                <p class="ai-report__waiting" role="status">Разбор временно недоступен.</p>
+                {% elseif ai_report.readonly %}
                 {# В кабинете нет bearer-токена результата, а форма заказа его
                    несёт: разбор заказывается на странице по своей ссылке. #}
                 <p class="ai-report__waiting" role="status">

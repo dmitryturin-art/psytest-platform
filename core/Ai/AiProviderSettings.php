@@ -29,7 +29,18 @@ final class AiProviderSettings
     ) {
     }
 
-    public static function fromConfig(object $config): self
+    /** Те же настройки с более коротким ожиданием — для синхронного пробного вызова из кабинета. */
+    public function withTimeout(int $seconds): self
+    {
+        return new self($this->baseUrl, $this->apiKey, $this->model, max(5, $seconds));
+    }
+
+    /**
+     * @param AiSettings|null $owner Настройки, заданные владельцем в кабинете (07.WP9).
+     *                               Переопределяют только модель: адрес, таймаут и
+     *                               ключ остаются в environment.
+     */
+    public static function fromConfig(object $config, ?AiSettings $owner = null): self
     {
         // AI_* — актуальные имена. OPENROUTER_* поддерживаются как исторические:
         // ключ уже лежит в .env под старым именем, ломать это незачем.
@@ -38,7 +49,12 @@ final class AiProviderSettings
             $key = (string) $config->getString('OPENROUTER_API_KEY', '');
         }
 
-        $model = (string) $config->getString('AI_MODEL', '');
+        // Модель из кабинета — первая по приоритету: владелец меняет её без
+        // выкладки релиза (D-039, WP9). Пустое значение возвращает к .env.
+        $model = $owner === null ? '' : $owner->modelOverride();
+        if ($model === '') {
+            $model = (string) $config->getString('AI_MODEL', '');
+        }
         if ($model === '') {
             $model = (string) $config->getString('OPENROUTER_MODEL', self::DEFAULT_MODEL);
         }

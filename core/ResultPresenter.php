@@ -6,6 +6,7 @@ namespace PsyTest\Core;
 
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiReportRevisionService;
+use PsyTest\Core\Ai\AiSettings;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Modules\ResultSection;
@@ -176,12 +177,16 @@ final class ResultPresenter
                 'mode' => $mode,
                 'kinds' => [],
                 'readonly' => $readonly,
+                'ai_disabled' => !(new AiSettings($this->db))->isAiEnabled(),
                 'published' => $this->publishedReport((string) $session['id']),
             ];
         }
 
-        $registry = PromptRegistry::default();
+        $registry = PromptRegistry::default($this->db);
         $reports = new AiReportRepository($this->db);
+        // Выключатель владельца (07.WP9): кнопку заказа показывать нечестно —
+        // задание всё равно ушло бы в отказ. Готовые разборы остаются видны.
+        $aiDisabled = !(new AiSettings($this->db))->isAiEnabled();
 
         $kinds = [];
         foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
@@ -202,7 +207,12 @@ final class ResultPresenter
             ];
         }
 
-        return $kinds === [] ? null : ['mode' => $mode, 'kinds' => $kinds, 'readonly' => $readonly];
+        return $kinds === [] ? null : [
+            'mode' => $mode,
+            'kinds' => $kinds,
+            'readonly' => $readonly,
+            'ai_disabled' => $aiDisabled,
+        ];
     }
 
     /**
