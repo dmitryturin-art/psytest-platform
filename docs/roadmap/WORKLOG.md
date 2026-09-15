@@ -20,6 +20,14 @@
 
 ## 2026-09-15
 
+### 08.B11 — staging-выкладка K5c + 00.D1 + WP9 (`2bd89f4`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-2bd89f4`; deployed runtime `2bd89f4` (merge PR #90; включает #87/#88 ссылку в письме, #89 долги).
+- Сделано: артефакт `release-2bd89f4.tar.gz`, SHA-256 `e7777b14…c33d` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-2bd89f4.sql.gz` (gzip -t OK); `AddPromptVersions` применена (с посевом `ai_enabled=1`); `public_html`/`current` атомарно на `releases/2bd89f4`.
+- Проверки: см. smoke в отчёте владельцу: основные маршруты `200`, `/favicon.svg` `200`, `/admin/prompts` без входа `303`, `/test/smil` `404`.
+- Rollback: `public_html` → `releases/be4342e/public`, `current` → `releases/be4342e`; `phinx rollback -t 20260915040000` из `releases/2bd89f4`.
+- Следующий шаг: ротация SSH-пароля владельцем; S2 (СМИЛ, дополнительные шкалы) — план партии и приёмка владельца.
+
 ### 07.WP9 — промпты из кабинета: версии, предпросмотр, публикация, откат, выключатель ИИ
 
 - Этап / ветка / commit: этап 07, `codex/07-wp9-prompt-editor` (rebase на `main` `d945ac9`); commits `e113cfb`, `b23dc4a`, `e861e88` (после rebase другие sha).
