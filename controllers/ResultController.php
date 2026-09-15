@@ -17,6 +17,7 @@ use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiSettings;
+use PsyTest\Core\Ai\BackgroundWorkerLauncher;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
@@ -96,12 +97,16 @@ class ResultController extends BaseController
     }
 
     /**
-     * Отпустить браузер и доготовить разбор в том же процессе.
+     * Отпустить браузер и довести разбор до конца вне этого запроса.
      *
-     * Расписание для этого не нужно: посетитель получает ответ сразу, а работа
-     * продолжается после закрытия соединения. Модель отвечает несколько минут,
-     * поэтому держать браузер всё это время нельзя — он и сервер оборвут запрос
-     * задолго до конца.
+     * Расписание для этого не нужно: посетитель получает ответ сразу. Модель
+     * отвечает несколько минут, поэтому держать браузер всё это время нельзя —
+     * он и сервер оборвут запрос задолго до конца.
+     *
+     * Предпочтительный путь — отдельный процесс (`AI_WORKER_PHP_BIN`): он
+     * переживает и уход посетителя, и 504 от nginx. Там, где CLI PHP не задан
+     * (локальный `php -S`), остаётся прежний путь — доработка в этом же
+     * процессе после отданного ответа.
      *
      * Если хостинг прервёт процесс на середине, задание останется в работе и
      * вернётся в очередь само (через получасовой возврат зависших), поэтому
@@ -109,6 +114,10 @@ class ResultController extends BaseController
      */
     private function respondThenGenerate(string $path, AiReportRepository $reports): never
     {
+        if (BackgroundWorkerLauncher::fromConfig(require dirname(__DIR__) . '/config.php')->launch(1)) {
+            $this->redirect($path);
+        }
+
         header('Location: ' . $path, true, 303);
         header('Content-Length: 0');
         ResponseFinisher::finish();

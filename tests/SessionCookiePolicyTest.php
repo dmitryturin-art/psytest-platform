@@ -67,12 +67,15 @@ final class SessionCookiePolicyTest extends TestCase
     }
 
     /**
-     * Фоновый разбор идёт минуты. Пока файл сессии заперт, следующий запрос
-     * браузера ждёт замок, и страница результата выглядит зависшей: посетитель
-     * не видит ни ожидания, ни опроса состояния. Поэтому сессия закрывается
-     * до того, как процесс уйдёт в работу.
+     * Запасной путь (07.K5a3): разбор доготавливается в этом же процессе.
+     *
+     * Так работает локальный `php -S` и fastcgi-хостинг, где `AI_WORKER_PHP_BIN`
+     * не задан. Фоновый разбор идёт минуты. Пока файл сессии заперт, следующий
+     * запрос браузера ждёт замок, и страница результата выглядит зависшей:
+     * посетитель не видит ни ожидания, ни опроса состояния. Поэтому сессия
+     * закрывается до того, как процесс уйдёт в работу.
      */
-    public function testBackgroundReportReleasesTheSessionBeforeGenerating(): void
+    public function testInProcessFallbackReleasesTheSessionBeforeGenerating(): void
     {
         $finisher = (string) file_get_contents(dirname(__DIR__) . '/core/ResponseFinisher.php');
         self::assertStringContainsString('session_write_close();', $finisher, 'Сессия должна закрываться перед фоновой работой.');
@@ -87,6 +90,32 @@ final class SessionCookiePolicyTest extends TestCase
             self::assertNotFalse($finished, "{$controller}: ответ должен уходить до фоновой работы.");
             self::assertNotFalse($generated, "{$controller}: фоновая обработка очереди не найдена.");
             self::assertLessThan($generated, $finished);
+        }
+    }
+
+    /**
+     * Основной путь (07.K5a3): отдельный процесс.
+     *
+     * На боевом хостинге PHP работает как `apache2handler`, `fastcgi_finish_request`
+     * нет, и nginx закрывает соединение по 504 примерно через минуту — работа
+     * в том же процессе до конца не доходит. Поэтому оба заказа сначала пробуют
+     * запустить воркера и только при отказе лаунчера остаются на прежнем пути.
+     */
+    public function testBothOrderPathsTryTheBackgroundWorkerBeforeTheInProcessFallback(): void
+    {
+        foreach (['ResultController', 'OwnerController'] as $controller) {
+            $source = (string) file_get_contents(dirname(__DIR__) . "/controllers/{$controller}.php");
+
+            $launched = strpos($source, 'BackgroundWorkerLauncher::fromConfig(');
+            $finished = strpos($source, 'ResponseFinisher::finish();');
+
+            self::assertNotFalse($launched, "{$controller}: запуск фонового воркера не найден.");
+            self::assertNotFalse($finished);
+            self::assertLessThan(
+                $finished,
+                $launched,
+                "{$controller}: лаунчер должен пробоваться до обработки в самом запросе.",
+            );
         }
     }
 

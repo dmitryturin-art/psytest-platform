@@ -12,6 +12,7 @@ use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiReportRevisionService;
 use PsyTest\Core\Ai\AiSettings;
+use PsyTest\Core\Ai\BackgroundWorkerLauncher;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptFixtureContext;
@@ -573,11 +574,21 @@ final class OwnerController extends BaseController
             $this->caseFlashBack($sessionId, false, 'Для этой методики и режима разбор пока не открыт.');
         }
 
-        // На shared-хостинге нет cron-обработчика очереди: как и на странице
-        // результата, задания доводятся до конца в этом же процессе после
-        // того, как ответ уже отдан браузеру (07.16–07.17).
-        $this->setFlash(['type' => 'success', 'message' => 'Черновики поставлены в очередь. Обновите страницу через несколько минут.']);
-        header('Location: /admin/invited-case/' . $sessionId, true, 303);
+        $this->setFlash([
+            'type' => 'success',
+            'message' => 'Черновики поставлены в очередь. Обычно это 2–5 минут — страница обновится сама.',
+        ]);
+
+        // Расписания на хостинге нет, поэтому очередь двигает сам заказ. Если
+        // задан CLI PHP (`AI_WORKER_PHP_BIN`), работа уходит в отдельный
+        // процесс и переживает 504 от nginx — браузеру остаётся обычный 303.
+        // Иначе остаётся прежний путь: ответ отдан, работа доделывается здесь
+        // же (07.16–07.17).
+        if (BackgroundWorkerLauncher::fromConfig(require dirname(__DIR__) . '/config.php')->launch($queued)) {
+            $this->redirect($this->caseAiAnchor($sessionId));
+        }
+
+        header('Location: ' . $this->caseAiAnchor($sessionId), true, 303);
         header('Content-Length: 0');
         ResponseFinisher::finish();
 
@@ -591,6 +602,17 @@ final class OwnerController extends BaseController
         }
 
         exit;
+    }
+
+    /**
+     * Возврат к разделу «ИИ-разбор», а не к началу длинной карточки.
+     *
+     * Карточка кейса — это весь результат теста целиком; без якоря специалист
+     * после заказа видит верх страницы и не понимает, что произошло.
+     */
+    private function caseAiAnchor(string $sessionId): string
+    {
+        return '/admin/invited-case/' . $sessionId . '#owner-case-ai';
     }
 
     private function reportGenerator(): AiReportGenerator
@@ -809,7 +831,7 @@ final class OwnerController extends BaseController
     private function caseFlashBack(string $sessionId, bool $success, string $message): never
     {
         $this->setFlash(['type' => $success ? 'success' : 'error', 'message' => $message]);
-        $this->redirect('/admin/invited-case/' . $sessionId);
+        $this->redirect($this->caseAiAnchor($sessionId));
     }
 
     public function lookupCase(): void

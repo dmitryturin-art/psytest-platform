@@ -168,6 +168,18 @@ return new class {
     public function openrouterModel(): string {
         return $this->getString('OPENROUTER_MODEL', 'deepseek/deepseek-chat');
     }
+
+    /**
+     * Путь к CLI PHP для фонового обработчика ИИ-разборов.
+     *
+     * Пусто по умолчанию: без него заказ разбора доготавливается в том же
+     * процессе (ResponseFinisher), как раньше. На хостинге без
+     * `fastcgi_finish_request` этот путь задаётся, и очередь уходит в
+     * отдельный процесс, который переживает обрыв соединения.
+     */
+    public function aiWorkerPhpBin(): string {
+        return trim($this->getString('AI_WORKER_PHP_BIN'));
+    }
     
     // Email
     public function mailFrom(): string {
