@@ -41,6 +41,19 @@
             <p class="owner-help">Список моделей провайдера сейчас недоступен — идентификатор можно вписать вручную.</p>
             {% endif %}
 
+            <fieldset class="owner-fieldset">
+                <legend>Глоссарий СМИЛ</legend>
+                <label class="owner-toggle" for="smil-glossary-full">
+                    <input type="radio" id="smil-glossary-full" name="smil_glossary_mode" value="full"{% if smil_glossary_mode != 'compact' %} checked{% endif %}>
+                    Полный
+                </label>
+                <label class="owner-toggle" for="smil-glossary-compact">
+                    <input type="radio" id="smil-glossary-compact" name="smil_glossary_mode" value="compact"{% if smil_glossary_mode == 'compact' %} checked{% endif %}>
+                    Компактный (краткое значение по шкалам 40–65T)
+                </label>
+            </fieldset>
+            <p class="owner-help">В компактном режиме шкалы со средним T-баллом уходят одной строкой смысла, а полные пояснения остаются по шкалам вне 40–65T. Режим виден в самом контексте разбора.</p>
+
             <button type="submit" class="btn btn-primary">Сохранить настройки</button>
         </form>
     </section>

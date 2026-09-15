@@ -17,6 +17,7 @@ use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptFixtureContext;
 use PsyTest\Core\Ai\PromptRegistry;
+use PsyTest\Core\Ai\SmilGlossaryCompactor;
 use PsyTest\Core\CaseExportPresenter;
 use PsyTest\Core\ClientReportNotifier;
 use PsyTest\Core\InvitedCasePresenter;
@@ -572,7 +573,7 @@ final class OwnerController extends BaseController
         }
 
         try {
-            $context = (new AiReportContextBuilder($this->sessionManager, $this->moduleLoader))
+            $context = (new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, new AiSettings($this->db)))
                 ->build($sessionId, $slug, $mode);
         } catch (AiProviderException $e) {
             $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: ' . $e->getMessage());
@@ -660,7 +661,7 @@ final class OwnerController extends BaseController
 
         return new AiReportGenerator(
             new AiReportRepository($this->db),
-            new AiReportContextBuilder($this->sessionManager, $this->moduleLoader),
+            new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, $aiSettings),
             PromptRegistry::default($this->db),
             new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings),
         );
@@ -1265,6 +1266,7 @@ final class OwnerController extends BaseController
             'groups' => array_values($groups),
             'ai_enabled' => $settings->isAiEnabled(),
             'ai_model' => $settings->modelOverride(),
+            'smil_glossary_mode' => $settings->smilGlossaryMode(),
             'env_model' => AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php')->model,
             'models' => $this->modelCatalog(),
         ]);
@@ -1285,6 +1287,9 @@ final class OwnerController extends BaseController
 
         $model = $_POST['ai_model'] ?? '';
         $settings->setModelOverride(is_string($model) ? $model : '');
+
+        $glossaryMode = $_POST['smil_glossary_mode'] ?? null;
+        $settings->setSmilGlossaryMode(is_string($glossaryMode) ? $glossaryMode : SmilGlossaryCompactor::MODE_FULL);
 
         $this->setFlash(['type' => 'success', 'message' => 'Настройки ИИ сохранены.']);
         $this->redirect('/admin/prompts');
@@ -1548,26 +1553,36 @@ final class OwnerController extends BaseController
     /**
      * Запрос к модели, собранный на синтетическом контексте методики.
      *
-     * @return array{system: string, user: string|null, context: array<string, mixed>, error: string|null}
+     * @return array{system: string, user: string|null, context: array<string, mixed>, error: string|null, glossary_mode: string|null, length: int|null}
      */
     private function buildPreview(Prompt $prompt, string $test, string $mode): array
     {
         $module = $this->moduleLoader->getModule($test);
+        $empty = ['system' => $prompt->text, 'user' => null, 'context' => [], 'glossary_mode' => null, 'length' => null];
 
         if ($module === null) {
-            return ['system' => $prompt->text, 'user' => null, 'context' => [], 'error' => "Методика «{$test}» не установлена."];
+            return $empty + ['error' => "Методика «{$test}» не установлена."];
         }
 
         try {
-            $context = PromptFixtureContext::build($module, $mode);
+            // Настройки кабинета передаются и сюда: предпросмотр обязан
+            // показывать нагрузку того же режима, что уйдёт боевым запросом.
+            $context = PromptFixtureContext::build($module, $mode, new AiSettings($this->db));
         } catch (\Throwable $e) {
-            return ['system' => $prompt->text, 'user' => null, 'context' => [], 'error' => $e->getMessage()];
+            return $empty + ['error' => $e->getMessage()];
         }
+
+        $user = json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
 
         return [
             'system' => $prompt->text,
-            'user' => json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR),
+            'user' => $user,
             'context' => $context,
+            // Режим и размер видно прямо на странице: владелец сравнивает
+            // полный и компактный глоссарий по одному и тому же кейсу (07.G6).
+            'glossary_mode' => isset($context['glossary_mode']) ? (string) $context['glossary_mode'] : null,
+            // Провайдеру уходит компактный JSON, им и меряем.
+            'length' => mb_strlen((string) json_encode($context, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)),
             'error' => null,
         ];
     }
