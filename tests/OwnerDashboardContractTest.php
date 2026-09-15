@@ -267,7 +267,7 @@ final class OwnerDashboardContractTest extends TestCase
      * Автоматической отправки нет: письмо уходит только из своего маршрута под
      * `requireOwner()`, и ни публикация, ни готовность черновика его не зовут.
      */
-    public function testTheClientNotificationIsOwnerOnlyManualAndCarriesNeitherLinkNorReport(): void
+    public function testTheClientNotificationIsOwnerOnlyManualAndCarriesOnlyTheResultLink(): void
     {
         $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
         $notifier = (string) file_get_contents($this->projectRoot . '/core/ClientReportNotifier.php');
@@ -282,9 +282,11 @@ final class OwnerDashboardContractTest extends TestCase
         }
         self::assertStringNotContainsString('ClientReportNotifier', (string) file_get_contents($this->projectRoot . '/core/Ai/AiReportRepository.php'));
 
-        // Ссылка на результат — bearer-токен, и в письме ей не место.
+        // Решение владельца 15.09: письмо несёт ссылку на страницу результата
+        // (клиент мог её закрыть), но не подпись клиента и не текст разбора.
         $body = substr($notifier, (int) strpos($notifier, 'public static function body('));
-        foreach (['session_token', '/result/', 'appUrl', 'http'] as $forbidden) {
+        self::assertStringContainsString('$resultLink', $body);
+        foreach (['label', 'owner_note', 'content'] as $forbidden) {
             self::assertStringNotContainsString($forbidden, $body, $forbidden);
         }
     }

@@ -61,15 +61,18 @@ final class PrivacyClaimsTruthfulnessTest extends TestCase
 
         self::assertStringContainsString('только если он сам его', $copy);
         self::assertStringContainsString('ни текста', $copy);
-        self::assertStringContainsString('ни ссылки на результат', $copy);
+        self::assertStringContainsString('ни вашего имени', $copy);
+        self::assertStringContainsString('ссылка на вашу страницу результата', $copy);
 
         // Обещанное поведение существует в коде, а не только в тексте.
         self::assertStringContainsString('Ваш разбор готов', $notifier);
         self::assertStringContainsString('published_revision_id IS NOT NULL', $notifier);
         self::assertStringContainsString('MIN_INTERVAL_MINUTES = 10', $notifier);
+        // Решение владельца 15.09: ссылка на страницу результата в письме есть,
+        // имени и текста разбора — нет.
         $body = substr($notifier, (int) strpos($notifier, 'public static function body('));
-        self::assertStringNotContainsString('http', $body);
-        self::assertStringNotContainsString('session_token', $body);
+        self::assertStringContainsString('$resultLink', $body);
+        self::assertStringNotContainsString('label', $body);
     }
 
     public function testPublicDeleteCopyDescribesTheCurrentSoftDeleteBoundary(): void
