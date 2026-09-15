@@ -63,7 +63,8 @@ final class BackgroundWorkerLauncherTest extends TestCase
         self::assertStringContainsString('nohup', $command);
         self::assertStringContainsString('/usr/local/bin/php8.3', $command);
         self::assertStringContainsString($this->root . '/bin/generate-ai-reports.php', $command);
-        self::assertStringContainsString('--limit=2', $command);
+        // Воркер вычерпывает очередь с запасом: два заказа подряд дают один запуск.
+        self::assertStringContainsString('--limit=10', $command);
         self::assertStringContainsString('>> ', $command);
         self::assertStringContainsString($this->root . '/storage/logs/ai-worker.log', $command);
         self::assertStringContainsString('2>&1', $command);
