@@ -20,6 +20,14 @@
 
 ## 2026-09-15
 
+### 08.B26 — staging-выкладка S3.5 + G7 (`4d8ab91`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-4d8ab91`; deployed runtime `4d8ab91` (merge PR #126). Миграций нет.
+- Сделано: артефакт `release-4d8ab91.tar.gz`, SHA-256 `dcdc1b91…70fb` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/4d8ab91`.
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`. В результате СМИЛ 105 дополнительных шкал.
+- Для сведения (владелец 15.09, не ориентир): прототипом на старте служил тест на psytests.org (СМИЛ/MMPI, 110 шкал в их наборе); ссылка на пример результата сохранена в реестре дополнительных шкал.
+- Rollback: `public_html` → `releases/9ddab4f/public`, `current` → `releases/9ddab4f`.
+
 ### 05.S3.5 + 07.G7 — пятая партия дополнительных шкал СМИЛ (все оставшиеся чистые записи) и её глоссарий
 
 - Этап / ветка / commit: этап 05/07, `codex/05-s3-5-remaining-batch` от `main` `652e201`; commits `c05d115`, `7fd2b66`, `ff9e21c`, `28cc5c6`, `b2f2e2a` (исполнитель Opus, БД `psytest_wt_s35`) + `dec8ace`, `f26efb2` (ведущий: правки по замечаниям владельца).
