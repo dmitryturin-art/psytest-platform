@@ -63,7 +63,7 @@ final class ClientReportNotifierTest extends TestCase
             new SessionLifecycleService($this->db, new RetentionPolicy(180), $this->storagePath),
         );
         $this->mailer = new RecordingMailer();
-        $this->notifier = new ClientReportNotifier($this->db, $this->mailer);
+        $this->notifier = new ClientReportNotifier($this->db, $this->mailer, 'https://example.test');
     }
 
     protected function tearDown(): void
@@ -98,9 +98,11 @@ final class ClientReportNotifierTest extends TestCase
         // Ничего, что раскрывает клиента, содержание разбора или доступ к нему.
         self::assertStringNotContainsString('выраженная тревога', $letter['body']);
         self::assertStringNotContainsString('Клиент с адресом', $letter['body']);
-        self::assertStringNotContainsString($case['session_token'], $letter['body']);
-        self::assertStringNotContainsString('/result/', $letter['body']);
-        self::assertStringNotContainsString('http', $letter['body']);
+        // Решение владельца 15.09: ссылка на страницу результата в письме есть —
+        // та же, что клиент получил после прохождения.
+        self::assertStringContainsString('https://example.test/result/', $letter['body']);
+        self::assertStringContainsString($case['session_token'], $letter['body']);
+        self::assertStringContainsString('Не пересылайте эту ссылку', $letter['body']);
 
         $notified = $this->db->selectOne(
             'SELECT client_notified_at FROM ai_reports WHERE id = ?',

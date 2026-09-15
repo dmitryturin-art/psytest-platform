@@ -38,6 +38,7 @@ final class ClientReportNotifier
     public function __construct(
         private readonly Database $db,
         private readonly MailerInterface $mailer,
+        private readonly string $appUrl = '',
     ) {
     }
 
@@ -47,7 +48,7 @@ final class ClientReportNotifier
         /** @var object $config */
         $config = require dirname(__DIR__) . '/config.php';
 
-        return new self($db, MailerFactory::fromConfig($config));
+        return new self($db, MailerFactory::fromConfig($config), (string) $config->appUrl());
     }
 
     /**
@@ -73,7 +74,7 @@ final class ClientReportNotifier
         }
 
         try {
-            $this->mailer->send($target['email'], self::subject(), self::body());
+            $this->mailer->send($target['email'], self::subject(), self::body($this->resultLink($target)));
         } catch (\Throwable) {
             // Ни адреса, ни идентификаторов кейса: лог не место для
             // персональных данных (ENGINEERING_RULES §9).
@@ -121,15 +122,23 @@ final class ClientReportNotifier
     /**
      * Текст письма.
      *
-     * Он одинаков для всех и не содержит ни имени, ни подписи, ни ссылки: так
-     * письмо, попавшее не туда, не рассказывает получателю ничего о клиенте.
+     * Решение владельца 15.09.2026: в письме есть ссылка на страницу результата
+     * клиента — он мог закрыть её и иначе разбор не найдёт. Ссылка та же, что
+     * он получил после прохождения; имени, подписи и текста разбора нет.
      */
-    public static function body(): string
+    public static function body(string $resultLink): string
     {
         return "Специалист подготовил разбор ваших результатов.\n\n"
-            . "Откройте свою страницу результата, которую вы получили после прохождения теста — "
-            . "разбор появился там.\n\n"
+            . "Откройте свою страницу результата — разбор появился там:\n"
+            . $resultLink . "\n\n"
+            . "Не пересылайте эту ссылку другим людям: по ней открывается ваш результат.\n\n"
             . "Если письмо пришло по ошибке, просто проигнорируйте его.\n";
+    }
+
+    /** @param array{test_slug: string, session_token: string} $target */
+    private function resultLink(array $target): string
+    {
+        return rtrim($this->appUrl, '/') . '/result/' . $target['test_slug'] . '/' . $target['session_token'];
     }
 
     /**
@@ -142,17 +151,18 @@ final class ClientReportNotifier
      * Окно повтора считает сама БД: `client_notified_at` пишется её же `NOW()`,
      * и сравнивать его с часами PHP нельзя — пояса у них расходятся.
      *
-     * @return array{report_id: string, email: string, notified_recently: bool}|null
+     * @return array{report_id: string, email: string, session_token: string, test_slug: string, notified_recently: bool}|null
      */
     private function publishedReportWithClientEmail(string $sessionId): ?array
     {
         $row = $this->db->selectOne(
-            'SELECT reports.id AS report_id, clients.email,
+            'SELECT reports.id AS report_id, clients.email, sessions.session_token, tests.slug AS test_slug,
                     (reports.client_notified_at IS NOT NULL
                      AND reports.client_notified_at > NOW() - INTERVAL ' . self::MIN_INTERVAL_MINUTES . ' MINUTE)
                     AS notified_recently
              FROM ai_reports AS reports
              INNER JOIN test_sessions AS sessions ON sessions.id = reports.session_id
+             INNER JOIN tests ON tests.id = sessions.test_id
              INNER JOIN test_invites AS invites ON invites.claimed_session_id = sessions.id
              INNER JOIN therapist_clients AS clients ON clients.id = invites.client_id
              WHERE reports.session_id = :session_id
@@ -175,6 +185,8 @@ final class ClientReportNotifier
         return [
             'report_id' => (string) $row['report_id'],
             'email' => (string) $row['email'],
+            'session_token' => (string) $row['session_token'],
+            'test_slug' => (string) $row['test_slug'],
             'notified_recently' => (bool) $row['notified_recently'],
         ];
     }
