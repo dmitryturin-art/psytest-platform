@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B14 — staging-выкладка K1c + K5a3/K5a4 + G2 (`33dbdc4`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-33dbdc4`; deployed runtime `33dbdc4` (merge PR #101; включает #98 свёрнутую анкету, #99 переподключение, #100 глоссарий партии 2). Миграций нет.
+- Сделано: артефакт `release-33dbdc4.tar.gz`, SHA-256 `790ae838…d07b` совпал; `.env` из прежнего релиза + `AI_WORKER_PHP_BIN=/usr/local/bin/php8.3`; `storage/cache` создан; pre-deploy dump `backups/pre-deploy-33dbdc4.sql.gz` (gzip -t OK); `public_html`/`current` атомарно на `releases/33dbdc4`.
+- Проверки: HTTPS основные маршруты `200`, `/test/smil` `404`; задания владельца по СМИЛ-кейсу «Дмитрий»: см. отчёт владельцу (повтор заказа через кнопку «Повторить» после выкладки).
+- Rollback: `public_html` → `releases/8d3ccfa/public`, `current` → `releases/8d3ccfa`.
+
 ### 07.K5a3 / 07.K5a4 — фоновый обработчик отдельным процессом, UX заказа, переподключение к БД перед транзакцией
 
 - Этап / ветка / commit: этап 07, `codex/07-k5a3-background-worker` (`3c12c08`, `bc2a9d0`, `08da74f`, после rebase другие sha) и `codex/07-k5a4-txn-reconnect` (`8560169`, merge #99).

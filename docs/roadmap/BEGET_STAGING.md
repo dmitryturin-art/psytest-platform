@@ -117,4 +117,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 23. Выкладка `8d3ccfa` (15.09): вторая партия дополнительных шкал СМИЛ (35 verified) и глоссарий для ИИ; миграций нет. SHA-256 `a436f06360bae0bcc72a5ecfcbbecbb30f1ea083dc17e55e99f7c5b311cd29ba` совпал; dump `backups/pre-deploy-8d3ccfa.sql.gz` проверен.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/e223062/public` и `current` на `releases/e223062`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+24. Выкладка `33dbdc4` (15.09): фоновый воркер отдельным процессом (в `.env` добавлен `AI_WORKER_PHP_BIN=/usr/local/bin/php8.3`; PHP web — apache2handler без `fastcgi_finish_request`), переподключение к БД перед транзакцией, глоссарий 35 шкал, свёрнутая анкета; миграций нет. SHA-256 `790ae8388c7032408a5789620a7f048c40f22741373cf1712f41474c6140d07b` совпал; dump `backups/pre-deploy-33dbdc4.sql.gz` проверен.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/8d3ccfa/public` и `current` на `releases/8d3ccfa`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
