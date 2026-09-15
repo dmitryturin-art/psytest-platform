@@ -174,7 +174,7 @@
                     <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="ai_consent" value="1">
-                        <button type="submit" class="btn">Повторить</button>
+                        <button type="submit" class="btn">Заказать заново</button>
                     </form>
                 {% elseif item.status == 'none' %}
                     <p class="owner-help">Задание не создавалось.</p>

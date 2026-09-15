@@ -112,6 +112,29 @@ final class AiReportQueueTest extends TestCase
         self::assertNull($again['failure_reason'], 'Прежняя причина отказа не должна оставаться на новой попытке.');
     }
 
+    public function testOwnerCanExplicitlyReorderAnExhaustedJobWithTheSameSnapshot(): void
+    {
+        $job = $this->request();
+        $this->db->update(
+            'ai_reports',
+            ['status' => AiReportRepository::STATUS_FAILED, 'attempts' => AiReportRepository::MAX_ATTEMPTS, 'failure_reason' => 'исчерпано'],
+            'id = ?',
+            [$job['id']],
+        );
+
+        // Обычный повтор (страница результата) исчерпанное задание не оживляет.
+        $again = $this->request();
+        self::assertSame(AiReportRepository::STATUS_FAILED, $again['status']);
+
+        // Явный заказ заново из кабинета — оживляет, обнуляя счётчик, снимок тот же.
+        $reordered = $this->reports->request($this->sessionId, 'lazarus', 'individual', 'clear', $this->prompt(), $this->context(), null, true);
+        self::assertSame($job['id'], $reordered['id']);
+        self::assertSame(AiReportRepository::STATUS_PENDING, $reordered['status']);
+        self::assertSame(0, (int) $reordered['attempts']);
+        self::assertNull($reordered['failure_reason']);
+        self::assertSame($job['context_snapshot'], $reordered['context_snapshot']);
+    }
+
     public function testExhaustedJobIsNotPickedUpForever(): void
     {
         $job = $this->request();

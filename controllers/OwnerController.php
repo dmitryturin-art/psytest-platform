@@ -566,6 +566,9 @@ final class OwnerController extends BaseController
                 $prompt,
                 $context,
                 $prompt->allowsOwnerContext && $ownerContext !== '' ? $ownerContext : null,
+                // Кабинет — единственное место, откуда исчерпанное задание
+                // можно заказать заново: это явное действие специалиста.
+                true,
             );
             $queued++;
         }
