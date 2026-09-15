@@ -37,7 +37,7 @@ final class AdditionalScalesCalculatorTest extends TestCase
     {
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
 
-        self::assertCount(55, $results);
+        self::assertCount(75, $results);
         $expected = [
             'A', 'R', 'Es', 'Do', 'Re', 'CYN', 'OH', 'LRN', 'MAT', 'DPR', 'DSU', 'DRT', 'DOV', 'DRX', 'DPN', 'EGO',
             'CNV', 'GLM', 'DNS', 'EGC', 'HDC', 'HLT', 'HYP', 'HYS', 'ARP', 'SOM', 'HYO', 'HYL', 'IMP',
@@ -53,6 +53,9 @@ final class AdditionalScalesCalculatorTest extends TestCase
         // считать T-балл не по чему, поэтому шкалы в расчёте нет.
         self::assertArrayNotHasKey('PHC', $results);
     }
+
+    /** Единственные шкалы, которым владелец утвердил пояснительное поле note. */
+    private const CODES_WITH_NOTE = ['SOM', 'RPL'];
 
     public function testScaleCarriesRawTNormsProvenanceAndNoClinicalText(): void
     {
@@ -82,10 +85,29 @@ final class AdditionalScalesCalculatorTest extends TestCase
         self::assertStringNotContainsStringIgnoringCase('норм', $som['note'], 'речь не о нормах, а о строке ключа');
 
         foreach ($results as $code => $scale) {
-            if ($code !== 'SOM') {
+            if (!in_array($code, self::CODES_WITH_NOTE, true)) {
                 self::assertSame('', $scale['note'], "{$code}: лишнее примечание");
             }
         }
+    }
+
+    /**
+     * Опечатка в заголовке источника правится в имени, но не прячется.
+     *
+     * У записи №177 книга печатает «Шкала „Играния роли“». В runtime идёт
+     * грамматически верное название, а написание источника остаётся в note,
+     * чтобы сверка с книгой не требовала догадок. Ключ и нормы не затронуты.
+     */
+    public function testTheEntryWithATitleTypoIsRenamedAndSaysSoInItsNote(): void
+    {
+        $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
+        $rpl = $results['RPL'];
+
+        self::assertSame(177, $rpl['source']['entry']);
+        self::assertSame('verified', $rpl['status'], 'опечатка заголовка не понижает статус');
+        self::assertSame('Шкала «Играние роли»', $rpl['name']);
+        self::assertStringContainsString('Играния роли', $rpl['note'], 'примечание сохраняет написание источника');
+        self::assertSame(31, $rpl['max_raw']);
     }
 
     public function testAllTrueScoresEveryTrueItemAndNoFalseItem(): void

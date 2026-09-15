@@ -7,7 +7,7 @@ namespace PsyTest\Tests\Smil;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Инварианты партий дополнительных шкал 05.S3.1, 05.S3.2 и 05.S3.3 (WP4).
+ * Инварианты партий дополнительных шкал 05.S3.1–05.S3.4 (WP4).
  *
  * Runtime-файл modules/smil/additional-scales-v2.json собирается скриптом
  * bin/smil-build-batch.php из транскрипции приложения Собчик. Тест стережёт
@@ -97,11 +97,43 @@ final class AdditionalScalesInvariantsTest extends TestCase
         187 => 'BSE',
     ];
 
+    /**
+     * Партия 05.S3.4: 20 шкал гипоманиакального спектра и социального
+     * функционирования, утверждены владельцем 15.09.2026.
+     *
+     * Утраченных норм и опечаток ключа в партии нет. У №177 заголовок источника
+     * напечатан с опечаткой («Играния роли»), поэтому runtime-имя правится
+     * NAME_OVERRIDES, а написание источника едет в поле note.
+     */
+    private const BATCH_4 = [
+        26 => 'Cn',
+        36 => 'CMP',
+        59 => 'EIM',
+        66 => 'FEM',
+        106 => 'LDR',
+        109 => 'HPM',
+        110 => 'Ma1',
+        111 => 'Ma2',
+        114 => 'MaO',
+        115 => 'MaS',
+        119 => 'SEN',
+        121 => 'ALT',
+        169 => 'PSI',
+        177 => 'RPL',
+        189 => 'SSF',
+        194 => 'SDS',
+        196 => 'SPA',
+        200 => 'SST',
+        203 => 'SHY',
+        208 => 'TTD',
+    ];
+
     /** Партия => номера записей. */
     private const BATCH_LABELS = [
         '05.S3.1' => self::BATCH_1,
         '05.S3.2' => self::BATCH_2,
         '05.S3.3' => self::BATCH_3,
+        '05.S3.4' => self::BATCH_4,
     ];
 
     /**
@@ -110,9 +142,22 @@ final class AdditionalScalesInvariantsTest extends TestCase
      * №87 — опечатка источника в строке ключа («11 верно» вместо «11 неверно»);
      * состав ключа подтверждён сверкой с Harris–Lingoes Hy4, поэтому статус
      * остаётся `verified`, а note лишь объясняет расхождение с печатной строкой.
+     * №177 — опечатка в заголовке источника («Играния роли»); ключ и нормы не
+     * затронуты, note фиксирует написание книги.
      * Список закрыт: note у любой другой шкалы — дефект сборки.
      */
-    private const NOTE_EXCEPTIONS = [87];
+    private const NOTE_EXCEPTIONS = [87, 177];
+
+    /**
+     * Записи, у которых runtime-имя намеренно отличается от заголовка источника.
+     *
+     * Единственное основание — опечатка набора в книге; правится только грамматика
+     * русского названия. Список закрыт и дублирует NAME_OVERRIDES сборщика:
+     * любое другое расхождение имени с транскрипцией — дефект.
+     */
+    private const NAME_OVERRIDES = [
+        177 => 'Шкала «Играние роли»',
+    ];
 
     /** Прежние runtime-коды, признанные неподтверждёнными в S1/S2 и выведенные из расчёта. */
     private const RETIRED_CODES = [
@@ -157,12 +202,12 @@ final class AdditionalScalesInvariantsTest extends TestCase
      */
     private static function batch(): array
     {
-        return self::BATCH_1 + self::BATCH_2 + self::BATCH_3;
+        return self::BATCH_1 + self::BATCH_2 + self::BATCH_3 + self::BATCH_4;
     }
 
     public function testBothBatchesArePresentWithExpectedCodesAndOrder(): void
     {
-        self::assertCount(55, $this->scales);
+        self::assertCount(75, $this->scales);
 
         $expectedOrder = [];
         foreach (self::BATCH_LABELS as $label => $codes) {
@@ -174,7 +219,7 @@ final class AdditionalScalesInvariantsTest extends TestCase
         self::assertSame(
             $expectedOrder,
             array_map(static fn (array $scale): string => $scale['code'], $this->scales),
-            'порядок: партия 1, затем партия 2, внутри — по номеру записи'
+            'порядок: партии 1, 2, 3, 4, внутри партии — по номеру записи'
         );
 
         foreach ($this->scales as $scale) {
@@ -182,7 +227,8 @@ final class AdditionalScalesInvariantsTest extends TestCase
             $expectedBatch = match (true) {
                 isset(self::BATCH_1[$number]) => '05.S3.1',
                 isset(self::BATCH_2[$number]) => '05.S3.2',
-                default => '05.S3.3',
+                isset(self::BATCH_3[$number]) => '05.S3.3',
+                default => '05.S3.4',
             };
             self::assertSame($expectedBatch, $scale['batch'] ?? null, "№{$number}: партия");
         }
@@ -207,7 +253,11 @@ final class AdditionalScalesInvariantsTest extends TestCase
 
             self::assertSame(self::batch()[$number], $scale['code'], "№{$number}: код партии");
             self::assertSame($entry['id'], $scale['id'], "№{$number}: id");
-            self::assertSame($entry['name'], $scale['name'], "№{$number}: название источника");
+            self::assertSame(
+                self::NAME_OVERRIDES[$number] ?? $entry['name'],
+                $scale['name'],
+                "№{$number}: название источника"
+            );
             self::assertSame((int) $entry['page_pdf'], (int) $scale['source']['page_pdf'], "№{$number}: страница PDF");
             self::assertSame((int) $entry['page_print'], (int) $scale['source']['page_print'], "№{$number}: печатная страница");
 

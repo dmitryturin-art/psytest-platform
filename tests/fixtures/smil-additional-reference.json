@@ -1,5 +1,5 @@
 {
-  "title": "Независимые эталоны дополнительных шкал СМИЛ, партии 05.S3.1, 05.S3.2 и 05.S3.3",
+  "title": "Независимые эталоны дополнительных шкал СМИЛ, партии 05.S3.1-05.S3.4",
   "generated_by": "bin/smil-additional-reference.py",
   "provenance": {
     "source": "Л.Н. Собчик. Стандартизированный многофакторный метод исследования личности. СПб.: Речь, 2003. Приложение, PDF-стр. 197–216 (печатные 195–214) скана в source/",
@@ -60,7 +60,27 @@
       "170": "PSZ",
       "182": "SAL",
       "183": "EAL",
-      "187": "BSE"
+      "187": "BSE",
+      "26": "Cn",
+      "36": "CMP",
+      "59": "EIM",
+      "66": "FEM",
+      "106": "LDR",
+      "109": "HPM",
+      "110": "Ma1",
+      "111": "Ma2",
+      "114": "MaO",
+      "115": "MaS",
+      "119": "SEN",
+      "121": "ALT",
+      "169": "PSI",
+      "177": "RPL",
+      "189": "SSF",
+      "194": "SDS",
+      "196": "SPA",
+      "200": "SST",
+      "203": "SHY",
+      "208": "TTD"
     },
     "batches": {
       "1": "05.S3.1",
@@ -117,7 +137,27 @@
       "170": "05.S3.3",
       "182": "05.S3.3",
       "183": "05.S3.3",
-      "187": "05.S3.3"
+      "187": "05.S3.3",
+      "26": "05.S3.4",
+      "36": "05.S3.4",
+      "59": "05.S3.4",
+      "66": "05.S3.4",
+      "106": "05.S3.4",
+      "109": "05.S3.4",
+      "110": "05.S3.4",
+      "111": "05.S3.4",
+      "114": "05.S3.4",
+      "115": "05.S3.4",
+      "119": "05.S3.4",
+      "121": "05.S3.4",
+      "169": "05.S3.4",
+      "177": "05.S3.4",
+      "189": "05.S3.4",
+      "194": "05.S3.4",
+      "196": "05.S3.4",
+      "200": "05.S3.4",
+      "203": "05.S3.4",
+      "208": "05.S3.4"
     },
     "formula": "raw = число ответов «верно» по списку true плюс «неверно» по списку false («не знаю» = 2 и пропуски не считаются); T = 50 + 10 * (raw - M) / sigma по нормам пола, округление до целого (половинки от нуля, как PHP round), зажим [20, 100].",
     "answer_encoding": {
@@ -1143,6 +1183,166 @@
         "sigma": 2.23,
         "max_raw": 20,
         "answered": 20
+      },
+      "Cn": {
+        "raw": 28,
+        "t": 58.0,
+        "M": 24.95,
+        "sigma": 3.89,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "CMP": {
+        "raw": 12,
+        "t": 42.0,
+        "M": 13.52,
+        "sigma": 1.91,
+        "max_raw": 22,
+        "answered": 22
+      },
+      "EIM": {
+        "raw": 25,
+        "t": 77.0,
+        "M": 12.0,
+        "sigma": 4.88,
+        "max_raw": 48,
+        "answered": 48
+      },
+      "FEM": {
+        "raw": 7,
+        "t": 55.0,
+        "M": 6.03,
+        "sigma": 1.97,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "LDR": {
+        "raw": 14,
+        "t": 24.0,
+        "M": 32.1,
+        "sigma": 6.9,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "HPM": {
+        "raw": 22,
+        "t": 83.0,
+        "M": 12.12,
+        "sigma": 2.97,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "Ma1": {
+        "raw": 5,
+        "t": 68.0,
+        "M": 2.54,
+        "sigma": 1.39,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "Ma2": {
+        "raw": 7,
+        "t": 72.0,
+        "M": 3.69,
+        "sigma": 1.49,
+        "max_raw": 11,
+        "answered": 11
+      },
+      "MaO": {
+        "raw": 20,
+        "t": 97.0,
+        "M": 5.7,
+        "sigma": 3.02,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "MaS": {
+        "raw": 15,
+        "t": 64.0,
+        "M": 11.48,
+        "sigma": 2.47,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "SEN": {
+        "raw": 7,
+        "t": 57.0,
+        "M": 5.3,
+        "sigma": 2.44,
+        "max_raw": 15,
+        "answered": 15
+      },
+      "ALT": {
+        "raw": 0,
+        "t": 28.0,
+        "M": 4.16,
+        "sigma": 1.88,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "PSI": {
+        "raw": 2,
+        "t": 31.0,
+        "M": 4.26,
+        "sigma": 1.22,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "RPL": {
+        "raw": 13,
+        "t": 31.0,
+        "M": 18.97,
+        "sigma": 3.2,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "SSF": {
+        "raw": 10,
+        "t": 28.0,
+        "M": 21.3,
+        "sigma": 5.05,
+        "max_raw": 34,
+        "answered": 34
+      },
+      "SDS": {
+        "raw": 20,
+        "t": 20.0,
+        "M": 66.87,
+        "sigma": 6.74,
+        "max_raw": 79,
+        "answered": 79
+      },
+      "SPA": {
+        "raw": 17,
+        "t": 51.0,
+        "M": 16.6,
+        "sigma": 3.3,
+        "max_raw": 25,
+        "answered": 25
+      },
+      "SST": {
+        "raw": 8,
+        "t": 38.0,
+        "M": 11.12,
+        "sigma": 2.54,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "SHY": {
+        "raw": 5,
+        "t": 69.0,
+        "M": 2.02,
+        "sigma": 1.58,
+        "max_raw": 5,
+        "answered": 5
+      },
+      "TTD": {
+        "raw": 9,
+        "t": 39.0,
+        "M": 12.35,
+        "sigma": 3.06,
+        "max_raw": 26,
+        "answered": 26
       }
     },
     "all_true_female": {
@@ -1585,6 +1785,166 @@
         "sigma": 2.58,
         "max_raw": 20,
         "answered": 20
+      },
+      "Cn": {
+        "raw": 28,
+        "t": 55.0,
+        "M": 26.19,
+        "sigma": 3.89,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "CMP": {
+        "raw": 12,
+        "t": 45.0,
+        "M": 12.97,
+        "sigma": 1.91,
+        "max_raw": 22,
+        "answered": 22
+      },
+      "EIM": {
+        "raw": 25,
+        "t": 65.0,
+        "M": 17.17,
+        "sigma": 5.11,
+        "max_raw": 48,
+        "answered": 48
+      },
+      "FEM": {
+        "raw": 7,
+        "t": 41.0,
+        "M": 9.0,
+        "sigma": 2.24,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "LDR": {
+        "raw": 14,
+        "t": 26.0,
+        "M": 28.1,
+        "sigma": 5.9,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "HPM": {
+        "raw": 22,
+        "t": 85.0,
+        "M": 11.97,
+        "sigma": 2.88,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "Ma1": {
+        "raw": 5,
+        "t": 67.0,
+        "M": 2.72,
+        "sigma": 1.36,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "Ma2": {
+        "raw": 7,
+        "t": 69.0,
+        "M": 3.92,
+        "sigma": 1.62,
+        "max_raw": 11,
+        "answered": 11
+      },
+      "MaO": {
+        "raw": 20,
+        "t": 94.0,
+        "M": 7.08,
+        "sigma": 2.91,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "MaS": {
+        "raw": 15,
+        "t": 65.0,
+        "M": 10.88,
+        "sigma": 2.72,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "SEN": {
+        "raw": 7,
+        "t": 48.0,
+        "M": 7.65,
+        "sigma": 2.74,
+        "max_raw": 15,
+        "answered": 15
+      },
+      "ALT": {
+        "raw": 0,
+        "t": 21.0,
+        "M": 4.3,
+        "sigma": 1.5,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "PSI": {
+        "raw": 2,
+        "t": 36.0,
+        "M": 3.84,
+        "sigma": 1.36,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "RPL": {
+        "raw": 13,
+        "t": 36.0,
+        "M": 17.78,
+        "sigma": 3.48,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "SSF": {
+        "raw": 10,
+        "t": 36.0,
+        "M": 17.2,
+        "sigma": 5.27,
+        "max_raw": 34,
+        "answered": 34
+      },
+      "SDS": {
+        "raw": 20,
+        "t": 20.0,
+        "M": 60.67,
+        "sigma": 7.14,
+        "max_raw": 79,
+        "answered": 79
+      },
+      "SPA": {
+        "raw": 17,
+        "t": 56.0,
+        "M": 15.0,
+        "sigma": 3.4,
+        "max_raw": 25,
+        "answered": 25
+      },
+      "SST": {
+        "raw": 8,
+        "t": 41.0,
+        "M": 10.24,
+        "sigma": 2.49,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "SHY": {
+        "raw": 5,
+        "t": 68.0,
+        "M": 2.04,
+        "sigma": 1.66,
+        "max_raw": 5,
+        "answered": 5
+      },
+      "TTD": {
+        "raw": 9,
+        "t": 38.0,
+        "M": 12.33,
+        "sigma": 2.74,
+        "max_raw": 26,
+        "answered": 26
       }
     },
     "all_false_male": {
@@ -2027,6 +2387,166 @@
         "sigma": 2.23,
         "max_raw": 20,
         "answered": 20
+      },
+      "Cn": {
+        "raw": 22,
+        "t": 42.0,
+        "M": 24.95,
+        "sigma": 3.89,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "CMP": {
+        "raw": 10,
+        "t": 32.0,
+        "M": 13.52,
+        "sigma": 1.91,
+        "max_raw": 22,
+        "answered": 22
+      },
+      "EIM": {
+        "raw": 23,
+        "t": 73.0,
+        "M": 12.0,
+        "sigma": 4.88,
+        "max_raw": 48,
+        "answered": 48
+      },
+      "FEM": {
+        "raw": 9,
+        "t": 65.0,
+        "M": 6.03,
+        "sigma": 1.97,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "LDR": {
+        "raw": 36,
+        "t": 56.0,
+        "M": 32.1,
+        "sigma": 6.9,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "HPM": {
+        "raw": 4,
+        "t": 23.0,
+        "M": 12.12,
+        "sigma": 2.97,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "Ma1": {
+        "raw": 1,
+        "t": 39.0,
+        "M": 2.54,
+        "sigma": 1.39,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "Ma2": {
+        "raw": 4,
+        "t": 52.0,
+        "M": 3.69,
+        "sigma": 1.49,
+        "max_raw": 11,
+        "answered": 11
+      },
+      "MaO": {
+        "raw": 3,
+        "t": 41.0,
+        "M": 5.7,
+        "sigma": 3.02,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "MaS": {
+        "raw": 8,
+        "t": 36.0,
+        "M": 11.48,
+        "sigma": 2.47,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "SEN": {
+        "raw": 8,
+        "t": 61.0,
+        "M": 5.3,
+        "sigma": 2.44,
+        "max_raw": 15,
+        "answered": 15
+      },
+      "ALT": {
+        "raw": 9,
+        "t": 76.0,
+        "M": 4.16,
+        "sigma": 1.88,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "PSI": {
+        "raw": 4,
+        "t": 48.0,
+        "M": 4.26,
+        "sigma": 1.22,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "RPL": {
+        "raw": 18,
+        "t": 47.0,
+        "M": 18.97,
+        "sigma": 3.2,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "SSF": {
+        "raw": 24,
+        "t": 55.0,
+        "M": 21.3,
+        "sigma": 5.05,
+        "max_raw": 34,
+        "answered": 34
+      },
+      "SDS": {
+        "raw": 59,
+        "t": 38.0,
+        "M": 66.87,
+        "sigma": 6.74,
+        "max_raw": 79,
+        "answered": 79
+      },
+      "SPA": {
+        "raw": 8,
+        "t": 24.0,
+        "M": 16.6,
+        "sigma": 3.3,
+        "max_raw": 25,
+        "answered": 25
+      },
+      "SST": {
+        "raw": 11,
+        "t": 50.0,
+        "M": 11.12,
+        "sigma": 2.54,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "SHY": {
+        "raw": 0,
+        "t": 37.0,
+        "M": 2.02,
+        "sigma": 1.58,
+        "max_raw": 5,
+        "answered": 5
+      },
+      "TTD": {
+        "raw": 17,
+        "t": 65.0,
+        "M": 12.35,
+        "sigma": 3.06,
+        "max_raw": 26,
+        "answered": 26
       }
     },
     "all_false_female": {
@@ -2469,6 +2989,166 @@
         "sigma": 2.58,
         "max_raw": 20,
         "answered": 20
+      },
+      "Cn": {
+        "raw": 22,
+        "t": 39.0,
+        "M": 26.19,
+        "sigma": 3.89,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "CMP": {
+        "raw": 10,
+        "t": 34.0,
+        "M": 12.97,
+        "sigma": 1.91,
+        "max_raw": 22,
+        "answered": 22
+      },
+      "EIM": {
+        "raw": 23,
+        "t": 61.0,
+        "M": 17.17,
+        "sigma": 5.11,
+        "max_raw": 48,
+        "answered": 48
+      },
+      "FEM": {
+        "raw": 9,
+        "t": 50.0,
+        "M": 9.0,
+        "sigma": 2.24,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "LDR": {
+        "raw": 36,
+        "t": 63.0,
+        "M": 28.1,
+        "sigma": 5.9,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "HPM": {
+        "raw": 4,
+        "t": 22.0,
+        "M": 11.97,
+        "sigma": 2.88,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "Ma1": {
+        "raw": 1,
+        "t": 37.0,
+        "M": 2.72,
+        "sigma": 1.36,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "Ma2": {
+        "raw": 4,
+        "t": 50.0,
+        "M": 3.92,
+        "sigma": 1.62,
+        "max_raw": 11,
+        "answered": 11
+      },
+      "MaO": {
+        "raw": 3,
+        "t": 36.0,
+        "M": 7.08,
+        "sigma": 2.91,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "MaS": {
+        "raw": 8,
+        "t": 39.0,
+        "M": 10.88,
+        "sigma": 2.72,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "SEN": {
+        "raw": 8,
+        "t": 51.0,
+        "M": 7.65,
+        "sigma": 2.74,
+        "max_raw": 15,
+        "answered": 15
+      },
+      "ALT": {
+        "raw": 9,
+        "t": 81.0,
+        "M": 4.3,
+        "sigma": 1.5,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "PSI": {
+        "raw": 4,
+        "t": 51.0,
+        "M": 3.84,
+        "sigma": 1.36,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "RPL": {
+        "raw": 18,
+        "t": 51.0,
+        "M": 17.78,
+        "sigma": 3.48,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "SSF": {
+        "raw": 24,
+        "t": 63.0,
+        "M": 17.2,
+        "sigma": 5.27,
+        "max_raw": 34,
+        "answered": 34
+      },
+      "SDS": {
+        "raw": 59,
+        "t": 48.0,
+        "M": 60.67,
+        "sigma": 7.14,
+        "max_raw": 79,
+        "answered": 79
+      },
+      "SPA": {
+        "raw": 8,
+        "t": 29.0,
+        "M": 15.0,
+        "sigma": 3.4,
+        "max_raw": 25,
+        "answered": 25
+      },
+      "SST": {
+        "raw": 11,
+        "t": 53.0,
+        "M": 10.24,
+        "sigma": 2.49,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "SHY": {
+        "raw": 0,
+        "t": 38.0,
+        "M": 2.04,
+        "sigma": 1.66,
+        "max_raw": 5,
+        "answered": 5
+      },
+      "TTD": {
+        "raw": 17,
+        "t": 67.0,
+        "M": 12.33,
+        "sigma": 2.74,
+        "max_raw": 26,
+        "answered": 26
       }
     },
     "reference_valid_male": {
@@ -2911,6 +3591,166 @@
         "sigma": 2.23,
         "max_raw": 20,
         "answered": 20
+      },
+      "Cn": {
+        "raw": 27,
+        "t": 55.0,
+        "M": 24.95,
+        "sigma": 3.89,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "CMP": {
+        "raw": 10,
+        "t": 32.0,
+        "M": 13.52,
+        "sigma": 1.91,
+        "max_raw": 22,
+        "answered": 22
+      },
+      "EIM": {
+        "raw": 21,
+        "t": 68.0,
+        "M": 12.0,
+        "sigma": 4.88,
+        "max_raw": 48,
+        "answered": 48
+      },
+      "FEM": {
+        "raw": 11,
+        "t": 75.0,
+        "M": 6.03,
+        "sigma": 1.97,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "LDR": {
+        "raw": 22,
+        "t": 35.0,
+        "M": 32.1,
+        "sigma": 6.9,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "HPM": {
+        "raw": 8,
+        "t": 36.0,
+        "M": 12.12,
+        "sigma": 2.97,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "Ma1": {
+        "raw": 0,
+        "t": 32.0,
+        "M": 2.54,
+        "sigma": 1.39,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "Ma2": {
+        "raw": 6,
+        "t": 66.0,
+        "M": 3.69,
+        "sigma": 1.49,
+        "max_raw": 11,
+        "answered": 11
+      },
+      "MaO": {
+        "raw": 7,
+        "t": 54.0,
+        "M": 5.7,
+        "sigma": 3.02,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "MaS": {
+        "raw": 9,
+        "t": 40.0,
+        "M": 11.48,
+        "sigma": 2.47,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "SEN": {
+        "raw": 6,
+        "t": 53.0,
+        "M": 5.3,
+        "sigma": 2.44,
+        "max_raw": 15,
+        "answered": 15
+      },
+      "ALT": {
+        "raw": 6,
+        "t": 60.0,
+        "M": 4.16,
+        "sigma": 1.88,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "PSI": {
+        "raw": 6,
+        "t": 64.0,
+        "M": 4.26,
+        "sigma": 1.22,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "RPL": {
+        "raw": 16,
+        "t": 41.0,
+        "M": 18.97,
+        "sigma": 3.2,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "SSF": {
+        "raw": 20,
+        "t": 47.0,
+        "M": 21.3,
+        "sigma": 5.05,
+        "max_raw": 34,
+        "answered": 34
+      },
+      "SDS": {
+        "raw": 53,
+        "t": 29.0,
+        "M": 66.87,
+        "sigma": 6.74,
+        "max_raw": 79,
+        "answered": 79
+      },
+      "SPA": {
+        "raw": 12,
+        "t": 36.0,
+        "M": 16.6,
+        "sigma": 3.3,
+        "max_raw": 25,
+        "answered": 25
+      },
+      "SST": {
+        "raw": 10,
+        "t": 46.0,
+        "M": 11.12,
+        "sigma": 2.54,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "SHY": {
+        "raw": 3,
+        "t": 56.0,
+        "M": 2.02,
+        "sigma": 1.58,
+        "max_raw": 5,
+        "answered": 5
+      },
+      "TTD": {
+        "raw": 10,
+        "t": 42.0,
+        "M": 12.35,
+        "sigma": 3.06,
+        "max_raw": 26,
+        "answered": 26
       }
     },
     "reference_valid_female": {
@@ -3353,6 +4193,166 @@
         "sigma": 2.58,
         "max_raw": 20,
         "answered": 20
+      },
+      "Cn": {
+        "raw": 27,
+        "t": 52.0,
+        "M": 26.19,
+        "sigma": 3.89,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "CMP": {
+        "raw": 10,
+        "t": 34.0,
+        "M": 12.97,
+        "sigma": 1.91,
+        "max_raw": 22,
+        "answered": 22
+      },
+      "EIM": {
+        "raw": 21,
+        "t": 57.0,
+        "M": 17.17,
+        "sigma": 5.11,
+        "max_raw": 48,
+        "answered": 48
+      },
+      "FEM": {
+        "raw": 11,
+        "t": 59.0,
+        "M": 9.0,
+        "sigma": 2.24,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "LDR": {
+        "raw": 22,
+        "t": 40.0,
+        "M": 28.1,
+        "sigma": 5.9,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "HPM": {
+        "raw": 8,
+        "t": 36.0,
+        "M": 11.97,
+        "sigma": 2.88,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "Ma1": {
+        "raw": 0,
+        "t": 30.0,
+        "M": 2.72,
+        "sigma": 1.36,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "Ma2": {
+        "raw": 6,
+        "t": 63.0,
+        "M": 3.92,
+        "sigma": 1.62,
+        "max_raw": 11,
+        "answered": 11
+      },
+      "MaO": {
+        "raw": 7,
+        "t": 50.0,
+        "M": 7.08,
+        "sigma": 2.91,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "MaS": {
+        "raw": 9,
+        "t": 43.0,
+        "M": 10.88,
+        "sigma": 2.72,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "SEN": {
+        "raw": 6,
+        "t": 44.0,
+        "M": 7.65,
+        "sigma": 2.74,
+        "max_raw": 15,
+        "answered": 15
+      },
+      "ALT": {
+        "raw": 6,
+        "t": 61.0,
+        "M": 4.3,
+        "sigma": 1.5,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "PSI": {
+        "raw": 6,
+        "t": 66.0,
+        "M": 3.84,
+        "sigma": 1.36,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "RPL": {
+        "raw": 16,
+        "t": 45.0,
+        "M": 17.78,
+        "sigma": 3.48,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "SSF": {
+        "raw": 20,
+        "t": 55.0,
+        "M": 17.2,
+        "sigma": 5.27,
+        "max_raw": 34,
+        "answered": 34
+      },
+      "SDS": {
+        "raw": 53,
+        "t": 39.0,
+        "M": 60.67,
+        "sigma": 7.14,
+        "max_raw": 79,
+        "answered": 79
+      },
+      "SPA": {
+        "raw": 12,
+        "t": 41.0,
+        "M": 15.0,
+        "sigma": 3.4,
+        "max_raw": 25,
+        "answered": 25
+      },
+      "SST": {
+        "raw": 10,
+        "t": 49.0,
+        "M": 10.24,
+        "sigma": 2.49,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "SHY": {
+        "raw": 3,
+        "t": 56.0,
+        "M": 2.04,
+        "sigma": 1.66,
+        "max_raw": 5,
+        "answered": 5
+      },
+      "TTD": {
+        "raw": 10,
+        "t": 41.0,
+        "M": 12.33,
+        "sigma": 2.74,
+        "max_raw": 26,
+        "answered": 26
       }
     },
     "pseudo_random_20260915_male": {
@@ -3795,6 +4795,166 @@
         "sigma": 2.23,
         "max_raw": 20,
         "answered": 13
+      },
+      "Cn": {
+        "raw": 8,
+        "t": 20.0,
+        "M": 24.95,
+        "sigma": 3.89,
+        "max_raw": 50,
+        "answered": 28
+      },
+      "CMP": {
+        "raw": 5,
+        "t": 20.0,
+        "M": 13.52,
+        "sigma": 1.91,
+        "max_raw": 22,
+        "answered": 16
+      },
+      "EIM": {
+        "raw": 8,
+        "t": 42.0,
+        "M": 12.0,
+        "sigma": 4.88,
+        "max_raw": 48,
+        "answered": 34
+      },
+      "FEM": {
+        "raw": 3,
+        "t": 35.0,
+        "M": 6.03,
+        "sigma": 1.97,
+        "max_raw": 16,
+        "answered": 10
+      },
+      "LDR": {
+        "raw": 16,
+        "t": 27.0,
+        "M": 32.1,
+        "sigma": 6.9,
+        "max_raw": 50,
+        "answered": 28
+      },
+      "HPM": {
+        "raw": 7,
+        "t": 33.0,
+        "M": 12.12,
+        "sigma": 2.97,
+        "max_raw": 26,
+        "answered": 16
+      },
+      "Ma1": {
+        "raw": 3,
+        "t": 53.0,
+        "M": 2.54,
+        "sigma": 1.39,
+        "max_raw": 6,
+        "answered": 4
+      },
+      "Ma2": {
+        "raw": 2,
+        "t": 39.0,
+        "M": 3.69,
+        "sigma": 1.49,
+        "max_raw": 11,
+        "answered": 5
+      },
+      "MaO": {
+        "raw": 8,
+        "t": 58.0,
+        "M": 5.7,
+        "sigma": 3.02,
+        "max_raw": 23,
+        "answered": 15
+      },
+      "MaS": {
+        "raw": 6,
+        "t": 28.0,
+        "M": 11.48,
+        "sigma": 2.47,
+        "max_raw": 23,
+        "answered": 14
+      },
+      "SEN": {
+        "raw": 2,
+        "t": 36.0,
+        "M": 5.3,
+        "sigma": 2.44,
+        "max_raw": 15,
+        "answered": 7
+      },
+      "ALT": {
+        "raw": 5,
+        "t": 54.0,
+        "M": 4.16,
+        "sigma": 1.88,
+        "max_raw": 9,
+        "answered": 8
+      },
+      "PSI": {
+        "raw": 2,
+        "t": 31.0,
+        "M": 4.26,
+        "sigma": 1.22,
+        "max_raw": 6,
+        "answered": 5
+      },
+      "RPL": {
+        "raw": 11,
+        "t": 25.0,
+        "M": 18.97,
+        "sigma": 3.2,
+        "max_raw": 31,
+        "answered": 23
+      },
+      "SSF": {
+        "raw": 11,
+        "t": 30.0,
+        "M": 21.3,
+        "sigma": 5.05,
+        "max_raw": 34,
+        "answered": 24
+      },
+      "SDS": {
+        "raw": 32,
+        "t": 20.0,
+        "M": 66.87,
+        "sigma": 6.74,
+        "max_raw": 79,
+        "answered": 54
+      },
+      "SPA": {
+        "raw": 13,
+        "t": 39.0,
+        "M": 16.6,
+        "sigma": 3.3,
+        "max_raw": 25,
+        "answered": 18
+      },
+      "SST": {
+        "raw": 9,
+        "t": 42.0,
+        "M": 11.12,
+        "sigma": 2.54,
+        "max_raw": 19,
+        "answered": 15
+      },
+      "SHY": {
+        "raw": 1,
+        "t": 44.0,
+        "M": 2.02,
+        "sigma": 1.58,
+        "max_raw": 5,
+        "answered": 3
+      },
+      "TTD": {
+        "raw": 10,
+        "t": 42.0,
+        "M": 12.35,
+        "sigma": 3.06,
+        "max_raw": 26,
+        "answered": 21
       }
     },
     "pseudo_random_20260915_female": {
@@ -4237,6 +5397,166 @@
         "sigma": 2.58,
         "max_raw": 20,
         "answered": 13
+      },
+      "Cn": {
+        "raw": 8,
+        "t": 20.0,
+        "M": 26.19,
+        "sigma": 3.89,
+        "max_raw": 50,
+        "answered": 28
+      },
+      "CMP": {
+        "raw": 5,
+        "t": 20.0,
+        "M": 12.97,
+        "sigma": 1.91,
+        "max_raw": 22,
+        "answered": 16
+      },
+      "EIM": {
+        "raw": 8,
+        "t": 32.0,
+        "M": 17.17,
+        "sigma": 5.11,
+        "max_raw": 48,
+        "answered": 34
+      },
+      "FEM": {
+        "raw": 3,
+        "t": 23.0,
+        "M": 9.0,
+        "sigma": 2.24,
+        "max_raw": 16,
+        "answered": 10
+      },
+      "LDR": {
+        "raw": 16,
+        "t": 29.0,
+        "M": 28.1,
+        "sigma": 5.9,
+        "max_raw": 50,
+        "answered": 28
+      },
+      "HPM": {
+        "raw": 7,
+        "t": 33.0,
+        "M": 11.97,
+        "sigma": 2.88,
+        "max_raw": 26,
+        "answered": 16
+      },
+      "Ma1": {
+        "raw": 3,
+        "t": 52.0,
+        "M": 2.72,
+        "sigma": 1.36,
+        "max_raw": 6,
+        "answered": 4
+      },
+      "Ma2": {
+        "raw": 2,
+        "t": 38.0,
+        "M": 3.92,
+        "sigma": 1.62,
+        "max_raw": 11,
+        "answered": 5
+      },
+      "MaO": {
+        "raw": 8,
+        "t": 53.0,
+        "M": 7.08,
+        "sigma": 2.91,
+        "max_raw": 23,
+        "answered": 15
+      },
+      "MaS": {
+        "raw": 6,
+        "t": 32.0,
+        "M": 10.88,
+        "sigma": 2.72,
+        "max_raw": 23,
+        "answered": 14
+      },
+      "SEN": {
+        "raw": 2,
+        "t": 29.0,
+        "M": 7.65,
+        "sigma": 2.74,
+        "max_raw": 15,
+        "answered": 7
+      },
+      "ALT": {
+        "raw": 5,
+        "t": 55.0,
+        "M": 4.3,
+        "sigma": 1.5,
+        "max_raw": 9,
+        "answered": 8
+      },
+      "PSI": {
+        "raw": 2,
+        "t": 36.0,
+        "M": 3.84,
+        "sigma": 1.36,
+        "max_raw": 6,
+        "answered": 5
+      },
+      "RPL": {
+        "raw": 11,
+        "t": 31.0,
+        "M": 17.78,
+        "sigma": 3.48,
+        "max_raw": 31,
+        "answered": 23
+      },
+      "SSF": {
+        "raw": 11,
+        "t": 38.0,
+        "M": 17.2,
+        "sigma": 5.27,
+        "max_raw": 34,
+        "answered": 24
+      },
+      "SDS": {
+        "raw": 32,
+        "t": 20.0,
+        "M": 60.67,
+        "sigma": 7.14,
+        "max_raw": 79,
+        "answered": 54
+      },
+      "SPA": {
+        "raw": 13,
+        "t": 44.0,
+        "M": 15.0,
+        "sigma": 3.4,
+        "max_raw": 25,
+        "answered": 18
+      },
+      "SST": {
+        "raw": 9,
+        "t": 45.0,
+        "M": 10.24,
+        "sigma": 2.49,
+        "max_raw": 19,
+        "answered": 15
+      },
+      "SHY": {
+        "raw": 1,
+        "t": 44.0,
+        "M": 2.04,
+        "sigma": 1.66,
+        "max_raw": 5,
+        "answered": 3
+      },
+      "TTD": {
+        "raw": 10,
+        "t": 41.0,
+        "M": 12.33,
+        "sigma": 2.74,
+        "max_raw": 26,
+        "answered": 21
       }
     }
   }
