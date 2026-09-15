@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 07.K5h — явный заказ заново пересобирает снимок входа
+
+- Этап / ветка / commit: этап 07, `codex/07-k5h-reorder-fresh-snapshot` от `main` `e3a3fb1`.
+- Причина: профессиональное заключение кейса «Дмитрий», заказанное заново после исчерпания попыток, ушло модели со снимком 14:47 — без глоссария второй партии и с промптом v2, и модель перечислила 19 шкал как «без пояснения». Снимок при повторе сохранялся намеренно (R2), но явный заказ заново из кабинета — новый заказ, а не повтор.
+- Сделано: `AiReportRepository::request(..., allowExhaustedRetry: true)` пересобирает `prompt_key/version`, `context_snapshot`, `prompt_snapshot` текущим входом; обычный повтор (attempts < MAX) снимок по-прежнему не трогает. Regression в `AiReportQueueTest`.
+- Проверки: `AiReportQueueTest` + `AiReportSnapshotTest` — 16 tests / 97 assertions OK; `composer test:fast` 419 OK; analyse/lint OK.
+
 ### 07.K5g — заметные кнопки действий в кабинете
 
 - Этап / ветка / commit: этап 07, `codex/07-k5g-visible-buttons` от `main` `b0e45a1`.

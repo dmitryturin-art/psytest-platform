@@ -126,13 +126,16 @@ final class AiReportQueueTest extends TestCase
         $again = $this->request();
         self::assertSame(AiReportRepository::STATUS_FAILED, $again['status']);
 
-        // Явный заказ заново из кабинета — оживляет, обнуляя счётчик, снимок тот же.
-        $reordered = $this->reports->request($this->sessionId, 'lazarus', 'individual', 'clear', $this->prompt(), $this->context(), null, true);
+        // Явный заказ заново из кабинета — новый заказ: счётчик обнуляется,
+        // снимок пересобирается с текущим входом (данные и глоссарий могли обновиться).
+        $freshContext = $this->context() + ['glossary_marker' => 'обновлённый вход'];
+        $reordered = $this->reports->request($this->sessionId, 'lazarus', 'individual', 'clear', $this->prompt(), $freshContext, null, true);
         self::assertSame($job['id'], $reordered['id']);
         self::assertSame(AiReportRepository::STATUS_PENDING, $reordered['status']);
         self::assertSame(0, (int) $reordered['attempts']);
         self::assertNull($reordered['failure_reason']);
-        self::assertSame($job['context_snapshot'], $reordered['context_snapshot']);
+        self::assertNotSame($job['context_snapshot'], $reordered['context_snapshot']);
+        self::assertStringContainsString('обновлённый вход', (string) $reordered['context_snapshot']);
     }
 
     public function testExhaustedJobIsNotPickedUpForever(): void
