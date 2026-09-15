@@ -7,9 +7,11 @@
     <title>{% block title %}{{ appName }}{% endblock %}</title>
     <meta name="description" content="{% block description %}Психологическое тестирование онлайн{% endblock %}">
     
-    <!-- Favicon -->
-    <link rel="icon" href="{{ basePath }}/favicon.ico" type="image/x-icon">
-    
+    <!-- Favicon: SVG для современных браузеров, PNG/ICO — запасной вариант -->
+    <link rel="icon" href="{{ basePath }}/favicon.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="{{ basePath }}/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="{{ basePath }}/favicon-32.png">
+
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/main.css') }}">
     {% block extra_css %}{% endblock %}
