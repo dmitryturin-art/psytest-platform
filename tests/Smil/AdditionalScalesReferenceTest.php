@@ -118,10 +118,10 @@ final class AdditionalScalesReferenceTest extends TestCase
         self::assertStringContainsString('transcription', $provenance['input']);
         self::assertStringContainsString('вне PHP', $provenance['independence']);
         self::assertNotEmpty($provenance['formula']);
-        self::assertCount(36, $provenance['entries']);
-        self::assertCount(36, $provenance['batches']);
+        self::assertCount(35, $provenance['entries']);
+        self::assertCount(35, $provenance['batches']);
         self::assertSame(
-            ['05.S3.1' => 16, '05.S3.2' => 20],
+            ['05.S3.1' => 16, '05.S3.2' => 19],
             array_count_values($provenance['batches']),
             'эталон обязан покрывать обе партии целиком'
         );

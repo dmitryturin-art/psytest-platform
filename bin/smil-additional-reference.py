@@ -52,7 +52,6 @@ BATCHES = {
         46: "GLM",
         48: "DNS",
         60: "EGC",
-        72: "PHC",
         73: "HDC",
         75: "HLT",
         80: "HYP",

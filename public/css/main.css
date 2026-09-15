@@ -4184,20 +4184,7 @@ body {
     margin-left: var(--spacing-sm, 8px);
 }
 
-/* Нейтральная пометка у шкал со статусом verified-with-note */
-.scores-table .scale-flag {
-    display: inline-block;
-    margin-left: var(--spacing-xs, 4px);
-    padding: 1px 6px;
-    border: 1px solid #e0b76a;
-    border-radius: 10px;
-    background: #fdf4e3;
-    color: #7a5312;
-    font-size: 0.72em;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
+/* Пояснение к опечатке источника: обычная сноска, не предупреждение */
 .scores-table .scale-note {
     font-style: italic;
 }

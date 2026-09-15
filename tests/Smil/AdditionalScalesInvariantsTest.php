@@ -13,8 +13,8 @@ use PHPUnit\Framework\TestCase;
  * bin/smil-build-batch.php из транскрипции приложения Собчик. Тест стережёт
  * то, что должно оставаться верным при любой пересборке: ключи и нормы равны
  * источнику, номера пунктов допустимы, набор не смешан с прежними
- * неподтверждёнными кодами, а статус verified-with-note стоит только у
- * записей, которые владелец включил с оговоркой.
+ * неподтверждёнными кодами, все шкалы verified, а пояснительное поле note
+ * стоит только у записи, для которой владелец его утвердил.
  */
 final class AdditionalScalesInvariantsTest extends TestCase
 {
@@ -38,13 +38,18 @@ final class AdditionalScalesInvariantsTest extends TestCase
         174 => 'Re',
     ];
 
-    /** Партия 05.S3.2: 20 клинических подшкал, утверждены владельцем 15.09.2026. */
+    /**
+     * Партия 05.S3.2: 19 клинических подшкал, утверждены владельцем 15.09.2026.
+     *
+     * №72 «Предипохондрическое состояние» в партию не входит: её нормы в издании —
+     * дубль строки №74, то есть собственные нормы записи утрачены, и считать по ним
+     * T-балл нельзя. Ждёт другого издания.
+     */
     private const BATCH_2 = [
         37 => 'CNV',
         46 => 'GLM',
         48 => 'DNS',
         60 => 'EGC',
-        72 => 'PHC',
         73 => 'HDC',
         75 => 'HLT',
         80 => 'HYP',
@@ -69,14 +74,14 @@ final class AdditionalScalesInvariantsTest extends TestCase
     ];
 
     /**
-     * Единственные записи, которым разрешён статус verified-with-note.
+     * Единственные записи, которым разрешено пояснительное поле note.
      *
-     * №87 — опечатка источника в строке ключа («11 верно» вместо «11 неверно»).
-     * №72 — нормы дословно совпадают с нормами №74, вероятный повтор строк.
-     * №74 попадёт сюда, если владелец включит его следующей партией; до тех пор
-     * список исключений закрыт, и любая другая шкала с таким статусом — дефект.
+     * №87 — опечатка источника в строке ключа («11 верно» вместо «11 неверно»);
+     * состав ключа подтверждён сверкой с Harris–Lingoes Hy4, поэтому статус
+     * остаётся `verified`, а note лишь объясняет расхождение с печатной строкой.
+     * Список закрыт: note у любой другой шкалы — дефект сборки.
      */
-    private const NOTE_EXCEPTIONS = [72, 87];
+    private const NOTE_EXCEPTIONS = [87];
 
     /** Прежние runtime-коды, признанные неподтверждёнными в S1/S2 и выведенные из расчёта. */
     private const RETIRED_CODES = [
@@ -126,7 +131,7 @@ final class AdditionalScalesInvariantsTest extends TestCase
 
     public function testBothBatchesArePresentWithExpectedCodesAndOrder(): void
     {
-        self::assertCount(36, $this->scales);
+        self::assertCount(35, $this->scales);
 
         $expectedOrder = [];
         foreach (self::BATCH_LABELS as $label => $codes) {
@@ -217,36 +222,56 @@ final class AdditionalScalesInvariantsTest extends TestCase
         }
     }
 
-    public function testOnlyTheApprovedExceptionsCarryVerifiedWithNote(): void
+    public function testEveryScaleIsVerifiedAndOnlyApprovedEntriesCarryANote(): void
     {
         $withNote = [];
 
         foreach ($this->scales as $scale) {
             $number = (int) $scale['source']['entry'];
-            $status = (string) $scale['status'];
 
-            self::assertContains(
-                $status,
-                ['verified', 'verified-with-note'],
-                "{$scale['code']}: недопустимый статус {$status}"
+            self::assertSame(
+                'verified',
+                (string) $scale['status'],
+                "№{$number} ({$scale['code']}): в runtime идут только verified-шкалы"
             );
 
-            if ($status === 'verified-with-note') {
+            if (isset($scale['note'])) {
                 $withNote[] = $number;
                 self::assertContains(
                     $number,
                     self::NOTE_EXCEPTIONS,
-                    "№{$number} ({$scale['code']}): verified-with-note разрешён только записям "
+                    "№{$number} ({$scale['code']}): note разрешён только записям "
                     . implode(', ', self::NOTE_EXCEPTIONS)
                 );
-                self::assertNotEmpty($scale['note'] ?? '', "№{$number}: причина оговорки обязательна");
-            } else {
-                self::assertArrayNotHasKey('note', $scale, "{$scale['code']}: note без оговорки");
+                self::assertNotEmpty($scale['note'], "№{$number}: пустой note бессмыслен");
             }
         }
 
         sort($withNote);
-        self::assertSame(self::NOTE_EXCEPTIONS, $withNote, 'состав оговорённых записей закреплён владельцем');
+        self::assertSame(self::NOTE_EXCEPTIONS, $withNote, 'состав записей с примечанием закреплён владельцем');
+    }
+
+    /**
+     * №72 выведена из runtime: её нормы в издании — дубль строки №74.
+     *
+     * Шкала без собственных норм даёт бессмысленный T-балл, поэтому её возвращение
+     * без нового источника должно ломать сборку, а не тихо проходить.
+     */
+    public function testEntryWithLostNormsStaysOutOfRuntime(): void
+    {
+        foreach ($this->scales as $scale) {
+            self::assertNotSame(72, (int) $scale['source']['entry'], 'запись №72 вернулась в расчёт');
+            self::assertNotSame('PHC', $scale['code'], 'код PHC вернулся в расчёт');
+        }
+
+        // Предусловие решения владельца: нормы №72 и №74 в транскрипции совпадают.
+        foreach (['male', 'female'] as $sex) {
+            self::assertSame(
+                $this->entries[74][$sex],
+                $this->entries[72][$sex],
+                "нормы №72 и №74 разошлись — основание вывода №72 требует пересмотра ({$sex})"
+            );
+        }
     }
 
     public function testRetiredUnverifiedCodesAreGoneFromRuntime(): void

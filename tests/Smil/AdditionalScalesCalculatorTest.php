@@ -37,15 +37,19 @@ final class AdditionalScalesCalculatorTest extends TestCase
     {
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
 
-        self::assertCount(36, $results);
+        self::assertCount(35, $results);
         $expected = [
             'A', 'R', 'Es', 'Do', 'Re', 'CYN', 'OH', 'LRN', 'MAT', 'DPR', 'DSU', 'DRT', 'DOV', 'DRX', 'DPN', 'EGO',
-            'CNV', 'GLM', 'DNS', 'EGC', 'PHC', 'HDC', 'HLT', 'HYP', 'HYS', 'ARP', 'SOM', 'HYO', 'HYL', 'IMP',
+            'CNV', 'GLM', 'DNS', 'EGC', 'HDC', 'HLT', 'HYP', 'HYS', 'ARP', 'SOM', 'HYO', 'HYL', 'IMP',
             'ANC', 'GLT', 'NEU', 'NOC', 'NUC', 'SOR',
         ];
         foreach ($expected as $code) {
             self::assertArrayHasKey($code, $results, "шкала {$code} отсутствует");
         }
+
+        // №72 «Предипохондрическое состояние»: нормы издания — дубль строки №74,
+        // считать T-балл не по чему, поэтому шкалы в расчёте нет.
+        self::assertArrayNotHasKey('PHC', $results);
     }
 
     public function testScaleCarriesRawTNormsProvenanceAndNoClinicalText(): void
@@ -64,14 +68,21 @@ final class AdditionalScalesCalculatorTest extends TestCase
         self::assertArrayNotHasKey('interpretation', $scale, 'клинические тексты для новых шкал не выдаются');
     }
 
-    public function testScalesApprovedWithAReservationCarryTheirReason(): void
+    public function testTheEntryWithASourceTypoStaysVerifiedAndCarriesItsExplanation(): void
     {
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
+        $som = $results['SOM'];
 
-        foreach (['SOM' => 87, 'PHC' => 72] as $code => $entry) {
-            self::assertSame('verified-with-note', $results[$code]['status'], "{$code}: статус");
-            self::assertNotSame('', $results[$code]['note'], "{$code}: причина оговорки");
-            self::assertSame($entry, $results[$code]['source']['entry'], "{$code}: запись источника");
+        self::assertSame(87, $som['source']['entry']);
+        self::assertSame('verified', $som['status'], 'состав ключа подтверждён, статус не понижается');
+        self::assertStringContainsString('Harris', $som['note'], 'примечание называет источник сверки');
+        self::assertSame(17, $som['max_raw'], 'Hy4: 17 пунктов');
+        self::assertStringNotContainsStringIgnoringCase('норм', $som['note'], 'речь не о нормах, а о строке ключа');
+
+        foreach ($results as $code => $scale) {
+            if ($code !== 'SOM') {
+                self::assertSame('', $scale['note'], "{$code}: лишнее примечание");
+            }
         }
     }
 
