@@ -4167,9 +4167,10 @@ body {
     font-size: 0.9375rem;
 }
 
-/* Дополнительные шкалы СМИЛ (05.S3.1): подписи источника и норм пола */
+/* Дополнительные шкалы СМИЛ (05.S3.1–05.S3.2): подписи источника, норм пола и оговорок */
 .scores-table .category-note,
 .scores-table .scale-source,
+.scores-table .scale-note,
 .scores-table .scale-norm {
     display: block;
     font-size: 0.78em;
@@ -4181,6 +4182,11 @@ body {
 .scores-table .category-note {
     display: inline;
     margin-left: var(--spacing-sm, 8px);
+}
+
+/* Пояснение к опечатке источника: обычная сноска, не предупреждение */
+.scores-table .scale-note {
+    font-style: italic;
 }
 
 .scores-table tr.level--above td {

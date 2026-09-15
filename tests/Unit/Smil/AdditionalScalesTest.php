@@ -8,8 +8,9 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Smil\SmilModule;
 
 /**
- * Секция «Дополнительные шкалы» после пакета 05.S3.1: одна группа
- * проверенных по источнику шкал, без клинических текстов.
+ * Секция «Дополнительные шкалы» после пакета 05.S3.2: одна группа
+ * проверенных по источнику шкал, без клинических текстов; там, где источник
+ * содержит опечатку, рядом идёт пояснение — без предупреждающего значка.
  */
 class AdditionalScalesTest extends TestCase
 {
@@ -61,14 +62,52 @@ class AdditionalScalesTest extends TestCase
         $this->assertCount(2, $category['items']);
 
         $first = $category['items'][0];
-        foreach (['code', 'name', 'raw', 'max_raw', 'answered', 't_score', 'level', 'level_name', 'norm', 'source_note', 'status'] as $key) {
+        foreach (['code', 'name', 'raw', 'max_raw', 'answered', 't_score', 'level', 'level_name', 'norm', 'source_note', 'status', 'note'] as $key) {
             $this->assertArrayHasKey($key, $first, "item.$key");
         }
         $this->assertSame('A', $first['code']);
         $this->assertSame('verified', $first['status']);
+        $this->assertSame('', $first['note']);
         $this->assertStringContainsString('M 11', $first['norm']);
         $this->assertStringContainsString('стр. 195', $first['source_note']);
         $this->assertArrayNotHasKey('interpretation', $first);
+    }
+
+    public function testTheEntryWithASourceTypoShowsItsExplanationWithoutAWarningBadge(): void
+    {
+        $module = new SmilModule();
+        $data = $this->invokeMethod($module, 'buildAdditionalScalesData', [[
+            'SOM' => [
+                'id' => 'sobchik-087',
+                'code' => 'SOM',
+                'name' => 'Шкала «Соматические жалобы»',
+                'raw' => 5,
+                't' => 63.0,
+                'M' => 2.37,
+                'sigma' => 2.0,
+                'max_raw' => 17,
+                'answered' => 17,
+                'level' => 'normal',
+                'level_name' => 'в пределах нормы',
+                'source' => ['entry' => 87, 'page_pdf' => 205, 'page_print' => 203],
+                'status' => 'verified',
+                'note' => 'В источнике опечатка «верно/неверно»; состав подтверждён сверкой с '
+                    . 'Harris–Lingoes Hy4 (17 п., 6 true / 11 false).',
+            ],
+        ]]);
+
+        $item = $data['categories'][0]['items'][0];
+
+        $this->assertSame('verified', $item['status'], 'состав ключа подтверждён — статус не понижается');
+        $this->assertStringContainsString('Harris', $item['note']);
+        $this->assertArrayNotHasKey('flag', $item, 'предупреждающего значка у verified-шкалы быть не должно');
+
+        // Примечание объясняет строку ключа, а не ставит под сомнение нормы,
+        // и остаётся нейтральным: клинических формулировок в нём нет.
+        $this->assertStringNotContainsStringIgnoringCase('норм', $item['note']);
+        foreach (['симптом', 'диагноз', 'патолог', 'расстройств'] as $clinical) {
+            $this->assertStringNotContainsStringIgnoringCase($clinical, $item['note']);
+        }
     }
 
     public function testBuildAdditionalScalesDataHandlesEmptyScores(): void

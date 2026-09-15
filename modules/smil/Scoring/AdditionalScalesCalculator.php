@@ -49,7 +49,7 @@ final class AdditionalScalesCalculator
      * @param array<int|string, int|bool|string> $answers question_id => ответ (0/1/2).
      * @param string                             $gender  'male' или 'female'.
      *
-     * @return array<string, array{id: string, code: string, name: string, raw: int, t: float, M: int|float, sigma: int|float, max_raw: int, answered: int, level: string, level_name: string, source: array<string, mixed>, status: string}>
+     * @return array<string, array{id: string, code: string, name: string, raw: int, t: float, M: int|float, sigma: int|float, max_raw: int, answered: int, level: string, level_name: string, source: array<string, mixed>, status: string, note: string}>
      */
     public function calculate(array $answers, string $gender): array
     {
@@ -112,6 +112,9 @@ final class AdditionalScalesCalculator
                 'level_name' => $this->levelName($t),
                 'source' => (array) ($scale['source'] ?? []),
                 'status' => (string) ($scale['status'] ?? 'unverified'),
+                // Оговорка владельца по записи источника (status verified-with-note).
+                // Пустая строка у шкал без оговорки: форма результата одинакова.
+                'note' => (string) ($scale['note'] ?? ''),
             ];
         }
 

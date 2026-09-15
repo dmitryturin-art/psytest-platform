@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
 
 /**
- * Поведение калькулятора дополнительных шкал на партии 05.S3.1.
+ * Поведение калькулятора дополнительных шкал на партиях 05.S3.1 и 05.S3.2.
  *
  * Численные ожидания живут в AdditionalScalesReferenceTest (независимый
  * эталон по источнику); здесь проверяется контракт: форма результата,
@@ -33,14 +33,23 @@ final class AdditionalScalesCalculatorTest extends TestCase
         $this->calc = new AdditionalScalesCalculator($this->definitions);
     }
 
-    public function testReturnsTheWholeVerifiedBatch(): void
+    public function testReturnsBothVerifiedBatches(): void
     {
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
 
-        self::assertCount(16, $results);
-        foreach (['A', 'R', 'Es', 'Do', 'Re', 'CYN', 'OH', 'LRN', 'MAT', 'DPR', 'DSU', 'DRT', 'DOV', 'DRX', 'DPN', 'EGO'] as $code) {
+        self::assertCount(35, $results);
+        $expected = [
+            'A', 'R', 'Es', 'Do', 'Re', 'CYN', 'OH', 'LRN', 'MAT', 'DPR', 'DSU', 'DRT', 'DOV', 'DRX', 'DPN', 'EGO',
+            'CNV', 'GLM', 'DNS', 'EGC', 'HDC', 'HLT', 'HYP', 'HYS', 'ARP', 'SOM', 'HYO', 'HYL', 'IMP',
+            'ANC', 'GLT', 'NEU', 'NOC', 'NUC', 'SOR',
+        ];
+        foreach ($expected as $code) {
             self::assertArrayHasKey($code, $results, "шкала {$code} отсутствует");
         }
+
+        // №72 «Предипохондрическое состояние»: нормы издания — дубль строки №74,
+        // считать T-балл не по чему, поэтому шкалы в расчёте нет.
+        self::assertArrayNotHasKey('PHC', $results);
     }
 
     public function testScaleCarriesRawTNormsProvenanceAndNoClinicalText(): void
@@ -49,13 +58,32 @@ final class AdditionalScalesCalculatorTest extends TestCase
         $scale = $results['A'];
 
         self::assertSame(
-            ['id', 'code', 'name', 'raw', 't', 'M', 'sigma', 'max_raw', 'answered', 'level', 'level_name', 'source', 'status'],
+            ['id', 'code', 'name', 'raw', 't', 'M', 'sigma', 'max_raw', 'answered', 'level', 'level_name', 'source', 'status', 'note'],
             array_keys($scale)
         );
         self::assertSame('sobchik-001', $scale['id']);
         self::assertSame('verified', $scale['status']);
+        self::assertSame('', $scale['note'], 'у шкалы без оговорки примечание пустое');
         self::assertSame(195, $scale['source']['page_print']);
         self::assertArrayNotHasKey('interpretation', $scale, 'клинические тексты для новых шкал не выдаются');
+    }
+
+    public function testTheEntryWithASourceTypoStaysVerifiedAndCarriesItsExplanation(): void
+    {
+        $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
+        $som = $results['SOM'];
+
+        self::assertSame(87, $som['source']['entry']);
+        self::assertSame('verified', $som['status'], 'состав ключа подтверждён, статус не понижается');
+        self::assertStringContainsString('Harris', $som['note'], 'примечание называет источник сверки');
+        self::assertSame(17, $som['max_raw'], 'Hy4: 17 пунктов');
+        self::assertStringNotContainsStringIgnoringCase('норм', $som['note'], 'речь не о нормах, а о строке ключа');
+
+        foreach ($results as $code => $scale) {
+            if ($code !== 'SOM') {
+                self::assertSame('', $scale['note'], "{$code}: лишнее примечание");
+            }
+        }
     }
 
     public function testAllTrueScoresEveryTrueItemAndNoFalseItem(): void

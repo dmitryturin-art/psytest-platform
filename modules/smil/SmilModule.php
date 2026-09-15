@@ -226,7 +226,7 @@ class SmilModule extends BaseTestModule
             'clinical_scales' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
             'full_version' => true,
             'total_questions' => 566,
-            'additional_scales_count' => 16,
+            'additional_scales_count' => 35,
         ]);
     }
 
@@ -334,7 +334,7 @@ class SmilModule extends BaseTestModule
     }
 
     /**
-     * Определения дополнительных шкал партии 05.S3.1.
+     * Определения дополнительных шкал партий 05.S3.1 и 05.S3.2.
      *
      * Файл собирается bin/smil-build-batch.php из транскрипции приложения
      * Собчик; руками ключи и нормы не правятся.
@@ -947,6 +947,10 @@ class SmilModule extends BaseTestModule
                     ? sprintf('Собчик, 2003, прил., стр. %d, зап. №%d', (int) $source['page_print'], (int) ($source['entry'] ?? 0))
                     : '',
                 'status' => $score['status'] ?? 'unverified',
+                // Пояснение к опечатке источника там, где она есть. Своего значка нет:
+                // шкала verified, и лишний «предупреждающий» бейдж читался бы как
+                // сомнение в данных. Текст говорит сам за себя.
+                'note' => (string) ($score['note'] ?? ''),
             ];
         }
 

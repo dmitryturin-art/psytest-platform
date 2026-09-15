@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Независимые эталоны дополнительных шкал СМИЛ (пакет 05.S3.1).
+"""Независимые эталоны дополнительных шкал СМИЛ (партии 05.S3.1 и 05.S3.2).
 
 Скрипт считает ожидаемые raw и T **по транскрипции источника**
 (docs/smil-additional-scales-transcription.json), а не по runtime-данным PHP
@@ -8,7 +8,7 @@
 означает согласие двух независимых реализаций с источником.
 
 Только стандартная библиотека. Запуск: python3 bin/smil-additional-reference.py
-Результат: tests/fixtures/smil-additional-batch1-reference.json
+Результат: tests/fixtures/smil-additional-reference.json
 """
 
 from __future__ import annotations
@@ -20,30 +20,62 @@ import random
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANSCRIPTION = os.path.join(ROOT, "docs", "smil-additional-scales-transcription.json")
 VALID_ANSWERS = os.path.join(ROOT, "tests", "fixtures", "smil-reference-answers-valid.json")
-OUTPUT = os.path.join(ROOT, "tests", "fixtures", "smil-additional-batch1-reference.json")
+OUTPUT = os.path.join(ROOT, "tests", "fixtures", "smil-additional-reference.json")
 
 TOTAL_QUESTIONS = 566
 SEED = 20260915
 
-# Номер записи транскрипции -> runtime-код. Партия 05.S3.1, утверждена 15.09.2026.
-BATCH = {
-    1: "A",
-    2: "LRN",
-    6: "MAT",
-    39: "CYN",
-    41: "DPR",
-    42: "DSU",
-    43: "DRT",
-    49: "Do",
-    51: "DOV",
-    53: "DRX",
-    57: "DPN",
-    62: "EGO",
-    77: "OH",
-    92: "Es",
-    171: "R",
-    174: "Re",
+# Партия -> (номер записи транскрипции -> runtime-код). Обе утверждены 15.09.2026.
+# Списки дублируют bin/smil-build-batch.php намеренно: эталон не должен читать
+# ни runtime-файл шкал, ни PHP-код.
+BATCHES = {
+    "05.S3.1": {
+        1: "A",
+        2: "LRN",
+        6: "MAT",
+        39: "CYN",
+        41: "DPR",
+        42: "DSU",
+        43: "DRT",
+        49: "Do",
+        51: "DOV",
+        53: "DRX",
+        57: "DPN",
+        62: "EGO",
+        77: "OH",
+        92: "Es",
+        171: "R",
+        174: "Re",
+    },
+    "05.S3.2": {
+        37: "CNV",
+        46: "GLM",
+        48: "DNS",
+        60: "EGC",
+        73: "HDC",
+        75: "HLT",
+        80: "HYP",
+        83: "HYS",
+        84: "ARP",
+        87: "SOM",
+        89: "HYO",
+        90: "HYL",
+        93: "IMP",
+        97: "ANC",
+        98: "GLT",
+        129: "NEU",
+        131: "NOC",
+        134: "NUC",
+        193: "SOR",
+    },
 }
+
+# Плоский список в порядке вывода: партия 1, затем партия 2, внутри — по номеру записи.
+BATCH = [
+    (number, code, batch)
+    for batch, codes in BATCHES.items()
+    for number, code in sorted(codes.items())
+]
 
 ANSWER_YES = 1
 ANSWER_NO = 0
@@ -129,12 +161,12 @@ def main() -> None:
     for set_name, answers in answer_sets.items():
         for sex in ("male", "female"):
             case = {}
-            for number, code in sorted(BATCH.items()):
+            for number, code, _batch in BATCH:
                 case[code] = score(entries[number], answers, sex)
             cases[f"{set_name}_{sex}"] = case
 
     output = {
-        "title": "Независимые эталоны дополнительных шкал СМИЛ, партия 05.S3.1",
+        "title": "Независимые эталоны дополнительных шкал СМИЛ, партии 05.S3.1 и 05.S3.2",
         "generated_by": "bin/smil-additional-reference.py",
         "provenance": {
             "source": doc["source"],
@@ -143,7 +175,8 @@ def main() -> None:
                 "Расчёт выполнен вне PHP и вне modules/smil/additional-scales-v2.json: "
                 "ключи и нормы взяты прямо из транскрипции источника."
             ),
-            "entries": {str(number): code for number, code in sorted(BATCH.items())},
+            "entries": {str(number): code for number, code, _batch in BATCH},
+            "batches": {str(number): batch for number, _code, batch in BATCH},
             "formula": (
                 "raw = число ответов «верно» по списку true плюс «неверно» по списку false "
                 "(«не знаю» = 2 и пропуски не считаются); "
