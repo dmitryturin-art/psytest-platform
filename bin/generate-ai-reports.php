@@ -49,8 +49,9 @@ $aiSettings = new AiSettings($db);
 $settings = AiProviderSettings::fromConfig($config, $aiSettings);
 
 if (!$aiSettings->isAiEnabled()) {
-    $log('ИИ-разборы выключены владельцем в кабинете. Задания не берутся.');
-    exit(0);
+    // Задания всё равно берутся: AiClient откажет каждому с причиной владельца,
+    // и оно закроется как failed, а не повиснет в очереди до включения.
+    $log('ИИ-разборы выключены владельцем в кабинете: поставленные задания закрываются с этой причиной.');
 }
 
 if (!$settings->isConfigured()) {

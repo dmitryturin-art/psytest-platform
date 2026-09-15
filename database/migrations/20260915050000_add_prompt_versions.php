@@ -91,6 +91,9 @@ final class AddPromptVersions extends AbstractMigration
                     'update' => 'CURRENT_TIMESTAMP',
                 ])
                 ->create();
+
+            // Явное состояние по умолчанию: разборы включены, как и до появления выключателя.
+            $this->execute("INSERT INTO ai_settings (setting_key, setting_value) VALUES ('ai_enabled', '1')");
         }
     }
 

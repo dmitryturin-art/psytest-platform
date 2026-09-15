@@ -29,6 +29,12 @@ final class AiProviderSettings
     ) {
     }
 
+    /** Те же настройки с более коротким ожиданием — для синхронного пробного вызова из кабинета. */
+    public function withTimeout(int $seconds): self
+    {
+        return new self($this->baseUrl, $this->apiKey, $this->model, max(5, $seconds));
+    }
+
     /**
      * @param AiSettings|null $owner Настройки, заданные владельцем в кабинете (07.WP9).
      *                               Переопределяют только модель: адрес, таймаут и

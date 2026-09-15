@@ -1293,8 +1293,11 @@ final class OwnerController extends BaseController
 
     private function trialClient(AiSettings $aiSettings): AiClient
     {
+        // Пробный вызов ждёт ответ синхронно в HTTP-запросе кабинета, поэтому
+        // ему нельзя давать боевой таймаут очереди: 90 секунд, иначе страница
+        // обрывается веб-сервером на середине.
         return new AiClient(
-            AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php', $aiSettings),
+            AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php', $aiSettings)->withTimeout(90),
             new CurlTransport(),
             ownerSettings: $aiSettings,
         );
