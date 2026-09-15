@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B17 — staging-выкладка K5f (`60e536b`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-60e536b`; deployed runtime `60e536b` (merge PR #107). Миграций нет.
+- Сделано: артефакт `release-60e536b.tar.gz`, SHA-256 `5cd6dd94…e418` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-60e536b.sql.gz` (gzip -t OK); `public_html`/`current` атомарно на `releases/60e536b`.
+- Проверки: основные маршруты `200`, `/test/smil` `404`.
+- Rollback: `public_html` → `releases/b0386cb/public`, `current` → `releases/b0386cb`.
+
 ### 07.K5f — редактор: список заголовков не залипает; зависшие задания возвращаются при просмотре
 
 - Этап / ветка / commit: этап 07, `codex/07-k5f-editor-label-stale` от `main` `4a39c8b`.
