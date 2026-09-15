@@ -4,7 +4,7 @@
 
 ## Обзор
 
-PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платёжный контур и YooKassa не реализованы; старые payment endpoints отвечают `410 Gone`. Новый бесплатный AI-контур работает через `core/Ai/`: реестр промптов, адаптер, очередь `ai_reports`, генерация после HTTP-ответа и polling. Вход задания заморожен при постановке: `AiReportContextBuilder` собирает разрешённый контекст, и он вместе с промптом пишется в `context_snapshot`/`prompt_snapshot`, а обработчик отправляет провайдеру именно снимок (аудит R2); задания без снимка — только те, что поставлены до миграции. Готовый черновик становится версией №1 в `ai_report_revisions`; специалист правит понятный разбор в карточке кейса, каждая правка — новая неизменяемая версия, и клиент видит только ту, что специалист явно опубликовал (`ai_reports.published_revision_id`, D-054) — на своей единственной странице результата и в её PDF. Профессиональное заключение остаётся только в кабинете. Политика согласия, клиентских черновиков и удаления имеет открытые дефекты [ревью 08.09](docs/audit/2026-09-08-delivery-review.md).
+PsyTest — PHP-приложение для бесплатного прохождения психологических методик и выдачи базового результата. Реализованы пять модулей: СМИЛ, BDI, HADS, BAI и Lazarus. Платёжный контур и YooKassa не реализованы; старые payment endpoints отвечают `410 Gone`. Новый бесплатный AI-контур работает через `core/Ai/`: реестр промптов, адаптер, очередь `ai_reports`, генерация после HTTP-ответа и polling. Вход задания заморожен при постановке: `AiReportContextBuilder` собирает разрешённый контекст, и он вместе с промптом пишется в `context_snapshot`/`prompt_snapshot`, а обработчик отправляет провайдеру именно снимок (аудит R2); задания без снимка — только те, что поставлены до миграции. Готовый черновик становится версией №1 в `ai_report_revisions`; специалист правит понятный разбор в карточке кейса, каждая правка — новая неизменяемая версия, и клиент видит только ту, что специалист явно опубликовал (`ai_reports.published_revision_id`, D-054) — на своей единственной странице результата и в её PDF. Профессиональное заключение остаётся только в кабинете. Промпты редактируются из кабинета (`/admin/prompts`, WP9): файлы `prompts/` остаются версионируемым исходником в Git, правки владельца ложатся в БД (`prompt_versions`), а `prompt_publications` говорит, какой номер уходит в новые заказы (NULL — как в `manifest.json`); `PromptRegistry` отдаёт версию из БД, если она есть, иначе файл, и файлы никогда не переписывает. Там же живут две настройки из `ai_settings`: общий выключатель `ai_enabled` (при нём `AiClient::complete` отказывает, страница результата не предлагает заказ, а поставленные задания уходят в `failed` с этой причиной) и `ai_model`, переопределяющий модель из `.env`. Предпросмотр запроса и пробный вызов работают на синтетическом контексте, собранном `PromptFixtureContext` по схеме ответов модуля, — реальных сессий на этих страницах нет. Политика согласия, клиентских черновиков и удаления имеет открытые дефекты [ревью 08.09](docs/audit/2026-09-08-delivery-review.md).
 
 | Слой | Фактическая технология |
 |---|---|
@@ -95,6 +95,14 @@ HTTP request
 | POST | `/admin/invited-case/{sessionId}/reports/{reportId}/restore` | `OwnerController::restoreCaseReportRevision` | восстановить старую версию копией в новую |
 | POST | `/admin/invited-case/{sessionId}/reports/{reportId}/publish` | `OwnerController::publishCaseReport` | опубликовать выбранную версию клиенту (с подтверждением) |
 | POST | `/admin/invited-case/{sessionId}/reports/{reportId}/unpublish` | `OwnerController::unpublishCaseReport` | снять разбор с публикации |
+| GET | `/admin/prompts` | `OwnerController::prompts` | список ключей реестра промптов и настройки ИИ |
+| POST | `/admin/prompts/settings` | `OwnerController::savePromptSettings` | выключатель ИИ-разборов и переопределение модели |
+| GET | `/admin/prompts/{test}/{mode}/{kind}` | `OwnerController::promptKey` | карточка ключа: версии и текст выбранной |
+| GET | `/admin/prompts/{test}/{mode}/{kind}/preview` | `OwnerController::promptPreview` | предпросмотр запроса на синтетическом контексте, без вызова провайдера |
+| POST | `/admin/prompts/{test}/{mode}/{kind}/versions` | `OwnerController::createPromptVersion` | сохранить новую версию промпта из кабинета |
+| POST | `/admin/prompts/{test}/{mode}/{kind}/publish` | `OwnerController::publishPromptVersion` | опубликовать версию для новых заказов |
+| POST | `/admin/prompts/{test}/{mode}/{kind}/reset` | `OwnerController::resetPromptVersion` | вернуть ключ к версии из `manifest.json` |
+| POST | `/admin/prompts/{test}/{mode}/{kind}/trial` | `OwnerController::promptTrial` | пробный вызов провайдера на том же синтетическом контексте |
 | GET | `/admin/clients` | `OwnerController::clients` | список карточек клиентов и форма создания |
 | POST | `/admin/clients/create` | `OwnerController::createClient` | создать карточку клиента (подпись владельца) |
 | GET | `/admin/clients/{clientId}` | `OwnerController::viewClient` | карточка клиента: назначения, история, удаление |
@@ -181,7 +189,7 @@ interface TestModuleInterface
 
 `database/migrations/` — source of truth. `database/schema.sql` — snapshot итоговой схемы, изменяемый осознанно вместе с migration chain. В CI чистая MySQL-проверка использует `composer migrate`.
 
-Таблицы включают tests, test sessions, `test_invites`, `visitor_accounts`/`visitor_login_tokens`, pair comparisons, activity log, новую `ai_reports` (со снимком входа задания и указателем опубликованной версии), `ai_report_revisions` (неизменяемая история разбора) и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
+Таблицы включают tests, test sessions, `test_invites`, `visitor_accounts`/`visitor_login_tokens`, pair comparisons, activity log, новую `ai_reports` (со снимком входа задания и указателем опубликованной версии), `ai_report_revisions` (неизменяемая история разбора), `prompt_versions`/`prompt_publications`/`ai_settings` (редактор промптов и настройки ИИ в кабинете) и legacy AI/payment records. Нельзя строить новую функцию на legacy финансовых таблицах: clinical и financial records разделяются в этапе 06.
 
 ## Проверки и рабочая дисциплина
 

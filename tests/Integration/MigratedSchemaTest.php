@@ -46,6 +46,10 @@ final class MigratedSchemaTest extends TestCase
         $this->assertColumns('ai_reports', ['published_revision_id', 'published_at', 'client_notified_at']);
         $this->assertColumns('ai_report_revisions', ['report_id', 'revision_no', 'content', 'source', 'created_at']);
         $this->assertIndex('ai_report_revisions', 'uq_report_revision_no', true);
+        $this->assertColumns('prompt_versions', ['test', 'mode', 'kind', 'version', 'text', 'note', 'allows_owner_context', 'created_at']);
+        $this->assertIndex('prompt_versions', 'uq_prompt_versions_key_version', true);
+        $this->assertColumns('prompt_publications', ['test', 'mode', 'kind', 'published_version', 'updated_at']);
+        $this->assertColumns('ai_settings', ['setting_key', 'setting_value', 'updated_at']);
         $this->assertColumns('test_sessions', ['account_id']);
         $this->assertIndex('test_sessions', 'idx_test_sessions_account', false);
 
