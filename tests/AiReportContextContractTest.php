@@ -224,15 +224,15 @@ final class AiReportContextContractTest extends TestCase
     public function testGlossaryCoversEveryScaleTheRegistryCanCalculate(): void
     {
         // Глоссарий адресуется id реестра, а не кодам: переименование шкалы не
-        // должна оставлять её без пояснения. Партии 05.S3.1 и 05.S3.2 — 35 шкал,
-        // и с 07.G2 покрыты обе целиком.
+        // должна оставлять её без пояснения. Партии 05.S3.1, 05.S3.2 и 05.S3.3 —
+        // 55 шкал, и с 07.G3 покрыты все три целиком.
         $registry = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-v2.json'), true, 512, JSON_THROW_ON_ERROR);
         $glossary = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-glossary.json'), true, 512, JSON_THROW_ON_ERROR);
 
         $registryIds = array_map(static fn (array $scale): string => (string) $scale['id'], (array) $registry['scales']);
         $explainedIds = array_keys((array) $glossary['scales']);
 
-        self::assertCount(35, $registryIds, 'Предусловие: реестр состоит из 35 шкал.');
+        self::assertCount(55, $registryIds, 'Предусловие: реестр состоит из 55 шкал.');
         self::assertSame([], array_diff($registryIds, $explainedIds), 'Каждая шкала реестра обязана иметь запись в глоссарии.');
         self::assertSame([], array_diff($explainedIds, $registryIds), 'Пояснение по шкале вне реестра только занимает место.');
     }
@@ -288,9 +288,9 @@ final class AiReportContextContractTest extends TestCase
             JSON_UNESCAPED_UNICODE,
         );
 
-        // 07.G2: глоссарий покрыл все 35 шкал реестра, и это его конечный
-        // размер — дальше расти ему уже не на чем.
-        self::assertLessThan(28000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
+        // 07.G3: глоссарий покрыл все 55 шкал реестра — на 20 записей больше,
+        // чем в 07.G2, и порог поднят с 28 000 до 44 000 знаков под этот объём.
+        self::assertLessThan(44000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
     }
 
     public function testSmilReportsTheFormInsteadOfBareGender(): void
