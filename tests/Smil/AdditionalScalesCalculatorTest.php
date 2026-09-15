@@ -37,14 +37,14 @@ final class AdditionalScalesCalculatorTest extends TestCase
     {
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
 
-        self::assertCount(104, $results);
+        self::assertCount(105, $results);
         $expected = [
             'A', 'R', 'Es', 'Do', 'Re', 'CYN', 'OH', 'LRN', 'MAT', 'DPR', 'DSU', 'DRT', 'DOV', 'DRX', 'DPN', 'EGO',
             'CNV', 'GLM', 'DNS', 'EGC', 'HDC', 'HLT', 'HYP', 'HYS', 'ARP', 'SOM', 'HYO', 'HYL', 'IMP',
             'ANC', 'GLT', 'NEU', 'NOC', 'NUC', 'SOR',
             'EPI', 'PAR', 'PRS', 'POI', 'NAI', 'PAO', 'PAS', 'PRC', 'PPD', 'FMD',
             'AUT', 'PDO', 'PDS', 'SZP', 'PFA', 'PNE', 'PSZ', 'SAL', 'EAL', 'BSE',
-            'ALD', 'RSP', 'Ca', 'Cl', 'Cs', 'CRM1', 'Do2', 'CRM2', 'Ds', 'IMV',
+            'ALD', 'RSP', 'Ca', 'Cl', 'Cs', 'CRM1', 'Do2', 'CRM2', 'Ds', 'DSb', 'IMV',
             'GMA', 'HCO', 'Hv', 'Hy2', 'Hy5', 'In', 'IQR', 'CHO', 'Mf4', 'Or',
             'Pr', 'RCD', 'SCZ', 'To', 'TCH', 'ULC', 'LAC', 'Wa', 'SDF',
         ];
@@ -58,7 +58,7 @@ final class AdditionalScalesCalculatorTest extends TestCase
     }
 
     /** Единственные шкалы, которым владелец утвердил пояснительное поле note. */
-    private const CODES_WITH_NOTE = ['SOM', 'RPL', 'CRM1', 'Do2', 'CRM2', 'Ds', 'HCO', 'Pr', 'To'];
+    private const CODES_WITH_NOTE = ['SOM', 'RPL', 'CRM1', 'Do2', 'CRM2', 'Ds', 'DSb', 'HCO', 'Pr', 'To'];
 
     public function testScaleCarriesRawTNormsProvenanceAndNoClinicalText(): void
     {
@@ -160,6 +160,37 @@ final class AdditionalScalesCalculatorTest extends TestCase
         self::assertSame(34, $hco['max_raw']);
         self::assertStringContainsString('№72', $hco['note']);
         self::assertArrayNotHasKey('PHC', $results);
+    }
+
+    /**
+     * Пара «явная/мягкая депрессия» покрывает 2-ю базовую шкалу без остатка.
+     *
+     * №51 и №56 — Obvious/Subtle Wiener–Harmon: ключи не пересекаются, а в объединении
+     * дают ровно 60 пунктов 2-й базовой шкалы. Это же равенство разрешило спорную
+     * позицию 10 списка «неверно» у №56: вариант 160 входит в ключ 2-й шкалы, 166 — нет.
+     * Если равенство сломается, спор о чтении скана надо открывать заново.
+     */
+    public function testTheObviousSubtleDepressionPairCoversTheSecondBasicScale(): void
+    {
+        $byCode = [];
+        foreach ($this->definitions as $scale) {
+            $byCode[$scale['code']] = $scale;
+        }
+
+        $dov = $byCode['DOV'];
+        $dsb = $byCode['DSb'];
+
+        self::assertSame(40, (int) $dov['max_raw']);
+        self::assertSame(20, (int) $dsb['max_raw']);
+
+        $dovItems = array_merge($dov['key']['true'], $dov['key']['false']);
+        $dsbItems = array_merge($dsb['key']['true'], $dsb['key']['false']);
+
+        self::assertSame([], array_values(array_intersect($dovItems, $dsbItems)), 'половины пары пересеклись');
+        self::assertCount(60, array_unique(array_merge($dovItems, $dsbItems)), 'объединение пары — не 60 пунктов');
+
+        self::assertContains(160, $dsb['key']['false'], 'спорная позиция прочитана как 160');
+        self::assertNotContains(166, $dsbItems, 'отвергнутый вариант 166 попал в ключ');
     }
 
     public function testAllTrueScoresEveryTrueItemAndNoFalseItem(): void

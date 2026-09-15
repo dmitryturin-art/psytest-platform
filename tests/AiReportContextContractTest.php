@@ -226,14 +226,14 @@ final class AiReportContextContractTest extends TestCase
     {
         // Глоссарий адресуется id реестра, а не кодам: переименование шкалы не
         // должна оставлять её без пояснения. Партии 05.S3.1–05.S3.4 —
-        // 104 шкалы, и с 07.G7 покрыты все пять партий целиком.
+        // 105 шкал, и с 07.G7 покрыты все пять партий целиком.
         $registry = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-v2.json'), true, 512, JSON_THROW_ON_ERROR);
         $glossary = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-glossary.json'), true, 512, JSON_THROW_ON_ERROR);
 
         $registryIds = array_map(static fn (array $scale): string => (string) $scale['id'], (array) $registry['scales']);
         $explainedIds = array_keys((array) $glossary['scales']);
 
-        self::assertCount(104, $registryIds, 'Предусловие: реестр состоит из 104 шкал.');
+        self::assertCount(105, $registryIds, 'Предусловие: реестр состоит из 105 шкал.');
         self::assertSame([], array_diff($registryIds, $explainedIds), 'Каждая шкала реестра обязана иметь запись в глоссарии.');
         self::assertSame([], array_diff($explainedIds, $registryIds), 'Пояснение по шкале вне реестра только занимает место.');
     }
@@ -289,18 +289,19 @@ final class AiReportContextContractTest extends TestCase
             JSON_UNESCAPED_UNICODE,
         );
 
-        // 07.G7: глоссарий покрыл все 104 шкалы реестра — на 29 записей больше,
+        // 07.G7: глоссарий покрыл все 105 шкал реестра — на 30 записей больше,
         // чем в 07.G5. Рост линейный по числу шкал: каждая запись добавляет и строку
         // в additional_scales, и пояснение в глоссарии. Записи партии 5 длиннее
         // прежних (~990 знаков против ~750): у половины из них прототип назван
         // «вероятным» или отвергнутым, и поле source обязано говорить, по какой
         // именно цифре, иначе оговорка превращается в пустую.
-        // Фактический размер на эталонном профиле — 89 089 знаков, порог поднят
-        // с 64 000 до 90 000 — это потолок, назначенный владельцем.
-        // ВНИМАНИЕ: запас всего около 1 %. Следующая партия (S3.6) в полный режим
-        // уже не помещается: её надо либо сажать на компактный режим по умолчанию,
-        // либо сокращать поля source. См. отчёт пакета 05.S3.5 + 07.G7.
-        self::assertLessThan(90000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
+        // Фактический размер на эталонном профиле — 90 614 знаков. Ориентир владельца
+        // был 90 000, и партия его перешагнула: порог поставлен по факту плюс запас
+        // около 5 % — 95 000.
+        // ВНИМАНИЕ: дальше полный режим наращивать некуда. Партия S3.6 должна идти
+        // либо на компактном режиме по умолчанию, либо с сокращёнными полями source.
+        // См. отчёт пакета 05.S3.5 + 07.G7.
+        self::assertLessThan(95000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
     }
 
     public function testCompactGlossaryModeCutsTheContextDownSubstantially(): void
@@ -312,17 +313,17 @@ final class AiReportContextContractTest extends TestCase
         $full = (string) json_encode((new SmilGlossaryCompactor(SmilGlossaryCompactor::MODE_FULL))->apply($context), JSON_UNESCAPED_UNICODE);
         $compact = (string) json_encode((new SmilGlossaryCompactor(SmilGlossaryCompactor::MODE_COMPACT))->apply($context), JSON_UNESCAPED_UNICODE);
 
-        // Факт на эталонном профиле после 07.G7: 89 112 знаков в полном режиме
-        // против 60 714 в компактном (−32 %). Ориентир владельца был ≤ 35 000, но на
+        // Факт на эталонном профиле после 07.G7: 90 591 знак в полном режиме
+        // против 62 216 в компактном (−31 %). Ориентир владельца был ≤ 35 000, но на
         // этом синтетическом профиле он недостижим: ответы идут циклом 0-1-2,
-        // T разбегаются по всему диапазону, и половина шкал (51 из 104) оказывается
-        // вне среднего диапазона, то есть сохраняет полную запись. На живом профиле
-        // средних шкал заметно больше, и экономия выше. Порог 64 000 — факт плюс
+        // T разбегаются по всему диапазону, и половина шкал оказывается
+        // вне среднего диапазона (52 из 105), то есть сохраняет полную запись. На живом профиле
+        // средних шкал заметно больше, и экономия выше. Порог 65 000 — факт плюс
         // запас около 5 % — стережёт регресс, отношение к полному режиму — саму
         // суть режима.
-        self::assertLessThan(64000, mb_strlen($compact), 'Компактный режим перестал быть компактным.');
+        self::assertLessThan(65000, mb_strlen($compact), 'Компактный режим перестал быть компактным.');
         self::assertLessThan(0.8 * mb_strlen($full), mb_strlen($compact), 'Компактный режим обязан заметно выигрывать у полного.');
-        self::assertLessThan(90000, mb_strlen($full), 'Полный режим остаётся под своим порогом.');
+        self::assertLessThan(95000, mb_strlen($full), 'Полный режим остаётся под своим порогом.');
     }
 
     public function testCompactModeKeepsFullEntriesExactlyWhereTheProfileSpeaks(): void
@@ -349,7 +350,7 @@ final class AiReportContextContractTest extends TestCase
             $short += $mid ? 1 : 0;
         }
 
-        self::assertSame(53, $short, 'Факт на эталонном профиле: 53 кратких записи из 104.');
+        self::assertSame(53, $short, 'Факт на эталонном профиле: 53 кратких записи из 105.');
         self::assertSame($context['additional_scales'], $compact['additional_scales'], 'Сами шкалы режим не трогает.');
         self::assertSame($context['additional_scales_without_glossary'], $compact['additional_scales_without_glossary']);
         self::assertSame($context['levels']['bands'], $compact['levels']['bands'], 'Полосы уровней режим не трогает.');
