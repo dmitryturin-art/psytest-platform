@@ -202,6 +202,9 @@ class SmilModule extends BaseTestModule
     private ValidityAssessor $validityAssessor;
     private AdditionalScalesCalculator $additionalCalc;
 
+    /** @var array<string, mixed>|null Глоссарий читается один раз на экземпляр. */
+    private ?array $additionalScalesGlossary = null;
+
     /**
      * Initialize module - set up scoring calculators
      */
@@ -1134,6 +1137,15 @@ class SmilModule extends BaseTestModule
             'profile' => $this->aiProfile($results),
             'indices' => $results['indices'] ?? [],
             'additional_scales' => $this->aiAdditionalScales($results['additional_scores'] ?? []),
+            // Число без пояснения модель трактует по названию шкалы. Глоссарий
+            // и правило уровней идут рядом с цифрами — и только по тем шкалам,
+            // которые в этой нагрузке действительно есть (07.G1).
+            'additional_scales_glossary' => $this->aiAdditionalScalesGlossary($results['additional_scores'] ?? []),
+            // Шкалы, для которых пояснения пока нет (глоссарий партии ждёт
+            // утверждения владельца): модель обязана ограничиться числом и
+            // связью с профилем, а не догадываться по названию.
+            'additional_scales_without_glossary' => $this->aiAdditionalScalesWithoutGlossary($results['additional_scores'] ?? []),
+            'levels' => $this->aiAdditionalScalesLevels(),
             'completeness' => [
                 'answered' => $results['answered_count'] ?? null,
                 'total' => $results['total_questions'] ?? null,
@@ -1246,6 +1258,106 @@ class SmilModule extends BaseTestModule
         }
 
         return $scales;
+    }
+
+    /**
+     * Пояснения к переданным дополнительным шкалам (07.G1).
+     *
+     * Наружу уходит запись только по той шкале, которая реально есть в
+     * нагрузке: иначе контекст растёт на шкалы, которых модель не видит.
+     * Отсутствие записи не ошибка — будущие партии реестра получат свои
+     * пояснения позже, а шкала до тех пор идёт без пояснения.
+     *
+     * @param array<string, mixed> $additional
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function aiAdditionalScalesGlossary(array $additional): array
+    {
+        $glossary = $this->loadAdditionalScalesGlossary();
+        $entries = (array) ($glossary['scales'] ?? []);
+        $selected = [];
+
+        foreach ($additional as $code => $scale) {
+            $id = (string) ($scale['id'] ?? '');
+            $entry = $entries[$id] ?? null;
+
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            $selected[(string) $code] = [
+                'meaning' => $entry['meaning'] ?? '',
+                'high' => $entry['high'] ?? '',
+                'low' => $entry['low'] ?? null,
+                'relates_to' => array_values((array) ($entry['relates_to'] ?? [])),
+                'western_name' => $entry['western_name'] ?? null,
+                'source' => $entry['source'] ?? '',
+            ];
+        }
+
+        return $selected;
+    }
+
+    /**
+     * Коды переданных шкал, у которых нет записи в глоссарии.
+     *
+     * @param array<string, array<string, mixed>> $additional
+     * @return list<string>
+     */
+    private function aiAdditionalScalesWithoutGlossary(array $additional): array
+    {
+        $entries = (array) ($this->loadAdditionalScalesGlossary()['scales'] ?? []);
+        $missing = [];
+        foreach ($additional as $code => $scale) {
+            if (!isset($entries[(string) ($scale['id'] ?? '')])) {
+                $missing[] = (string) $code;
+            }
+        }
+
+        return $missing;
+    }
+
+    /**
+     * Правило уровней и общие принципы трактовки дополнительных шкал.
+     *
+     * Это методологические факты руководства, а не авторский текст: без них
+     * модель придумывает собственные границы «нормы».
+     *
+     * @return array<string, mixed>
+     */
+    private function aiAdditionalScalesLevels(): array
+    {
+        $levels = (array) ($this->loadAdditionalScalesGlossary()['levels'] ?? []);
+
+        return [
+            'scale' => $levels['scale'] ?? 'T',
+            'normative_range' => $levels['normative_range'] ?? null,
+            'bands' => array_values((array) ($levels['bands'] ?? [])),
+            'principles' => array_values((array) ($levels['principles'] ?? [])),
+        ];
+    }
+
+    /**
+     * Глоссарий дополнительных шкал: пересказ своими словами, без цитат.
+     *
+     * @return array<string, mixed>
+     */
+    protected function loadAdditionalScalesGlossary(): array
+    {
+        if ($this->additionalScalesGlossary !== null) {
+            return $this->additionalScalesGlossary;
+        }
+
+        $filepath = $this->modulePath . '/additional-scales-glossary.json';
+        if (!file_exists($filepath)) {
+            return $this->additionalScalesGlossary = [];
+        }
+
+        $content = file_get_contents($filepath);
+        $data = json_decode((string) $content, true);
+
+        return $this->additionalScalesGlossary = is_array($data) ? $data : [];
     }
 
     public function getAnswerSchema(): array
