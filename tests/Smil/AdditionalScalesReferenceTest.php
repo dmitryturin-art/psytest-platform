@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
 
 /**
- * Независимые reference cases партий 05.S3.1 и 05.S3.2 (WP5).
+ * Независимые reference cases партий 05.S3.1, 05.S3.2 и 05.S3.3 (WP5).
  *
  * Ожидаемые значения в tests/fixtures/smil-additional-reference.json
  * посчитаны bin/smil-additional-reference.py прямо по транскрипции источника,
@@ -118,12 +118,12 @@ final class AdditionalScalesReferenceTest extends TestCase
         self::assertStringContainsString('transcription', $provenance['input']);
         self::assertStringContainsString('вне PHP', $provenance['independence']);
         self::assertNotEmpty($provenance['formula']);
-        self::assertCount(35, $provenance['entries']);
-        self::assertCount(35, $provenance['batches']);
+        self::assertCount(55, $provenance['entries']);
+        self::assertCount(55, $provenance['batches']);
         self::assertSame(
-            ['05.S3.1' => 16, '05.S3.2' => 19],
+            ['05.S3.1' => 16, '05.S3.2' => 19, '05.S3.3' => 20],
             array_count_values($provenance['batches']),
-            'эталон обязан покрывать обе партии целиком'
+            'эталон обязан покрывать все партии целиком'
         );
     }
 

@@ -37,11 +37,13 @@ final class AdditionalScalesCalculatorTest extends TestCase
     {
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
 
-        self::assertCount(35, $results);
+        self::assertCount(55, $results);
         $expected = [
             'A', 'R', 'Es', 'Do', 'Re', 'CYN', 'OH', 'LRN', 'MAT', 'DPR', 'DSU', 'DRT', 'DOV', 'DRX', 'DPN', 'EGO',
             'CNV', 'GLM', 'DNS', 'EGC', 'HDC', 'HLT', 'HYP', 'HYS', 'ARP', 'SOM', 'HYO', 'HYL', 'IMP',
             'ANC', 'GLT', 'NEU', 'NOC', 'NUC', 'SOR',
+            'EPI', 'PAR', 'PRS', 'POI', 'NAI', 'PAO', 'PAS', 'PRC', 'PPD', 'FMD',
+            'AUT', 'PDO', 'PDS', 'SZP', 'PFA', 'PNE', 'PSZ', 'SAL', 'EAL', 'BSE',
         ];
         foreach ($expected as $code) {
             self::assertArrayHasKey($code, $results, "шкала {$code} отсутствует");
