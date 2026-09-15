@@ -85,18 +85,26 @@
         {% if case.pair %}
             {% for sheet in case.pair.questionnaires %}
                 <section class="owner-case-questionnaire{{ sheet.is_case ? ' owner-case-questionnaire--this' : '' }}">
-                    <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
                     {% if sheet.rows is empty %}
+                        <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
                         <p class="owner-help">Ответы не сохранены.</p>
                     {% else %}
-                        {{ _self.answer_list(sheet.rows) }}
+                        {# Свёрнуто по умолчанию: у СМИЛ 566 строк, и без этого до разбора не домотать. #}
+                        <details class="owner-case-individual owner-case-answers-details">
+                            <summary>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %} — {{ sheet.rows|length }} ответов</summary>
+                            {{ _self.answer_list(sheet.rows) }}
+                        </details>
                     {% endif %}
                 </section>
             {% endfor %}
         {% elseif case.answer_rows is empty %}
             <p class="owner-help">Клиент ещё не сохранил ответы.</p>
         {% else %}
-            {{ _self.answer_list(case.answer_rows) }}
+            {# Свёрнуто по умолчанию: у СМИЛ 566 строк, и без этого до разбора не домотать. #}
+            <details class="owner-case-individual owner-case-answers-details">
+                <summary>Показать ответы по пунктам — {{ case.answer_rows|length }}</summary>
+                {{ _self.answer_list(case.answer_rows) }}
+            </details>
         {% endif %}
     </section>
 
