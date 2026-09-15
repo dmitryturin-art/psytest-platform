@@ -551,4 +551,70 @@ final class OwnerDashboardContractTest extends TestCase
             (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php'),
         );
     }
+
+    /**
+     * Выгрузка кейса (07.K5j).
+     *
+     * Оба выхода закрыты владельцем и проверкой владения кейсом, ссылки в
+     * карточке не несут токен, а печатная страница закрыта от индексации: в
+     * ней клинический материал клиента.
+     */
+    public function testTheCaseExportIsOwnerOnlyTokenlessAndNeverIndexed(): void
+    {
+        $routes = (string) file_get_contents($this->projectRoot . '/public/index.php');
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        $card = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        $page = (string) file_get_contents($this->projectRoot . '/templates/owner-case-export.twig');
+
+        self::assertStringContainsString("\$router->get('/admin/invited-case/{sessionId}/export.pdf'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/invited-case/{sessionId}/print'", $routes);
+
+        // Обе выгрузки идут через `ownedCase()`, то есть через `requireOwner()`
+        // и `claimedCaseForOwner()`; отдельного пути доступа у них нет.
+        self::assertStringContainsString('private function caseExport(string $sessionId): ?array', $controller);
+        self::assertStringContainsString('$case = $this->ownedCase($sessionId);', $controller);
+        self::assertStringContainsString("header('X-Robots-Tag: noindex, nofollow');", $controller);
+        // Документ собирается на лету: в storage он не записывается.
+        self::assertStringContainsString("->generate(\$html, 'case_export.pdf', false)", $controller);
+
+        // Ссылки выгрузки — обычные owner-адреса, без токена и без `/result/`.
+        self::assertStringContainsString('/export.pdf', $card);
+        self::assertStringContainsString('formtarget="_blank"', $card);
+        self::assertStringContainsString('name="include_professional"', $card);
+        self::assertStringContainsString('name="include_answers"', $card);
+        self::assertStringNotContainsString('session_token', $card);
+
+        self::assertStringContainsString('noindex, nofollow', $page);
+        self::assertStringContainsString('@media print', $page);
+        self::assertStringContainsString('page-break-before: always', $page);
+        self::assertStringNotContainsString('session_token', $page);
+        self::assertStringNotContainsString('/result/', $page);
+    }
+
+    /**
+     * Кабинет не показывает значения столбцов вместо состояния (замечание 15.09).
+     *
+     * Специалист читал `completed` и `therapist_case` — это схема базы, а не
+     * состояние работы с клиентом. Перевод живёт в одном месте, `OwnerLabels`.
+     */
+    public function testOwnerTemplatesTranslateStatusesInsteadOfPrintingColumnValues(): void
+    {
+        foreach (['owner-invited-case', 'owner-dashboard'] as $name) {
+            $template = (string) file_get_contents($this->projectRoot . '/templates/' . $name . '.twig');
+
+            self::assertStringNotContainsString('>completed<', $template, $name);
+            self::assertStringNotContainsString('{{ case.status }}', $template, $name);
+            self::assertStringNotContainsString('{{ case.retention_class }}', $template, $name);
+            self::assertStringContainsString('status_label', $template, $name);
+        }
+
+        self::assertStringContainsString('retention_label', (string) file_get_contents(
+            $this->projectRoot . '/templates/owner-dashboard.twig',
+        ));
+
+        $labels = (string) file_get_contents($this->projectRoot . '/core/OwnerLabels.php');
+        foreach (['завершено', 'в процессе', 'удалено', 'анонимная', 'кейс специалиста'] as $word) {
+            self::assertStringContainsString($word, $labels);
+        }
+    }
 }

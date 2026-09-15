@@ -88,6 +88,8 @@ HTTP request
 | POST | `/admin/invites/revoke` | `OwnerController::revokeInvite` | отозвать неоткрытое invitation |
 | GET | `/admin/invited-case/{sessionId}` | `OwnerController::viewInvitedCase` | защищённо показать базовый результат и читаемую анкету invitation case |
 | POST | `/admin/invited-case/{sessionId}/delete` | `OwnerController::deleteInvitedCase` | удалить кейс приглашения с его карточки (с подтверждением) |
+| GET | `/admin/invited-case/{sessionId}/export.pdf` | `OwnerController::exportCasePdf` | выгрузить кейс одним PDF (результат, заключение, разбор); файл собирается на лету и на сервере не остаётся |
+| GET | `/admin/invited-case/{sessionId}/print` | `OwnerController::exportCasePrint` | тот же документ HTML-страницей с print-CSS (`X-Robots-Tag: noindex`) для сохранения в PDF/Word средствами браузера |
 | POST | `/admin/invited-case/{sessionId}/reports/request` | `OwnerController::requestCaseReports` | заказать оба черновика ИИ-разбора по кейсу (согласие + клинический контекст) |
 | GET | `/admin/invited-case/{sessionId}/reports/status` | `OwnerController::caseReportStatus` | owner-only JSON со статусами заданий (без текста черновика) |
 | GET | `/admin/invited-case/{sessionId}/reports/{reportId}/edit` | `OwnerController::editCaseReport` | редактор понятного разбора: текст, предпросмотр, история версий |
