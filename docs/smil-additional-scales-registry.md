@@ -1,6 +1,6 @@
 # Реестр дополнительных шкал СМИЛ — S1
 
-**Статус:** инвентарь S1 от 09.09.2026; транскрипция S2 и первая партия S3.1 от 15.09.2026 — [smil-additional-scales-transcription.json](smil-additional-scales-transcription.json). Это не публикация новых ключей, не корректировка
+**Статус:** инвентарь S1 от 09.09.2026; транскрипция S2, первая партия S3.1 и вторая партия S3.2 от 15.09.2026 — [smil-additional-scales-transcription.json](smil-additional-scales-transcription.json). Это не публикация новых ключей, не корректировка
 расчёта и не проверка базовых 13 шкал. Все runtime-значения ниже остаются неизменными.
 
 ## Граница и схема реестра
@@ -20,7 +20,9 @@ _Стандартизированный многофакторный метод 
 отдельный пакет S2. Происхождение всех строк — указанный скан; статус всех новых строк —
 `missing` (в runtime не включены), а правовой статус публикации русской формы — `unconfirmed`.
 Пакетом 05.S3.1 шестнадцать записей переведены в `verified (S3.1)` и включены в runtime;
-остальные 97 остаются `missing` до следующих партий.
+пакетом 05.S3.2 к ним добавлены ещё двадцать клинических подшкал (`verified (S3.2)`,
+две из них — `verified-with-note (S3.2)`). Остальные 77 записей остаются `missing`
+до следующих партий.
 
 | ID | № в источнике | Название | PDF / печатная стр. | true/false keys и нормы по полу | Статус |
 |---|---:|---|---|---|---|
@@ -34,15 +36,15 @@ _Стандартизированный многофакторный метод 
 | sobchik-023 | 23 | Студенческий староста | 198 / 196 | transcribed (A=B) | missing |
 | sobchik-026 | 26 | Контроль | 198 / 196 | transcribed (A=B) | missing |
 | sobchik-036 | 36 | Соперничество | 198 / 196 | transcribed (A=B) | missing |
-| sobchik-037 | 37 | Конверсионная реакция | 199 / 197 | transcribed (A=B) | missing |
+| sobchik-037 | 37 | Конверсионная реакция | 199 / 197 | transcribed (A=B) | verified (S3.2), runtime-код `CNV` |
 | sobchik-038 | 38 | Адвокатский тип личности | 199 / 197 | transcribed (A=B) | missing |
 | sobchik-039 | 39 | Цинизм | 199 / 197 | transcribed (A=B) | verified (S3.1), runtime-код `CYN` |
 | sobchik-041 | 41 | Чистая депрессия | 199 / 197 | transcribed (A=B) | verified (S3.1), runtime-код `DPR` |
 | sobchik-042 | 42 | Субъективная депрессия | 199 / 197 | transcribed (A=B) | verified (S3.1), runtime-код `DSU` |
 | sobchik-043 | 43 | Психическая заторможенность | 199 / 197 | transcribed (A=B) | verified (S3.1), runtime-код `DRT` |
-| sobchik-046 | 46 | Мрачность (угрюмость) | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-046 | 46 | Мрачность (угрюмость) | 200 / 198 | transcribed (A=B) | verified (S3.2), runtime-код `GLM` |
 | sobchik-047 | 47 | Преступность | 200 / 198 | transcribed (A=B) | missing |
-| sobchik-048 | 48 | Отрицание симптомов | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-048 | 48 | Отрицание симптомов | 200 / 198 | transcribed (A=B) | verified (S3.2), runtime-код `DNS` |
 | sobchik-049 | 49 | Доминирование | 200 / 198 | transcribed (A=B) | verified (S3.1), runtime-код `Do` |
 | sobchik-050 | 50 | Доминирование | 200 / 198 | transcribed (A=B) | missing |
 | sobchik-051 | 51 | Явная депрессия | 200 / 198 | transcribed (A=B) | verified (S3.1), runtime-код `DOV` |
@@ -53,32 +55,32 @@ _Стандартизированный многофакторный метод 
 | sobchik-057 | 57 | Зависимость | 201 / 199 | transcribed (A=B) | verified (S3.1), runtime-код `DPN` |
 | sobchik-058 | 58 | Эскапизм (бегство от решения проблем) | 202 / 200 | transcribed (A=B) | missing |
 | sobchik-059 | 59 | Эмоциональная незрелость | 202 / 200 | transcribed (A=B) | missing |
-| sobchik-060 | 60 | Сверхконтроль «Я» (зажатость) | 202 / 200 | transcribed (A=B) | missing |
+| sobchik-060 | 60 | Сверхконтроль «Я» (зажатость) | 202 / 200 | transcribed (A=B) | verified (S3.2), runtime-код `EGC` |
 | sobchik-061 | 61 | Эпилепсия | 202 / 200 | transcribed (A=B) | missing |
 | sobchik-062 | 62 | Сила Эго | 202 / 200 | transcribed (A=B) | verified (S3.1), runtime-код `EGO` |
 | sobchik-064 | 64 | Оценка улучшения | 203 / 201 | transcribed (A=B) | missing |
 | sobchik-066 | 66 | Женственность | 203 / 201 | transcribed (A=B) | missing |
 | sobchik-070 | 70 | Общая плохая приспособляемость | 203 / 201 | transcribed (A=B) | missing |
-| sobchik-072 | 72 | Предипохондрическое состояние | 203 / 201 | transcribed (A=B) | missing |
-| sobchik-073 | 73 | Предрасположенность к головным болям | 203 / 201 | transcribed (A=B) | missing |
+| sobchik-072 | 72 | Предипохондрическое состояние | 203 / 201 | transcribed (A=B) | verified-with-note (S3.2), runtime-код `PHC` |
+| sobchik-073 | 73 | Предрасположенность к головным болям | 203 / 201 | transcribed (A=B) | verified (S3.2), runtime-код `HDC` |
 | sobchik-074 | 74 | Контроль над враждебностью | 203 / 201 | transcribed (A=B) | missing |
-| sobchik-075 | 75 | Сосредоточенность на здоровье | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-075 | 75 | Сосредоточенность на здоровье | 204 / 202 | transcribed (A=B) | verified (S3.2), runtime-код `HLT` |
 | sobchik-077 | 77 | Враждебность | 204 / 202 | transcribed (A=B) | verified (S3.1), runtime-код `OH` |
-| sobchik-080 | 80 | Чистая ипохондрия | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-080 | 80 | Чистая ипохондрия | 204 / 202 | transcribed (A=B) | verified (S3.2), runtime-код `HYP` |
 | sobchik-081 | 81 | Выраженная враждебность | 204 / 202 | transcribed (A=B) | missing |
-| sobchik-083 | 83 | Чистая истерия | 204 / 202 | transcribed (A=B) | missing |
-| sobchik-084 | 84 | Вытеснение тревоги | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-083 | 83 | Чистая истерия | 204 / 202 | transcribed (A=B) | verified (S3.2), runtime-код `HYS` |
+| sobchik-084 | 84 | Вытеснение тревоги | 204 / 202 | transcribed (A=B) | verified (S3.2), runtime-код `ARP` |
 | sobchik-085 | 85 | Потребность в эмоциональных переживаниях | 205 / 203 | transcribed (A=B) | missing |
-| sobchik-087 | 87 | Соматические жалобы | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-087 | 87 | Соматические жалобы | 205 / 203 | transcribed (A=B) | verified-with-note (S3.2), runtime-код `SOM` |
 | sobchik-088 | 88 | Подавленная агрессия | 205 / 203 | transcribed (A=B) | missing |
-| sobchik-089 | 89 | Явная истерия | 205 / 203 | transcribed (A=B) | missing |
-| sobchik-090 | 90 | Скрытая истерия | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-089 | 89 | Явная истерия | 205 / 203 | transcribed (A=B) | verified (S3.2), runtime-код `HYO` |
+| sobchik-090 | 90 | Скрытая истерия | 205 / 203 | transcribed (A=B) | verified (S3.2), runtime-код `HYL` |
 | sobchik-092 | 92 | Интеллектуальная эффективность (условия для мыслительной деятельности) | 205 / 203 | transcribed (A=B) | verified (S3.1), runtime-код `Es` |
-| sobchik-093 | 93 | Импульсивность | 206 / 204 | transcribed (A=B) | missing |
+| sobchik-093 | 93 | Импульсивность | 206 / 204 | transcribed (A=B) | verified (S3.2), runtime-код `IMP` |
 | sobchik-094 | 94 | Внутренняя плохая приспособляемость (внутренняя рассогласованность) | 206 / 204 | transcribed (A=B) | missing |
 | sobchik-095 | 95 | Интеллектуальный коэффициент (реальная продуктивность интеллекта) | 206 / 204 | transcribed (A=B) | missing |
-| sobchik-097 | 97 | Осознанная тревога | 206 / 204 | transcribed (A=B) | missing |
-| sobchik-098 | 98 | Комплекс осуждения (комплекс вины) | 206 / 204 | transcribed (A=B) | missing |
+| sobchik-097 | 97 | Осознанная тревога | 206 / 204 | transcribed (A=B) | verified (S3.2), runtime-код `ANC` |
+| sobchik-098 | 98 | Комплекс осуждения (комплекс вины) | 206 / 204 | transcribed (A=B) | verified (S3.2), runtime-код `GLT` |
 | sobchik-099 | 99 | Осознанная выраженная враждебность | 207 / 205 | transcribed (A=B) | missing |
 | sobchik-106 | 106 | Лидерство | 207 / 205 | transcribed (A=B) | missing |
 | sobchik-109 | 109 | Чистая гипомания | 207 / 205 | transcribed (A=B) | missing |
@@ -89,9 +91,9 @@ _Стандартизированный многофакторный метод 
 | sobchik-119 | 119 | Эмоциональная сензитивность | 208 / 206 | transcribed (A=B) | missing |
 | sobchik-121 | 121 | Альтруизм | 208 / 206 | transcribed (A=B) | missing |
 | sobchik-122 | 122 | Женственность интересов | 208 / 206 | transcribed (A=B) | missing |
-| sobchik-129 | 129 | Невротизм | 208 / 206 | transcribed (A=B) | missing |
-| sobchik-131 | 131 | Невротический сверхконтроль | 209 / 207 | transcribed (A=B) | missing |
-| sobchik-134 | 134 | Невротическое снижение контроля | 209 / 207 | transcribed (A=B) | missing |
+| sobchik-129 | 129 | Невротизм | 208 / 206 | transcribed (A=B) | verified (S3.2), runtime-код `NEU` |
+| sobchik-131 | 131 | Невротический сверхконтроль | 209 / 207 | transcribed (A=B) | verified (S3.2), runtime-код `NOC` |
+| sobchik-134 | 134 | Невротическое снижение контроля | 209 / 207 | transcribed (A=B) | verified (S3.2), runtime-код `NUC` |
 | sobchik-135 | 135 | Оригинальность | 209 / 207 | transcribed (A=B) | missing |
 | sobchik-138 | 138 | Чистая паранойя | 209 / 207 | transcribed (A=B) | missing |
 | sobchik-139 | 139 | Идеи преследования | 209 / 207 | transcribed (A=B) | missing |
@@ -125,7 +127,7 @@ _Стандартизированный многофакторный метод 
 | sobchik-183 | 183 | Эмоциональное отчуждение | 214 / 212 | transcribed (A=B) | missing |
 | sobchik-187 | 187 | Причудливость сенсорного восприятия | 214 / 212 | transcribed (A=B) | missing |
 | sobchik-189 | 189 | Самоудовлетворённость | 214 / 212 | transcribed (A=B) | missing |
-| sobchik-193 | 193 | Реакция соматизации | 214 / 212 | transcribed (A=B) | missing |
+| sobchik-193 | 193 | Реакция соматизации | 214 / 212 | transcribed (A=B) | verified (S3.2), runtime-код `SOR` |
 | sobchik-194 | 194 | Социальная желательность | 215 / 213 | transcribed (A=B) | missing |
 | sobchik-196 | 196 | Социальное участие | 215 / 213 | transcribed (A=B) | missing |
 | sobchik-200 | 200 | Социальный статус | 215 / 213 | transcribed (A=B) | missing |
@@ -138,14 +140,18 @@ _Стандартизированный многофакторный метод 
 | sobchik-211 | 211 | Отношение к работе | 216 / 214 | transcribed (A=B) | missing |
 | sobchik-212 | 212 | Стремление наговорить на себя | 216 / 214 | transcribed (A=B) | missing |
 
-## Что рассчитывается сейчас (после 05.S3.1)
+## Что рассчитывается сейчас (после 05.S3.2)
 
 `SmilModule` создаёт `AdditionalScalesCalculator` из
-`modules/smil/additional-scales-v2.json` — **16 шкал партии 05.S3.1**, все со статусом
-`verified`. Файл генерируется `bin/smil-build-batch.php` прямо из
+`modules/smil/additional-scales-v2.json` — **36 шкал: 16 партии 05.S3.1 и 20 партии
+05.S3.2**. Файл генерируется `bin/smil-build-batch.php` прямо из
 [транскрипции](smil-additional-scales-transcription.json), поэтому ключи и нормы
 нельзя перепечатать руками; `AdditionalScalesInvariantsTest` проверяет равенство
-источнику при каждом прогоне.
+источнику при каждом прогоне. Порядок в файле — партия 1, затем партия 2, внутри
+партии по номеру записи; у каждой шкалы есть поле `batch`. `additional_scales_count`
+в metadata модуля — 36.
+
+### Партия 05.S3.1 (16 шкал, `verified`)
 
 | Runtime ID | Запись | Название источника | n (true+false) | M/σ муж. | M/σ жен. |
 |---|---:|---|---:|---|---|
@@ -169,6 +175,50 @@ _Стандартизированный многофакторный метод 
 Статус всех 16 записей в реестре источника — `verified (S3.1)`. У каждой M ≤ n и σ > 0
 для обоих полов; нормы применяются **по полу респондента**, а не мужские обоим.
 
+### Партия 05.S3.2 (20 клинических подшкал, утверждена владельцем 15.09.2026)
+
+| Runtime ID | Запись | Название источника | n (true+false) | M/σ муж. | M/σ жен. | Статус |
+|---|---:|---|---:|---|---|---|
+| CNV | 37 | Шкала «Конверсионная реакция» | 77 | 54.75 / 7.74 | 47.57 / 7.63 | `verified` |
+| GLM | 46 | Шкала «Мрачность (угрюмость)» | 10 | 2.65 / 1.63 | 4.42 / 1.82 | `verified` |
+| DNS | 48 | Шкала «Отрицание симптомов» | 26 | 12.52 / 4.18 | 12.15 / 3.52 | `verified` |
+| EGC | 60 | Шкала «Сверхконтроль «Я» (зажатость)» | 23 | 12.02 / 3.02 | 11.89 / 2.99 | `verified` |
+| PHC | 72 | Шкала «Предипохондрическое состояние» | 55 | 7.95 / 2.86 | 9.67 / 2.67 | `verified-with-note` |
+| HDC | 73 | Шкала «Предрасположенность к головным болям» | 28 | 9.02 / 1.08 | 10.75 / 3.13 | `verified` |
+| HLT | 75 | Шкала «Сосредоточенность на здоровье» | 16 | 2.14 / 2.32 | 5.39 / 3.11 | `verified` |
+| HYP | 80 | Шкала «Чистая ипохондрия» | 9 | 0.89 / 1.1 | 1.64 / 1.31 | `verified` |
+| HYS | 83 | Шкала «Чистая истерия» | 19 | 8.34 / 2.6 | 8.3 / 2.12 | `verified` |
+| ARP | 84 | Шкала «Вытеснение тревоги» | 6 | 3.09 / 1.62 | 3.04 / 1.67 | `verified` |
+| SOM | 87 | Шкала «Соматические жалобы» | 17 | 2.37 / 2.0 | 4.95 / 2.37 | `verified-with-note` |
+| HYO | 89 | Шкала «Явная истерия» | 31 | 4.85 / 3.54 | 9.34 / 4.14 | `verified` |
+| HYL | 90 | Шкала «Скрытая истерия» | 28 | 13.35 / 4.27 | 13.35 / 3.62 | `verified` |
+| IMP | 93 | Шкала «Импульсивность» | 21 | 7.12 / 3.45 | 8.94 / 3.16 | `verified` |
+| ANC | 97 | Шкала «Осознанная тревога» | 31 | 6.0 / 3.98 | 9.96 / 4.68 | `verified` |
+| GLT | 98 | Шкала «Комплекс осуждения (комплекс вины)» | 50 | 27.0 / 3.42 | 28.66 / 3.81 | `verified` |
+| NEU | 129 | Шкала «Невротизм» | 30 | 4.79 / 3.14 | 7.96 / 3.78 | `verified` |
+| NOC | 131 | Шкала «Невротический сверхконтроль» | 18 | 5.0 / 2.39 | 6.52 / 2.2 | `verified` |
+| NUC | 134 | Шкала «Невротическое снижение контроля» | 33 | 14.1 / 4.93 | 17.03 / 4.53 | `verified` |
+| SOR | 193 | Шкала «Реакция соматизации» | 47 | 22.48 / 3.59 | 20.31 / 3.62 | `verified` |
+
+Записи №84 (только «неверно») и №97 (только «верно») односторонние в самом источнике —
+это не потеря строки, а форма ключа; счётчики источника совпадают с длинами списков.
+У всех двадцати M ≤ n и σ > 0 для обоих полов.
+
+#### Две записи включены с оговоркой (решение владельца от 15.09.2026)
+
+| Запись | Runtime | Причина оговорки |
+|---:|---|---|
+| 72 | `PHC` | Нормы дословно совпадают с нормами записи №74 («Контроль над враждебностью») — вероятный повтор строк в печатном приложении. Значения перенесены как напечатано. |
+| 87 | `SOM` | Вторая строка ключа напечатана «11 верно» вместо «11 неверно»; оба прохода транскрипции прочитали её как список «неверно», так она и перенесена. |
+
+В runtime у таких шкал `status: "verified-with-note"` и поле `note` с текстом причины;
+в результате и в PDF рядом с названием видна нейтральная пометка **«нормы требуют
+сверки»**, а следом — сам текст причины. Клинических формулировок в пометке нет.
+Запись №74 («Контроль над враждебностью») в эту партию не входит: если владелец включит
+её позже, она получит такой же статус, и список исключений в
+`AdditionalScalesInvariantsTest::NOTE_EXCEPTIONS` придётся расширить явно — сейчас он
+закрыт двумя номерами (72, 87), и любая другая шкала с этим статусом валит тест.
+
 ### Что выведено из расчёта тем же пакетом
 
 Прежние 23 runtime-кода (`A`, `R`, `Es`, `Do`, `Re`, `Pk`, `MAC`, `O-H`, `ANX`, `FRS`,
@@ -178,8 +228,8 @@ _Стандартизированный многофакторный метод 
 `interpretations.json`. Основание — сверка S2: пересечение их ключей с источником
 практически нулевое (таблица ниже сохранена как evidence). Коды `A`, `R`, `Es`, `Do`,
 `Re`, `CYN` в runtime остались, но это **новые определения по источнику**, а не
-прежние списки. `additional_scales_count` в metadata модуля — 16, число «200+» из
-модуля и README убрано.
+прежние списки. `additional_scales_count` в metadata модуля — 36 после 05.S3.2
+(было 16 после 05.S3.1), число «200+» из модуля и README убрано.
 
 ### Независимая проверка (WP5)
 
@@ -187,9 +237,11 @@ _Стандартизированный многофакторный метод 
 транскрипции, вне PHP и вне runtime-файла шкал, для четырёх наборов ответов (все
 «верно», все «неверно», `tests/fixtures/smil-reference-answers-valid.json`,
 псевдослучайный seed 20260915) и обоих полов; результат —
-`tests/fixtures/smil-additional-batch1-reference.json` с provenance.
-`tests/Smil/AdditionalScalesReferenceTest.php` сравнивает с ним расчёт PHP: raw точно,
-T с допуском 0.01. Самопорождённый `smil-additional-reference-scores.json` удалён.
+`tests/fixtures/smil-additional-reference.json` с provenance (после 05.S3.2 файл
+переименован из `smil-additional-batch1-reference.json` и покрывает **все 36 шкал**:
+8 наборов × 36). `tests/Smil/AdditionalScalesReferenceTest.php` сравнивает с ним
+расчёт PHP: raw точно, T с допуском 0.01. Самопорождённый
+`smil-additional-reference-scores.json` удалён.
 
 ## S2: результат транскрипции (15.09.2026)
 
