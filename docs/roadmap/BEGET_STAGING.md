@@ -137,4 +137,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 33. Выкладка `9ab675c` (15.09): глоссарий дополнительных шкал сверен по источникам владельца (07.G5); миграций нет. SHA-256 `7d9b615714f4b8a412899efff778727d99ae38bc67c94179f7a25d4a6e7614d8` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/80e8daf/public` и `current` на `releases/80e8daf`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+34. Выкладка `9ddab4f` (15.09): компактный режим глоссария СМИЛ переключателем в кабинете (07.G6); миграций нет. SHA-256 `5d0297e289cc90f0e96bd8009565fc02f1914b851cbd857466b331848ca34305` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/9ab675c/public` и `current` на `releases/9ab675c`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.

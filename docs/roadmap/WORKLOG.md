@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B25 — staging-выкладка G6 (`9ddab4f`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-9ddab4f`; deployed runtime `9ddab4f` (merge PR #124, полная матрица 5.7/8.0 зелёная). Миграций нет (`smil_glossary_mode` — запись в key-value `ai_settings`, по умолчанию `full`).
+- Сделано: артефакт `release-9ddab4f.tar.gz`, SHA-256 `5d0297e2…4305` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/9ddab4f`.
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`. Владельцу: WP8 — дождаться разборов с полным глоссарием, переключить «Промпты → Глоссарий СМИЛ: компактный», «Заказать заново», сравнить.
+- Rollback: `public_html` → `releases/9ab675c/public`, `current` → `releases/9ab675c`.
+
 ### 07.G6 — компактный режим глоссария СМИЛ в AI-контексте (переключатель в кабинете)
 
 - Этап / ветка / commit: этап 07, `codex/07-g6-compact-glossary` от `main` `8277cb6`; commits `330cf9d`, `1b6198a`, `9315d89`, `d6c2fab` (исполнитель Opus в изолированном worktree).
