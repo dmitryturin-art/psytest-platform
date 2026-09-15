@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B24 — staging-выкладка G5 (`9ab675c`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-9ab675c`; deployed runtime `9ab675c` (merge PR #122). Миграций нет.
+- Сделано: артефакт `release-9ab675c.tar.gz`, SHA-256 `7d9b6157…14d8` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/9ab675c`.
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`. Владельцу: перезаказать разборы по кейсу «Дмитрий» и оценить, как модель пользуется сверенным глоссарием (WP8). Оценка стоимости разбора на текущей модели RouterAI (`qwen/qwen3.8-flash`, 16/51 ₽ за 1 млн токенов): ≈25 тыс. входных + ≈4,5 тыс. выходных токенов ≈ 0,6 ₽ за разбор.
+- Rollback: `public_html` → `releases/80e8daf/public`, `current` → `releases/80e8daf`.
+
 ### 07.G5 — сверка глоссария дополнительных шкал СМИЛ по источникам владельца
 
 - Этап / ветка / commit: этап 07, `codex/07-g5-glossary-verification` от `main` `80e8daf`; commits `52f408a`, `67648bb`, `235920c` (исследователь Opus, read-only по источникам) + `5c805e7` (ведущий: решения владельца).
