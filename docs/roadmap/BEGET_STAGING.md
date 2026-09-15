@@ -127,4 +127,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 28. Выкладка `9b80e42` (15.09): «Заказать заново» пересобирает снимок; заметные кнопки; миграций нет. SHA-256 `df4b33361c5b2bb1b9b69d42067899311e0b4238809e729e064a79a0977c1c9c` совпал; dump `backups/pre-deploy-9b80e42.sql.gz` проверен.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/60e536b/public` и `current` на `releases/60e536b`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+29. Выкладки `eddee4c` (S3.3 + G3) и `0f32c96` («Заказать заново» для готовых черновиков), 15.09; миграций нет. SHA-256 `e7cc502b7e048928a304c6c5e5b2a2b1f9fddb42ccae75e8e7565285316372a7` и `9fa122a8ea4674acff3dae8db16efe3c0fc4409753eedc17871dfe0c1c09bcee` совпали; dumps проверены.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/eddee4c/public` и `current` на `releases/eddee4c`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
