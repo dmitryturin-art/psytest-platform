@@ -123,4 +123,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 26. Выкладка `b0386cb` (15.09): «Заказать заново» для исчерпанных заданий ИИ; миграций нет. SHA-256 `90edb6f13e51537b5df8adca11f69ebc49e70362011dbdfd4622408d9de2e4f8` совпал; dump `backups/pre-deploy-b0386cb.sql.gz` проверен. Загрузку по SSH вести с `-o ServerAliveInterval=10` (первая попытка зависла на 2,7 МБ из 6,3).
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/975b653/public` и `current` на `releases/975b653`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+27. Выкладка `60e536b` (15.09): фикс залипающего списка заголовков в редакторе, возврат зависших заданий при просмотре; миграций нет. SHA-256 `5cd6dd942b443079c3be6aa78114d3dc46c0f3b9058e4b5a40fe7cebb1a3e418` совпал; dump `backups/pre-deploy-60e536b.sql.gz` проверен.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/b0386cb/public` и `current` на `releases/b0386cb`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
