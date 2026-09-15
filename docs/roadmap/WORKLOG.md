@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B22 — staging-выкладка K5j (`9d52345`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-9d52345`; deployed runtime `9d52345` (merge PR #118). Миграций нет.
+- Сделано: артефакт `release-9d52345.tar.gz`, SHA-256 `a7efb2f3…8714` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/9d52345`.
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`. Владельцу: в карточке кейса блок «Выгрузка» (PDF / версия для печати), статусы по-русски.
+- Rollback: `public_html` → `releases/63f9057/public`, `current` → `releases/63f9057`.
+
 ### 07.K5j — выгрузка кейса специалиста в PDF и версия для печати; русские подписи статусов
 
 - Этап / ветка / commit: этап 07, `codex/07-k5j-case-export` (merge с `main`); commits `2f8e9f7`, `1e70b86`, `b22b71f`.
