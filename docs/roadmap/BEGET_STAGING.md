@@ -112,4 +112,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 21. Выкладка `2bd89f4` (15.09) добавила ссылку в письмо-уведомление, favicon, исправления пары/СМИЛ/PDF и кабинет промптов с выключателем ИИ (`AddPromptVersions`). SHA-256 `e7777b140b63e28773d7f4333b955e7e6be0f953e27f205b6930e8126d4ec33d` совпал; dump `backups/pre-deploy-2bd89f4.sql.gz` проверен.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/be4342e/public` и `current` на `releases/be4342e`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+22. Выкладка `e223062` (15.09) заменила дополнительные шкалы СМИЛ на 16 verified по Собчик; миграций нет. SHA-256 `28535fd1bbff3cbff39840afb979028e22346e72eeb75be27d640cc69e95fc6b` совпал; dump `backups/pre-deploy-e223062.sql.gz` проверен.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/2bd89f4/public` и `current` на `releases/2bd89f4`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
