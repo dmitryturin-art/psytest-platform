@@ -20,6 +20,14 @@
 
 ## 2026-09-15
 
+### 08.B13 — staging-выкладка S3.2 + 07.G1 (`8d3ccfa`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-8d3ccfa`; deployed runtime `8d3ccfa` (merge PR #96; включает #95 S3.2). Миграций нет.
+- Сделано: артефакт `release-8d3ccfa.tar.gz`, SHA-256 `a436f063…29ba` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-8d3ccfa.sql.gz` (gzip -t OK); `public_html`/`current` атомарно на `releases/8d3ccfa`.
+- Проверки: HTTPS `/`, `/tests`, health, `/admin/login` — `200`; `/test/smil` — `404`; страница результата синтетической СМИЛ-сессии — `200` (35 шкал).
+- Rollback: `public_html` → `releases/e223062/public`, `current` → `releases/e223062`.
+- Следующий шаг: владелец публикует промпты СМИЛ v3 из кабинета «Промпты»; 07.G2 (глоссарий партии 2 на утверждение); S3.3.
+
 ### 07.G1 — глоссарий дополнительных шкал СМИЛ для ИИ-разбора
 
 - Этап / ветка / commit: этап 07, `codex/07-smil-ai-glossary` (rebase на `main` после S3.2); commits `db36e20`, `9959d07`, `4bc00ec`, `e14f22a` + fix ведущего.
