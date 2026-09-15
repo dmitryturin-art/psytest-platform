@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B16 — staging-выкладка K5e (`b0386cb`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-b0386cb`; deployed runtime `b0386cb` (merge PR #105). Миграций нет.
+- Сделано: артефакт `release-b0386cb.tar.gz`, SHA-256 `90edb6f1…e4f8` совпал (первая загрузка зависла на SSH и была повторена с keepalive); `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-b0386cb.sql.gz` (gzip -t OK); `public_html`/`current` атомарно на `releases/b0386cb` в 16:28.
+- Проверки: основные маршруты `200`, `/test/smil` `404`. Профессиональное заключение кейса «Дмитрий» — `running`, попытка 3 с 16:00 (SSH-запущенный воркер убит хостингом); после `releaseStuck` станет `failed`, владелец заказывает заново из кабинета (K5e) — воркер стартует из веб-запроса.
+- Rollback: `public_html` → `releases/975b653/public`, `current` → `releases/975b653`.
+
 ### 07.K5e — «Заказать заново» для исчерпанных заданий ИИ
 
 - Этап / ветка / commit: этап 07, `codex/07-k5e-requeue-exhausted` от `main` `d286664`.
