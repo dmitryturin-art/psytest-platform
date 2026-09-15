@@ -238,6 +238,15 @@ class Database
      */
     public function beginTransaction(): bool
     {
+        // К началу транзакции соединение могло умереть, пока процесс ждал
+        // ответа модели (wait_timeout на хостинге — 30 секунд, разбор — минуты).
+        // START TRANSACTION на мёртвом соединении падает с 2006, а повтор
+        // внутри транзакции запрещён, поэтому проверяем соединение заранее:
+        // SELECT 1 идёт через execute() и переподключается сам.
+        if (!$this->connection->inTransaction()) {
+            $this->execute('SELECT 1');
+        }
+
         return $this->connection->beginTransaction();
     }
 

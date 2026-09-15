@@ -72,6 +72,18 @@ final class DatabaseReconnectTest extends TestCase
         self::assertGreaterThan(0, (int) $count['c'], 'Запись и чтение после разрыва обязаны работать.');
     }
 
+    public function testATransactionOpenedAfterTheServerClosedTheConnectionStillCommits(): void
+    {
+        // Сценарий обработчика разборов: минуты ожидания модели, затем
+        // markReady открывает транзакцию на уже закрытом сервером соединении.
+        $db = Database::getInstance();
+        $this->killFromOutside($this->connectionId($db));
+
+        self::assertTrue($db->beginTransaction());
+        self::assertSame(1, (int) $db->selectOne('SELECT 1 AS one')['one']);
+        self::assertTrue($db->commit());
+    }
+
     public function testConnectionLossInsideATransactionIsNotHiddenByARetry(): void
     {
         // Переподключение внутри транзакции молча разорвало бы атомарность:
