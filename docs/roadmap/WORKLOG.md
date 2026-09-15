@@ -20,6 +20,15 @@
 
 ## 2026-09-15
 
+### 07.K5a3 / 07.K5a4 — фоновый обработчик отдельным процессом, UX заказа, переподключение к БД перед транзакцией
+
+- Этап / ветка / commit: этап 07, `codex/07-k5a3-background-worker` (`3c12c08`, `bc2a9d0`, `08da74f`, после rebase другие sha) и `codex/07-k5a4-txn-reconnect` (`8560169`, merge #99).
+- Причина (обследование staging 15.09): PHP на Beget — `apache2handler` за nginx, `fastcgi_finish_request` нет, nginx отдаёт 504 через ~60 с; схема «ответить и продолжить в том же процессе» не работала — владелец получил 504 при заказе черновиков, задание зависло `running`, а `markReady` затем упал с «MySQL server has gone away» (транзакция K5a открывалась на соединении, закрытом сервером за минуты ожидания модели; `wait_timeout` 30 с).
+- Сделано: `BackgroundWorkerLauncher` — при заданном `AI_WORKER_PHP_BIN` и доступном `exec` запускает `nohup php bin/generate-ai-reports.php --limit=N` отсоединённым процессом (лог `storage/logs/ai-worker.log`, троттлинг 10 с через `storage/cache/ai-worker.lock`), оба пути заказа (результат посетителя и карточка кейса) делают обычный 303, fallback — прежний `ResponseFinisher`; кабинет: редирект на `#owner-case-ai`, flash внутри раздела, спиннер и опрос статуса раз в 10 с (`public/js/owner-case.js`, owner-only JSON), перезагрузка при завершении, «Повторить» при failed. `Database::beginTransaction()` вне транзакции сначала выполняет `SELECT 1` через путь с переподключением; regression в `DatabaseReconnectTest`.
+- Проверки и evidence: исполнитель — полный `composer test` 511 tests / 29666 assertions OK; analyse/lint/architecture/baseline OK; браузер: мгновенный 303, флеш в разделе, лог воркера с обработкой двух заданий, спиннер, автоперезагрузка, «Повторить»; desktop и 390×844 без console errors. Ведущий: `bin/local-gate.sh` на Docker MySQL 5.7.44 — **пройден** (после rebase на main с K5a4 и G2).
+- Эксплуатация: в `.env` staging задаётся `AI_WORKER_PHP_BIN=/usr/local/bin/php8.3`; cron не обязателен (`CRON_AI_REPORTS.md`). Ручной запуск воркера 15.09 для двух заданий владельца показал разрыв соединения до фикса.
+- Следующий шаг: выкладка; владелец повторяет заказ черновиков; WP8 после публикации v3.
+
 ### 07.G2 — глоссарий для 19 шкал партии S3.2
 
 - Этап / ветка / commit: этап 07, `codex/07-g2-glossary-batch2` (rebase на `main`); commit `609cc92` (после rebase `7ed5e0f`).
