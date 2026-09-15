@@ -133,4 +133,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 31. Выкладка `9d52345` (15.09): выгрузка кейса в PDF и версия для печати, русские статусы; миграций нет. SHA-256 `a7efb2f3837624afa6d9cf11687151d5ce885afe7a1c3ab71b9c446cc6378714` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/63f9057/public` и `current` на `releases/63f9057`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+32. Выкладка `80e8daf` (15.09): партия S3.4 — 75 дополнительных шкал СМИЛ с глоссарием; миграций нет. SHA-256 `5792b93a9754c3c9946667bf4f0571dbea599de7ac8d133e61612d52ed05b25b` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/9d52345/public` и `current` на `releases/9d52345`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
