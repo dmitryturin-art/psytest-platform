@@ -110,4 +110,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 20. Выкладка `be4342e` (15.09) добавила парное прохождение в карточке кейса; миграций нет. SHA-256 `96e154b91bd3738909914a89e8af75b1838af2e930c497fddd1286125581cef1` совпал; dump `backups/pre-deploy-be4342e.sql.gz` проверен.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/869986d/public` и `current` на `releases/869986d`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+21. Выкладка `2bd89f4` (15.09) добавила ссылку в письмо-уведомление, favicon, исправления пары/СМИЛ/PDF и кабинет промптов с выключателем ИИ (`AddPromptVersions`). SHA-256 `e7777b140b63e28773d7f4333b955e7e6be0f953e27f205b6930e8126d4ec33d` совпал; dump `backups/pre-deploy-2bd89f4.sql.gz` проверен.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/be4342e/public` и `current` на `releases/be4342e`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
