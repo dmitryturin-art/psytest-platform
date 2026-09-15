@@ -11,8 +11,10 @@ use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiReportRevisionService;
+use PsyTest\Core\Ai\AiSettings;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
+use PsyTest\Core\Ai\PromptFixtureContext;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\ClientReportNotifier;
 use PsyTest\Core\InvitedCasePresenter;
@@ -464,7 +466,7 @@ final class OwnerController extends BaseController
 
         $reports = new AiReportRepository($this->db);
         $revisions = new AiReportRevisionService($this->db);
-        $registry = PromptRegistry::default();
+        $registry = PromptRegistry::default($this->db);
 
         $kinds = [];
         $anyJob = false;
@@ -496,6 +498,9 @@ final class OwnerController extends BaseController
             'has_jobs' => $anyJob,
             'kinds' => $kinds,
             'owner_context_max' => self::OWNER_CONTEXT_MAX_LENGTH,
+            // Выключатель владельца (07.WP9): заказывать черновики, которые
+            // сразу уйдут в отказ, бессмысленно.
+            'ai_disabled' => !(new AiSettings($this->db))->isAiEnabled(),
         ];
     }
 
@@ -529,8 +534,12 @@ final class OwnerController extends BaseController
 
         $slug = (string) $case['test_slug'];
         $mode = (new ResultPresenter($this->db, $this->sessionManager))->reportMode($session);
-        $registry = PromptRegistry::default();
+        $registry = PromptRegistry::default($this->db);
         $reports = new AiReportRepository($this->db);
+
+        if (!(new AiSettings($this->db))->isAiEnabled()) {
+            $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: ' . AiClient::DISABLED_REASON . '.');
+        }
 
         try {
             $context = (new AiReportContextBuilder($this->sessionManager, $this->moduleLoader))
@@ -586,13 +595,14 @@ final class OwnerController extends BaseController
 
     private function reportGenerator(): AiReportGenerator
     {
-        $settings = AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php');
+        $aiSettings = new AiSettings($this->db);
+        $settings = AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php', $aiSettings);
 
         return new AiReportGenerator(
             new AiReportRepository($this->db),
             new AiReportContextBuilder($this->sessionManager, $this->moduleLoader),
-            PromptRegistry::default(),
-            new AiClient($settings, new CurlTransport()),
+            PromptRegistry::default($this->db),
+            new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings),
         );
     }
 
@@ -1023,5 +1033,441 @@ final class OwnerController extends BaseController
         return is_string($token) && preg_match('/\A[a-f0-9]{64}\z/i', $token) === 1
             ? $token
             : null;
+    }
+
+    // =========================================================== промпты (07.WP9)
+
+    /** Заметка владельца к версии промпта. */
+    public const PROMPT_NOTE_MAX_LENGTH = 255;
+
+    /**
+     * Список методик с разбором и общие настройки ИИ.
+     * GET /admin/prompts
+     */
+    public function prompts(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $registry = PromptRegistry::default($this->db);
+        $settings = new AiSettings($this->db);
+        $groups = [];
+
+        foreach ($registry->keys() as $key) {
+            [$test, $mode, $kind] = array_map('trim', explode('|', $key));
+            $override = $registry->publishedOverride($test, $mode, $kind);
+            $version = $override ?? $registry->manifestVersion($test, $mode, $kind);
+            $entry = $version === null
+                ? null
+                : self::findCatalogEntry($registry->versionCatalog($test, $mode, $kind), $version);
+
+            $groups[$test]['test'] = $test;
+            $groups[$test]['title'] = $this->testTitle($test);
+            $groups[$test]['keys'][] = [
+                'test' => $test,
+                'mode' => $mode,
+                'kind' => $kind,
+                'mode_title' => self::modeTitle($mode),
+                'kind_title' => self::kindTitle($kind),
+                'version' => $version,
+                'source' => $entry['source'] ?? PromptRegistry::SOURCE_FILE,
+                'created_at' => $entry['created_at'] ?? null,
+                'from_manifest' => $override === null,
+            ];
+        }
+
+        echo $this->view->render('owner-prompts', [
+            'flash' => $this->takeFlash(),
+            'groups' => array_values($groups),
+            'ai_enabled' => $settings->isAiEnabled(),
+            'ai_model' => $settings->modelOverride(),
+            'env_model' => AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php')->model,
+            'models' => $this->modelCatalog(),
+        ]);
+    }
+
+    /**
+     * Выключатель разборов и модель.
+     * POST /admin/prompts/settings
+     */
+    public function savePromptSettings(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $settings = new AiSettings($this->db);
+        $settings->setAiEnabled(($_POST['ai_enabled'] ?? null) === '1');
+
+        $model = $_POST['ai_model'] ?? '';
+        $settings->setModelOverride(is_string($model) ? $model : '');
+
+        $this->setFlash(['type' => 'success', 'message' => 'Настройки ИИ сохранены.']);
+        $this->redirect('/admin/prompts');
+    }
+
+    /**
+     * Карточка одного ключа реестра.
+     * GET /admin/prompts/{test}/{mode}/{kind}
+     */
+    public function promptKey(string $test, string $mode, string $kind): void
+    {
+        $view = $this->promptKeyView($test, $mode, $kind);
+        if ($view === null) {
+            return;
+        }
+
+        echo $this->view->render('owner-prompt-key', $view);
+    }
+
+    /**
+     * Предпросмотр запроса на синтетическом контексте — без вызова провайдера.
+     * GET /admin/prompts/{test}/{mode}/{kind}/preview
+     */
+    public function promptPreview(string $test, string $mode, string $kind): void
+    {
+        $view = $this->promptKeyView($test, $mode, $kind);
+        if ($view === null) {
+            return;
+        }
+
+        $view['preview'] = $this->buildPreview($view['selected'], $test, $mode);
+
+        echo $this->view->render('owner-prompt-key', $view);
+    }
+
+    /**
+     * Новая версия промпта из кабинета.
+     * POST /admin/prompts/{test}/{mode}/{kind}/versions
+     */
+    public function createPromptVersion(string $test, string $mode, string $kind): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!$this->promptKeyExists($test, $mode, $kind)) {
+            $this->notFound();
+
+            return;
+        }
+
+        $text = $_POST['text'] ?? '';
+        $note = $_POST['note'] ?? '';
+
+        if (!is_string($text) || trim($text) === '') {
+            $this->promptFlashBack($test, $mode, $kind, false, 'Версия не сохранена: текст промпта пуст.');
+        }
+        if (!is_string($note) || mb_strlen(trim($note)) > self::PROMPT_NOTE_MAX_LENGTH) {
+            $this->promptFlashBack($test, $mode, $kind, false, 'Версия не сохранена: заметка длиннее ' . self::PROMPT_NOTE_MAX_LENGTH . ' символов.');
+        }
+
+        try {
+            $version = PromptRegistry::default($this->db)->createOwnerVersion(
+                $test,
+                $mode,
+                $kind,
+                $text,
+                $note,
+                ($_POST['allows_owner_context'] ?? null) === '1',
+            );
+        } catch (\RuntimeException $e) {
+            $this->promptFlashBack($test, $mode, $kind, false, 'Версия не сохранена: ' . $e->getMessage());
+        }
+
+        $this->setFlash([
+            'type' => 'success',
+            'message' => "Версия {$version} сохранена. Она ещё не опубликована — новые заказы по-прежнему идут по текущей версии.",
+        ]);
+        $this->redirect($this->promptKeyPath($test, $mode, $kind) . '?version=' . $version);
+    }
+
+    /**
+     * Опубликовать версию для новых заказов.
+     * POST /admin/prompts/{test}/{mode}/{kind}/publish
+     */
+    public function publishPromptVersion(string $test, string $mode, string $kind): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!$this->promptKeyExists($test, $mode, $kind)) {
+            $this->notFound();
+
+            return;
+        }
+
+        if (($_POST['confirm_publish'] ?? null) !== '1') {
+            $this->promptFlashBack($test, $mode, $kind, false, 'Версия не опубликована: нужно подтвердить, что новые заказы пойдут по ней.');
+        }
+
+        $version = (int) ($_POST['version'] ?? 0);
+
+        try {
+            PromptRegistry::default($this->db)->publishVersion($test, $mode, $kind, $version);
+        } catch (\RuntimeException $e) {
+            $this->promptFlashBack($test, $mode, $kind, false, 'Версия не опубликована: ' . $e->getMessage());
+        }
+
+        $this->promptFlashBack($test, $mode, $kind, true, "Версия {$version} опубликована. Уже поставленные задания не изменились — у них свой снимок промпта.");
+    }
+
+    /**
+     * Вернуться к версии из manifest.json.
+     * POST /admin/prompts/{test}/{mode}/{kind}/reset
+     */
+    public function resetPromptVersion(string $test, string $mode, string $kind): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!$this->promptKeyExists($test, $mode, $kind)) {
+            $this->notFound();
+
+            return;
+        }
+
+        PromptRegistry::default($this->db)->resetToManifest($test, $mode, $kind);
+        $this->promptFlashBack($test, $mode, $kind, true, 'Ключ возвращён к версии из manifest.json.');
+    }
+
+    /**
+     * Пробный вызов провайдера на синтетическом контексте.
+     * POST /admin/prompts/{test}/{mode}/{kind}/trial
+     *
+     * Результат показывается на странице и нигде не сохраняется: это проверка
+     * формулировки, а не разбор чьего-то результата.
+     */
+    public function promptTrial(string $test, string $mode, string $kind): void
+    {
+        $view = $this->promptKeyView($test, $mode, $kind);
+        if ($view === null) {
+            return;
+        }
+
+        if (($_POST['confirm_trial'] ?? null) !== '1') {
+            $this->promptFlashBack($test, $mode, $kind, false, 'Пробный вызов не сделан: нужно подтвердить обращение к провайдеру.');
+        }
+
+        $aiSettings = new AiSettings($this->db);
+        if (!$aiSettings->isAiEnabled()) {
+            $this->promptFlashBack($test, $mode, $kind, false, AiClient::DISABLED_REASON . '.');
+        }
+
+        /** @var Prompt $prompt */
+        $prompt = $view['selected'];
+        $preview = $this->buildPreview($prompt, $test, $mode);
+        if ($preview['error'] !== null) {
+            $this->promptFlashBack($test, $mode, $kind, false, 'Пробный вызов не сделан: ' . $preview['error']);
+        }
+
+        $trial = ['text' => null, 'error' => null, 'model' => null];
+
+        try {
+            $completion = $this->trialClient($aiSettings)->complete(
+                new Prompt(
+                    test: $prompt->test,
+                    mode: $prompt->mode,
+                    kind: $prompt->kind,
+                    version: $prompt->version,
+                    // Пробный вызов делается и по неопубликованной версии: в
+                    // этом он и нужен — проверить текст до публикации.
+                    status: Prompt::STATUS_PUBLISHED,
+                    text: $prompt->text,
+                    allowsOwnerContext: $prompt->allowsOwnerContext,
+                    source: $prompt->source,
+                ),
+                $preview['context'],
+            );
+            $trial['text'] = ReportMarkdown::toHtml($completion->text);
+            $trial['model'] = $completion->servedModel;
+        } catch (AiProviderException $e) {
+            $trial['error'] = $e->getMessage();
+        }
+
+        $view['preview'] = $preview;
+        $view['trial'] = $trial;
+
+        echo $this->view->render('owner-prompt-key', $view);
+    }
+
+    private function trialClient(AiSettings $aiSettings): AiClient
+    {
+        return new AiClient(
+            AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php', $aiSettings),
+            new CurlTransport(),
+            ownerSettings: $aiSettings,
+        );
+    }
+
+    /**
+     * Общие данные карточки ключа; null — ответ уже отдан (404 или редирект).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function promptKeyView(string $test, string $mode, string $kind): ?array
+    {
+        if (!$this->requireOwner()) {
+            return null;
+        }
+        if (!$this->promptKeyExists($test, $mode, $kind)) {
+            $this->notFound();
+
+            return null;
+        }
+
+        $registry = PromptRegistry::default($this->db);
+        $catalog = $registry->versionCatalog($test, $mode, $kind);
+        $override = $registry->publishedOverride($test, $mode, $kind);
+        $publishedVersion = $override ?? $registry->manifestVersion($test, $mode, $kind);
+
+        $requested = $_GET['version'] ?? null;
+        $selectedVersion = is_string($requested) && preg_match('/\A\d{1,6}\z/', $requested) === 1
+            ? (int) $requested
+            : (int) $publishedVersion;
+
+        $selected = $registry->version($test, $mode, $kind, $selectedVersion);
+        if ($selected === null) {
+            $selectedVersion = (int) $publishedVersion;
+            $selected = $registry->version($test, $mode, $kind, $selectedVersion);
+        }
+
+        if ($selected === null) {
+            $this->notFound();
+
+            return null;
+        }
+
+        return [
+            'flash' => $this->takeFlash(),
+            'test' => $test,
+            'mode' => $mode,
+            'kind' => $kind,
+            'test_title' => $this->testTitle($test),
+            'mode_title' => self::modeTitle($mode),
+            'kind_title' => self::kindTitle($kind),
+            'versions' => $catalog,
+            'published_version' => $publishedVersion,
+            'from_manifest' => $override === null,
+            'manifest_version' => $registry->manifestVersion($test, $mode, $kind),
+            'selected' => $selected,
+            'selected_version' => $selectedVersion,
+            'note_max' => self::PROMPT_NOTE_MAX_LENGTH,
+            'ai_enabled' => (new AiSettings($this->db))->isAiEnabled(),
+            'preview' => null,
+            'trial' => null,
+        ];
+    }
+
+    /**
+     * Запрос к модели, собранный на синтетическом контексте методики.
+     *
+     * @return array{system: string, user: string|null, context: array<string, mixed>, error: string|null}
+     */
+    private function buildPreview(Prompt $prompt, string $test, string $mode): array
+    {
+        $module = $this->moduleLoader->getModule($test);
+
+        if ($module === null) {
+            return ['system' => $prompt->text, 'user' => null, 'context' => [], 'error' => "Методика «{$test}» не установлена."];
+        }
+
+        try {
+            $context = PromptFixtureContext::build($module, $mode);
+        } catch (\Throwable $e) {
+            return ['system' => $prompt->text, 'user' => null, 'context' => [], 'error' => $e->getMessage()];
+        }
+
+        return [
+            'system' => $prompt->text,
+            'user' => json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR),
+            'context' => $context,
+            'error' => null,
+        ];
+    }
+
+    private function promptKeyExists(string $test, string $mode, string $kind): bool
+    {
+        return in_array(Prompt::keyFor($test, $mode, $kind), PromptRegistry::default($this->db)->keys(), true);
+    }
+
+    private function promptKeyPath(string $test, string $mode, string $kind): string
+    {
+        return '/admin/prompts/' . rawurlencode($test) . '/' . rawurlencode($mode) . '/' . rawurlencode($kind);
+    }
+
+    private function promptFlashBack(string $test, string $mode, string $kind, bool $ok, string $message): never
+    {
+        $this->setFlash(['type' => $ok ? 'success' : 'error', 'message' => $message]);
+        $this->redirect($this->promptKeyPath($test, $mode, $kind));
+    }
+
+    /**
+     * @param list<array{version: int, source: string, created_at: string|null, note: string|null}> $catalog
+     *
+     * @return array{version: int, source: string, created_at: string|null, note: string|null}|null
+     */
+    private static function findCatalogEntry(array $catalog, int $version): ?array
+    {
+        foreach ($catalog as $entry) {
+            if ($entry['version'] === $version) {
+                return $entry;
+            }
+        }
+
+        return null;
+    }
+
+    private function testTitle(string $slug): string
+    {
+        $module = $this->moduleLoader->getModule($slug);
+
+        return $module === null ? $slug : (string) ($module->getMetadata()['name'] ?? $slug);
+    }
+
+    private static function modeTitle(string $mode): string
+    {
+        return match ($mode) {
+            'individual' => 'индивидуальный',
+            'pair' => 'парный',
+            default => $mode,
+        };
+    }
+
+    private static function kindTitle(string $kind): string
+    {
+        return match ($kind) {
+            Prompt::KIND_CLEAR => 'понятный разбор',
+            Prompt::KIND_PROFESSIONAL => 'профессиональное заключение',
+            default => $kind,
+        };
+    }
+
+    /**
+     * Каталог моделей провайдера для подсказки; сеть здесь не обязана работать.
+     *
+     * @return list<array{id: string, name: string, free: bool}>
+     */
+    private function modelCatalog(): array
+    {
+        $settings = AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php', new AiSettings($this->db));
+        if (!$settings->isConfigured()) {
+            return [];
+        }
+
+        try {
+            $models = (new AiClient($settings, new CurlTransport()))->models();
+        } catch (\Throwable) {
+            // Список моделей — удобство, а не условие работы страницы:
+            // недоступный провайдер не должен ломать редактор промптов.
+            return [];
+        }
+
+        $catalog = [];
+        foreach ($models as $model) {
+            $catalog[] = ['id' => $model->id, 'name' => $model->name, 'free' => $model->isFree];
+        }
+
+        return $catalog;
     }
 }

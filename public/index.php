@@ -113,6 +113,14 @@ $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/revisions', [O
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/restore', [OwnerController::class, 'restoreCaseReportRevision']);
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/publish', [OwnerController::class, 'publishCaseReport']);
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/unpublish', [OwnerController::class, 'unpublishCaseReport']);
+$router->get('/admin/prompts', [OwnerController::class, 'prompts']);
+$router->post('/admin/prompts/settings', [OwnerController::class, 'savePromptSettings']);
+$router->get('/admin/prompts/{test}/{mode}/{kind}', [OwnerController::class, 'promptKey']);
+$router->get('/admin/prompts/{test}/{mode}/{kind}/preview', [OwnerController::class, 'promptPreview']);
+$router->post('/admin/prompts/{test}/{mode}/{kind}/versions', [OwnerController::class, 'createPromptVersion']);
+$router->post('/admin/prompts/{test}/{mode}/{kind}/publish', [OwnerController::class, 'publishPromptVersion']);
+$router->post('/admin/prompts/{test}/{mode}/{kind}/reset', [OwnerController::class, 'resetPromptVersion']);
+$router->post('/admin/prompts/{test}/{mode}/{kind}/trial', [OwnerController::class, 'promptTrial']);
 $router->get('/admin/clients', [OwnerController::class, 'clients']);
 $router->post('/admin/clients/create', [OwnerController::class, 'createClient']);
 $router->get('/admin/clients/{clientId}', [OwnerController::class, 'viewClient']);

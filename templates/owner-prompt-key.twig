@@ -1,0 +1,125 @@
+{% extends "layout.twig" %}
+{# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
+{% set ownerArea = true %}
+{% set key_path = basePath ~ '/admin/prompts/' ~ test ~ '/' ~ mode ~ '/' ~ kind %}
+
+{% block title %}{{ test_title }} — {{ kind_title }} — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">Приглашения</a><a class="nav-link" href="{{ basePath }}/admin/prompts">К списку промптов</a></nav>{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-prompt-title">
+    <p class="owner-panel-eyebrow">{{ test_title }}</p>
+    <h1 id="owner-prompt-title">{{ kind_title|capitalize }}, {{ mode_title }}</h1>
+    <p class="owner-panel-intro">
+        Сейчас новые заказы идут по версии {{ published_version }}{% if from_manifest %} — как задано в manifest.json{% endif %}.
+        Уже поставленные задания не меняются: у каждого свой снимок промпта.
+    </p>
+
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
+    {% if not ai_enabled %}
+        <p class="owner-notice owner-notice--error" role="status">ИИ-разборы выключены в настройках. Редактировать промпты можно, пробный вызов провайдера — нет.</p>
+    {% endif %}
+
+    <section class="owner-invites" aria-labelledby="owner-prompt-versions-title">
+        <h2 id="owner-prompt-versions-title">Версии</h2>
+        <ul class="owner-invite-list">
+            {% for item in versions %}
+            <li>
+                <p>
+                    <strong><a href="{{ key_path }}?version={{ item.version }}">Версия {{ item.version }}</a></strong>
+                    — {{ item.source == 'owner' ? 'правка из кабинета' : 'файл в репозитории' }}{% if item.version == published_version %}, опубликована{% endif %}{% if item.version == selected_version %}, открыта сейчас{% endif %}.
+                </p>
+                {% if item.note %}<p>{{ item.note }}</p>{% endif %}
+                {% if item.created_at %}<small>Сохранена {{ item.created_at|date("d.m.Y H:i") }}</small>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+
+        <form method="post" action="{{ key_path }}/publish" class="owner-form">
+            {{ csrf_field() }}
+            <input type="hidden" name="version" value="{{ selected_version }}">
+            <label class="owner-toggle">
+                <input type="checkbox" name="confirm_publish" value="1" required>
+                Понимаю: новые заказы будут использовать версию {{ selected_version }}; уже поставленные задания не меняются — у них снимок.
+            </label>
+            <button type="submit" class="btn btn-primary">Опубликовать эту версию</button>
+        </form>
+
+        <form method="post" action="{{ key_path }}/reset" class="owner-action-form">
+            {{ csrf_field() }}
+            <button type="submit" class="btn btn-sm">Вернуть к manifest (версия {{ manifest_version }})</button>
+        </form>
+    </section>
+
+    <section class="owner-invites" aria-labelledby="owner-prompt-text-title">
+        <h2 id="owner-prompt-text-title">Текст версии {{ selected_version }}</h2>
+        <p class="owner-help">Источник: {{ selected.source ?: 'не указан' }}. Клинический контекст специалиста {{ selected.allowsOwnerContext ? 'принимается' : 'не принимается' }}.</p>
+        <pre class="owner-prompt-text">{{ selected.text }}</pre>
+
+        <p><a class="btn btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}">Предпросмотр запроса на фикстуре</a></p>
+
+        <form method="post" action="{{ key_path }}/trial" class="owner-form">
+            {{ csrf_field() }}
+            <input type="hidden" name="version" value="{{ selected_version }}">
+            <label class="owner-toggle">
+                <input type="checkbox" name="confirm_trial" value="1" required>
+                Подтверждаю обращение к внешнему провайдеру с синтетическим набором ответов. Результат нигде не сохраняется.
+            </label>
+            <button type="submit" class="btn btn-sm"{% if not ai_enabled %} disabled{% endif %}>Пробный вызов на fixture</button>
+        </form>
+    </section>
+
+    {% if preview %}
+    <section class="owner-invites" aria-labelledby="owner-prompt-preview-title">
+        <h2 id="owner-prompt-preview-title">Предпросмотр запроса</h2>
+        {% if preview.error %}
+            <p class="owner-notice owner-notice--error" role="alert">{{ preview.error }}</p>
+        {% else %}
+            <p class="owner-help">
+                Ровно то, что уйдёт модели. Ответы придуманы этой страницей по схеме методики — ни одной реальной сессии здесь нет.
+                Провайдер при предпросмотре не вызывается.
+            </p>
+            <h3>system</h3>
+            <pre class="owner-prompt-text">{{ preview.system }}</pre>
+            <h3>user</h3>
+            <pre class="owner-prompt-text">{{ preview.user }}</pre>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if trial %}
+    <section class="owner-invites" aria-labelledby="owner-prompt-trial-title">
+        <h2 id="owner-prompt-trial-title">Пробный вызов</h2>
+        {% if trial.error %}
+            <p class="owner-notice owner-notice--error" role="alert">{{ trial.error }}</p>
+        {% else %}
+            <p class="owner-help">Ответ модели{% if trial.model %} ({{ trial.model }}){% endif %}. Он не сохранён и исчезнет при перезагрузке страницы.</p>
+            <div class="ai-report__body">{{ trial.text|raw }}</div>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    <section class="owner-invites" aria-labelledby="owner-prompt-new-title">
+        <h2 id="owner-prompt-new-title">Новая версия</h2>
+        <p class="owner-help">Основа — текст версии {{ selected_version }}. Сохранение не публикует: опубликовать нужно отдельной кнопкой.</p>
+        <form method="post" action="{{ key_path }}/versions" class="owner-form">
+            {{ csrf_field() }}
+            <label for="prompt-text">Текст промпта</label>
+            <textarea id="prompt-text" name="text" rows="18" required>{{ selected.text }}</textarea>
+
+            <label for="prompt-note">Заметка о правке</label>
+            <input type="text" id="prompt-note" name="note" maxlength="{{ note_max }}">
+
+            <label class="owner-toggle">
+                <input type="checkbox" name="allows_owner_context" value="1"{% if selected.allowsOwnerContext %} checked{% endif %}>
+                Принимает клинический контекст специалиста
+            </label>
+
+            <button type="submit" class="btn btn-primary">Сохранить как новую версию</button>
+        </form>
+    </section>
+</section>
+{% endblock %}
