@@ -50,7 +50,7 @@
         <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
     {% endif %}
     <dl class="owner-case-details">
-        <div><dt>Статус</dt><dd>{{ case.status }}</dd></div>
+        <div><dt>Статус</dt><dd>{{ case.status|status_label }}</dd></div>
         <div><dt>Открыто</dt><dd>{{ case.claimed_at|date("d.m.Y H:i") }}</dd></div>
         <div><dt>Завершено</dt><dd>{% if case.completed_at %}{{ case.completed_at|date("d.m.Y H:i") }}{% else %}ещё нет{% endif %}</dd></div>
         {% if case.client_label %}<div><dt>Клиент</dt><dd><a href="{{ basePath }}/admin/clients/{{ case.client_id }}">{{ case.client_label }}</a></dd></div>{% endif %}
