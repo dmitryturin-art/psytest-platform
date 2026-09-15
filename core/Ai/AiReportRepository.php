@@ -71,12 +71,23 @@ final class AiReportRepository
             }
 
             // Попытки исчерпаны: автоматически такое задание не оживает (R3),
-            // но специалист может явно заказать его заново — счётчик попыток
-            // обнуляется, снимок входа остаётся прежним.
+            // но специалист может явно заказать его заново. Это новый заказ, а
+            // не повтор: счётчик обнуляется, а снимок входа пересобирается с
+            // текущим результатом, глоссарием и опубликованным промптом — иначе
+            // модель получала бы данные многочасовой давности (случай 15.09:
+            // снимок без глоссария второй партии).
             if ($existing['status'] === self::STATUS_FAILED && $allowExhaustedRetry) {
                 $this->db->update(
                     'ai_reports',
-                    ['status' => self::STATUS_PENDING, 'failure_reason' => null, 'attempts' => 0],
+                    [
+                        'status' => self::STATUS_PENDING,
+                        'failure_reason' => null,
+                        'attempts' => 0,
+                        'prompt_key' => $prompt->key(),
+                        'prompt_version' => $prompt->version,
+                        'context_snapshot' => self::encodeSnapshot($context),
+                        'prompt_snapshot' => self::encodeSnapshot($prompt->toSnapshot()),
+                    ],
                     'id = ?',
                     [$existing['id']],
                 );
