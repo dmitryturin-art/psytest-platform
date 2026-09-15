@@ -17,18 +17,22 @@ use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptFixtureContext;
 use PsyTest\Core\Ai\PromptRegistry;
+use PsyTest\Core\CaseExportPresenter;
 use PsyTest\Core\ClientReportNotifier;
 use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\OwnerDashboardAuthenticator;
+use PsyTest\Core\PDFGenerator;
 use PsyTest\Core\ReportMarkdown;
 use PsyTest\Core\ResponseFinisher;
 use PsyTest\Core\ResultPresenter;
+use PsyTest\Core\ResultSectionRenderer;
 use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\Security;
 use PsyTest\Core\SessionLifecycleService;
 use PsyTest\Core\TestInviteService;
 use PsyTest\Core\TherapistCaseService;
 use PsyTest\Core\TherapistClientService;
+use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\TestModuleInterface;
 
 /**
@@ -788,6 +792,126 @@ final class OwnerController extends BaseController
         (new AiReportRevisionService($this->db))->unpublish($reportId);
         $this->setFlash(['type' => 'success', 'message' => 'Разбор снят с публикации. Клиент снова видит ожидание.']);
         $this->redirect('/admin/invited-case/' . $sessionId . '/reports/' . $reportId . '/edit');
+    }
+
+    /**
+     * Выгрузка кейса в PDF.
+     * GET /admin/invited-case/{sessionId}/export.pdf
+     *
+     * Документ собирается на лету и никуда не сохраняется: файл на диске
+     * пережил бы удаление кейса и стал бы копией клинических данных вне
+     * lifecycle-политики (PRODUCT_RULES §11). Поэтому генератор вызывается
+     * без записи в storage, а байты уходят прямо в ответ.
+     */
+    public function exportCasePdf(string $sessionId): void
+    {
+        $prepared = $this->caseExport($sessionId);
+        if ($prepared === null) {
+            return;
+        }
+
+        [$document, $module] = $prepared;
+
+        $html = $this->view->render('owner-case-export-pdf', [
+            'document' => $document,
+            'sections_html' => $this->titledSections($document['sections']),
+            // График совмещённых профилей — SVG: DomPDF его не рисует и
+            // вываливает наружу голые подписи вместе с подсказкой про курсор.
+            // В PDF остаётся таблица сравнения, сам график живёт на версии для
+            // печати, где браузер рисует тот же SVG.
+            'pair_html' => $document['pair'] === null
+                ? ''
+                : $this->titledSections(array_values(array_filter(
+                    $document['pair']['sections'],
+                    static fn ($section): bool => $section->type !== ResultSection::TYPE_PAIR_CHART,
+                ))),
+        ]);
+
+        // Portrait для всего документа: заключение и разбор — сплошной текст,
+        // а таблицы промптами ограничены пятью колонками и помещаются.
+        $pdf = (new PDFGenerator())->generate($html, 'case_export.pdf', false);
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="case_' . $module . '_' . date('YmdHis') . '.pdf"');
+        header('Content-Length: ' . strlen($pdf));
+        echo $pdf;
+        exit;
+    }
+
+    /**
+     * Версия кейса для печати.
+     * GET /admin/invited-case/{sessionId}/print
+     *
+     * Тот же документ страницей браузера: сохранение в PDF или Word делает сам
+     * браузер, и специалисту не нужен отдельный конвертер.
+     */
+    public function exportCasePrint(string $sessionId): void
+    {
+        $prepared = $this->caseExport($sessionId);
+        if ($prepared === null) {
+            return;
+        }
+
+        // Страница несёт клинический материал: в индекс она не попадает ни
+        // при какой ошибке конфигурации.
+        header('X-Robots-Tag: noindex, nofollow');
+
+        echo $this->view->render('owner-case-export', [
+            'document' => $prepared[0],
+            'case_id' => $sessionId,
+        ]);
+    }
+
+    /**
+     * Секции результата для PDF вместе с их заголовками.
+     *
+     * `ResultSectionRenderer` рендерит только блоки: в PDF результата заголовки
+     * секций и не показывались, и «Основные шкалы» от «Дополнительных» было не
+     * отличить. Сам рендерер здесь не меняется — заголовок добавляется рядом,
+     * чтобы PDF результата остался прежним.
+     *
+     * @param list<\PsyTest\Modules\ResultSection> $sections
+     */
+    private function titledSections(array $sections): string
+    {
+        $renderer = ResultSectionRenderer::forView($this->view);
+        $html = '';
+        foreach ($sections as $section) {
+            if ($section->title !== null && $section->title !== '') {
+                $html .= '<h3>' . htmlspecialchars($section->title, ENT_QUOTES) . '</h3>';
+            }
+            $html .= $renderer->renderToHtml([$section]);
+        }
+
+        return $html;
+    }
+
+    /**
+     * Общая подготовка выгрузки: доступ, модуль и собранный документ.
+     *
+     * @return array{0: array<string, mixed>, 1: string}|null
+     */
+    private function caseExport(string $sessionId): ?array
+    {
+        $case = $this->ownedCase($sessionId);
+        if ($case === null) {
+            return null;
+        }
+
+        $module = $this->moduleLoader->getModule((string) $case['test_slug']);
+        if ($module === null) {
+            $this->notFound();
+
+            return null;
+        }
+
+        $document = (new CaseExportPresenter($this->db, $this->sessionManager))->build(
+            $case,
+            $module,
+            CaseExportPresenter::options($_GET),
+        );
+
+        return [$document, (string) $case['test_slug']];
     }
 
     /**
