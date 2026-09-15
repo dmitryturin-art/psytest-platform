@@ -119,4 +119,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 24. Выкладка `33dbdc4` (15.09): фоновый воркер отдельным процессом (в `.env` добавлен `AI_WORKER_PHP_BIN=/usr/local/bin/php8.3`; PHP web — apache2handler без `fastcgi_finish_request`), переподключение к БД перед транзакцией, глоссарий 35 шкал, свёрнутая анкета; миграций нет. SHA-256 `790ae8388c7032408a5789620a7f048c40f22741373cf1712f41474c6140d07b` совпал; dump `backups/pre-deploy-33dbdc4.sql.gz` проверен.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/8d3ccfa/public` и `current` на `releases/8d3ccfa`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+25. Выкладка `975b653` (15.09): визуальный редактор разбора (Toast UI локально в `public/vendor/`), перезагрузка и автообновление статуса; миграций нет. SHA-256 `9366fa96fa8b1c7ffa70ab24ee8c57d0dd58b2df5d37c06f8dfc4bd82fe39285` совпал; dump `backups/pre-deploy-975b653.sql.gz` проверен. Ручной запуск воркера по SSH — только через `setsid nohup …`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/33dbdc4/public` и `current` на `releases/33dbdc4`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.

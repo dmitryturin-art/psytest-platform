@@ -20,6 +20,14 @@
 
 ## 2026-09-15
 
+### 08.B15 — staging-выкладка K5d (`975b653`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-975b653`; deployed runtime `975b653` (merge PR #103). Миграций нет.
+- Сделано: артефакт `release-975b653.tar.gz`, SHA-256 `9366fa96…9285` совпал; `.env` из прежнего релиза (с `AI_WORKER_PHP_BIN`); pre-deploy dump `backups/pre-deploy-975b653.sql.gz` (gzip -t OK); `public_html`/`current` атомарно на `releases/975b653`.
+- Проверки: HTTPS основные маршруты `200`, `/vendor/toastui-editor/toastui-editor-all.min.js` `200`, `/test/smil` `404`.
+- Наблюдение: воркер, запущенный вручную по SSH через `nohup … &`, дважды умирал при закрытии SSH-сессии (задания оставались `running` до `releaseStuck`); воркер, запущенный из веб-запроса лаунчером, отработал штатно (clear ready за 219 с). Для ручных запусков по SSH использовать `setsid`.
+- Rollback: `public_html` → `releases/33dbdc4/public`, `current` → `releases/33dbdc4`.
+
 ### 07.K5d — визуальный редактор разбора (Toast UI) и обновление статуса в карточке кейса
 
 - Этап / ветка / commit: этап 07, `codex/07-k5d-wysiwyg-editor` от `main` `248cddf`; commits `8a9f0f4` (vendor), `17fec09`, `33784a2`.
