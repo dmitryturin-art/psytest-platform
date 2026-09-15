@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
 
 /**
- * Независимые reference cases партии 05.S3.1 (WP5).
+ * Независимые reference cases партий 05.S3.1 и 05.S3.2 (WP5).
  *
- * Ожидаемые значения в tests/fixtures/smil-additional-batch1-reference.json
+ * Ожидаемые значения в tests/fixtures/smil-additional-reference.json
  * посчитаны bin/smil-additional-reference.py прямо по транскрипции источника,
  * вне PHP и вне runtime-файла шкал. Self-generated fixture не считается
  * доказательством, поэтому этот тест — сравнение двух независимых реализаций.
@@ -30,7 +30,7 @@ final class AdditionalScalesReferenceTest extends TestCase
         $root = dirname(__DIR__, 2);
 
         $this->fixture = json_decode(
-            (string) file_get_contents($root . '/tests/fixtures/smil-additional-batch1-reference.json'),
+            (string) file_get_contents($root . '/tests/fixtures/smil-additional-reference.json'),
             true,
             512,
             JSON_THROW_ON_ERROR
@@ -118,7 +118,13 @@ final class AdditionalScalesReferenceTest extends TestCase
         self::assertStringContainsString('transcription', $provenance['input']);
         self::assertStringContainsString('вне PHP', $provenance['independence']);
         self::assertNotEmpty($provenance['formula']);
-        self::assertCount(16, $provenance['entries']);
+        self::assertCount(36, $provenance['entries']);
+        self::assertCount(36, $provenance['batches']);
+        self::assertSame(
+            ['05.S3.1' => 16, '05.S3.2' => 20],
+            array_count_values($provenance['batches']),
+            'эталон обязан покрывать обе партии целиком'
+        );
     }
 
     /**

@@ -1,5 +1,5 @@
 {
-  "title": "Независимые эталоны дополнительных шкал СМИЛ, партия 05.S3.1",
+  "title": "Независимые эталоны дополнительных шкал СМИЛ, партии 05.S3.1 и 05.S3.2",
   "generated_by": "bin/smil-additional-reference.py",
   "provenance": {
     "source": "Л.Н. Собчик. Стандартизированный многофакторный метод исследования личности. СПб.: Речь, 2003. Приложение, PDF-стр. 197–216 (печатные 195–214) скана в source/",
@@ -21,7 +21,65 @@
       "77": "OH",
       "92": "Es",
       "171": "R",
-      "174": "Re"
+      "174": "Re",
+      "37": "CNV",
+      "46": "GLM",
+      "48": "DNS",
+      "60": "EGC",
+      "72": "PHC",
+      "73": "HDC",
+      "75": "HLT",
+      "80": "HYP",
+      "83": "HYS",
+      "84": "ARP",
+      "87": "SOM",
+      "89": "HYO",
+      "90": "HYL",
+      "93": "IMP",
+      "97": "ANC",
+      "98": "GLT",
+      "129": "NEU",
+      "131": "NOC",
+      "134": "NUC",
+      "193": "SOR"
+    },
+    "batches": {
+      "1": "05.S3.1",
+      "2": "05.S3.1",
+      "6": "05.S3.1",
+      "39": "05.S3.1",
+      "41": "05.S3.1",
+      "42": "05.S3.1",
+      "43": "05.S3.1",
+      "49": "05.S3.1",
+      "51": "05.S3.1",
+      "53": "05.S3.1",
+      "57": "05.S3.1",
+      "62": "05.S3.1",
+      "77": "05.S3.1",
+      "92": "05.S3.1",
+      "171": "05.S3.1",
+      "174": "05.S3.1",
+      "37": "05.S3.2",
+      "46": "05.S3.2",
+      "48": "05.S3.2",
+      "60": "05.S3.2",
+      "72": "05.S3.2",
+      "73": "05.S3.2",
+      "75": "05.S3.2",
+      "80": "05.S3.2",
+      "83": "05.S3.2",
+      "84": "05.S3.2",
+      "87": "05.S3.2",
+      "89": "05.S3.2",
+      "90": "05.S3.2",
+      "93": "05.S3.2",
+      "97": "05.S3.2",
+      "98": "05.S3.2",
+      "129": "05.S3.2",
+      "131": "05.S3.2",
+      "134": "05.S3.2",
+      "193": "05.S3.2"
     },
     "formula": "raw = число ответов «верно» по списку true плюс «неверно» по списку false («не знаю» = 2 и пропуски не считаются); T = 50 + 10 * (raw - M) / sigma по нормам пола, округление до целого (половинки от нуля, как PHP round), зажим [20, 100].",
     "answer_encoding": {
@@ -735,6 +793,166 @@
         "sigma": 2.76,
         "max_raw": 32,
         "answered": 32
+      },
+      "CNV": {
+        "raw": 26,
+        "t": 20.0,
+        "M": 54.75,
+        "sigma": 7.74,
+        "max_raw": 77,
+        "answered": 77
+      },
+      "GLM": {
+        "raw": 8,
+        "t": 83.0,
+        "M": 2.65,
+        "sigma": 1.63,
+        "max_raw": 10,
+        "answered": 10
+      },
+      "DNS": {
+        "raw": 1,
+        "t": 22.0,
+        "M": 12.52,
+        "sigma": 4.18,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "EGC": {
+        "raw": 3,
+        "t": 20.0,
+        "M": 12.02,
+        "sigma": 3.02,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "PHC": {
+        "raw": 24,
+        "t": 100.0,
+        "M": 7.95,
+        "sigma": 2.86,
+        "max_raw": 55,
+        "answered": 55
+      },
+      "HDC": {
+        "raw": 19,
+        "t": 100.0,
+        "M": 9.02,
+        "sigma": 1.08,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "HLT": {
+        "raw": 2,
+        "t": 49.0,
+        "M": 2.14,
+        "sigma": 2.32,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "HYP": {
+        "raw": 6,
+        "t": 96.0,
+        "M": 0.89,
+        "sigma": 1.1,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "HYS": {
+        "raw": 3,
+        "t": 29.0,
+        "M": 8.34,
+        "sigma": 2.6,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "ARP": {
+        "raw": 0,
+        "t": 31.0,
+        "M": 3.09,
+        "sigma": 1.62,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "SOM": {
+        "raw": 6,
+        "t": 68.0,
+        "M": 2.37,
+        "sigma": 2.0,
+        "max_raw": 17,
+        "answered": 17
+      },
+      "HYO": {
+        "raw": 11,
+        "t": 67.0,
+        "M": 4.85,
+        "sigma": 3.54,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "HYL": {
+        "raw": 1,
+        "t": 21.0,
+        "M": 13.35,
+        "sigma": 4.27,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "IMP": {
+        "raw": 19,
+        "t": 84.0,
+        "M": 7.12,
+        "sigma": 3.45,
+        "max_raw": 21,
+        "answered": 21
+      },
+      "ANC": {
+        "raw": 31,
+        "t": 100.0,
+        "M": 6.0,
+        "sigma": 3.98,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "GLT": {
+        "raw": 20,
+        "t": 30.0,
+        "M": 27.0,
+        "sigma": 3.42,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "NEU": {
+        "raw": 17,
+        "t": 89.0,
+        "M": 4.79,
+        "sigma": 3.14,
+        "max_raw": 30,
+        "answered": 30
+      },
+      "NOC": {
+        "raw": 3,
+        "t": 42.0,
+        "M": 5.0,
+        "sigma": 2.39,
+        "max_raw": 18,
+        "answered": 18
+      },
+      "NUC": {
+        "raw": 25,
+        "t": 72.0,
+        "M": 14.1,
+        "sigma": 4.93,
+        "max_raw": 33,
+        "answered": 33
+      },
+      "SOR": {
+        "raw": 15,
+        "t": 29.0,
+        "M": 22.48,
+        "sigma": 3.59,
+        "max_raw": 47,
+        "answered": 47
       }
     },
     "all_true_female": {
@@ -865,6 +1083,166 @@
         "sigma": 2.49,
         "max_raw": 32,
         "answered": 32
+      },
+      "CNV": {
+        "raw": 26,
+        "t": 22.0,
+        "M": 47.57,
+        "sigma": 7.63,
+        "max_raw": 77,
+        "answered": 77
+      },
+      "GLM": {
+        "raw": 8,
+        "t": 70.0,
+        "M": 4.42,
+        "sigma": 1.82,
+        "max_raw": 10,
+        "answered": 10
+      },
+      "DNS": {
+        "raw": 1,
+        "t": 20.0,
+        "M": 12.15,
+        "sigma": 3.52,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "EGC": {
+        "raw": 3,
+        "t": 20.0,
+        "M": 11.89,
+        "sigma": 2.99,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "PHC": {
+        "raw": 24,
+        "t": 100.0,
+        "M": 9.67,
+        "sigma": 2.67,
+        "max_raw": 55,
+        "answered": 55
+      },
+      "HDC": {
+        "raw": 19,
+        "t": 76.0,
+        "M": 10.75,
+        "sigma": 3.13,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "HLT": {
+        "raw": 2,
+        "t": 39.0,
+        "M": 5.39,
+        "sigma": 3.11,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "HYP": {
+        "raw": 6,
+        "t": 83.0,
+        "M": 1.64,
+        "sigma": 1.31,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "HYS": {
+        "raw": 3,
+        "t": 25.0,
+        "M": 8.3,
+        "sigma": 2.12,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "ARP": {
+        "raw": 0,
+        "t": 32.0,
+        "M": 3.04,
+        "sigma": 1.67,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "SOM": {
+        "raw": 6,
+        "t": 54.0,
+        "M": 4.95,
+        "sigma": 2.37,
+        "max_raw": 17,
+        "answered": 17
+      },
+      "HYO": {
+        "raw": 11,
+        "t": 54.0,
+        "M": 9.34,
+        "sigma": 4.14,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "HYL": {
+        "raw": 1,
+        "t": 20.0,
+        "M": 13.35,
+        "sigma": 3.62,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "IMP": {
+        "raw": 19,
+        "t": 82.0,
+        "M": 8.94,
+        "sigma": 3.16,
+        "max_raw": 21,
+        "answered": 21
+      },
+      "ANC": {
+        "raw": 31,
+        "t": 95.0,
+        "M": 9.96,
+        "sigma": 4.68,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "GLT": {
+        "raw": 20,
+        "t": 27.0,
+        "M": 28.66,
+        "sigma": 3.81,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "NEU": {
+        "raw": 17,
+        "t": 74.0,
+        "M": 7.96,
+        "sigma": 3.78,
+        "max_raw": 30,
+        "answered": 30
+      },
+      "NOC": {
+        "raw": 3,
+        "t": 34.0,
+        "M": 6.52,
+        "sigma": 2.2,
+        "max_raw": 18,
+        "answered": 18
+      },
+      "NUC": {
+        "raw": 25,
+        "t": 68.0,
+        "M": 17.03,
+        "sigma": 4.53,
+        "max_raw": 33,
+        "answered": 33
+      },
+      "SOR": {
+        "raw": 15,
+        "t": 35.0,
+        "M": 20.31,
+        "sigma": 3.62,
+        "max_raw": 47,
+        "answered": 47
       }
     },
     "all_false_male": {
@@ -995,6 +1373,166 @@
         "sigma": 2.76,
         "max_raw": 32,
         "answered": 32
+      },
+      "CNV": {
+        "raw": 51,
+        "t": 45.0,
+        "M": 54.75,
+        "sigma": 7.74,
+        "max_raw": 77,
+        "answered": 77
+      },
+      "GLM": {
+        "raw": 2,
+        "t": 46.0,
+        "M": 2.65,
+        "sigma": 1.63,
+        "max_raw": 10,
+        "answered": 10
+      },
+      "DNS": {
+        "raw": 25,
+        "t": 80.0,
+        "M": 12.52,
+        "sigma": 4.18,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "EGC": {
+        "raw": 20,
+        "t": 76.0,
+        "M": 12.02,
+        "sigma": 3.02,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "PHC": {
+        "raw": 31,
+        "t": 100.0,
+        "M": 7.95,
+        "sigma": 2.86,
+        "max_raw": 55,
+        "answered": 55
+      },
+      "HDC": {
+        "raw": 9,
+        "t": 50.0,
+        "M": 9.02,
+        "sigma": 1.08,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "HLT": {
+        "raw": 14,
+        "t": 100.0,
+        "M": 2.14,
+        "sigma": 2.32,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "HYP": {
+        "raw": 3,
+        "t": 69.0,
+        "M": 0.89,
+        "sigma": 1.1,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "HYS": {
+        "raw": 16,
+        "t": 79.0,
+        "M": 8.34,
+        "sigma": 2.6,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "ARP": {
+        "raw": 6,
+        "t": 68.0,
+        "M": 3.09,
+        "sigma": 1.62,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "SOM": {
+        "raw": 11,
+        "t": 93.0,
+        "M": 2.37,
+        "sigma": 2.0,
+        "max_raw": 17,
+        "answered": 17
+      },
+      "HYO": {
+        "raw": 20,
+        "t": 93.0,
+        "M": 4.85,
+        "sigma": 3.54,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "HYL": {
+        "raw": 27,
+        "t": 82.0,
+        "M": 13.35,
+        "sigma": 4.27,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "IMP": {
+        "raw": 2,
+        "t": 35.0,
+        "M": 7.12,
+        "sigma": 3.45,
+        "max_raw": 21,
+        "answered": 21
+      },
+      "ANC": {
+        "raw": 0,
+        "t": 35.0,
+        "M": 6.0,
+        "sigma": 3.98,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "GLT": {
+        "raw": 30,
+        "t": 59.0,
+        "M": 27.0,
+        "sigma": 3.42,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "NEU": {
+        "raw": 13,
+        "t": 76.0,
+        "M": 4.79,
+        "sigma": 3.14,
+        "max_raw": 30,
+        "answered": 30
+      },
+      "NOC": {
+        "raw": 15,
+        "t": 92.0,
+        "M": 5.0,
+        "sigma": 2.39,
+        "max_raw": 18,
+        "answered": 18
+      },
+      "NUC": {
+        "raw": 8,
+        "t": 38.0,
+        "M": 14.1,
+        "sigma": 4.93,
+        "max_raw": 33,
+        "answered": 33
+      },
+      "SOR": {
+        "raw": 32,
+        "t": 77.0,
+        "M": 22.48,
+        "sigma": 3.59,
+        "max_raw": 47,
+        "answered": 47
       }
     },
     "all_false_female": {
@@ -1125,6 +1663,166 @@
         "sigma": 2.49,
         "max_raw": 32,
         "answered": 32
+      },
+      "CNV": {
+        "raw": 51,
+        "t": 54.0,
+        "M": 47.57,
+        "sigma": 7.63,
+        "max_raw": 77,
+        "answered": 77
+      },
+      "GLM": {
+        "raw": 2,
+        "t": 37.0,
+        "M": 4.42,
+        "sigma": 1.82,
+        "max_raw": 10,
+        "answered": 10
+      },
+      "DNS": {
+        "raw": 25,
+        "t": 87.0,
+        "M": 12.15,
+        "sigma": 3.52,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "EGC": {
+        "raw": 20,
+        "t": 77.0,
+        "M": 11.89,
+        "sigma": 2.99,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "PHC": {
+        "raw": 31,
+        "t": 100.0,
+        "M": 9.67,
+        "sigma": 2.67,
+        "max_raw": 55,
+        "answered": 55
+      },
+      "HDC": {
+        "raw": 9,
+        "t": 44.0,
+        "M": 10.75,
+        "sigma": 3.13,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "HLT": {
+        "raw": 14,
+        "t": 78.0,
+        "M": 5.39,
+        "sigma": 3.11,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "HYP": {
+        "raw": 3,
+        "t": 60.0,
+        "M": 1.64,
+        "sigma": 1.31,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "HYS": {
+        "raw": 16,
+        "t": 86.0,
+        "M": 8.3,
+        "sigma": 2.12,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "ARP": {
+        "raw": 6,
+        "t": 68.0,
+        "M": 3.04,
+        "sigma": 1.67,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "SOM": {
+        "raw": 11,
+        "t": 76.0,
+        "M": 4.95,
+        "sigma": 2.37,
+        "max_raw": 17,
+        "answered": 17
+      },
+      "HYO": {
+        "raw": 20,
+        "t": 76.0,
+        "M": 9.34,
+        "sigma": 4.14,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "HYL": {
+        "raw": 27,
+        "t": 88.0,
+        "M": 13.35,
+        "sigma": 3.62,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "IMP": {
+        "raw": 2,
+        "t": 28.0,
+        "M": 8.94,
+        "sigma": 3.16,
+        "max_raw": 21,
+        "answered": 21
+      },
+      "ANC": {
+        "raw": 0,
+        "t": 29.0,
+        "M": 9.96,
+        "sigma": 4.68,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "GLT": {
+        "raw": 30,
+        "t": 54.0,
+        "M": 28.66,
+        "sigma": 3.81,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "NEU": {
+        "raw": 13,
+        "t": 63.0,
+        "M": 7.96,
+        "sigma": 3.78,
+        "max_raw": 30,
+        "answered": 30
+      },
+      "NOC": {
+        "raw": 15,
+        "t": 89.0,
+        "M": 6.52,
+        "sigma": 2.2,
+        "max_raw": 18,
+        "answered": 18
+      },
+      "NUC": {
+        "raw": 8,
+        "t": 30.0,
+        "M": 17.03,
+        "sigma": 4.53,
+        "max_raw": 33,
+        "answered": 33
+      },
+      "SOR": {
+        "raw": 32,
+        "t": 82.0,
+        "M": 20.31,
+        "sigma": 3.62,
+        "max_raw": 47,
+        "answered": 47
       }
     },
     "reference_valid_male": {
@@ -1255,6 +1953,166 @@
         "sigma": 2.76,
         "max_raw": 32,
         "answered": 32
+      },
+      "CNV": {
+        "raw": 43,
+        "t": 35.0,
+        "M": 54.75,
+        "sigma": 7.74,
+        "max_raw": 77,
+        "answered": 77
+      },
+      "GLM": {
+        "raw": 3,
+        "t": 52.0,
+        "M": 2.65,
+        "sigma": 1.63,
+        "max_raw": 10,
+        "answered": 10
+      },
+      "DNS": {
+        "raw": 10,
+        "t": 44.0,
+        "M": 12.52,
+        "sigma": 4.18,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "EGC": {
+        "raw": 15,
+        "t": 60.0,
+        "M": 12.02,
+        "sigma": 3.02,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "PHC": {
+        "raw": 21,
+        "t": 96.0,
+        "M": 7.95,
+        "sigma": 2.86,
+        "max_raw": 55,
+        "answered": 55
+      },
+      "HDC": {
+        "raw": 12,
+        "t": 78.0,
+        "M": 9.02,
+        "sigma": 1.08,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "HLT": {
+        "raw": 7,
+        "t": 71.0,
+        "M": 2.14,
+        "sigma": 2.32,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "HYP": {
+        "raw": 1,
+        "t": 51.0,
+        "M": 0.89,
+        "sigma": 1.1,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "HYS": {
+        "raw": 8,
+        "t": 49.0,
+        "M": 8.34,
+        "sigma": 2.6,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "ARP": {
+        "raw": 2,
+        "t": 43.0,
+        "M": 3.09,
+        "sigma": 1.62,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "SOM": {
+        "raw": 8,
+        "t": 78.0,
+        "M": 2.37,
+        "sigma": 2.0,
+        "max_raw": 17,
+        "answered": 17
+      },
+      "HYO": {
+        "raw": 12,
+        "t": 70.0,
+        "M": 4.85,
+        "sigma": 3.54,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "HYL": {
+        "raw": 11,
+        "t": 44.0,
+        "M": 13.35,
+        "sigma": 4.27,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "IMP": {
+        "raw": 9,
+        "t": 55.0,
+        "M": 7.12,
+        "sigma": 3.45,
+        "max_raw": 21,
+        "answered": 21
+      },
+      "ANC": {
+        "raw": 13,
+        "t": 68.0,
+        "M": 6.0,
+        "sigma": 3.98,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "GLT": {
+        "raw": 31,
+        "t": 62.0,
+        "M": 27.0,
+        "sigma": 3.42,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "NEU": {
+        "raw": 12,
+        "t": 73.0,
+        "M": 4.79,
+        "sigma": 3.14,
+        "max_raw": 30,
+        "answered": 30
+      },
+      "NOC": {
+        "raw": 11,
+        "t": 75.0,
+        "M": 5.0,
+        "sigma": 2.39,
+        "max_raw": 18,
+        "answered": 18
+      },
+      "NUC": {
+        "raw": 12,
+        "t": 46.0,
+        "M": 14.1,
+        "sigma": 4.93,
+        "max_raw": 33,
+        "answered": 33
+      },
+      "SOR": {
+        "raw": 21,
+        "t": 46.0,
+        "M": 22.48,
+        "sigma": 3.59,
+        "max_raw": 47,
+        "answered": 47
       }
     },
     "reference_valid_female": {
@@ -1385,6 +2243,166 @@
         "sigma": 2.49,
         "max_raw": 32,
         "answered": 32
+      },
+      "CNV": {
+        "raw": 43,
+        "t": 44.0,
+        "M": 47.57,
+        "sigma": 7.63,
+        "max_raw": 77,
+        "answered": 77
+      },
+      "GLM": {
+        "raw": 3,
+        "t": 42.0,
+        "M": 4.42,
+        "sigma": 1.82,
+        "max_raw": 10,
+        "answered": 10
+      },
+      "DNS": {
+        "raw": 10,
+        "t": 44.0,
+        "M": 12.15,
+        "sigma": 3.52,
+        "max_raw": 26,
+        "answered": 26
+      },
+      "EGC": {
+        "raw": 15,
+        "t": 60.0,
+        "M": 11.89,
+        "sigma": 2.99,
+        "max_raw": 23,
+        "answered": 23
+      },
+      "PHC": {
+        "raw": 21,
+        "t": 92.0,
+        "M": 9.67,
+        "sigma": 2.67,
+        "max_raw": 55,
+        "answered": 55
+      },
+      "HDC": {
+        "raw": 12,
+        "t": 54.0,
+        "M": 10.75,
+        "sigma": 3.13,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "HLT": {
+        "raw": 7,
+        "t": 55.0,
+        "M": 5.39,
+        "sigma": 3.11,
+        "max_raw": 16,
+        "answered": 16
+      },
+      "HYP": {
+        "raw": 1,
+        "t": 45.0,
+        "M": 1.64,
+        "sigma": 1.31,
+        "max_raw": 9,
+        "answered": 9
+      },
+      "HYS": {
+        "raw": 8,
+        "t": 49.0,
+        "M": 8.3,
+        "sigma": 2.12,
+        "max_raw": 19,
+        "answered": 19
+      },
+      "ARP": {
+        "raw": 2,
+        "t": 44.0,
+        "M": 3.04,
+        "sigma": 1.67,
+        "max_raw": 6,
+        "answered": 6
+      },
+      "SOM": {
+        "raw": 8,
+        "t": 63.0,
+        "M": 4.95,
+        "sigma": 2.37,
+        "max_raw": 17,
+        "answered": 17
+      },
+      "HYO": {
+        "raw": 12,
+        "t": 56.0,
+        "M": 9.34,
+        "sigma": 4.14,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "HYL": {
+        "raw": 11,
+        "t": 44.0,
+        "M": 13.35,
+        "sigma": 3.62,
+        "max_raw": 28,
+        "answered": 28
+      },
+      "IMP": {
+        "raw": 9,
+        "t": 50.0,
+        "M": 8.94,
+        "sigma": 3.16,
+        "max_raw": 21,
+        "answered": 21
+      },
+      "ANC": {
+        "raw": 13,
+        "t": 56.0,
+        "M": 9.96,
+        "sigma": 4.68,
+        "max_raw": 31,
+        "answered": 31
+      },
+      "GLT": {
+        "raw": 31,
+        "t": 56.0,
+        "M": 28.66,
+        "sigma": 3.81,
+        "max_raw": 50,
+        "answered": 50
+      },
+      "NEU": {
+        "raw": 12,
+        "t": 61.0,
+        "M": 7.96,
+        "sigma": 3.78,
+        "max_raw": 30,
+        "answered": 30
+      },
+      "NOC": {
+        "raw": 11,
+        "t": 70.0,
+        "M": 6.52,
+        "sigma": 2.2,
+        "max_raw": 18,
+        "answered": 18
+      },
+      "NUC": {
+        "raw": 12,
+        "t": 39.0,
+        "M": 17.03,
+        "sigma": 4.53,
+        "max_raw": 33,
+        "answered": 33
+      },
+      "SOR": {
+        "raw": 21,
+        "t": 52.0,
+        "M": 20.31,
+        "sigma": 3.62,
+        "max_raw": 47,
+        "answered": 47
       }
     },
     "pseudo_random_20260915_male": {
@@ -1515,6 +2533,166 @@
         "sigma": 2.76,
         "max_raw": 32,
         "answered": 19
+      },
+      "CNV": {
+        "raw": 29,
+        "t": 20.0,
+        "M": 54.75,
+        "sigma": 7.74,
+        "max_raw": 77,
+        "answered": 47
+      },
+      "GLM": {
+        "raw": 0,
+        "t": 34.0,
+        "M": 2.65,
+        "sigma": 1.63,
+        "max_raw": 10,
+        "answered": 7
+      },
+      "DNS": {
+        "raw": 8,
+        "t": 39.0,
+        "M": 12.52,
+        "sigma": 4.18,
+        "max_raw": 26,
+        "answered": 17
+      },
+      "EGC": {
+        "raw": 9,
+        "t": 40.0,
+        "M": 12.02,
+        "sigma": 3.02,
+        "max_raw": 23,
+        "answered": 16
+      },
+      "PHC": {
+        "raw": 21,
+        "t": 96.0,
+        "M": 7.95,
+        "sigma": 2.86,
+        "max_raw": 55,
+        "answered": 36
+      },
+      "HDC": {
+        "raw": 7,
+        "t": 31.0,
+        "M": 9.02,
+        "sigma": 1.08,
+        "max_raw": 28,
+        "answered": 17
+      },
+      "HLT": {
+        "raw": 5,
+        "t": 62.0,
+        "M": 2.14,
+        "sigma": 2.32,
+        "max_raw": 16,
+        "answered": 10
+      },
+      "HYP": {
+        "raw": 3,
+        "t": 69.0,
+        "M": 0.89,
+        "sigma": 1.1,
+        "max_raw": 9,
+        "answered": 6
+      },
+      "HYS": {
+        "raw": 6,
+        "t": 41.0,
+        "M": 8.34,
+        "sigma": 2.6,
+        "max_raw": 19,
+        "answered": 12
+      },
+      "ARP": {
+        "raw": 2,
+        "t": 43.0,
+        "M": 3.09,
+        "sigma": 1.62,
+        "max_raw": 6,
+        "answered": 4
+      },
+      "SOM": {
+        "raw": 11,
+        "t": 93.0,
+        "M": 2.37,
+        "sigma": 2.0,
+        "max_raw": 17,
+        "answered": 15
+      },
+      "HYO": {
+        "raw": 9,
+        "t": 62.0,
+        "M": 4.85,
+        "sigma": 3.54,
+        "max_raw": 31,
+        "answered": 21
+      },
+      "HYL": {
+        "raw": 9,
+        "t": 40.0,
+        "M": 13.35,
+        "sigma": 4.27,
+        "max_raw": 28,
+        "answered": 19
+      },
+      "IMP": {
+        "raw": 9,
+        "t": 55.0,
+        "M": 7.12,
+        "sigma": 3.45,
+        "max_raw": 21,
+        "answered": 14
+      },
+      "ANC": {
+        "raw": 9,
+        "t": 58.0,
+        "M": 6.0,
+        "sigma": 3.98,
+        "max_raw": 31,
+        "answered": 19
+      },
+      "GLT": {
+        "raw": 12,
+        "t": 20.0,
+        "M": 27.0,
+        "sigma": 3.42,
+        "max_raw": 50,
+        "answered": 34
+      },
+      "NEU": {
+        "raw": 11,
+        "t": 70.0,
+        "M": 4.79,
+        "sigma": 3.14,
+        "max_raw": 30,
+        "answered": 20
+      },
+      "NOC": {
+        "raw": 6,
+        "t": 54.0,
+        "M": 5.0,
+        "sigma": 2.39,
+        "max_raw": 18,
+        "answered": 13
+      },
+      "NUC": {
+        "raw": 12,
+        "t": 46.0,
+        "M": 14.1,
+        "sigma": 4.93,
+        "max_raw": 33,
+        "answered": 24
+      },
+      "SOR": {
+        "raw": 18,
+        "t": 38.0,
+        "M": 22.48,
+        "sigma": 3.59,
+        "max_raw": 47,
+        "answered": 31
       }
     },
     "pseudo_random_20260915_female": {
@@ -1645,6 +2823,166 @@
         "sigma": 2.49,
         "max_raw": 32,
         "answered": 19
+      },
+      "CNV": {
+        "raw": 29,
+        "t": 26.0,
+        "M": 47.57,
+        "sigma": 7.63,
+        "max_raw": 77,
+        "answered": 47
+      },
+      "GLM": {
+        "raw": 0,
+        "t": 26.0,
+        "M": 4.42,
+        "sigma": 1.82,
+        "max_raw": 10,
+        "answered": 7
+      },
+      "DNS": {
+        "raw": 8,
+        "t": 38.0,
+        "M": 12.15,
+        "sigma": 3.52,
+        "max_raw": 26,
+        "answered": 17
+      },
+      "EGC": {
+        "raw": 9,
+        "t": 40.0,
+        "M": 11.89,
+        "sigma": 2.99,
+        "max_raw": 23,
+        "answered": 16
+      },
+      "PHC": {
+        "raw": 21,
+        "t": 92.0,
+        "M": 9.67,
+        "sigma": 2.67,
+        "max_raw": 55,
+        "answered": 36
+      },
+      "HDC": {
+        "raw": 7,
+        "t": 38.0,
+        "M": 10.75,
+        "sigma": 3.13,
+        "max_raw": 28,
+        "answered": 17
+      },
+      "HLT": {
+        "raw": 5,
+        "t": 49.0,
+        "M": 5.39,
+        "sigma": 3.11,
+        "max_raw": 16,
+        "answered": 10
+      },
+      "HYP": {
+        "raw": 3,
+        "t": 60.0,
+        "M": 1.64,
+        "sigma": 1.31,
+        "max_raw": 9,
+        "answered": 6
+      },
+      "HYS": {
+        "raw": 6,
+        "t": 39.0,
+        "M": 8.3,
+        "sigma": 2.12,
+        "max_raw": 19,
+        "answered": 12
+      },
+      "ARP": {
+        "raw": 2,
+        "t": 44.0,
+        "M": 3.04,
+        "sigma": 1.67,
+        "max_raw": 6,
+        "answered": 4
+      },
+      "SOM": {
+        "raw": 11,
+        "t": 76.0,
+        "M": 4.95,
+        "sigma": 2.37,
+        "max_raw": 17,
+        "answered": 15
+      },
+      "HYO": {
+        "raw": 9,
+        "t": 49.0,
+        "M": 9.34,
+        "sigma": 4.14,
+        "max_raw": 31,
+        "answered": 21
+      },
+      "HYL": {
+        "raw": 9,
+        "t": 38.0,
+        "M": 13.35,
+        "sigma": 3.62,
+        "max_raw": 28,
+        "answered": 19
+      },
+      "IMP": {
+        "raw": 9,
+        "t": 50.0,
+        "M": 8.94,
+        "sigma": 3.16,
+        "max_raw": 21,
+        "answered": 14
+      },
+      "ANC": {
+        "raw": 9,
+        "t": 48.0,
+        "M": 9.96,
+        "sigma": 4.68,
+        "max_raw": 31,
+        "answered": 19
+      },
+      "GLT": {
+        "raw": 12,
+        "t": 20.0,
+        "M": 28.66,
+        "sigma": 3.81,
+        "max_raw": 50,
+        "answered": 34
+      },
+      "NEU": {
+        "raw": 11,
+        "t": 58.0,
+        "M": 7.96,
+        "sigma": 3.78,
+        "max_raw": 30,
+        "answered": 20
+      },
+      "NOC": {
+        "raw": 6,
+        "t": 48.0,
+        "M": 6.52,
+        "sigma": 2.2,
+        "max_raw": 18,
+        "answered": 13
+      },
+      "NUC": {
+        "raw": 12,
+        "t": 39.0,
+        "M": 17.03,
+        "sigma": 4.53,
+        "max_raw": 33,
+        "answered": 24
+      },
+      "SOR": {
+        "raw": 18,
+        "t": 44.0,
+        "M": 20.31,
+        "sigma": 3.62,
+        "max_raw": 47,
+        "answered": 31
       }
     }
   }

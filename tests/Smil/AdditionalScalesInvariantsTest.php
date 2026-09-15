@@ -7,18 +7,19 @@ namespace PsyTest\Tests\Smil;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Инварианты партии дополнительных шкал 05.S3.1 (WP4).
+ * Инварианты партий дополнительных шкал 05.S3.1 и 05.S3.2 (WP4).
  *
  * Runtime-файл modules/smil/additional-scales-v2.json собирается скриптом
  * bin/smil-build-batch.php из транскрипции приложения Собчик. Тест стережёт
  * то, что должно оставаться верным при любой пересборке: ключи и нормы равны
  * источнику, номера пунктов допустимы, набор не смешан с прежними
- * неподтверждёнными кодами.
+ * неподтверждёнными кодами, а статус verified-with-note стоит только у
+ * записей, которые владелец включил с оговоркой.
  */
 final class AdditionalScalesInvariantsTest extends TestCase
 {
-    /** Номер записи транскрипции => runtime-код (партия 05.S3.1). */
-    private const BATCH = [
+    /** Партия 05.S3.1: номер записи транскрипции => runtime-код. */
+    private const BATCH_1 = [
         1 => 'A',
         2 => 'LRN',
         6 => 'MAT',
@@ -36,6 +37,46 @@ final class AdditionalScalesInvariantsTest extends TestCase
         171 => 'R',
         174 => 'Re',
     ];
+
+    /** Партия 05.S3.2: 20 клинических подшкал, утверждены владельцем 15.09.2026. */
+    private const BATCH_2 = [
+        37 => 'CNV',
+        46 => 'GLM',
+        48 => 'DNS',
+        60 => 'EGC',
+        72 => 'PHC',
+        73 => 'HDC',
+        75 => 'HLT',
+        80 => 'HYP',
+        83 => 'HYS',
+        84 => 'ARP',
+        87 => 'SOM',
+        89 => 'HYO',
+        90 => 'HYL',
+        93 => 'IMP',
+        97 => 'ANC',
+        98 => 'GLT',
+        129 => 'NEU',
+        131 => 'NOC',
+        134 => 'NUC',
+        193 => 'SOR',
+    ];
+
+    /** Партия => номера записей. */
+    private const BATCH_LABELS = [
+        '05.S3.1' => self::BATCH_1,
+        '05.S3.2' => self::BATCH_2,
+    ];
+
+    /**
+     * Единственные записи, которым разрешён статус verified-with-note.
+     *
+     * №87 — опечатка источника в строке ключа («11 верно» вместо «11 неверно»).
+     * №72 — нормы дословно совпадают с нормами №74, вероятный повтор строк.
+     * №74 попадёт сюда, если владелец включит его следующей партией; до тех пор
+     * список исключений закрыт, и любая другая шкала с таким статусом — дефект.
+     */
+    private const NOTE_EXCEPTIONS = [72, 87];
 
     /** Прежние runtime-коды, признанные неподтверждёнными в S1/S2 и выведенные из расчёта. */
     private const RETIRED_CODES = [
@@ -73,13 +114,42 @@ final class AdditionalScalesInvariantsTest extends TestCase
         }
     }
 
-    public function testBatchHasExactlySixteenScalesWithExpectedCodes(): void
+    /**
+     * Номер записи => runtime-код по обеим партиям.
+     *
+     * @return array<int, string>
+     */
+    private static function batch(): array
     {
-        self::assertCount(16, $this->scales);
+        return self::BATCH_1 + self::BATCH_2;
+    }
+
+    public function testBothBatchesArePresentWithExpectedCodesAndOrder(): void
+    {
+        self::assertCount(36, $this->scales);
+
+        $expectedOrder = [];
+        foreach (self::BATCH_LABELS as $label => $codes) {
+            ksort($codes);
+            foreach ($codes as $code) {
+                $expectedOrder[] = $code;
+            }
+        }
+        self::assertSame(
+            $expectedOrder,
+            array_map(static fn (array $scale): string => $scale['code'], $this->scales),
+            'порядок: партия 1, затем партия 2, внутри — по номеру записи'
+        );
+
+        foreach ($this->scales as $scale) {
+            $number = (int) $scale['source']['entry'];
+            $expectedBatch = isset(self::BATCH_1[$number]) ? '05.S3.1' : '05.S3.2';
+            self::assertSame($expectedBatch, $scale['batch'] ?? null, "№{$number}: партия");
+        }
 
         $codes = array_map(static fn (array $scale): string => $scale['code'], $this->scales);
         self::assertSame(count($codes), count(array_unique($codes)), 'коды дублируются');
-        self::assertSame($this->sorted(array_values(self::BATCH)), $this->sorted($codes));
+        self::assertSame($this->sorted(array_values(self::batch())), $this->sorted($codes));
 
         $ids = array_map(static fn (array $scale): string => $scale['id'], $this->scales);
         self::assertSame(count($ids), count(array_unique($ids)), 'id дублируются');
@@ -95,7 +165,7 @@ final class AdditionalScalesInvariantsTest extends TestCase
             self::assertArrayHasKey($number, $this->entries, "запись №{$number} отсутствует в транскрипции");
             $entry = $this->entries[$number];
 
-            self::assertSame(self::BATCH[$number], $scale['code'], "№{$number}: код партии");
+            self::assertSame(self::batch()[$number], $scale['code'], "№{$number}: код партии");
             self::assertSame($entry['id'], $scale['id'], "№{$number}: id");
             self::assertSame($entry['name'], $scale['name'], "№{$number}: название источника");
             self::assertSame((int) $entry['page_pdf'], (int) $scale['source']['page_pdf'], "№{$number}: страница PDF");
@@ -147,11 +217,36 @@ final class AdditionalScalesInvariantsTest extends TestCase
         }
     }
 
-    public function testEveryScaleIsVerified(): void
+    public function testOnlyTheApprovedExceptionsCarryVerifiedWithNote(): void
     {
+        $withNote = [];
+
         foreach ($this->scales as $scale) {
-            self::assertSame('verified', $scale['status'], "{$scale['code']}: статус");
+            $number = (int) $scale['source']['entry'];
+            $status = (string) $scale['status'];
+
+            self::assertContains(
+                $status,
+                ['verified', 'verified-with-note'],
+                "{$scale['code']}: недопустимый статус {$status}"
+            );
+
+            if ($status === 'verified-with-note') {
+                $withNote[] = $number;
+                self::assertContains(
+                    $number,
+                    self::NOTE_EXCEPTIONS,
+                    "№{$number} ({$scale['code']}): verified-with-note разрешён только записям "
+                    . implode(', ', self::NOTE_EXCEPTIONS)
+                );
+                self::assertNotEmpty($scale['note'] ?? '', "№{$number}: причина оговорки обязательна");
+            } else {
+                self::assertArrayNotHasKey('note', $scale, "{$scale['code']}: note без оговорки");
+            }
         }
+
+        sort($withNote);
+        self::assertSame(self::NOTE_EXCEPTIONS, $withNote, 'состав оговорённых записей закреплён владельцем');
     }
 
     public function testRetiredUnverifiedCodesAreGoneFromRuntime(): void

@@ -72,7 +72,7 @@ if (!file_exists($refScoresFile)) {
 
 $answers = json_decode(file_get_contents($answersFile), true);
 $refScores = json_decode(file_get_contents($refScoresFile), true);
-$refBatchFile = $fixturesDir . '/smil-additional-batch1-reference.json';
+$refBatchFile = $fixturesDir . '/smil-additional-reference.json';
 $refBatch = file_exists($refBatchFile)
     ? json_decode(file_get_contents($refBatchFile), true)
     : null;
@@ -221,7 +221,7 @@ foreach ($indexLabels as $key => $label) {
 }
 
 // --- Additional Scales ---
-subheader("Additional Scales (Sobchik 2003, batch 05.S3.1)");
+subheader("Additional Scales (Sobchik 2003, batches 05.S3.1 + 05.S3.2)");
 $additionalScores = $results['additional_scores'];
 
 if (empty($additionalScores)) {
