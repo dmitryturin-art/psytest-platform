@@ -1,0 +1,98 @@
+{# Тело PDF-выгрузки кейса (07.K5j).
+
+   Оболочку, шрифт (DejaVu Sans — кириллица) и базовые стили добавляет
+   `PDFGenerator::wrapInHtml()`, тот же, что у PDF результата. Здесь только
+   содержание: разделы приходят уже собранными сборщиком `CaseExportPresenter`,
+   а секции результата — из `ResultSectionRenderer`, то есть тем же путём, каким
+   в PDF результата попадает канонический график.
+
+   DomPDF понимает только простой CSS, поэтому разрывы страниц заданы
+   `page-break-before` на разделах, а оформление — инлайновым стилем. #}
+{# Материал кабинета: навигация посетителя сюда не попадает. #}
+{% set ownerArea = true %}
+{% macro answer_list(rows) %}
+    <ol>
+        {% for row in rows %}
+            <li style="margin: 0 0 6px 0;">
+                <span>{{ row.question }}</span><br>
+                {% if row.self_answer is defined %}
+                    <span style="color:#555;">Я: {{ row.self_answer }} · Партнёр (по мнению респондента): {{ row.partner_answer }}</span>
+                {% else %}
+                    <span style="color:#555;">{{ row.answer }}{% if row.score is not null %} · {{ row.score }} балл.{% endif %}</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+{% endmacro %}
+
+<div class="header">
+    <h1>{{ document.header.test_name }}</h1>
+    <p>Выгрузка кейса специалиста</p>
+</div>
+
+<div class="meta-info">
+    {% if document.header.client_label %}<p><strong>Клиент:</strong> {{ document.header.client_label }}</p>{% endif %}
+    <p><strong>Дата прохождения:</strong> {% if document.header.completed_at %}{{ document.header.completed_at|date("d.m.Y H:i") }}{% else %}не завершено{% endif %}</p>
+    <p><strong>{{ document.header.prepared_by }}</strong></p>
+    <p style="color:#c0392b;font-weight:bold;">{{ document.header.confidential }}</p>
+</div>
+
+{% if pair_html %}
+<div>
+    <h2>Парный результат</h2>
+    <p>Этот кейс — {{ document.pair.label }}.</p>
+    {{ pair_html|raw }}
+</div>
+<div style="page-break-before: always;">
+{% else %}
+<div>
+{% endif %}
+    <h2>{% if document.pair %}Индивидуальный результат{% else %}Базовый результат{% endif %}</h2>
+    {{ sections_html|raw }}
+</div>
+
+{% if document.options.include_answers %}
+<div style="page-break-before: always;">
+    <h2>{% if document.pair %}Анкеты обоих партнёров{% else %}Анкета по пунктам{% endif %}</h2>
+    {% if document.pair %}
+        {% for sheet in document.pair.questionnaires %}
+            <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
+            {{ _self.answer_list(sheet.rows) }}
+        {% endfor %}
+    {% else %}
+        {{ _self.answer_list(document.answers) }}
+    {% endif %}
+</div>
+{% endif %}
+
+{% if document.professional %}
+<div style="page-break-before: always;">
+    <h2>Профессиональное заключение</h2>
+    {{ document.professional.html|raw }}
+</div>
+{% endif %}
+
+{% if document.clear %}
+<div style="page-break-before: always;">
+    <h2>Понятный разбор</h2>
+    {% if document.clear.published %}
+        <p style="color:#1f5fa6;">Опубликовано клиенту, версия №{{ document.clear.revision_no }} от {{ document.clear.date }}</p>
+    {% else %}
+        <p style="color:#8a5a06;">Черновик, не опубликован — версия №{{ document.clear.revision_no }}</p>
+    {% endif %}
+    {{ document.clear.html|raw }}
+</div>
+{% endif %}
+
+{% if document.note %}
+<div style="page-break-before: always;">
+    <h2>Заметка к назначению</h2>
+    <p>{{ document.note }}</p>
+</div>
+{% endif %}
+
+<div class="disclaimer">
+    <p>Документ сформирован {{ document.generated_at }}.</p>
+    <p>{{ document.disclaimer }}</p>
+    <p>{{ document.header.confidential }}. Документ сгенерирован автоматически.</p>
+</div>

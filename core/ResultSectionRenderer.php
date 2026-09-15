@@ -87,25 +87,40 @@ final class ResultSectionRenderer
         $barWidth = 28;
         $maxHeight = 200;
 
+        // Колонки — ячейки одной строки таблицы, а не `inline-block`:
+        // DomPDF не раскладывает inline-block, и весь профиль вытягивался в
+        // вертикальный столбик на десяток страниц (найдено при 07.K5j на
+        // выгрузке кейса). Данные, порядок шкал и цвета те же.
+        // Столбец целиком лежит в одной ячейке — иначе DomPDF разрывает
+        // таблицу между строками, и подписи уезжают на следующую страницу.
+        // Выравнивание по низу делает распорка, а не `vertical-align`:
+        // высоту ячейки DomPDF в этом случае считает по содержимому.
         $bars = '';
+        $captions = '';
         for ($i = 0; $i < $count; $i++) {
             $t = max($tMin, min($tMax, (float) $scores[$i]));
-            $pct = (($t - $tMin) / ($tMax - $tMin)) * 100;
-            $barH = round(($t - $tMin) / ($tMax - $tMin) * $maxHeight);
+            $barH = max(1, (int) round(($t - $tMin) / ($tMax - $tMin) * $maxHeight));
             $color = ($t >= 65 || $t <= 35) ? '#c0392b' : '#3498db';
+            $cell = 'padding:0 2px;text-align:center;border:none;';
 
-            $bars .= '<div style="display:inline-block;text-align:center;vertical-align:bottom;margin:0 2px;">'
+            $bars .= '<td style="' . $cell . '">'
+                . '<div style="height:' . ($maxHeight - $barH) . 'px;"></div>'
                 . '<div style="font-size:7pt;font-weight:bold;color:' . $color . ';">' . (int) $t . '</div>'
                 . '<div style="width:' . $barWidth . 'px;height:' . $barH . 'px;background:' . $color . ';margin:0 auto;"></div>'
-                . '<div style="font-size:7pt;margin-top:2px;color:#333;">' . htmlspecialchars($labels[$i] ?? '') . '</div>'
-                . '</div>';
+                . '</td>';
+            $captions .= '<td style="' . $cell . 'font-size:7pt;color:#333;border-top:2px solid #333;">'
+                . htmlspecialchars($labels[$i] ?? '') . '</td>';
         }
 
+        // Заголовок — строка самой таблицы: отдельный `h3` и `caption` остаются
+        // на прежней странице, когда график переносится целиком.
         return '<div style="margin:1em 0;text-align:center;">'
-            . '<h3 style="font-size:11pt;color:#2c3e50;margin:0 0 0.5em 0;">Профиль личности (T-баллы)</h3>'
-            . '<div style="border-bottom:2px solid #333;padding-bottom:4px;display:inline-block;">'
-            . $bars
-            . '</div>'
+            . '<table style="width:100%;border-collapse:collapse;border:none;page-break-inside:avoid;">'
+            . '<tr><td colspan="' . $count . '" style="border:none;padding:0 0 0.5em;text-align:center;'
+            . 'font-size:11pt;font-weight:bold;color:#2c3e50;">Профиль личности (T-баллы)</td></tr>'
+            . '<tr>' . $bars . '</tr>'
+            . '<tr>' . $captions . '</tr>'
+            . '</table>'
             . '<div style="font-size:7pt;color:#7f8c8d;margin-top:4px;">Норма: 30–70 T</div>'
             . '</div>';
     }

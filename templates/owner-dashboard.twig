@@ -92,8 +92,8 @@
             <dl class="owner-case-details">
                 <div><dt>Методика</dt><dd>{{ case.test_name }}</dd></div>
                 <div><dt>Создана</dt><dd>{{ case.created_at|date("d.m.Y H:i") }}</dd></div>
-                <div><dt>Статус</dt><dd>{{ case.status }}</dd></div>
-                <div><dt>Режим хранения</dt><dd>{{ case.retention_class }}</dd></div>
+                <div><dt>Статус</dt><dd>{{ case.status|status_label }}</dd></div>
+                <div><dt>Режим хранения</dt><dd>{{ case.retention_class|retention_label }}</dd></div>
             </dl>
 
             {% if case_attached %}

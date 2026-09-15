@@ -4250,3 +4250,37 @@ body {
 .scores-table tr.level--below td {
     background: #e3f2fd;
 }
+
+/* ---------------------------------------------------------------- 07.K5j
+   Блок «Выгрузка» в карточке кейса. Форма только выбирает состав документа,
+   поэтому она компактна и на 390×844 складывается в одну колонку. */
+
+.owner-case-export {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.owner-export-options {
+    margin: var(--spacing-md) 0 0;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.owner-export-options legend {
+    padding: 0 var(--spacing-xs);
+    font-weight: 600;
+}
+
+.owner-export-options label {
+    display: block;
+    margin: var(--spacing-xs) 0;
+}
+
+.owner-export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}

@@ -50,7 +50,7 @@
         <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
     {% endif %}
     <dl class="owner-case-details">
-        <div><dt>Статус</dt><dd>{{ case.status }}</dd></div>
+        <div><dt>Статус</dt><dd>{{ case.status|status_label }}</dd></div>
         <div><dt>Открыто</dt><dd>{{ case.claimed_at|date("d.m.Y H:i") }}</dd></div>
         <div><dt>Завершено</dt><dd>{% if case.completed_at %}{{ case.completed_at|date("d.m.Y H:i") }}{% else %}ещё нет{% endif %}</dd></div>
         {% if case.client_label %}<div><dt>Клиент</dt><dd><a href="{{ basePath }}/admin/clients/{{ case.client_id }}">{{ case.client_label }}</a></dd></div>{% endif %}
@@ -221,6 +221,34 @@
             </article>
             {% endfor %}
         {% endif %}
+    </section>
+    {% endif %}
+
+    {% if case.completed_at %}
+    {# Выгрузка (07.K5j): результат и интерпретации одним документом — сохранить
+       или распечатать. Оба выхода собирает один сборщик, поэтому состав у PDF и
+       версии для печати совпадает. Форма GET: она ничего не меняет, а документ
+       не сохраняется на сервере и не несёт токен. #}
+    <section class="owner-case-export" aria-labelledby="owner-case-export-title">
+        <h2 id="owner-case-export-title">Выгрузка</h2>
+        <p class="owner-help">Результат теста вместе с интерпретациями одним документом. Файл не хранится на сервере: он собирается в момент запроса.</p>
+        <form method="get" action="{{ basePath }}/admin/invited-case/{{ case.id }}/export.pdf" class="owner-form owner-export-form">
+            <input type="hidden" name="export_options" value="1">
+            <fieldset class="owner-export-options">
+                <legend>Что включить</legend>
+                <label><input type="checkbox" name="include_professional" value="1" checked> Профессиональное заключение</label>
+                <label><input type="checkbox" name="include_clear" value="1" checked> Понятный разбор</label>
+                <label><input type="checkbox" name="include_answers" value="1"> Анкета по пунктам</label>
+                <label><input type="checkbox" name="include_note" value="1"> Заметка к назначению</label>
+            </fieldset>
+            <p class="owner-export-actions">
+                <button type="submit" class="btn btn-primary">Скачать PDF</button>
+                <button type="submit" class="btn btn-outline"
+                        formaction="{{ basePath }}/admin/invited-case/{{ case.id }}/print"
+                        formtarget="_blank">Версия для печати</button>
+            </p>
+            <p class="owner-help">Версия для печати открывается в новой вкладке: из неё браузер сохраняет документ в PDF или Word.</p>
+        </form>
     </section>
     {% endif %}
 

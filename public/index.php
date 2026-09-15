@@ -105,6 +105,9 @@ $router->post('/admin/invites/create', [OwnerController::class, 'createInvite'])
 $router->post('/admin/invites/revoke', [OwnerController::class, 'revokeInvite']);
 $router->get('/admin/invited-case/{sessionId}', [OwnerController::class, 'viewInvitedCase']);
 $router->post('/admin/invited-case/{sessionId}/delete', [OwnerController::class, 'deleteInvitedCase']);
+// Выгрузка кейса (07.K5j): документ собирается на лету, файл на сервере не остаётся.
+$router->get('/admin/invited-case/{sessionId}/export.pdf', [OwnerController::class, 'exportCasePdf']);
+$router->get('/admin/invited-case/{sessionId}/print', [OwnerController::class, 'exportCasePrint']);
 $router->post('/admin/invited-case/{sessionId}/reports/request', [OwnerController::class, 'requestCaseReports']);
 $router->get('/admin/invited-case/{sessionId}/reports/status', [OwnerController::class, 'caseReportStatus']);
 $router->post('/admin/invited-case/{sessionId}/reports/notify', [OwnerController::class, 'notifyClientAboutReport']);

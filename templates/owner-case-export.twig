@@ -1,0 +1,178 @@
+{# Версия кейса для печати (07.K5j).
+
+   Отдельная страница, а не `layout.twig`: это документ, который специалист
+   сохраняет или печатает, и шапка сайта, футер и навигация посетителя в нём
+   лишние. На экране остаётся узкая панель с кнопкой печати; в `@media print`
+   она скрывается, а разделы начинаются с новой страницы.
+
+   Ни идентификатора сессии, ни токена, ни клиентской ссылки результата: файл
+   уходит из кабинета и не должен нести выданный доступ. #}
+{# Страница кабинета: навигация посетителя сюда не попадает — её здесь нет
+   вовсе, но пометка сохраняется общей для всех owner-шаблонов. #}
+{% set ownerArea = true %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>{{ document.header.test_name }} — выгрузка кейса</title>
+    <link rel="stylesheet" href="{{ asset('css/main.css') }}">
+    <style>
+        /* `main.css` делает body flex-контейнером, а у flex-элемента
+           минимальная ширина по умолчанию равна min-content: широкая таблица
+           шкал растягивала страницу и давала горизонтальную прокрутку на 390. */
+        .case-export { width: 100%; min-width: 0; max-width: 62rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+        .case-export__bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; padding: .75rem 0; background: #fff; border-bottom: 1px solid #e1e5ea; }
+        .case-export__bar p { margin: 0; font-size: .9rem; color: #5a6672; }
+        .case-export__doc { margin-top: 1.5rem; }
+        .case-export__head { border-bottom: 2px solid #2c3e50; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+        .case-export__head h1 { margin: 0 0 .5rem; font-size: 1.6rem; }
+        .case-export__meta { margin: 0; display: grid; gap: .25rem; font-size: .95rem; color: #3b4552; }
+        .case-export__confidential { display: inline-block; margin-top: .75rem; padding: .2rem .6rem; border: 1px solid #c0392b; border-radius: .25rem; color: #c0392b; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+        .case-export__part { margin: 2rem 0; }
+        .case-export__part > h2 { font-size: 1.25rem; border-bottom: 1px solid #bdc3c7; padding-bottom: .3rem; }
+        .case-export__badge { display: inline-block; padding: .15rem .5rem; border-radius: .25rem; font-size: .8rem; background: #eef4fb; color: #1f5fa6; }
+        .case-export__badge--draft { background: #fdf2e2; color: #8a5a06; }
+        .case-export__note { white-space: pre-wrap; }
+        .case-export__foot { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #bdc3c7; font-size: .85rem; color: #6b7682; }
+        /* Таблицы шкал и канонический профиль шире телефона. Прокручивается сам
+           блок; горизонтальной прокрутки у страницы быть не должно. */
+        .case-export .section-body { overflow-x: auto; }
+
+        @media print {
+            /* Навигация и кнопки — экранные: в распечатке они бессмысленны. */
+            .case-export__bar, .site-header, .site-footer { display: none !important; }
+            .case-export { max-width: none; padding: 0; }
+            .case-export__doc { margin-top: 0; }
+            /* Разделы — с новой страницы, заголовки не отрываются от текста. */
+            .case-export__part { break-before: page; page-break-before: always; }
+            .case-export__part--first { break-before: auto; page-break-before: auto; }
+            h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+            table, .results-section { break-inside: avoid-page; }
+            tr, li { break-inside: avoid; }
+            /* В распечатке резать нечего: прокрутки на бумаге нет. */
+            .case-export .section-body { overflow: visible; }
+            details, .owner-case-individual { display: block; }
+            details > summary { display: none; }
+            a[href]:after { content: ""; }
+            body { background: #fff; }
+        }
+    </style>
+</head>
+<body class="case-export-page">
+{% macro sections(list) %}
+    {% for section in list %}
+        <section class="results-section results-section--{{ section.type }}">
+            {% if section.title %}<h3 class="section-title">{{ section.title }}</h3>{% endif %}
+            <div class="section-body">
+                {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
+            </div>
+        </section>
+    {% endfor %}
+{% endmacro %}
+
+{% macro answer_list(rows) %}
+    <ol class="owner-answer-list">
+        {% for row in rows %}
+            <li class="owner-answer-row">
+                <p class="owner-answer-question">{{ row.question }}</p>
+                {% if row.self_answer is defined %}
+                    <dl class="owner-answer-dual">
+                        <div><dt>Я</dt><dd>{{ row.self_answer }}</dd></div>
+                        <div><dt>Партнёр (по мнению респондента)</dt><dd>{{ row.partner_answer }}</dd></div>
+                    </dl>
+                {% else %}
+                    <p class="owner-answer-value">{{ row.answer }}{% if row.score is not null %}<span> · {{ row.score }} балл.</span>{% endif %}</p>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+{% endmacro %}
+
+<div class="case-export">
+    <div class="case-export__bar">
+        <p>Версия для печати. Сохраните в PDF или Word средствами браузера.</p>
+        <span>
+            <button type="button" class="btn btn-primary" data-print>Печать</button>
+            <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ case_id }}">К карточке кейса</a>
+        </span>
+    </div>
+
+    <article class="case-export__doc">
+        <header class="case-export__head">
+            <h1>{{ document.header.test_name }}</h1>
+            <div class="case-export__meta">
+                {% if document.header.client_label %}<span><strong>Клиент:</strong> {{ document.header.client_label }}</span>{% endif %}
+                <span><strong>Дата прохождения:</strong> {% if document.header.completed_at %}{{ document.header.completed_at|date("d.m.Y H:i") }}{% else %}не завершено{% endif %}</span>
+                <span>{{ document.header.prepared_by }}</span>
+            </div>
+            <p class="case-export__confidential">{{ document.header.confidential }}</p>
+        </header>
+
+        {% if document.pair %}
+        <section class="case-export__part case-export__part--first">
+            <h2>Парный результат</h2>
+            <p class="owner-help">Этот кейс — {{ document.pair.label }}.</p>
+            {{ _self.sections(document.pair.sections) }}
+        </section>
+        {% endif %}
+
+        <section class="case-export__part{% if not document.pair %} case-export__part--first{% endif %}">
+            <h2>{% if document.pair %}Индивидуальный результат{% else %}Базовый результат{% endif %}</h2>
+            {{ _self.sections(document.sections) }}
+        </section>
+
+        {% if document.options.include_answers %}
+        <section class="case-export__part">
+            <h2>{% if document.pair %}Анкеты обоих партнёров{% else %}Анкета по пунктам{% endif %}</h2>
+            {% if document.pair %}
+                {% for sheet in document.pair.questionnaires %}
+                    <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
+                    {{ _self.answer_list(sheet.rows) }}
+                {% endfor %}
+            {% else %}
+                {{ _self.answer_list(document.answers) }}
+            {% endif %}
+        </section>
+        {% endif %}
+
+        {% if document.professional %}
+        <section class="case-export__part">
+            <h2>Профессиональное заключение</h2>
+            <div class="ai-report__body">{{ document.professional.html|raw }}</div>
+        </section>
+        {% endif %}
+
+        {% if document.clear %}
+        <section class="case-export__part">
+            <h2>Понятный разбор</h2>
+            {% if document.clear.published %}
+                <p class="case-export__badge">Опубликовано клиенту, версия №{{ document.clear.revision_no }} от {{ document.clear.date }}</p>
+            {% else %}
+                <p class="case-export__badge case-export__badge--draft">Черновик, не опубликован — версия №{{ document.clear.revision_no }}</p>
+            {% endif %}
+            <div class="ai-report__body">{{ document.clear.html|raw }}</div>
+        </section>
+        {% endif %}
+
+        {% if document.note %}
+        <section class="case-export__part">
+            <h2>Заметка к назначению</h2>
+            <p class="case-export__note">{{ document.note }}</p>
+        </section>
+        {% endif %}
+
+        <footer class="case-export__foot">
+            <p>Документ сформирован {{ document.generated_at }}.</p>
+            <p>{{ document.disclaimer }}</p>
+            <p>{{ document.header.confidential }}.</p>
+        </footer>
+    </article>
+</div>
+
+{# Скрипт канонического профиля подключает сам блок графика: второй раз не нужен. #}
+<script src="{{ asset('js/owner-case-export.js') }}"></script>
+</body>
+</html>

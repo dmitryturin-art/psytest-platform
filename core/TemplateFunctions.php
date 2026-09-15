@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PsyTest\Core;
 
 use Twig\Environment;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
@@ -37,5 +38,16 @@ final class TemplateFunctions
 
             return $basePath . '/' . $relative . $version;
         }));
+
+        // Кабинет показывал значения столбцов (`completed`, `therapist_case`).
+        // Перевод сделан фильтром, а не в каждом шаблоне: словарь один.
+        $twig->addFilter(new TwigFilter(
+            'status_label',
+            static fn (?string $value): string => OwnerLabels::status($value),
+        ));
+        $twig->addFilter(new TwigFilter(
+            'retention_label',
+            static fn (?string $value): string => OwnerLabels::retention($value),
+        ));
     }
 }
