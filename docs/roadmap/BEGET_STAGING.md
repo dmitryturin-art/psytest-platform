@@ -125,4 +125,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 27. Выкладка `60e536b` (15.09): фикс залипающего списка заголовков в редакторе, возврат зависших заданий при просмотре; миграций нет. SHA-256 `5cd6dd942b443079c3be6aa78114d3dc46c0f3b9058e4b5a40fe7cebb1a3e418` совпал; dump `backups/pre-deploy-60e536b.sql.gz` проверен.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/b0386cb/public` и `current` на `releases/b0386cb`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+28. Выкладка `9b80e42` (15.09): «Заказать заново» пересобирает снимок; заметные кнопки; миграций нет. SHA-256 `df4b33361c5b2bb1b9b69d42067899311e0b4238809e729e064a79a0977c1c9c` совпал; dump `backups/pre-deploy-9b80e42.sql.gz` проверен.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/60e536b/public` и `current` на `releases/60e536b`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.

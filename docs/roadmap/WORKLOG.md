@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B18 — staging-выкладка K5g + K5h (`9b80e42`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-9b80e42`; deployed runtime `9b80e42` (merge PR #110; включает #109 заметные кнопки). Миграций нет.
+- Сделано: артефакт `release-9b80e42.tar.gz`, SHA-256 `df4b3336…1c9c` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-9b80e42.sql.gz` (gzip -t OK); `public_html`/`current` атомарно на `releases/9b80e42`.
+- Проверки: основные маршруты `200`, `/test/smil` `404`. Профессиональное заключение кейса «Дмитрий» получено (заказ из веб-запроса, воркер отработал), но со старым снимком без глоссария партии 2 — владелец перезаказывает после этой выкладки.
+- Rollback: `public_html` → `releases/60e536b/public`, `current` → `releases/60e536b`.
+
 ### 07.K5h — явный заказ заново пересобирает снимок входа
 
 - Этап / ветка / commit: этап 07, `codex/07-k5h-reorder-fresh-snapshot` от `main` `e3a3fb1`.
