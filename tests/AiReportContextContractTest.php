@@ -196,6 +196,7 @@ final class AiReportContextContractTest extends TestCase
         $glossaryFile = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-glossary.json'), true, 512, JSON_THROW_ON_ERROR);
         $explainedIds = array_keys((array) $glossaryFile['scales']);
         self::assertGreaterThanOrEqual(16, count($explainedIds));
+        self::assertSame([], $payload['additional_scales_without_glossary'], 'С партии 07.G2 пояснение есть у каждой переданной шкалы.');
         foreach ($payload['additional_scales'] as $scale) {
             $code = (string) $scale['code'];
             $hasEntry = array_key_exists($code, $payload['additional_scales_glossary']);
@@ -218,6 +219,22 @@ final class AiReportContextContractTest extends TestCase
         $codes = array_map(static fn (array $scale): string => (string) $scale['code'], $payload['additional_scales']);
         self::assertSame([], array_diff(array_keys($payload['additional_scales_glossary']), $codes));
         self::assertSame([], array_diff($payload['additional_scales_without_glossary'], $codes));
+    }
+
+    public function testGlossaryCoversEveryScaleTheRegistryCanCalculate(): void
+    {
+        // Глоссарий адресуется id реестра, а не кодам: переименование шкалы не
+        // должна оставлять её без пояснения. Партии 05.S3.1 и 05.S3.2 — 35 шкал,
+        // и с 07.G2 покрыты обе целиком.
+        $registry = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-v2.json'), true, 512, JSON_THROW_ON_ERROR);
+        $glossary = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-glossary.json'), true, 512, JSON_THROW_ON_ERROR);
+
+        $registryIds = array_map(static fn (array $scale): string => (string) $scale['id'], (array) $registry['scales']);
+        $explainedIds = array_keys((array) $glossary['scales']);
+
+        self::assertCount(35, $registryIds, 'Предусловие: реестр состоит из 35 шкал.');
+        self::assertSame([], array_diff($registryIds, $explainedIds), 'Каждая шкала реестра обязана иметь запись в глоссарии.');
+        self::assertSame([], array_diff($explainedIds, $registryIds), 'Пояснение по шкале вне реестра только занимает место.');
     }
 
     public function testSmilShipsTheLevelRuleSoTheModelDoesNotInventItsOwn(): void
@@ -271,7 +288,9 @@ final class AiReportContextContractTest extends TestCase
             JSON_UNESCAPED_UNICODE,
         );
 
-        self::assertLessThan(24000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
+        // 07.G2: глоссарий покрыл все 35 шкал реестра, и это его конечный
+        // размер — дальше расти ему уже не на чем.
+        self::assertLessThan(28000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
     }
 
     public function testSmilReportsTheFormInsteadOfBareGender(): void
