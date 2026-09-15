@@ -44,7 +44,7 @@ final class AdditionalScalesCalculatorTest extends TestCase
             'ANC', 'GLT', 'NEU', 'NOC', 'NUC', 'SOR',
             'EPI', 'PAR', 'PRS', 'POI', 'NAI', 'PAO', 'PAS', 'PRC', 'PPD', 'FMD',
             'AUT', 'PDO', 'PDS', 'SZP', 'PFA', 'PNE', 'PSZ', 'SAL', 'EAL', 'BSE',
-            'ALD', 'RSP', 'CAU', 'Cl', 'Cs', 'CRM1', 'Do2', 'CRM2', 'Ds', 'IMV',
+            'ALD', 'RSP', 'Ca', 'Cl', 'Cs', 'CRM1', 'Do2', 'CRM2', 'Ds', 'IMV',
             'GMA', 'HCO', 'Hv', 'Hy2', 'Hy5', 'In', 'IQR', 'CHO', 'Mf4', 'Or',
             'Pr', 'RCD', 'SCZ', 'To', 'TCH', 'ULC', 'LAC', 'Wa', 'SDF',
         ];

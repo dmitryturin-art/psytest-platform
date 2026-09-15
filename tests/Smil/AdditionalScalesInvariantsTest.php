@@ -141,7 +141,7 @@ final class AdditionalScalesInvariantsTest extends TestCase
     private const BATCH_5 = [
         7 => 'ALD',
         19 => 'RSP',
-        22 => 'CAU',
+        22 => 'Ca',
         23 => 'Cl',
         38 => 'Cs',
         47 => 'CRM1',
