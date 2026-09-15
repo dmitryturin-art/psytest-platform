@@ -9,18 +9,21 @@ use PsyTest\Core\Database;
 /**
  * Настройки ИИ, которыми владелец управляет из кабинета (07.WP9).
  *
- * Их всего две: общий выключатель разборов и переопределение модели. Всё
+ * Это общий выключатель разборов, переопределение модели и режим глоссария
+ * СМИЛ в контексте разбора (07.G6). Всё
  * остальное — адрес провайдера, таймаут и, главное, ключ — остаётся в
  * environment: секрет не редактируется через веб и не хранится в БД
  * (PRODUCT_RULES §6, ENGINEERING_RULES §9).
  *
  * Отсутствие строки значит «по умолчанию»: разборы включены, модель берётся
- * из `.env`. Так пустая таблица ведёт себя ровно как поведение до этого пакета.
+ * из `.env`, глоссарий СМИЛ уходит полным. Так пустая таблица ведёт себя ровно
+ * как поведение до этих пакетов.
  */
 final class AiSettings
 {
     public const KEY_ENABLED = 'ai_enabled';
     public const KEY_MODEL = 'ai_model';
+    public const KEY_SMIL_GLOSSARY_MODE = 'smil_glossary_mode';
 
     /** @var array<string, string|null>|null */
     private ?array $cache = null;
@@ -44,6 +47,22 @@ final class AiSettings
     public function modelOverride(): string
     {
         return trim((string) ($this->value(self::KEY_MODEL) ?? ''));
+    }
+
+    /**
+     * Режим глоссария СМИЛ в контексте разбора (07.G6): `full` или `compact`.
+     *
+     * Отсутствие строки — «полный», то есть ровно поведение до этого пакета:
+     * компактный режим включается только явным действием владельца.
+     */
+    public function smilGlossaryMode(): string
+    {
+        return SmilGlossaryCompactor::normalizeMode($this->value(self::KEY_SMIL_GLOSSARY_MODE));
+    }
+
+    public function setSmilGlossaryMode(string $mode): void
+    {
+        $this->put(self::KEY_SMIL_GLOSSARY_MODE, SmilGlossaryCompactor::normalizeMode($mode));
     }
 
     public function setAiEnabled(bool $enabled): void

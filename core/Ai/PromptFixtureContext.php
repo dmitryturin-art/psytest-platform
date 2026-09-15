@@ -24,9 +24,14 @@ final class PromptFixtureContext
     /**
      * @return array<string, mixed>
      *
+     * @param AiSettings|null $ownerSettings Настройки кабинета: предпросмотр
+     *                                        обязан показывать тот же режим
+     *                                        глоссария, что уйдёт боевым
+     *                                        запросом (07.G6).
+     *
      * @throws AiProviderException если методика не отдаёт данные в этом режиме
      */
-    public static function build(TestModuleInterface $module, string $mode): array
+    public static function build(TestModuleInterface $module, string $mode, ?AiSettings $ownerSettings = null): array
     {
         // Тот же путь, что и в AiReportContextBuilder: для пары модуль сначала
         // сводит результаты двух участников, и уже это сведение проходит через
@@ -44,7 +49,9 @@ final class PromptFixtureContext
             throw new AiProviderException('Методика не отдаёт данные в этом режиме — предпросмотр невозможен.');
         }
 
-        return $context;
+        // Тот же компактор, что и в AiReportContextBuilder: иначе предпросмотр
+        // расходится с боевой нагрузкой ровно там, где владелец сравнивает разборы.
+        return SmilGlossaryCompactor::fromSettings($ownerSettings)->apply($context);
     }
 
     /**

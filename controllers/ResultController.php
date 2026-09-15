@@ -145,7 +145,7 @@ class ResultController extends BaseController
 
     private function contextBuilder(): AiReportContextBuilder
     {
-        return new AiReportContextBuilder($this->sessionManager, $this->moduleLoader);
+        return new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, new AiSettings($this->db));
     }
 
     /**
