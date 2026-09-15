@@ -460,6 +460,11 @@ final class OwnerController extends BaseController
      */
     private function aiSection(string $sessionId, string $testSlug): array
     {
+        // Зависшие задания (воркер убит хостингом) возвращает в очередь только
+        // сам воркер, а он стартует лишь при новом заказе. Чтобы карточка не
+        // показывала «в работе» бесконечно, срок проверяется и при просмотре.
+        (new AiReportRepository($this->db))->releaseStuck();
+
         $session = $this->sessionManager->getSessionById($sessionId);
         $mode = $session === null
             ? 'individual'
@@ -637,6 +642,8 @@ final class OwnerController extends BaseController
      */
     public function caseReportStatus(string $sessionId): void
     {
+        (new AiReportRepository($this->db))->releaseStuck();
+
         if (!$this->requireOwner()) {
             return;
         }

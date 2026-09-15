@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 07.K5f — редактор: список заголовков не залипает; зависшие задания возвращаются при просмотре
+
+- Этап / ветка / commit: этап 07, `codex/07-k5f-editor-label-stale` от `main` `4a39c8b`.
+- Причина (замечания владельца 15.09): в редакторе при любой правке открывался и оставался список заголовков — textarea и смонтированный рядом визуальный редактор были внутри `<label>`, и клик внутри label уходил первому элементу управления, кнопке заголовков; профессиональное заключение висело «в работе», потому что `releaseStuck` вызывал только воркер, который стартует лишь при новом заказе.
+- Сделано: `<label>`-обёртка заменена на `<div class="owner-field">` с `<label for>`; `OwnerController::aiSection` и `caseReportStatus` вызывают `AiReportRepository::releaseStuck()` (30 минут) при просмотре карточки и опросе статуса.
+- Проверки: `OwnerDashboardContractTest` + `AiReportQueueTest` — 30 tests / 325 assertions OK; `composer test:fast` 419 OK; analyse/lint OK.
+
 ### 08.B16 — staging-выкладка K5e (`b0386cb`)
 
 - Этап / ветка / commit: этап 08, `codex/08-deploy-b0386cb`; deployed runtime `b0386cb` (merge PR #105). Миграций нет.
