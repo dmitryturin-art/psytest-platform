@@ -33,6 +33,13 @@ final class BackgroundWorkerLauncher
      */
     public const THROTTLE_SECONDS = 10;
 
+    /**
+     * Воркер вычерпывает очередь, а не только «свои» задания: два заказа с
+     * разницей в секунды дают один запуск (второй гасит троттлинг), и без
+     * запаса второе задание оставалось бы в очереди без обработчика (15.09).
+     */
+    public const DRAIN_LIMIT = 10;
+
     public const LOG_FILE = 'ai-worker.log';
 
     /** @var (callable(string): void)|null */
@@ -88,7 +95,7 @@ final class BackgroundWorkerLauncher
             return true;
         }
 
-        $command = $this->command(max(1, $limit));
+        $command = $this->command(max(self::DRAIN_LIMIT, $limit));
 
         try {
             $runner($command);

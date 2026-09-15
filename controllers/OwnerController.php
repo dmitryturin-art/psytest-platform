@@ -458,12 +458,32 @@ final class OwnerController extends BaseController
      *
      * @return array<string, mixed>
      */
+    /**
+     * Самолечение очереди: если у кейса есть задание в ожидании, а воркера нет
+     * (его убил хостинг, или запуск был погашен троттлингом), просмотр карточки
+     * или опрос статуса поднимает воркер заново. Троттлинг лаунчера не даёт
+     * плодить процессы при частом опросе.
+     */
+    private function relaunchWorkerIfQueued(string $sessionId): void
+    {
+        $pending = $this->db->selectOne(
+            'SELECT id FROM ai_reports WHERE session_id = :session_id AND status = :status LIMIT 1',
+            ['session_id' => $sessionId, 'status' => AiReportRepository::STATUS_PENDING],
+        );
+        if ($pending === null) {
+            return;
+        }
+
+        BackgroundWorkerLauncher::fromConfig(require dirname(__DIR__) . '/config.php')->launch(BackgroundWorkerLauncher::DRAIN_LIMIT);
+    }
+
     private function aiSection(string $sessionId, string $testSlug): array
     {
         // Зависшие задания (воркер убит хостингом) возвращает в очередь только
         // сам воркер, а он стартует лишь при новом заказе. Чтобы карточка не
         // показывала «в работе» бесконечно, срок проверяется и при просмотре.
         (new AiReportRepository($this->db))->releaseStuck();
+        $this->relaunchWorkerIfQueued($sessionId);
 
         $session = $this->sessionManager->getSessionById($sessionId);
         $mode = $session === null
@@ -649,6 +669,7 @@ final class OwnerController extends BaseController
     public function caseReportStatus(string $sessionId): void
     {
         (new AiReportRepository($this->db))->releaseStuck();
+        $this->relaunchWorkerIfQueued($sessionId);
 
         if (!$this->requireOwner()) {
             return;
