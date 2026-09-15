@@ -26,6 +26,7 @@ use PsyTest\Core\Ai\AiProviderSettings;
 use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
+use PsyTest\Core\Ai\AiSettings;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\Database;
@@ -43,13 +44,20 @@ $log = static function (string $message): void {
     echo '[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL;
 };
 
-$settings = AiProviderSettings::fromConfig($config);
+$db = Database::getInstance();
+$aiSettings = new AiSettings($db);
+$settings = AiProviderSettings::fromConfig($config, $aiSettings);
+
+if (!$aiSettings->isAiEnabled()) {
+    $log('ИИ-разборы выключены владельцем в кабинете. Задания не берутся.');
+    exit(0);
+}
+
 if (!$settings->isConfigured()) {
     $log('Провайдер ИИ не настроен: нет ключа или адреса. Задания не берутся.');
     exit(0);
 }
 
-$db = Database::getInstance();
 $reports = new AiReportRepository($db);
 
 $released = $reports->releaseStuck();
@@ -65,8 +73,8 @@ $contextBuilder = new AiReportContextBuilder(
 $generator = new AiReportGenerator(
     $reports,
     $contextBuilder,
-    PromptRegistry::default(),
-    new AiClient($settings, new CurlTransport()),
+    PromptRegistry::default($db),
+    new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings),
 );
 
 // Поставить задание по ссылке результата. Нужно, пока на странице нет кнопки:
@@ -86,7 +94,7 @@ if (isset($options['request'])) {
     $test = $db->selectOne('SELECT slug FROM tests WHERE id = ?', [$session['test_id']]);
     $slug = (string) ($test['slug'] ?? '');
 
-    $prompt = PromptRegistry::default()->published($slug, $mode, $kind);
+    $prompt = PromptRegistry::default($db)->published($slug, $mode, $kind);
     if ($prompt === null) {
         $log("Промпт «{$slug} | {$mode} | {$kind}» не опубликован — задание не ставится.");
         exit(1);

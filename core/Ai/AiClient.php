@@ -16,15 +16,21 @@ final class AiClient
     /** Статусы, при которых повтор осмыслен: перегрузка пула и сбои на стороне провайдера. */
     private const RETRYABLE_STATUSES = [408, 409, 425, 429, 500, 502, 503, 504];
 
+    /** Причина отказа, когда владелец выключил разборы в кабинете (07.WP9). */
+    public const DISABLED_REASON = 'ИИ-разборы временно выключены владельцем';
+
     /**
      * @param callable(int): void|null $sleeper Пауза между попытками; подменяется в тестах,
      *                                          чтобы они не ждали по-настоящему.
+     * @param AiSettings|null $ownerSettings Общий выключатель владельца. Без него
+     *                                       (тесты, CLI без БД) клиент работает как прежде.
      */
     public function __construct(
         private readonly AiProviderSettings $settings,
         private readonly AiTransport $transport,
         private readonly int $maxAttempts = 3,
         private $sleeper = null,
+        private readonly ?AiSettings $ownerSettings = null,
     ) {
     }
 
@@ -34,6 +40,12 @@ final class AiClient
      */
     public function complete(Prompt $prompt, array $context, ?string $ownerContext = null): AiCompletion
     {
+        // Рубильник владельца проверяется до всего остального: выключенный
+        // разбор не должен ни уйти провайдеру, ни стоить денег.
+        if ($this->ownerSettings !== null && !$this->ownerSettings->isAiEnabled()) {
+            throw new AiProviderException(self::DISABLED_REASON);
+        }
+
         if (!$prompt->isPublished()) {
             throw new AiProviderException("Промпт «{$prompt->key()}» не опубликован — вызов запрещён.");
         }
