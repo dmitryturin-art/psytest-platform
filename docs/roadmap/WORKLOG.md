@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B21 — staging-выкладка K5k (`63f9057`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-63f9057`; deployed runtime `63f9057` (merge PR #116). Миграций нет.
+- Сделано: артефакт `release-63f9057.tar.gz`, SHA-256 `07b0b836…59d5` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/63f9057`.
+- Проверки: основные маршруты `200`, `/test/smil` `404`. Понятный разбор кейса «Дмитрий» ждал в `pending` с 18:19 — после выкладки владелец открывает карточку, воркер поднимается сам.
+- Rollback: `public_html` → `releases/0f32c96/public`, `current` → `releases/0f32c96`.
+
 ### 07.K5k — воркер вычерпывает очередь и перезапускается при просмотре кейса
 
 - Этап / ветка / commit: этап 07, `codex/07-k5k-worker-drain` от `main`.

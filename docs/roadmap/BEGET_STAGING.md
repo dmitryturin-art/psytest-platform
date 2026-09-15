@@ -129,4 +129,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 29. Выкладки `eddee4c` (S3.3 + G3) и `0f32c96` («Заказать заново» для готовых черновиков), 15.09; миграций нет. SHA-256 `e7cc502b7e048928a304c6c5e5b2a2b1f9fddb42ccae75e8e7565285316372a7` и `9fa122a8ea4674acff3dae8db16efe3c0fc4409753eedc17871dfe0c1c09bcee` совпали; dumps проверены.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/eddee4c/public` и `current` на `releases/eddee4c`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+30. Выкладка `63f9057` (15.09): воркер с `--limit=10` и самоперезапуск из карточки кейса; миграций нет. SHA-256 `07b0b83601b6224eef64bda41588bf4a9c7083333195173be5c4bb6150a859d5` совпал; dump проверен. Ручной запуск воркера по SSH на Beget невозможен: процесс убивается при закрытии сессии даже с `setsid`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/0f32c96/public` и `current` на `releases/0f32c96`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
