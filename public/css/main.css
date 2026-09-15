@@ -4166,3 +4166,27 @@ body {
     color: var(--color-text-light);
     font-size: 0.9375rem;
 }
+
+/* Дополнительные шкалы СМИЛ (05.S3.1): подписи источника и норм пола */
+.scores-table .category-note,
+.scores-table .scale-source,
+.scores-table .scale-norm {
+    display: block;
+    font-size: 0.78em;
+    font-weight: 400;
+    color: var(--color-text-light, #667);
+    margin-top: 2px;
+}
+
+.scores-table .category-note {
+    display: inline;
+    margin-left: var(--spacing-sm, 8px);
+}
+
+.scores-table tr.level--above td {
+    background: #fff3e0;
+}
+
+.scores-table tr.level--below td {
+    background: #e3f2fd;
+}
