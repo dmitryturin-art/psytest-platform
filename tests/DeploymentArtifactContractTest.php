@@ -29,4 +29,27 @@ final class DeploymentArtifactContractTest extends TestCase
         self::assertStringContainsString('^tmp/release-[A-Za-z0-9._-]+$', $script);
         self::assertStringNotContainsString('./ "$STAGE/"', $script);
     }
+
+    /**
+     * Локальная библиотека редактора доезжает до сервера (07.K5d).
+     *
+     * Исключение `/vendor` в сборке привязано к корню репозитория, а
+     * `public/vendor` — совсем другой каталог: это файлы страницы, без которых
+     * визуальный редактор просто не откроется. Проверяются оба условия: файл
+     * под контролем версий (сборка сверяет артефакт с `git ls-files public`)
+     * и исключение не может задеть web root.
+     */
+    public function testEditorLibraryShipsWithTheArtifact(): void
+    {
+        $root = dirname(__DIR__);
+        $script = (string) file_get_contents($root . '/bin/build-release.sh');
+
+        self::assertStringContainsString("--exclude '/vendor'", $script);
+        self::assertStringNotContainsString("--exclude 'vendor'", $script);
+        self::assertStringContainsString('git ls-files public', $script);
+
+        $tracked = [];
+        exec('git -C ' . escapeshellarg($root) . ' ls-files public/vendor', $tracked);
+        self::assertContains('public/vendor/toastui-editor/toastui-editor-all.min.js', $tracked);
+    }
 }

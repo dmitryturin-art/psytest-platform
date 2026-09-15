@@ -4144,6 +4144,26 @@ body {
     resize: vertical;
 }
 
+/* Визуальный редактор включился — поле остаётся в форме, но скрыто. */
+.owner-editor-textarea--enhanced {
+    display: none;
+}
+
+.owner-markdown-editor {
+    max-width: 100%;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Тулбар библиотеки на узком экране переносится, а не растягивает страницу. */
+.owner-markdown-editor .toastui-editor-defaultUI-toolbar {
+    flex-wrap: wrap;
+    height: auto;
+}
+
+.owner-markdown-editor .toastui-editor-defaultUI {
+    max-width: 100%;
+}
+
 .owner-revision-list {
     display: grid;
     gap: var(--spacing-md);
