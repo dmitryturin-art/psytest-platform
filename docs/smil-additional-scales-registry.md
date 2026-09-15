@@ -1,6 +1,6 @@
 # Реестр дополнительных шкал СМИЛ — S1
 
-**Статус:** инвентарь S1 от 09.09.2026. Это не публикация новых ключей, не корректировка
+**Статус:** инвентарь S1 от 09.09.2026; транскрипция S2 от 15.09.2026 — [smil-additional-scales-transcription.json](smil-additional-scales-transcription.json). Это не публикация новых ключей, не корректировка
 расчёта и не проверка базовых 13 шкал. Все runtime-значения ниже остаются неизменными.
 
 ## Граница и схема реестра
@@ -22,119 +22,119 @@ _Стандартизированный многофакторный метод 
 
 | ID | № в источнике | Название | PDF / печатная стр. | true/false keys и нормы по полу | Статус |
 |---|---:|---|---|---|---|
-| sobchik-001 | 1 | А — первый фактор | 197 / 195 | source-present / not-transcribed | missing |
-| sobchik-002 | 2 | Способности к обучению | 197 / 195 | source-present / not-transcribed | missing |
-| sobchik-006 | 6 | Зрелость | 197 / 195 | source-present / not-transcribed | missing |
-| sobchik-007 | 7 | Алкогольная дифференциация | 197 / 195 | source-present / not-transcribed | missing |
-| sobchik-009 | 9 | Алкоголизм | 197 / 195 | source-present / not-transcribed | missing |
-| sobchik-019 | 19 | Черта ответственности | 198 / 196 | source-present / not-transcribed | missing |
-| sobchik-022 | 22 | Органическое поражение хвостатого ядра | 198 / 196 | source-present / not-transcribed | missing |
-| sobchik-023 | 23 | Студенческий староста | 198 / 196 | source-present / not-transcribed | missing |
-| sobchik-026 | 26 | Контроль | 198 / 196 | source-present / not-transcribed | missing |
-| sobchik-036 | 36 | Соперничество | 198 / 196 | source-present / not-transcribed | missing |
-| sobchik-037 | 37 | Конверсионная реакция | 199 / 197 | source-present / not-transcribed | missing |
-| sobchik-038 | 38 | Адвокатский тип личности | 199 / 197 | source-present / not-transcribed | missing |
-| sobchik-039 | 39 | Цинизм | 199 / 197 | source-present / not-transcribed | missing |
-| sobchik-041 | 41 | Чистая депрессия | 199 / 197 | source-present / not-transcribed | missing |
-| sobchik-042 | 42 | Субъективная депрессия | 199 / 197 | source-present / not-transcribed | missing |
-| sobchik-043 | 43 | Психическая заторможенность | 199 / 197 | source-present / not-transcribed | missing |
-| sobchik-046 | 46 | Мрачность (угрюмость) | 200 / 198 | source-present / not-transcribed | missing |
-| sobchik-047 | 47 | Преступность | 200 / 198 | source-present / not-transcribed | missing |
-| sobchik-048 | 48 | Отрицание симптомов | 200 / 198 | source-present / not-transcribed | missing |
-| sobchik-049 | 49 | Доминирование | 200 / 198 | source-present / not-transcribed | missing |
-| sobchik-050 | 50 | Доминирование | 200 / 198 | source-present / not-transcribed | missing |
-| sobchik-051 | 51 | Явная депрессия | 200 / 198 | source-present / not-transcribed | missing |
-| sobchik-052 | 52 | Преступность | 201 / 199 | source-present / not-transcribed | missing |
-| sobchik-053 | 53 | Депрессивные реакции | 201 / 199 | source-present / not-transcribed | missing |
-| sobchik-055 | 55 | Диссимуляция | 201 / 199 | source-present / not-transcribed | missing |
-| sobchik-056 | 56 | Мягкая депрессия | 201 / 199 | source-present / not-transcribed | missing |
-| sobchik-057 | 57 | Зависимость | 201 / 199 | source-present / not-transcribed | missing |
-| sobchik-058 | 58 | Эскапизм (бегство от решения проблем) | 202 / 200 | source-present / not-transcribed | missing |
-| sobchik-059 | 59 | Эмоциональная незрелость | 202 / 200 | source-present / not-transcribed | missing |
-| sobchik-060 | 60 | Сверхконтроль «Я» (зажатость) | 202 / 200 | source-present / not-transcribed | missing |
-| sobchik-061 | 61 | Эпилепсия | 202 / 200 | source-present / not-transcribed | missing |
-| sobchik-062 | 62 | Сила Эго | 202 / 200 | source-present / not-transcribed | missing |
-| sobchik-064 | 64 | Оценка улучшения | 203 / 201 | source-present / not-transcribed | missing |
-| sobchik-066 | 66 | Женственность | 203 / 201 | source-present / not-transcribed | missing |
-| sobchik-070 | 70 | Общая плохая приспособляемость | 203 / 201 | source-present / not-transcribed | missing |
-| sobchik-072 | 72 | Предипохондрическое состояние | 203 / 201 | source-present / not-transcribed | missing |
-| sobchik-073 | 73 | Предрасположенность к головным болям | 203 / 201 | source-present / not-transcribed | missing |
-| sobchik-074 | 74 | Контроль над враждебностью | 203 / 201 | source-present / not-transcribed | missing |
-| sobchik-075 | 75 | Сосредоточенность на здоровье | 204 / 202 | source-present / not-transcribed | missing |
-| sobchik-077 | 77 | Враждебность | 204 / 202 | source-present / not-transcribed | missing |
-| sobchik-080 | 80 | Чистая ипохондрия | 204 / 202 | source-present / not-transcribed | missing |
-| sobchik-081 | 81 | Выраженная враждебность | 204 / 202 | source-present / not-transcribed | missing |
-| sobchik-083 | 83 | Чистая истерия | 204 / 202 | source-present / not-transcribed | missing |
-| sobchik-084 | 84 | Вытеснение тревоги | 204 / 202 | source-present / not-transcribed | missing |
-| sobchik-085 | 85 | Потребность в эмоциональных переживаниях | 205 / 203 | source-present / not-transcribed | missing |
-| sobchik-087 | 87 | Соматические жалобы | 205 / 203 | source-present / not-transcribed | missing |
-| sobchik-088 | 88 | Подавленная агрессия | 205 / 203 | source-present / not-transcribed | missing |
-| sobchik-089 | 89 | Явная истерия | 205 / 203 | source-present / not-transcribed | missing |
-| sobchik-090 | 90 | Скрытая истерия | 205 / 203 | source-present / not-transcribed | missing |
-| sobchik-092 | 92 | Интеллектуальная эффективность (условия для мыслительной деятельности) | 205 / 203 | source-present / not-transcribed | missing |
-| sobchik-093 | 93 | Импульсивность | 206 / 204 | source-present / not-transcribed | missing |
-| sobchik-094 | 94 | Внутренняя плохая приспособляемость (внутренняя рассогласованность) | 206 / 204 | source-present / not-transcribed | missing |
-| sobchik-095 | 95 | Интеллектуальный коэффициент (реальная продуктивность интеллекта) | 206 / 204 | source-present / not-transcribed | missing |
-| sobchik-097 | 97 | Осознанная тревога | 206 / 204 | source-present / not-transcribed | missing |
-| sobchik-098 | 98 | Комплекс осуждения (комплекс вины) | 206 / 204 | source-present / not-transcribed | missing |
-| sobchik-099 | 99 | Осознанная выраженная враждебность | 207 / 205 | source-present / not-transcribed | missing |
-| sobchik-106 | 106 | Лидерство | 207 / 205 | source-present / not-transcribed | missing |
-| sobchik-109 | 109 | Чистая гипомания | 207 / 205 | source-present / not-transcribed | missing |
-| sobchik-110 | 110 | Аморальность | 207 / 205 | source-present / not-transcribed | missing |
-| sobchik-111 | 111 | Психомоторная акселерация | 207 / 205 | source-present / not-transcribed | missing |
-| sobchik-114 | 114 | Явная гипомания | 208 / 206 | source-present / not-transcribed | missing |
-| sobchik-115 | 115 | Скрытая гипомания | 208 / 206 | source-present / not-transcribed | missing |
-| sobchik-119 | 119 | Эмоциональная сензитивность | 208 / 206 | source-present / not-transcribed | missing |
-| sobchik-121 | 121 | Альтруизм | 208 / 206 | source-present / not-transcribed | missing |
-| sobchik-122 | 122 | Женственность интересов | 208 / 206 | source-present / not-transcribed | missing |
-| sobchik-129 | 129 | Невротизм | 208 / 206 | source-present / not-transcribed | missing |
-| sobchik-131 | 131 | Невротический сверхконтроль | 209 / 207 | source-present / not-transcribed | missing |
-| sobchik-134 | 134 | Невротическое снижение контроля | 209 / 207 | source-present / not-transcribed | missing |
-| sobchik-135 | 135 | Оригинальность | 209 / 207 | source-present / not-transcribed | missing |
-| sobchik-138 | 138 | Чистая паранойя | 209 / 207 | source-present / not-transcribed | missing |
-| sobchik-139 | 139 | Идеи преследования | 209 / 207 | source-present / not-transcribed | missing |
-| sobchik-140 | 140 | Идеи отравления | 209 / 207 | source-present / not-transcribed | missing |
-| sobchik-141 | 141 | Наивность | 210 / 208 | source-present / not-transcribed | missing |
-| sobchik-142 | 142 | Явная паранойя | 210 / 208 | source-present / not-transcribed | missing |
-| sobchik-143 | 143 | Скрытая паранойя | 210 / 208 | source-present / not-transcribed | missing |
-| sobchik-144 | 144 | Предсказание изменений | 210 / 208 | source-present / not-transcribed | missing |
-| sobchik-146 | 146 | Чистая психопатия | 210 / 208 | source-present / not-transcribed | missing |
-| sobchik-147 | 147 | Семейная дисгармония | 210 / 208 | source-present / not-transcribed | missing |
-| sobchik-148 | 148 | Авторитарная проблема | 211 / 209 | source-present / not-transcribed | missing |
-| sobchik-152 | 152 | Явные психопатические отклонения | 211 / 209 | source-present / not-transcribed | missing |
-| sobchik-153 | 153 | Скрытые психопатические отклонения | 211 / 209 | source-present / not-transcribed | missing |
-| sobchik-156 | 156 | Прогноз шизофрении | 211 / 209 | source-present / not-transcribed | missing |
-| sobchik-157 | 157 | Фактор паранойи | 211 / 209 | source-present / not-transcribed | missing |
-| sobchik-158 | 158 | Психоневроз | 211 / 209 | source-present / not-transcribed | missing |
-| sobchik-162 | 162 | Предубеждённость | 212 / 210 | source-present / not-transcribed | missing |
-| sobchik-167 | 167 | Фарисейство | 212 / 210 | source-present / not-transcribed | missing |
-| sobchik-169 | 169 | Психологические интересы | 212 / 210 | source-present / not-transcribed | missing |
-| sobchik-170 | 170 | Параноидальная шизофрения | 212 / 210 | source-present / not-transcribed | missing |
-| sobchik-171 | 171 | R — второй фактор | 212 / 210 | source-present / not-transcribed | missing |
-| sobchik-172 | 172 | Рецидивизм | 212 / 210 | source-present / not-transcribed | missing |
-| sobchik-174 | 174 | Социальная ответственность | 213 / 211 | source-present / not-transcribed | missing |
-| sobchik-175 | 175 | Ригидность (женская) | 213 / 211 | source-present / not-transcribed | missing |
-| sobchik-176 | 176 | Ригидность (мужская) | 213 / 211 | source-present / not-transcribed | missing |
-| sobchik-177 | 177 | Играния роли | 213 / 211 | source-present / not-transcribed | missing |
-| sobchik-178 | 178 | Стабильность профиля (женская) | 213 / 211 | source-present / not-transcribed | missing |
-| sobchik-179 | 179 | Стабильность профиля (мужская) | 213 / 211 | source-present / not-transcribed | missing |
-| sobchik-181 | 181 | Чистая шизофрения | 214 / 212 | source-present / not-transcribed | missing |
-| sobchik-182 | 182 | Социальное отчуждение | 214 / 212 | source-present / not-transcribed | missing |
-| sobchik-183 | 183 | Эмоциональное отчуждение | 214 / 212 | source-present / not-transcribed | missing |
-| sobchik-187 | 187 | Причудливость сенсорного восприятия | 214 / 212 | source-present / not-transcribed | missing |
-| sobchik-189 | 189 | Самоудовлетворённость | 214 / 212 | source-present / not-transcribed | missing |
-| sobchik-193 | 193 | Реакция соматизации | 214 / 212 | source-present / not-transcribed | missing |
-| sobchik-194 | 194 | Социальная желательность | 215 / 213 | source-present / not-transcribed | missing |
-| sobchik-196 | 196 | Социальное участие | 215 / 213 | source-present / not-transcribed | missing |
-| sobchik-200 | 200 | Социальный статус | 215 / 213 | source-present / not-transcribed | missing |
-| sobchik-203 | 203 | Застенчивость | 215 / 213 | source-present / not-transcribed | missing |
-| sobchik-205 | 205 | Толерантность к стрессу | 215 / 213 | source-present / not-transcribed | missing |
-| sobchik-206 | 206 | Способность к преподаванию | 215 / 213 | source-present / not-transcribed | missing |
-| sobchik-208 | 208 | Защитная реакция на тест | 216 / 214 | source-present / not-transcribed | missing |
-| sobchik-209 | 209 | Язвенный тип личности | 216 / 214 | source-present / not-transcribed | missing |
-| sobchik-210 | 210 | Низкие способности к достижению цели | 216 / 214 | source-present / not-transcribed | missing |
-| sobchik-211 | 211 | Отношение к работе | 216 / 214 | source-present / not-transcribed | missing |
-| sobchik-212 | 212 | Стремление наговорить на себя | 216 / 214 | source-present / not-transcribed | missing |
+| sobchik-001 | 1 | А — первый фактор | 197 / 195 | transcribed (A=B) | missing |
+| sobchik-002 | 2 | Способности к обучению | 197 / 195 | transcribed (A=B) | missing |
+| sobchik-006 | 6 | Зрелость | 197 / 195 | transcribed (A=B) | missing |
+| sobchik-007 | 7 | Алкогольная дифференциация | 197 / 195 | transcribed (A=B) | missing |
+| sobchik-009 | 9 | Алкоголизм | 197 / 195 | transcribed (A=B) | missing |
+| sobchik-019 | 19 | Черта ответственности | 198 / 196 | transcribed (A=B) | missing |
+| sobchik-022 | 22 | Органическое поражение хвостатого ядра | 198 / 196 | transcribed (A=B) | missing |
+| sobchik-023 | 23 | Студенческий староста | 198 / 196 | transcribed (A=B) | missing |
+| sobchik-026 | 26 | Контроль | 198 / 196 | transcribed (A=B) | missing |
+| sobchik-036 | 36 | Соперничество | 198 / 196 | transcribed (A=B) | missing |
+| sobchik-037 | 37 | Конверсионная реакция | 199 / 197 | transcribed (A=B) | missing |
+| sobchik-038 | 38 | Адвокатский тип личности | 199 / 197 | transcribed (A=B) | missing |
+| sobchik-039 | 39 | Цинизм | 199 / 197 | transcribed (A=B) | missing |
+| sobchik-041 | 41 | Чистая депрессия | 199 / 197 | transcribed (A=B) | missing |
+| sobchik-042 | 42 | Субъективная депрессия | 199 / 197 | transcribed (A=B) | missing |
+| sobchik-043 | 43 | Психическая заторможенность | 199 / 197 | transcribed (A=B) | missing |
+| sobchik-046 | 46 | Мрачность (угрюмость) | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-047 | 47 | Преступность | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-048 | 48 | Отрицание симптомов | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-049 | 49 | Доминирование | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-050 | 50 | Доминирование | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-051 | 51 | Явная депрессия | 200 / 198 | transcribed (A=B) | missing |
+| sobchik-052 | 52 | Преступность | 201 / 199 | transcribed (A=B) | missing |
+| sobchik-053 | 53 | Депрессивные реакции | 201 / 199 | transcribed (A=B) | missing |
+| sobchik-055 | 55 | Диссимуляция | 201 / 199 | transcribed (A=B) | missing |
+| sobchik-056 | 56 | Мягкая депрессия | 201 / 199 | transcribed (A=B) | missing |
+| sobchik-057 | 57 | Зависимость | 201 / 199 | transcribed (A=B) | missing |
+| sobchik-058 | 58 | Эскапизм (бегство от решения проблем) | 202 / 200 | transcribed (A=B) | missing |
+| sobchik-059 | 59 | Эмоциональная незрелость | 202 / 200 | transcribed (A=B) | missing |
+| sobchik-060 | 60 | Сверхконтроль «Я» (зажатость) | 202 / 200 | transcribed (A=B) | missing |
+| sobchik-061 | 61 | Эпилепсия | 202 / 200 | transcribed (A=B) | missing |
+| sobchik-062 | 62 | Сила Эго | 202 / 200 | transcribed (A=B) | missing |
+| sobchik-064 | 64 | Оценка улучшения | 203 / 201 | transcribed (A=B) | missing |
+| sobchik-066 | 66 | Женственность | 203 / 201 | transcribed (A=B) | missing |
+| sobchik-070 | 70 | Общая плохая приспособляемость | 203 / 201 | transcribed (A=B) | missing |
+| sobchik-072 | 72 | Предипохондрическое состояние | 203 / 201 | transcribed (A=B) | missing |
+| sobchik-073 | 73 | Предрасположенность к головным болям | 203 / 201 | transcribed (A=B) | missing |
+| sobchik-074 | 74 | Контроль над враждебностью | 203 / 201 | transcribed (A=B) | missing |
+| sobchik-075 | 75 | Сосредоточенность на здоровье | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-077 | 77 | Враждебность | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-080 | 80 | Чистая ипохондрия | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-081 | 81 | Выраженная враждебность | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-083 | 83 | Чистая истерия | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-084 | 84 | Вытеснение тревоги | 204 / 202 | transcribed (A=B) | missing |
+| sobchik-085 | 85 | Потребность в эмоциональных переживаниях | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-087 | 87 | Соматические жалобы | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-088 | 88 | Подавленная агрессия | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-089 | 89 | Явная истерия | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-090 | 90 | Скрытая истерия | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-092 | 92 | Интеллектуальная эффективность (условия для мыслительной деятельности) | 205 / 203 | transcribed (A=B) | missing |
+| sobchik-093 | 93 | Импульсивность | 206 / 204 | transcribed (A=B) | missing |
+| sobchik-094 | 94 | Внутренняя плохая приспособляемость (внутренняя рассогласованность) | 206 / 204 | transcribed (A=B) | missing |
+| sobchik-095 | 95 | Интеллектуальный коэффициент (реальная продуктивность интеллекта) | 206 / 204 | transcribed (A=B) | missing |
+| sobchik-097 | 97 | Осознанная тревога | 206 / 204 | transcribed (A=B) | missing |
+| sobchik-098 | 98 | Комплекс осуждения (комплекс вины) | 206 / 204 | transcribed (A=B) | missing |
+| sobchik-099 | 99 | Осознанная выраженная враждебность | 207 / 205 | transcribed (A=B) | missing |
+| sobchik-106 | 106 | Лидерство | 207 / 205 | transcribed (A=B) | missing |
+| sobchik-109 | 109 | Чистая гипомания | 207 / 205 | transcribed (A=B) | missing |
+| sobchik-110 | 110 | Аморальность | 207 / 205 | transcribed (A=B) | missing |
+| sobchik-111 | 111 | Психомоторная акселерация | 207 / 205 | transcribed (A=B) | missing |
+| sobchik-114 | 114 | Явная гипомания | 208 / 206 | transcribed (A=B) | missing |
+| sobchik-115 | 115 | Скрытая гипомания | 208 / 206 | transcribed (A=B) | missing |
+| sobchik-119 | 119 | Эмоциональная сензитивность | 208 / 206 | transcribed (A=B) | missing |
+| sobchik-121 | 121 | Альтруизм | 208 / 206 | transcribed (A=B) | missing |
+| sobchik-122 | 122 | Женственность интересов | 208 / 206 | transcribed (A=B) | missing |
+| sobchik-129 | 129 | Невротизм | 208 / 206 | transcribed (A=B) | missing |
+| sobchik-131 | 131 | Невротический сверхконтроль | 209 / 207 | transcribed (A=B) | missing |
+| sobchik-134 | 134 | Невротическое снижение контроля | 209 / 207 | transcribed (A=B) | missing |
+| sobchik-135 | 135 | Оригинальность | 209 / 207 | transcribed (A=B) | missing |
+| sobchik-138 | 138 | Чистая паранойя | 209 / 207 | transcribed (A=B) | missing |
+| sobchik-139 | 139 | Идеи преследования | 209 / 207 | transcribed (A=B) | missing |
+| sobchik-140 | 140 | Идеи отравления | 209 / 207 | transcribed (A=B) | missing |
+| sobchik-141 | 141 | Наивность | 210 / 208 | transcribed (A=B) | missing |
+| sobchik-142 | 142 | Явная паранойя | 210 / 208 | transcribed (A=B) | missing |
+| sobchik-143 | 143 | Скрытая паранойя | 210 / 208 | transcribed (A=B) | missing |
+| sobchik-144 | 144 | Предсказание изменений | 210 / 208 | transcribed (A=B) | missing |
+| sobchik-146 | 146 | Чистая психопатия | 210 / 208 | transcribed (A=B) | missing |
+| sobchik-147 | 147 | Семейная дисгармония | 210 / 208 | transcribed (A=B) | missing |
+| sobchik-148 | 148 | Авторитарная проблема | 211 / 209 | transcribed (A=B) | missing |
+| sobchik-152 | 152 | Явные психопатические отклонения | 211 / 209 | transcribed (A=B) | missing |
+| sobchik-153 | 153 | Скрытые психопатические отклонения | 211 / 209 | transcribed (A=B) | missing |
+| sobchik-156 | 156 | Прогноз шизофрении | 211 / 209 | transcribed (A=B) | missing |
+| sobchik-157 | 157 | Фактор паранойи | 211 / 209 | transcribed (A=B) | missing |
+| sobchik-158 | 158 | Психоневроз | 211 / 209 | transcribed (A=B) | missing |
+| sobchik-162 | 162 | Предубеждённость | 212 / 210 | transcribed (A=B) | missing |
+| sobchik-167 | 167 | Фарисейство | 212 / 210 | transcribed (A=B) | missing |
+| sobchik-169 | 169 | Психологические интересы | 212 / 210 | transcribed (A=B) | missing |
+| sobchik-170 | 170 | Параноидальная шизофрения | 212 / 210 | transcribed (A=B) | missing |
+| sobchik-171 | 171 | R — второй фактор | 212 / 210 | transcribed (A=B) | missing |
+| sobchik-172 | 172 | Рецидивизм | 212 / 210 | transcribed (A=B) | missing |
+| sobchik-174 | 174 | Социальная ответственность | 213 / 211 | transcribed (A=B) | missing |
+| sobchik-175 | 175 | Ригидность (женская) | 213 / 211 | transcribed (A=B) | missing |
+| sobchik-176 | 176 | Ригидность (мужская) | 213 / 211 | transcribed (A=B) | missing |
+| sobchik-177 | 177 | Играния роли | 213 / 211 | transcribed (A=B) | missing |
+| sobchik-178 | 178 | Стабильность профиля (женская) | 213 / 211 | transcribed (A=B) | missing |
+| sobchik-179 | 179 | Стабильность профиля (мужская) | 213 / 211 | transcribed (A=B) | missing |
+| sobchik-181 | 181 | Чистая шизофрения | 214 / 212 | transcribed (A=B) | missing |
+| sobchik-182 | 182 | Социальное отчуждение | 214 / 212 | transcribed (A=B) | missing |
+| sobchik-183 | 183 | Эмоциональное отчуждение | 214 / 212 | transcribed (A=B) | missing |
+| sobchik-187 | 187 | Причудливость сенсорного восприятия | 214 / 212 | transcribed (A=B) | missing |
+| sobchik-189 | 189 | Самоудовлетворённость | 214 / 212 | transcribed (A=B) | missing |
+| sobchik-193 | 193 | Реакция соматизации | 214 / 212 | transcribed (A=B) | missing |
+| sobchik-194 | 194 | Социальная желательность | 215 / 213 | transcribed (A=B) | missing |
+| sobchik-196 | 196 | Социальное участие | 215 / 213 | transcribed (A=B) | missing |
+| sobchik-200 | 200 | Социальный статус | 215 / 213 | transcribed (A=B) | missing |
+| sobchik-203 | 203 | Застенчивость | 215 / 213 | transcribed (A=B) | missing |
+| sobchik-205 | 205 | Толерантность к стрессу | 215 / 213 | transcribed (A=B) | missing |
+| sobchik-206 | 206 | Способность к преподаванию | 215 / 213 | transcribed (A=B) | missing |
+| sobchik-208 | 208 | Защитная реакция на тест | 216 / 214 | transcribed (A=B) | missing |
+| sobchik-209 | 209 | Язвенный тип личности | 216 / 214 | transcribed (A=B) | missing |
+| sobchik-210 | 210 | Низкие способности к достижению цели | 216 / 214 | transcribed (A=B) | missing |
+| sobchik-211 | 211 | Отношение к работе | 216 / 214 | transcribed (A=B) | missing |
+| sobchik-212 | 212 | Стремление наговорить на себя | 216 / 214 | transcribed (A=B) | missing |
 
 ## Что действительно рассчитывается сейчас
 
@@ -180,7 +180,64 @@ _Стандартизированный многофакторный метод 
 имеют `M > n`; это инвентарное доказательство неподтверждённости, а не разрешение менять
 работающий scoring. Ни key, ни норма, ни fixture этим пакетом не менялись.
 
-## S2: точный следующий пакет
+
+## S2: результат транскрипции (15.09.2026)
+
+Все 113 записей PDF-стр. 197–216 перенесены в
+[`smil-additional-scales-transcription.json`](smil-additional-scales-transcription.json)
+двумя независимыми проходами (по порядку страниц и в обратном порядке) с автоматической
+сверкой: **113/113 записей совпали по всем ключам, счётчикам и нормам**; расхождения только в
+написании двух заголовков (опечатки источника «Шкаля/Шкаяа»). Объявленные счётчики «K верно /
+K неверно» совпадают с длиной списков во всех записях; чисел вне 1–566 нет. Спорные сжатым
+кеглем позиции (№52 поз. 10–11, №53 поз. 10, №55 поз. 12–13) прочитаны обоими проходами
+одинаково и согласуются с возрастающим порядком чисел; отмечены в `notes`.
+
+Аномалии источника, записанные как напечатано (решение — за владельцем при выборе партии):
+
+- **№9 «Шкала алкоголизма»**: низ печатной стр. 195 обрезан в самом скане — строки «неверно»
+  и нормы отсутствуют. Нужен другой источник (например, И.Л. Соломин в `source/`) или скан
+  без обреза; до этого №9 не может войти в партию.
+- Нарушен порядок чисел (вероятные опечатки): №1 (76 67), №7 (359 в конце), №9 (506 503),
+  №38, №62, №70, №122, №181, №209.
+- Подозрительные нормы: №58 (мужское M 2.82 при женском 14.58), №167 (женское 4.37 при
+  мужском 19.2), №72 и №74 (нормы идентичны), №212 («M = M = 26.94»), №175/176/178/179
+  (нормы 0.001 для «чужого» пола — однополые шкалы).
+- №87: вторая строка напечатана «11 верно» вместо «неверно» — перенесена как «неверно».
+- Дубли названий: №47 и №52 «Преступность», №49 и №50 «Доминирование»; №162 и №205 —
+  почти зеркальные списки.
+
+### Сверка 23 runtime-шкал с транскрипцией
+
+Для 8 runtime-шкал с кандидатом в источнике пересечение ключей практически нулевое:
+
+| Runtime | Источник | true runtime/источник (общих) | false runtime/источник (общих) |
+|---|---|---|---|
+| A | №1 | 29 / 38 (0) | 1 / 1 (0) |
+| R | №171 | 15 / 0 (0) | 0 / 40 (0) |
+| Es | №92 | 5 / 15 (0) | 1 / 24 (0) |
+| Do | №49 | 5 / 7 (0) | 3 / 21 (0) |
+| Re | №174 | 0 / 8 (0) | 16 / 24 (1) |
+| MAC | №9 | 30 / 80 (5) | 0 / — |
+| O-H | №77 | 30 / 47 (2) | 0 / 3 (0) |
+| CYN | №39 | 8 / 7 (0) | 0 / 0 |
+
+Остальные 15 runtime-кодов (Pk, ANX … TRT) — номенклатура контент-шкал MMPI-2, в приложении
+Собчик их нет. Runtime-списки повторяют ключи базовых шкал (A = шкала 2, R = L, MAC ≈ 8 и т.д.),
+то есть действующие «дополнительные шкалы» не связаны с источником. **Вывод S2:** ни одна из
+23 не может быть подтверждена; линия S3 — не «исправление», а замена набора на транскрибированный,
+партиями с независимыми эталонами, по решению владельца. До этого runtime не меняется.
+
+### Предложение первой партии S3.1 (на утверждение)
+
+Записи без аномалий и с полными нормами по обоим полам, клинически востребованные:
+№1 А, №171 R, №92 Es, №49 Do, №174 Re, №39 Цинизм, №77 Враждебность, №2 Способности к обучению,
+№6 Зрелость, №41 Чистая депрессия, №42 Субъективная депрессия, №43 Психическая заторможенность,
+№51 Явная депрессия, №53 Депрессивные реакции, №57 Зависимость, №62 Сила Эго. Итого 16.
+Каждая получает независимый ручной reference case (расчёт по транскрипции вне PHP-кода) до
+включения в runtime; текущие 23 кода выводятся из результата тем же пакетом, чтобы не смешивать
+неподтверждённое с verified.
+
+## S2: точный следующий пакет (формулировка S1)
 
 Транскрибировать только PDF-стр. 197–216 в отдельный versioned input вне runtime; для каждой из
 113 записей сверить с изображением название, каждый true/false номер, длины ключей, диапазон 1–566,
