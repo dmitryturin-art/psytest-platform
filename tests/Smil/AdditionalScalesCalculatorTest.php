@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
 
 /**
- * Поведение калькулятора дополнительных шкал на партиях 05.S3.1 и 05.S3.2.
+ * Поведение калькулятора дополнительных шкал на партиях 05.S3.1–05.S3.5.
  *
  * Численные ожидания живут в AdditionalScalesReferenceTest (независимый
  * эталон по источнику); здесь проверяется контракт: форма результата,
@@ -37,13 +37,16 @@ final class AdditionalScalesCalculatorTest extends TestCase
     {
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
 
-        self::assertCount(75, $results);
+        self::assertCount(105, $results);
         $expected = [
             'A', 'R', 'Es', 'Do', 'Re', 'CYN', 'OH', 'LRN', 'MAT', 'DPR', 'DSU', 'DRT', 'DOV', 'DRX', 'DPN', 'EGO',
             'CNV', 'GLM', 'DNS', 'EGC', 'HDC', 'HLT', 'HYP', 'HYS', 'ARP', 'SOM', 'HYO', 'HYL', 'IMP',
             'ANC', 'GLT', 'NEU', 'NOC', 'NUC', 'SOR',
             'EPI', 'PAR', 'PRS', 'POI', 'NAI', 'PAO', 'PAS', 'PRC', 'PPD', 'FMD',
             'AUT', 'PDO', 'PDS', 'SZP', 'PFA', 'PNE', 'PSZ', 'SAL', 'EAL', 'BSE',
+            'ALD', 'RSP', 'Ca', 'Cl', 'Cs', 'CRM1', 'Do2', 'CRM2', 'Ds', 'DSb', 'IMV',
+            'GMA', 'HCO', 'Hv', 'Hy2', 'Hy5', 'In', 'IQR', 'CHO', 'Mf4', 'Or',
+            'Pr', 'RCD', 'SCZ', 'To', 'TCH', 'ULC', 'LAC', 'Wa', 'SDF',
         ];
         foreach ($expected as $code) {
             self::assertArrayHasKey($code, $results, "шкала {$code} отсутствует");
@@ -55,7 +58,7 @@ final class AdditionalScalesCalculatorTest extends TestCase
     }
 
     /** Единственные шкалы, которым владелец утвердил пояснительное поле note. */
-    private const CODES_WITH_NOTE = ['SOM', 'RPL'];
+    private const CODES_WITH_NOTE = ['SOM', 'RPL', 'CRM1', 'Do2', 'CRM2', 'Ds', 'DSb', 'HCO', 'Pr', 'To'];
 
     public function testScaleCarriesRawTNormsProvenanceAndNoClinicalText(): void
     {
@@ -108,6 +111,86 @@ final class AdditionalScalesCalculatorTest extends TestCase
         self::assertSame('Шкала «Играние роли»', $rpl['name']);
         self::assertStringContainsString('Играния роли', $rpl['note'], 'примечание сохраняет написание источника');
         self::assertSame(31, $rpl['max_raw']);
+    }
+
+    /**
+     * Омонимы приложения различимы в расчёте, а не только в документации.
+     *
+     * Источник печатает «Шкала „Преступность“» дважды (№47 и №52) и «Доминирование»
+     * дважды (№49 и №50). Шкалы при этом разные: у пары «Преступность» общих пунктов
+     * всего четыре, а №50 — короткая форма внутри №49. В таблице результата и в PDF
+     * одинаковые имена читались бы как дубль строки, поэтому runtime разводит их
+     * римскими цифрами, а note объясняет, откуда цифры взялись.
+     */
+    public function testHomonymousTitlesAreSeparatedInRuntimeAndExplainedInNotes(): void
+    {
+        $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
+
+        self::assertSame('Шкала «Преступность (I)»', $results['CRM1']['name']);
+        self::assertSame('Шкала «Преступность (II)»', $results['CRM2']['name']);
+        self::assertSame(12, $results['CRM1']['max_raw']);
+        self::assertSame(33, $results['CRM2']['max_raw']);
+        self::assertStringContainsString('одинаково', $results['CRM1']['note']);
+        self::assertStringContainsString('одинаково', $results['CRM2']['note']);
+
+        self::assertSame('Шкала «Доминирование»', $results['Do']['name']);
+        self::assertSame('Доминирование (II)', $results['Do2']['name']);
+        self::assertSame(28, $results['Do']['max_raw']);
+        self::assertSame(16, $results['Do2']['max_raw']);
+        self::assertStringContainsString('№49', $results['Do2']['note']);
+
+        $names = array_map(static fn (array $scale): string => $scale['name'], $results);
+        self::assertSame(count($names), count(array_unique($names)), 'имена шкал в расчёте дублируются');
+    }
+
+    /**
+     * Запись с чужими нормами в расчёт не попала, а её «двойник» — попал с оговоркой.
+     *
+     * №74 несёт те же M и sigma, что напечатаны у выведенной №72. Владелец решил,
+     * что строка принадлежит №74 (для 34 пунктов значения правдоподобны, для 55 —
+     * нет), и note обязан это сказать: иначе совпадение выглядит как ошибка сборки.
+     */
+    public function testTheScaleThatInheritedTheDisputedNormsSaysSoInItsNote(): void
+    {
+        $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
+        $hco = $results['HCO'];
+
+        self::assertSame(74, $hco['source']['entry']);
+        self::assertSame('verified', $hco['status']);
+        self::assertSame(34, $hco['max_raw']);
+        self::assertStringContainsString('№72', $hco['note']);
+        self::assertArrayNotHasKey('PHC', $results);
+    }
+
+    /**
+     * Пара «явная/мягкая депрессия» покрывает 2-ю базовую шкалу без остатка.
+     *
+     * №51 и №56 — Obvious/Subtle Wiener–Harmon: ключи не пересекаются, а в объединении
+     * дают ровно 60 пунктов 2-й базовой шкалы. Это же равенство разрешило спорную
+     * позицию 10 списка «неверно» у №56: вариант 160 входит в ключ 2-й шкалы, 166 — нет.
+     * Если равенство сломается, спор о чтении скана надо открывать заново.
+     */
+    public function testTheObviousSubtleDepressionPairCoversTheSecondBasicScale(): void
+    {
+        $byCode = [];
+        foreach ($this->definitions as $scale) {
+            $byCode[$scale['code']] = $scale;
+        }
+
+        $dov = $byCode['DOV'];
+        $dsb = $byCode['DSb'];
+
+        self::assertSame(40, (int) $dov['max_raw']);
+        self::assertSame(20, (int) $dsb['max_raw']);
+
+        $dovItems = array_merge($dov['key']['true'], $dov['key']['false']);
+        $dsbItems = array_merge($dsb['key']['true'], $dsb['key']['false']);
+
+        self::assertSame([], array_values(array_intersect($dovItems, $dsbItems)), 'половины пары пересеклись');
+        self::assertCount(60, array_unique(array_merge($dovItems, $dsbItems)), 'объединение пары — не 60 пунктов');
+
+        self::assertContains(160, $dsb['key']['false'], 'спорная позиция прочитана как 160');
+        self::assertNotContains(166, $dsbItems, 'отвергнутый вариант 166 попал в ключ');
     }
 
     public function testAllTrueScoresEveryTrueItemAndNoFalseItem(): void
