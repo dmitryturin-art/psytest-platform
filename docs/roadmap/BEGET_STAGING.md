@@ -121,4 +121,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 25. Выкладка `975b653` (15.09): визуальный редактор разбора (Toast UI локально в `public/vendor/`), перезагрузка и автообновление статуса; миграций нет. SHA-256 `9366fa96fa8b1c7ffa70ab24ee8c57d0dd58b2df5d37c06f8dfc4bd82fe39285` совпал; dump `backups/pre-deploy-975b653.sql.gz` проверен. Ручной запуск воркера по SSH — только через `setsid nohup …`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/33dbdc4/public` и `current` на `releases/33dbdc4`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+26. Выкладка `b0386cb` (15.09): «Заказать заново» для исчерпанных заданий ИИ; миграций нет. SHA-256 `90edb6f13e51537b5df8adca11f69ebc49e70362011dbdfd4622408d9de2e4f8` совпал; dump `backups/pre-deploy-b0386cb.sql.gz` проверен. Загрузку по SSH вести с `-o ServerAliveInterval=10` (первая попытка зависла на 2,7 МБ из 6,3).
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/975b653/public` и `current` на `releases/975b653`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
