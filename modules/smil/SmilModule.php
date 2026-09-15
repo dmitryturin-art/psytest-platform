@@ -745,18 +745,25 @@ class SmilModule extends BaseTestModule
 
     public function buildSections(array $results): array
     {
-        $validity = $results['validity'] ?? [];
-        $profile = $results['profile'] ?? [];
-        $interpretation = $results['interpretation'] ?? [];
-        $rawScores = $results['raw_scores'] ?? [];
-        $tScores = $results['t_scores'] ?? [];
-        $correctedScores = $results['corrected_scores'] ?? [];
-        $indices = $results['indices'] ?? [];
-        $additionalScores = $results['additional_scores'] ?? [];
+        // Результаты приходят из БД и могут быть пустыми или неполными —
+        // например у сессии, которая не дошла до расчёта. Страница обязана
+        // собраться и в этом случае; расчёт от этого не меняется.
+        $part = static fn (string $key): array => is_array($results[$key] ?? null)
+            ? $results[$key]
+            : [];
+
+        $validity = $part('validity');
+        $profile = $part('profile');
+        $interpretation = $part('interpretation');
+        $rawScores = $part('raw_scores');
+        $tScores = $part('t_scores');
+        $correctedScores = $part('corrected_scores');
+        $indices = $part('indices');
+        $additionalScores = $part('additional_scores');
 
         $sections = [];
 
-        if (!$validity['is_valid']) {
+        if (empty($validity['is_valid'])) {
             $sections[] = new ResultSection(
                 type: ResultSection::TYPE_VALIDITY,
                 title: '⚠️ Протокол недостоверен — контрольные шкалы',

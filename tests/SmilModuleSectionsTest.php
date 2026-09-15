@@ -83,4 +83,63 @@ final class SmilModuleSectionsTest extends TestCase
             }
         }
     }
+
+    /**
+     * Пустые или неполные `calculated_results` не должны валить страницу.
+     *
+     * Так выглядит сессия без ответов (в том числе синтетическая): расчёт не
+     * дошёл до контрольных шкал, и прямой доступ `$validity['is_valid']`
+     * поднимал Warning «Undefined array key "is_valid"». Секции обязаны
+     * собираться и в этом случае — сам расчёт при этом не меняется.
+     */
+    public function testBuildSectionsSurvivesEmptyCalculatedResults(): void
+    {
+        $module = new SmilModule();
+
+        set_error_handler(static function (int $severity, string $message): bool {
+            throw new \ErrorException($message, 0, $severity);
+        });
+
+        try {
+            $sections = $module->buildSections([]);
+        } finally {
+            restore_error_handler();
+        }
+
+        $types = array_map(static fn ($s): string => $s->type, $sections);
+        $this->assertContains('validity', $types);
+        $this->assertContains('profile_chart', $types);
+
+        $validity = null;
+        foreach ($sections as $section) {
+            if ($section->type === 'validity') {
+                $validity = $section;
+                break;
+            }
+        }
+
+        $this->assertNotNull($validity);
+        $this->assertFalse($validity->data['is_valid']);
+    }
+
+    public function testBuildSectionsSurvivesPartialCalculatedResults(): void
+    {
+        $module = new SmilModule();
+
+        set_error_handler(static function (int $severity, string $message): bool {
+            throw new \ErrorException($message, 0, $severity);
+        });
+
+        try {
+            $sections = $module->buildSections([
+                'validity' => [],
+                'profile' => [],
+                'raw_scores' => ['K' => 10],
+            ]);
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertNotSame([], $sections);
+    }
 }
