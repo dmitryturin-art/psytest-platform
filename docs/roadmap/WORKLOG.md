@@ -20,6 +20,13 @@
 
 ## 2026-09-15
 
+### 08.B23 — staging-выкладка S3.4 + G4 (`80e8daf`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-80e8daf`; deployed runtime `80e8daf` (merge PR #120). Миграций нет.
+- Сделано: артефакт `release-80e8daf.tar.gz`, SHA-256 `5792b93a…b25b` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/80e8daf`.
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`. В PR MySQL-матрица пропущена классификатором (`bin/classify-ci-scope.php`: изменения модуля СМИЛ не затрагивают БД), локальный gate на 5.7.44 пройден, полная матрица на `main` запущена.
+- Rollback: `public_html` → `releases/9d52345/public`, `current` → `releases/9d52345`.
+
 ### 05.S3.4 + 07.G4 — четвёртая партия дополнительных шкал СМИЛ (гипомания и социальное функционирование) и её глоссарий
 
 - Этап / ветка / commit: этап 05/07, `codex/05-s3-4-hypomania-social` от `main` `fd6d240`; commits `2201261`, `2a1a9c7`, `ab65644`, `e9425d7` (исполнитель Opus в изолированном worktree, БД `psytest_wt_s34`).
