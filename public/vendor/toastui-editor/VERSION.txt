@@ -1,0 +1,34 @@
+TOAST UI Editor — визуальный редактор Markdown для редактора разбора.
+
+Пакет:    @toast-ui/editor
+Версия:   3.2.2 (зафиксирована, обновляется только отдельным пакетом работ)
+Лицензия: MIT (файл LICENSE рядом, https://raw.githubusercontent.com/nhn/tui.editor/master/LICENSE)
+Скачано:  15.09.2026
+
+Файлы и источники (скачаны через curl; в рантайме внешний CDN не используется):
+
+  toastui-editor-all.min.js
+    https://uicdn.toast.com/editor/3.2.2/toastui-editor-all.min.js
+    sha256 f50e1b7c0fc4e5d9a1ccd0d8be78cb3a950ccb3bf676fbf1627810c76aeaedd8
+
+  toastui-editor.min.css
+    https://uicdn.toast.com/editor/3.2.2/toastui-editor.min.css
+    sha256 c70e24c68fefc205e8e504edc07fd6a5efd3044a623b4be7e3ac16cc8a736ed9
+
+  i18n/ru-ru.min.js
+    https://uicdn.toast.com/editor/3.2.2/i18n/ru-ru.min.js
+    sha256 639f61c151e39e001e4445bb2d739d559c0cf9aa410cd82363c8cfcd75bed1ca
+
+  LICENSE
+    https://raw.githubusercontent.com/nhn/tui.editor/master/LICENSE
+    sha256 1c7c070da956f0c3122883c1b4eb706b1b819971082ccde001fe2d241d90e3c0
+
+Почему официальный CDN проекта, а не npm/jsDelivr: в npm-пакете 3.2.2 лежит
+только `dist/toastui-editor.js`, у которого все пакеты prosemirror вынесены во
+внешние зависимости — в браузере он падает на `PluginKey of undefined`.
+Самодостаточный бандл со встроенным prosemirror публикуется именно как
+`toastui-editor-all.min.js` на uicdn.toast.com. Это он.
+
+Приватность: бандл умеет отправлять анонимную статистику на Google Analytics.
+Редактор инициализируется с `usageStatistics: false`, поэтому этот запрос не
+выполняется. Иконки тулбара — data:-URI внутри CSS; внешних шрифтов и картинок нет.
