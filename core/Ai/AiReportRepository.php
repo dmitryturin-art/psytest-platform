@@ -76,7 +76,10 @@ final class AiReportRepository
             // текущим результатом, глоссарием и опубликованным промптом — иначе
             // модель получала бы данные многочасовой давности (случай 15.09:
             // снимок без глоссария второй партии).
-            if ($existing['status'] === self::STATUS_FAILED && $allowExhaustedRetry) {
+            // Готовый разбор специалист тоже может заказать заново (новые
+            // данные, глоссарий, версия промпта): старый текст остаётся в
+            // истории версий, новый ляжет следующей версией от модели.
+            if (in_array($existing['status'], [self::STATUS_FAILED, self::STATUS_READY], true) && $allowExhaustedRetry) {
                 $this->db->update(
                     'ai_reports',
                     [

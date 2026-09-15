@@ -73,11 +73,23 @@ final class AiReportRevisionService
      */
     public function seedFromContent(string $reportId, string $content): ?string
     {
-        if (trim($content) === '' || $this->latest($reportId) !== null) {
+        if (trim($content) === '') {
             return null;
         }
 
-        return $this->append($reportId, $content, self::SOURCE_AI, 1);
+        $latest = $this->latest($reportId);
+        if ($latest === null) {
+            return $this->append($reportId, $content, self::SOURCE_AI, 1);
+        }
+
+        // Повторный ответ модели после «Заказать заново»: если текст новый —
+        // он ложится следующей версией с источником «модель», а правки
+        // специалиста и опубликованная версия остаются на месте.
+        if (trim((string) $latest['content']) === trim($content)) {
+            return null;
+        }
+
+        return $this->append($reportId, $content, self::SOURCE_AI, ((int) $latest['revision_no']) + 1);
     }
 
     /**

@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\Ai\AiCompletion;
 use PsyTest\Core\Ai\AiReportRepository;
+use PsyTest\Core\Ai\AiReportRevisionService;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Database;
 use PsyTest\Core\SessionManager;
@@ -136,6 +137,29 @@ final class AiReportQueueTest extends TestCase
         self::assertNull($reordered['failure_reason']);
         self::assertNotSame($job['context_snapshot'], $reordered['context_snapshot']);
         self::assertStringContainsString('обновлённый вход', (string) $reordered['context_snapshot']);
+    }
+
+    public function testOwnerCanReorderAReadyReportAndTheModelTextBecomesANewRevision(): void
+    {
+        $job = $this->request();
+        $this->reports->markReady((string) $job['id'], new AiCompletion('первый текст модели', 'm', 'm', 1, 1));
+        $revisions = new AiReportRevisionService($this->db);
+        self::assertCount(1, $revisions->revisions((string) $job['id']));
+
+        // Обычный запрос готовый отчёт не трогает.
+        self::assertSame(AiReportRepository::STATUS_READY, $this->request()['status']);
+
+        // Явный заказ заново из кабинета — снова в очередь со свежим снимком.
+        $reordered = $this->reports->request($this->sessionId, 'lazarus', 'individual', 'clear', $this->prompt(), $this->context() + ['fresh' => true], null, true);
+        self::assertSame(AiReportRepository::STATUS_PENDING, $reordered['status']);
+        self::assertStringContainsString('"fresh"', (string) $reordered['context_snapshot']);
+
+        $this->reports->markReady((string) $job['id'], new AiCompletion('второй текст модели', 'm', 'm', 1, 1));
+        $all = $revisions->revisions((string) $job['id']);
+        self::assertCount(2, $all);
+        self::assertSame('второй текст модели', $all[1]['content']);
+        self::assertSame('ai', $all[1]['source']);
+        self::assertSame('первый текст модели', $all[0]['content']);
     }
 
     public function testExhaustedJobIsNotPickedUpForever(): void
