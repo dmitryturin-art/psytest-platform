@@ -20,6 +20,15 @@
 
 ## 2026-09-24
 
+### 05.S4a — пересчёт дополнительных шкал СМИЛ у сохранённых сессий (только additional_scores)
+
+- Этап / ветка / commit: этап 05, `codex/05-s4a-refresh-additional` от `main` `a3f1e45`; commits `a829013`, `8eb9365`, `9333dd7` (исполнитель Opus, БД `psytest_wt_s4a`).
+- Причина (сравнение WP8 24.09): у кейса «Дмитрий» в результате 35 дополнительных шкал — результат считается один раз при завершении и хранится в `calculated_results`; новые партии (105 шкал) видны только новым прохождениям.
+- Сделано: `SmilModule::refreshAdditionalScores(results, answers)` пересчитывает только `additional_scores` тем же `AdditionalScalesCalculator` (пол из результата; устаревание = набор кодов ≠ `AdditionalScalesCalculator::codes()`); интерфейс `modules/RefreshesAdditionalScores.php`; `core/ResultRefresher.php` + `SessionManager::withFreshResults(session, module)` — единая точка при чтении (страница результата и PDF через `ResultPresenter`, AI-контекст `AiReportContextBuilder`, карточка кейса, `CaseExportPresenter`), после пересчёта один раз пишет `calculated_results` (идемпотентно); без ответов (`deleted`, `answers=[]`) — без изменений; ошибка пересчёта — в лог `results` только класс исключения, показывается прежний результат. CLI `bin/smil-refresh-additional.php [--dry-run]` пачками по 100 со счётчиками. Базовые 13 шкал, validity, profile, indices, interpretation — байт-в-байт прежние (тест).
+- Проверки и evidence: исполнитель — полный `composer test` 573 tests / 48 984 assertions OK (+6 unit, +5 integration); analyse OK, baseline 141/141; lint OK; архитектура OK (в `bin/check-architecture.php` добавлен `require_once` нового интерфейса); golden базовых без diff; браузер — две сессии на 35 шкалах → 105 строк, PDF 200, console errors 0; CLI dry-run/real/повтор: 1 / «1 обновлено, 1 актуально» / «0 / 2». Ведущий: `bin/local-gate.sh` на Docker MySQL 5.7.44 — **пройден**.
+- Сравнение WP8 (24.09, кейс «Дмитрий», проф. разбор, версия 5 full 15.09 vs версия 6 compact 24.09, 35 шкал): обе версии называют все 35 шкал, направление трактовки шести шкал вне 40–65T совпадает с глоссарием в обеих, выдуманных кодов нет; full 18,6 тыс. знаков с интегративным сводом по доп. шкалам, compact 16,3 тыс. с более подробными построчными комментариями и перекрёстными ссылками; контекст compact 15 тыс. знаков против ≈40 тыс. Решение: **компактный режим остаётся по умолчанию на стенде**; галочка «показывать использованные шкалы» не нужна (модель и так перечисляет все шкалы таблицей).
+- Следующий шаг: выкладка по сигналу владельца; после выкладки — `php8.3 bin/smil-refresh-additional.php` на стенде (или открыть кейс) и перезаказ разборов «Дмитрия» на 105 шкалах; S3.6.
+
 ### 08.B27 — staging-выкладка K6a (`1491f40`)
 
 - Этап / ветка / commit: этап 08, `codex/08-deploy-1491f40`; deployed runtime `1491f40` (merge PR #128, полная матрица 5.7/8.0 зелёная). Миграций нет.
