@@ -47,6 +47,9 @@ final class ResultPresenter
      */
     public function results(array $session, TestModuleInterface $module): array
     {
+        // Сохранённый результат мог быть посчитан на прежнем реестре
+        // дополнительных шкал: страница и PDF берут его через единую точку.
+        $session = $this->sessions->withFreshResults($session, $module);
         /** @var array<string, mixed> $results */
         $results = $session['calculated_results'] ?? [];
         if (!$module->supportsPairMode()) {
@@ -65,6 +68,9 @@ final class ResultPresenter
 
         $partnerSessionId = $position === 1 ? $secondId : $firstId;
         $partnerSession = $this->sessions->getSessionById($partnerSessionId);
+        if ($partnerSession !== null) {
+            $partnerSession = $this->sessions->withFreshResults($partnerSession, $module);
+        }
         /** @var array<string, mixed> $partnerResults */
         $partnerResults = $partnerSession['calculated_results'] ?? [];
 
@@ -115,6 +121,8 @@ final class ResultPresenter
         if ($first === null || $second === null) {
             return null;
         }
+        $first = $this->sessions->withFreshResults($first, $module);
+        $second = $this->sessions->withFreshResults($second, $module);
 
         $position = $firstId === (string) $session['id'] ? 1 : 2;
 

@@ -13,12 +13,14 @@ namespace PsyTest\Core;
 use DateTime;
 use DateTimeImmutable;
 use PDOException;
+use PsyTest\Modules\TestModuleInterface;
 use Ramsey\Uuid\Uuid;
 
 class SessionManager
 {
     private Database $db;
     private int $sessionTtlDays;
+    private ?ResultRefresher $resultRefresher = null;
 
     public function __construct(?Database $db = null, ?int $sessionTtlDays = null)
     {
@@ -132,6 +134,24 @@ class SessionManager
         }
 
         return $session;
+    }
+
+    /**
+     * Сессия с актуальным результатом для показа (05.S4a).
+     *
+     * Единая точка для страницы результата, PDF, кабинетов, выгрузки кейса и
+     * контекста ИИ: модуль может досчитать блок, реестр которого вырос после
+     * прохождения. Для остальных методик и незавершённых сессий — без изменений.
+     *
+     * @param array<string, mixed> $session Сессия, как её вернули методы чтения.
+     *
+     * @return array<string, mixed>
+     */
+    public function withFreshResults(array $session, TestModuleInterface $module): array
+    {
+        $this->resultRefresher ??= new ResultRefresher($this->db);
+
+        return $this->resultRefresher->refresh($session, $module);
     }
 
     /**

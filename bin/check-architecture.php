@@ -134,6 +134,7 @@ echo "\n4. Проверка модуля СМИЛ...\n";
 if (file_exists($projectRoot . '/modules/smil/SmilModule.php')) {
     require_once $projectRoot . '/modules/TestModuleInterface.php';
     require_once $projectRoot . '/modules/ModuleCapability.php';
+    require_once $projectRoot . '/modules/RefreshesAdditionalScores.php';
     require_once $projectRoot . '/modules/BaseTestModule.php';
     require_once $projectRoot . '/modules/ResultSection.php';
     require_once $projectRoot . '/core/ResultSectionRenderer.php';

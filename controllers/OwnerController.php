@@ -348,6 +348,8 @@ final class OwnerController extends BaseController
 
             return;
         }
+        // Тот же актуальный результат, что у клиента, в PDF и во внешнем разборе.
+        $case = $this->sessionManager->withFreshResults($case, $module);
         $presenter = new InvitedCasePresenter();
         $case['answer_rows'] = $presenter->answers($module, $case['answers']);
         $case['result_sections'] = $presenter->resultSections($module, $case['calculated_results']);
