@@ -141,4 +141,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 35. Выкладка `4d8ab91` (15.09): партия S3.5 — 105 дополнительных шкал СМИЛ с глоссарием; миграций нет. SHA-256 `dcdc1b91ba37d63bcf4d8c662db303ca36e3e8be5189c607c19028dab42870fb` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/9ddab4f/public` и `current` на `releases/9ddab4f`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+36. Выкладка `1491f40` (24.09): форма приглашения — защита от двойной отправки и «Новый клиент…» (07.K6a); миграций нет. SHA-256 `a04a74a7780ab6679e550c71d4e24f9ffa2b8e7ef46f2509b6375dfe7cbf3526` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/4d8ab91/public` и `current` на `releases/4d8ab91`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
