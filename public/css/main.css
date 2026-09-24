@@ -272,6 +272,21 @@ body {
     font-weight: 600;
 }
 
+/* Поле «Имя нового клиента» в форме приглашения (07.K6a). */
+.owner-new-client {
+    display: grid;
+    gap: var(--spacing-sm);
+}
+
+.owner-new-client[hidden] {
+    display: none;
+}
+
+.owner-new-client small {
+    font-weight: 400;
+    color: var(--color-text-light);
+}
+
 .owner-form input[type="text"],
 .owner-form input[type="email"],
 .owner-form input[type="password"],

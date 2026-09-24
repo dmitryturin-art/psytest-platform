@@ -32,20 +32,28 @@
     <section class="owner-invites" aria-labelledby="owner-invites-title">
         <h2 id="owner-invites-title">Новое приглашение</h2>
         <p class="owner-help">Ссылка действует 14 дней и может быть открыта один раз. Ответы и результат после открытия будут доступны только в этом кабинете.</p>
-        <form method="post" action="{{ basePath }}/admin/invites/create" class="owner-form">
+        {# form_key — одноразовый ключ этой отрисовки: повторная отправка той же
+           формы (двойной клик) не создаёт второе приглашение (07.K6a). #}
+        <form method="post" action="{{ basePath }}/admin/invites/create" class="owner-form" data-submit-once>
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="form_key" value="{{ invite_form_key }}">
             <label for="invite-test">Методика</label>
             <select id="invite-test" name="test_id" required>
                 {% for test in invite_tests %}<option value="{{ test.id }}">{{ test.name }}</option>{% endfor %}
             </select>
             <label for="invite-client">Клиент (необязательно)</label>
-            <select id="invite-client" name="client_id">
+            <select id="invite-client" name="client_id" data-new-client-select>
                 <option value="">Без карточки клиента</option>
+                <option value="__new__">Новый клиент…</option>
                 {% for client in clients %}<option value="{{ client.id }}">{{ client.label }}</option>{% endfor %}
             </select>
+            <div class="owner-new-client" data-new-client-field>
+                <label for="invite-new-client">Имя нового клиента <small data-new-client-hint>(только если выбран «Новый клиент…»)</small></label>
+                <input id="invite-new-client" name="new_client_label" type="text" maxlength="120" autocomplete="off">
+            </div>
             <label for="invite-note">Заметка для себя (не показывается клиенту)</label>
             <textarea id="invite-note" name="owner_note" maxlength="1000" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary">Создать ссылку</button>
+            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">Создать ссылку</button>
         </form>
     </section>
 
@@ -146,4 +154,10 @@
         </section>
     {% endif %}
 </section>
+{% endblock %}
+
+{% block extra_js %}
+{# Блокировка кнопки после отправки и поле «Новый клиент…». Без JS форма
+   работает целиком: поле имени просто всегда видно, а повтор ловит сервер. #}
+<script src="{{ asset('js/owner-forms.js') }}"></script>
 {% endblock %}

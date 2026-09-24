@@ -624,4 +624,32 @@ final class OwnerDashboardContractTest extends TestCase
             self::assertStringContainsString($word, $labels);
         }
     }
+
+    /**
+     * Форма приглашения (07.K6a): одноразовый ключ, блокировка кнопки и
+     * «Новый клиент…». Без JS поле имени видно с подсказкой, повтор ловит сервер.
+     */
+    public function testInviteFormCarriesAOneTimeKeyAndOffersANewClient(): void
+    {
+        $template = (string) file_get_contents($this->projectRoot . '/templates/owner-dashboard.twig');
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-forms.js');
+
+        self::assertStringContainsString('<input type="hidden" name="form_key" value="{{ invite_form_key }}">', $template);
+        self::assertStringContainsString("'invite_form_key' => \$this->inviteSubmission()->issueKey()", $controller);
+        self::assertStringContainsString('->submit($post, $availableIds)', $controller);
+
+        self::assertStringContainsString('<option value="__new__">Новый клиент…</option>', $template);
+        self::assertSame('__new__', \PsyTest\Core\OwnerInviteSubmission::NEW_CLIENT);
+        self::assertStringContainsString('name="new_client_label" type="text" maxlength="120"', $template);
+        self::assertStringContainsString('только если выбран «Новый клиент…»', $template);
+        // Поле не обязательно в разметке: required ставит только скрипт в режиме нового клиента.
+        self::assertStringNotContainsString('name="new_client_label" type="text" maxlength="120" required', $template);
+
+        self::assertStringContainsString('data-submit-once', $template);
+        self::assertStringContainsString('data-busy-text="Создаём…"', $template);
+        self::assertStringContainsString("asset('js/owner-forms.js')", $template);
+        self::assertStringContainsString('button.disabled = true', $script);
+        self::assertStringContainsString("select.value === '__new__'", $script);
+    }
 }
