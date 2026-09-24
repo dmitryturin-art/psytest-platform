@@ -20,6 +20,13 @@
 
 ## 2026-09-24
 
+### 08.B28 — staging-выкладка S4a (`90d2c9d`) и обновление архива сессий СМИЛ
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-90d2c9d`; deployed runtime `90d2c9d` (merge PR #130, полная матрица 5.7/8.0 зелёная). Миграций нет.
+- Сделано: артефакт `release-90d2c9d.tar.gz`, SHA-256 `ce9abf2b…3eee` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/90d2c9d`; затем `php8.3 bin/smil-refresh-additional.php` на стенде: dry-run «будет обновлено 4», реальный прогон «обновлено 4, актуально 0, без ответов 0, ошибок 0».
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`.
+- Rollback: `public_html` → `releases/1491f40/public`, `current` → `releases/1491f40` (pre-deploy dump содержит `calculated_results` до обновления архива).
+
 ### 05.S4a — пересчёт дополнительных шкал СМИЛ у сохранённых сессий (только additional_scores)
 
 - Этап / ветка / commit: этап 05, `codex/05-s4a-refresh-additional` от `main` `a3f1e45`; commits `a829013`, `8eb9365`, `9333dd7` (исполнитель Opus, БД `psytest_wt_s4a`).
