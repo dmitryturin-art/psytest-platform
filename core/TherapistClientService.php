@@ -32,6 +32,27 @@ final class TherapistClientService
     ) {
     }
 
+    /**
+     * Проверка полей карточки до записи: те же пределы, что в create()/update().
+     *
+     * Пустой email допустим и означает «уведомлять некуда»: контакт клиента
+     * остаётся необязательным (D-054).
+     */
+    public static function isValidInput(mixed $label, mixed $note, mixed $email = ''): bool
+    {
+        if (!is_string($label) || !is_string($note) || !is_string($email)) {
+            return false;
+        }
+        $email = trim($email);
+        $emailIsValid = $email === ''
+            || (mb_strlen($email) <= self::EMAIL_MAX_LENGTH && Security::isValidEmail($email));
+
+        return trim($label) !== ''
+            && mb_strlen(trim($label)) <= self::LABEL_MAX_LENGTH
+            && mb_strlen(trim($note)) <= self::NOTE_MAX_LENGTH
+            && $emailIsValid;
+    }
+
     public function create(string $label, string $note, string $email = ''): string
     {
         $label = $this->normaliseLabel($label);

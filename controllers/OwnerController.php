@@ -20,8 +20,10 @@ use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\Ai\SmilGlossaryCompactor;
 use PsyTest\Core\CaseExportPresenter;
 use PsyTest\Core\ClientReportNotifier;
+use PsyTest\Core\FormOnce;
 use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\OwnerDashboardAuthenticator;
+use PsyTest\Core\OwnerInviteSubmission;
 use PsyTest\Core\PDFGenerator;
 use PsyTest\Core\ReportMarkdown;
 use PsyTest\Core\ResponseFinisher;
@@ -130,6 +132,7 @@ final class OwnerController extends BaseController
             'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
             'invites' => $this->invites->recentForOwner(),
             'clients' => $this->clients->listForOwner(),
+            'invite_form_key' => $this->inviteSubmission()->issueKey(),
         ]);
     }
 
@@ -287,24 +290,25 @@ final class OwnerController extends BaseController
             return;
         }
 
-        $testId = $this->validTestId($_POST['test_id'] ?? null);
-        $note = $_POST['owner_note'] ?? '';
-        $rawClientId = $_POST['client_id'] ?? '';
-        $clientId = is_string($rawClientId) && $rawClientId !== '' ? $rawClientId : null;
-        $clientIsValid = $clientId === null
-            || (Security::isValidUuid($clientId) && $this->clients->exists($clientId));
-        if ($testId === null || !$clientIsValid || !is_string($note) || mb_strlen(trim($note)) > 1000) {
-            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать приглашение: выберите поддерживаемую методику, существующую карточку клиента и сократите заметку до 1000 символов.']);
-            $this->redirect('/admin');
-        }
-
-        $invite = $this->invites->create($testId, trim($note), $clientId);
-        $this->setFlash([
-            'type' => 'success',
-            'message' => 'Одноразовое приглашение создано. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
-            'invite_url' => $this->appUrl . '/invite/' . $invite['token'],
-        ]);
+        $availableIds = array_map(
+            static fn (array $test): int => (int) $test['id'],
+            array_values($this->moduleLoader->getActiveModules()),
+        );
+        /** @var array<string, mixed> $post */
+        $post = $_POST;
+        $this->setFlash($this->inviteSubmission()->submit($post, $availableIds));
         $this->redirect('/admin');
+    }
+
+    private function inviteSubmission(): OwnerInviteSubmission
+    {
+        return new OwnerInviteSubmission(
+            $this->db,
+            $this->clients,
+            $this->invites,
+            new FormOnce($_SESSION),
+            $this->appUrl,
+        );
     }
 
     public function revokeInvite(): void
@@ -1114,27 +1118,10 @@ final class OwnerController extends BaseController
         return is_int($testId) && in_array($testId, $availableIds, true) ? $testId : null;
     }
 
-    /**
-     * Проверка полей карточки до записи.
-     *
-     * Пустой email допустим и означает «уведомлять некуда»: контакт клиента
-     * остаётся необязательным (D-054).
-     */
+    /** Проверка полей карточки до записи — общая с формой приглашения. */
     private function isValidClientInput(mixed $label, mixed $note, mixed $email = ''): bool
     {
-        if (!is_string($email)) {
-            return false;
-        }
-        $email = trim($email);
-        $emailIsValid = $email === ''
-            || (mb_strlen($email) <= TherapistClientService::EMAIL_MAX_LENGTH && Security::isValidEmail($email));
-
-        return is_string($label)
-            && is_string($note)
-            && trim($label) !== ''
-            && mb_strlen(trim($label)) <= TherapistClientService::LABEL_MAX_LENGTH
-            && mb_strlen(trim($note)) <= TherapistClientService::NOTE_MAX_LENGTH
-            && $emailIsValid;
+        return TherapistClientService::isValidInput($label, $note, $email);
     }
 
     private function requireOwner(): bool
