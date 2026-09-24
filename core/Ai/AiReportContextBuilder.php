@@ -6,6 +6,7 @@ namespace PsyTest\Core\Ai;
 
 use PsyTest\Core\ModuleLoader;
 use PsyTest\Core\SessionManager;
+use PsyTest\Modules\TestModuleInterface;
 
 /**
  * Сбор разрешённого контекста для внешнего ИИ.
@@ -48,9 +49,11 @@ final class AiReportContextBuilder
             throw new AiProviderException("Методика «{$testSlug}» не найдена.");
         }
 
+        // Контекст замораживается в задании, поэтому берётся уже актуальный
+        // результат — тот же, что на странице и в PDF (05.S4a).
         $results = $mode === 'pair'
             ? $this->pairResults($module, $session)
-            : (array) $session['calculated_results'];
+            : (array) $this->sessions->withFreshResults($session, $module)['calculated_results'];
 
         if ($results === []) {
             throw new AiProviderException('Результат сессии пуст — разбирать нечего.');
@@ -71,7 +74,7 @@ final class AiReportContextBuilder
      *
      * @return array<string, mixed>
      */
-    private function pairResults(object $module, array $session): array
+    private function pairResults(TestModuleInterface $module, array $session): array
     {
         $comparison = $this->sessions->getPairComparisonBySession((string) $session['id']);
         if ($comparison === null) {
@@ -86,8 +89,8 @@ final class AiReportContextBuilder
         }
 
         return $module->comparePairResults(
-            (array) $first['calculated_results'],
-            (array) $second['calculated_results'],
+            (array) $this->sessions->withFreshResults($first, $module)['calculated_results'],
+            (array) $this->sessions->withFreshResults($second, $module)['calculated_results'],
         );
     }
 }

@@ -89,6 +89,8 @@ final class CaseExportPresenter
     {
         $sessionId = (string) $case['id'];
         $presenter = new InvitedCasePresenter();
+        // Выгрузка совпадает со страницей кейса: тот же актуальный результат.
+        $case = $this->sessions->withFreshResults($case, $module);
 
         /** @var array<string, mixed> $results */
         $results = is_array($case['calculated_results'] ?? null) ? $case['calculated_results'] : [];
