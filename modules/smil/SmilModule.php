@@ -21,13 +21,14 @@ namespace PsyTest\Modules\Smil;
 
 use PsyTest\Modules\BaseTestModule;
 use PsyTest\Modules\ModuleCapability;
+use PsyTest\Modules\RefreshesAdditionalScores;
 use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
 use PsyTest\Modules\Smil\Scoring\RawScoreCalculator;
 use PsyTest\Modules\Smil\Scoring\TScoreCalculator;
 use PsyTest\Modules\Smil\Scoring\ValidityAssessor;
 
-class SmilModule extends BaseTestModule
+class SmilModule extends BaseTestModule implements RefreshesAdditionalScores
 {
     /**
      * Scale names (Russian)
@@ -334,6 +335,70 @@ class SmilModule extends BaseTestModule
             'completion_rate' => round($numericAnswerCount / 566 * 100, 1),
             'interpretation' => $interpretation,
         ];
+    }
+
+    /**
+     * Пересчитать только дополнительные шкалы по сохранённым ответам (05.S4a).
+     *
+     * Реестр дополнительных шкал растёт после прохождения (35 → 105 к 15.09),
+     * а результат считается один раз при завершении. Базовый профиль,
+     * достоверность, индексы и интерпретация — проверенное scoring core — здесь
+     * не пересчитываются и возвращаются как есть; меняется только
+     * `additional_scores`, и только когда набор кодов расходится с реестром.
+     * Без ответов на пункты (ответы удалены) пересчитывать не из чего.
+     *
+     * @param array<string, mixed>     $results
+     * @param array<int|string, mixed> $answers
+     *
+     * @return array<string, mixed>
+     */
+    public function refreshAdditionalScores(array $results, array $answers): array
+    {
+        if ($results === [] || !$this->hasItemAnswers($answers)) {
+            return $results;
+        }
+
+        $registry = $this->additionalCalc->codes();
+        $stored = is_array($results['additional_scores'] ?? null)
+            ? array_map('strval', array_keys($results['additional_scores']))
+            : null;
+        if ($stored !== null && self::sameCodes($stored, $registry)) {
+            return $results;
+        }
+
+        $gender = $results['gender'] ?? $answers['gender'] ?? 'male';
+        $results['additional_scores'] = $this->additionalCalc->calculate(
+            $answers,
+            is_string($gender) ? $gender : 'male',
+        );
+
+        return $results;
+    }
+
+    /**
+     * @param array<int|string, mixed> $answers
+     */
+    private function hasItemAnswers(array $answers): bool
+    {
+        foreach (array_keys($answers) as $key) {
+            if (is_int($key) || ctype_digit((string) $key)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param list<string> $left
+     * @param list<string> $right
+     */
+    private static function sameCodes(array $left, array $right): bool
+    {
+        sort($left);
+        sort($right);
+
+        return $left === $right;
     }
 
     /**

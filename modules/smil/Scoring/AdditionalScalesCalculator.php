@@ -40,6 +40,28 @@ final class AdditionalScalesCalculator
     }
 
     /**
+     * Коды шкал, которые калькулятор сейчас считает, в порядке реестра.
+     *
+     * Нужен, чтобы отличить результат, посчитанный на прежнем реестре, от
+     * актуального: тот же фильтр, что и в calculate().
+     *
+     * @return list<string>
+     */
+    public function codes(): array
+    {
+        $codes = [];
+        foreach ($this->scales as $scale) {
+            $code = (string) ($scale['code'] ?? '');
+            if ($code === '' || !isset($scale['key'], $scale['norms'])) {
+                continue;
+            }
+            $codes[] = $code;
+        }
+
+        return $codes;
+    }
+
+    /**
      * Рассчитать дополнительные шкалы.
      *
      * raw = совпадения «верно» по key.true плюс «неверно» по key.false.
