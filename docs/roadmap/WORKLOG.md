@@ -20,6 +20,13 @@
 
 ## 2026-09-24
 
+### 08.B27 — staging-выкладка K6a (`1491f40`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-1491f40`; deployed runtime `1491f40` (merge PR #128, полная матрица 5.7/8.0 зелёная). Миграций нет.
+- Сделано: артефакт `release-1491f40.tar.gz`, SHA-256 `a04a74a7…3526` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/1491f40`.
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`.
+- Rollback: `public_html` → `releases/4d8ab91/public`, `current` → `releases/4d8ab91`.
+
 ### 07.K6a — приглашение не дублируется при двойном нажатии; новый клиент из формы приглашения
 
 - Этап / ветка / commit: этап 07, `codex/07-k6a-invite-form` от `main` `d85ee26`; commits `29c937b`, `a1cd740`, `465ec5d` (исполнитель Opus, БД `psytest_wt_k6a`).
