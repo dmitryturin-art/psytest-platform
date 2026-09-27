@@ -20,6 +20,13 @@
 
 ## 2026-09-27
 
+### 08.B29 — staging-выкладка K6c (`a4392ba`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-a4392ba`; deployed runtime `a4392ba` (merge PR #133 после merge документации #132; полная матрица 5.7/8.0 зелёная). Миграций нет.
+- Сделано: артефакт `release-a4392ba.tar.gz`, SHA-256 `5db16e1f…3f28` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/a4392ba`.
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`.
+- Rollback: `public_html` → `releases/90d2c9d/public`, `current` → `releases/90d2c9d`.
+
 ### 07.K6c — блок разбора у клиента специалиста только при заказе; удаление отозванных приглашений
 
 - Этап / ветка / commit: этап 07, `codex/07-k6c-client-block-and-invites` от `main` `c74ba4e`; commits `789a119`, `b735a0c` (исполнитель Opus, БД `psytest_wt_k6c`). Запущен ведущим до явного «делай» владельца — владелец 27.09 подтвердил продолжение задним числом («если исполнитель убирает просто это, то окей»); правило «сначала отвечать» усилено.
