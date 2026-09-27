@@ -145,4 +145,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 37. Выкладка `90d2c9d` (24.09): пересчёт дополнительных шкал у сохранённых сессий (05.S4a); миграций нет; после выкладки `php8.3 bin/smil-refresh-additional.php` обновил 4 сессии. SHA-256 `ce9abf2bdbad75b5e260981049c042e8e8772d9bbd6e370558189300879d3eee` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/1491f40/public` и `current` на `releases/1491f40`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+38. Выкладка `a4392ba` (27.09): блок разбора у клиента специалиста только при заказе, удаление отозванных приглашений (07.K6c); миграций нет. SHA-256 `5db16e1fdf159afb825e1c08278a5d577225392c042802df34c741ca43283f28` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/90d2c9d/public` и `current` на `releases/90d2c9d`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
