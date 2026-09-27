@@ -652,4 +652,39 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString('button.disabled = true', $script);
         self::assertStringContainsString("select.value === '__new__'", $script);
     }
+
+    /**
+     * Кнопка «Удалить» есть только у отозванного неоткрытого приглашения
+     * (07.K6c); у ожидающего остаётся «Отозвать», у открытых — ссылка на кейс.
+     */
+    public function testOnlyRevokedInvitesOfferDeletion(): void
+    {
+        $routes = (string) file_get_contents($this->projectRoot . '/public/index.php');
+        self::assertStringContainsString("\$router->post('/admin/invites/delete', [OwnerController::class, 'deleteInvite'])", $routes);
+
+        $twig = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($this->projectRoot . '/templates'), ['cache' => false]);
+        \PsyTest\Core\TemplateFunctions::register($twig);
+        $row = static fn (string $id, string $status, string $display, ?string $session): array => [
+            'id' => $id, 'status' => $status, 'display_status' => $display, 'claimed_session_id' => $session,
+            'test_name' => 'Методика ' . $id, 'created_at' => '2026-09-27 10:00:00', 'owner_note' => null,
+            'client_label' => null, 'client_id' => null,
+        ];
+        $html = $twig->render('owner-dashboard.twig', [
+            'appName' => 'PsyTest', 'basePath' => '', 'csrf_token' => 'synthetic-csrf',
+            'invites' => [
+                $row('pending-1', 'pending', 'pending', null),
+                $row('revoked-1', 'revoked', 'revoked', null),
+                $row('claimed-1', 'claimed', 'completed', '11111111-1111-4111-8111-111111111111'),
+            ],
+            'tests' => [], 'clients' => [], 'invite_form_key' => 'k',
+        ]);
+
+        self::assertSame(1, substr_count($html, 'action="/admin/invites/delete"'));
+        self::assertSame(1, substr_count($html, 'action="/admin/invites/revoke"'));
+        self::assertMatchesRegularExpression(
+            '#action="/admin/invites/delete" class="owner-action-form" data-submit-once>\s*<input type="hidden" name="csrf_token" value="synthetic-csrf">\s*<input type="hidden" name="invite_id" value="revoked-1">#',
+            $html,
+        );
+        self::assertStringContainsString('data-busy-text="Удаляем…">Удалить</button>', $html);
+    }
 }

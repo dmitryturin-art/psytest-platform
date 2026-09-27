@@ -325,6 +325,30 @@ final class OwnerController extends BaseController
         $this->redirect('/admin');
     }
 
+    /**
+     * Удаление отозванного приглашения из списка (07.K6c).
+     *
+     * Идемпотентно: повторная отправка формы по уже удалённой строке даёт
+     * спокойное сообщение, а не ошибку. Токена в сообщениях нет.
+     */
+    public function deleteInvite(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $inviteId = $_POST['invite_id'] ?? '';
+        $outcome = is_string($inviteId) && Security::isValidUuid($inviteId)
+            ? $this->invites->deleteRevoked($inviteId)
+            : TestInviteService::DELETE_REFUSED;
+        $this->setFlash(match ($outcome) {
+            TestInviteService::DELETE_DONE => ['type' => 'success', 'message' => 'Отозванное приглашение удалено.'],
+            TestInviteService::DELETE_MISSING => ['type' => 'success', 'message' => 'Приглашение уже удалено.'],
+            default => ['type' => 'error', 'message' => 'Удалить можно только отозванное приглашение, которое не открывали.'],
+        });
+        $this->redirect('/admin');
+    }
+
     public function viewInvitedCase(string $sessionId): void
     {
         if (!$this->requireOwner()) {

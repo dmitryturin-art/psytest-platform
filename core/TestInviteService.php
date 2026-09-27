@@ -184,6 +184,37 @@ final class TestInviteService
         ) === 1;
     }
 
+    public const DELETE_DONE = 'deleted';
+    public const DELETE_MISSING = 'missing';
+    public const DELETE_REFUSED = 'refused';
+
+    /**
+     * Физически удаляет отозванное и никогда не открытое приглашение (07.K6c).
+     *
+     * Отозванные строки только засоряют список владельца: клиентских данных за
+     * ними нет. Условие удаления проверяется в самом `DELETE`, поэтому
+     * ожидающее, открытое или завершённое приглашение удалить нельзя даже
+     * гонкой. Карточка клиента и сессии не затрагиваются. Повторный вызов для
+     * уже удалённой строки — не ошибка, а `DELETE_MISSING`.
+     *
+     * @return self::DELETE_*
+     */
+    public function deleteRevoked(string $inviteId): string
+    {
+        $deleted = $this->db->delete(
+            'test_invites',
+            'id = ? AND status = ? AND claimed_session_id IS NULL',
+            [$inviteId, 'revoked'],
+        );
+        if ($deleted === 1) {
+            return self::DELETE_DONE;
+        }
+
+        return $this->db->selectOne('SELECT id FROM test_invites WHERE id = ?', [$inviteId]) === null
+            ? self::DELETE_MISSING
+            : self::DELETE_REFUSED;
+    }
+
     /** @return list<array<string, mixed>> */
     public function recentForOwner(int $limit = 20): array
     {
