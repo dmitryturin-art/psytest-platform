@@ -78,6 +78,14 @@
                             <input type="hidden" name="invite_id" value="{{ invite.id }}">
                             <button type="submit" class="btn btn-outline">Отозвать</button>
                         </form>
+                    {% elseif invite.status == 'revoked' and not invite.claimed_session_id %}
+                        {# Отозванное и не открытое приглашение можно убрать из
+                           списка (07.K6c): клиентских данных за ним нет. #}
+                        <form method="post" action="{{ basePath }}/admin/invites/delete" class="owner-action-form" data-submit-once>
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="invite_id" value="{{ invite.id }}">
+                            <button type="submit" class="btn btn-outline" data-busy-text="Удаляем…">Удалить</button>
+                        </form>
                     {% elseif invite.claimed_session_id %}
                         <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ invite.claimed_session_id }}">Открыть кейс</a>
                     {% endif %}

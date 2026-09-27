@@ -104,6 +104,57 @@ final class TestInviteServiceTest extends TestCase
         self::assertSame('Только для владельца', $case['owner_note']);
     }
 
+    /**
+     * Отозванное неоткрытое приглашение удаляется физически (07.K6c), карточка
+     * клиента остаётся; повторное удаление — не ошибка.
+     */
+    public function testRevokedInviteIsDeletedIdempotentlyAndClientCardStays(): void
+    {
+        $clientId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $this->db->insert('therapist_clients', ['id' => $clientId, 'label' => 'Клиент K6c']);
+        try {
+            $invite = $this->invites->create($this->testId('beck-anxiety'), 'Заметка', $clientId);
+            $this->inviteIds = [$invite['id']];
+            self::assertTrue($this->invites->revoke($invite['id']));
+
+            self::assertSame(TestInviteService::DELETE_DONE, $this->invites->deleteRevoked($invite['id']));
+            self::assertNull($this->db->selectOne('SELECT id FROM test_invites WHERE id = ?', [$invite['id']]));
+            self::assertNotNull($this->db->selectOne('SELECT id FROM therapist_clients WHERE id = ?', [$clientId]));
+
+            self::assertSame(TestInviteService::DELETE_MISSING, $this->invites->deleteRevoked($invite['id']));
+        } finally {
+            $this->db->delete('test_invites', 'client_id = ?', [$clientId]);
+            $this->db->delete('therapist_clients', 'id = ?', [$clientId]);
+        }
+    }
+
+    public function testPendingOpenedOrCompletedInviteCannotBeDeleted(): void
+    {
+        $pending = $this->invites->create($this->testId('bdi'), '');
+        $opened = $this->invites->create($this->testId('bdi'), '');
+        $completed = $this->invites->create($this->testId('hads'), '');
+        $this->inviteIds = [$pending['id'], $opened['id'], $completed['id']];
+
+        $openedClaim = $this->invites->claim($opened['token']);
+        $completedClaim = $this->invites->claim($completed['token']);
+        self::assertNotNull($openedClaim);
+        self::assertNotNull($completedClaim);
+        $this->sessionIds = [(string) $openedClaim['session']['id'], (string) $completedClaim['session']['id']];
+        $this->db->update('test_sessions', ['status' => 'completed'], 'id = ?', [$completedClaim['session']['id']]);
+
+        foreach ([$pending, $opened, $completed] as $invite) {
+            self::assertSame(TestInviteService::DELETE_REFUSED, $this->invites->deleteRevoked($invite['id']));
+            self::assertNotNull($this->db->selectOne('SELECT id FROM test_invites WHERE id = ?', [$invite['id']]));
+        }
+        foreach ($this->sessionIds as $sessionId) {
+            self::assertNotNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$sessionId]));
+        }
+
+        // Даже с поддельным статусом «отозвано» строка с привязанной сессией не удаляется.
+        $this->db->update('test_invites', ['status' => 'revoked'], 'id = ?', [$opened['id']]);
+        self::assertSame(TestInviteService::DELETE_REFUSED, $this->invites->deleteRevoked($opened['id']));
+    }
+
     private function testId(string $slug): int
     {
         return (int) $this->db->selectOne('SELECT id FROM tests WHERE slug = ?', [$slug])['id'];

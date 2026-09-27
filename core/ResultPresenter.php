@@ -180,13 +180,25 @@ final class ResultPresenter
             // Черновики, их статусы и профессиональное заключение сюда не
             // попадают вовсе (K0b). Единственное, что клиент может увидеть, —
             // версия, которую специалист явно опубликовал (D-054).
+            //
+            // Фраза ожидания честна, только если специалист действительно
+            // заказал понятный разбор. Без заказа (в том числе у методик без
+            // промптов, например BAI) блока нет вовсе: иначе клиент ждал бы
+            // того, что никогда не появится (07.K6c).
+            $published = $this->publishedReport((string) $session['id']);
+            if ($published === null
+                && (new AiReportRepository($this->db))->findFor((string) $session['id'], $mode, Prompt::KIND_CLEAR) === null
+            ) {
+                return null;
+            }
+
             return [
                 'restricted' => true,
                 'mode' => $mode,
                 'kinds' => [],
                 'readonly' => $readonly,
                 'ai_disabled' => !(new AiSettings($this->db))->isAiEnabled(),
-                'published' => $this->publishedReport((string) $session['id']),
+                'published' => $published,
             ];
         }
 

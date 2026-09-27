@@ -86,6 +86,7 @@ HTTP request
 | POST | `/admin/case/delete` | `OwnerController::deleteCase` | полное ручное удаление кейса |
 | POST | `/admin/invites/create` | `OwnerController::createInvite` | создать 14-day invitation для поддерживаемой методики |
 | POST | `/admin/invites/revoke` | `OwnerController::revokeInvite` | отозвать неоткрытое invitation |
+| POST | `/admin/invites/delete` | `OwnerController::deleteInvite` | удалить отозванное неоткрытое invitation из списка (07.K6c) |
 | GET | `/admin/invited-case/{sessionId}` | `OwnerController::viewInvitedCase` | защищённо показать базовый результат и читаемую анкету invitation case |
 | POST | `/admin/invited-case/{sessionId}/delete` | `OwnerController::deleteInvitedCase` | удалить кейс приглашения с его карточки (с подтверждением) |
 | GET | `/admin/invited-case/{sessionId}/export.pdf` | `OwnerController::exportCasePdf` | выгрузить кейс одним PDF (результат, заключение, разбор); файл собирается на лету и на сервере не остаётся |
