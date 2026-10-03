@@ -59,6 +59,88 @@ final class FormOnceTest extends TestCase
         self::assertSame(FormOnce::REPLAY, $once->claim('invite', $key));
     }
 
+    public function testRunPerformsTheActionOnceAndReplaysItsResult(): void
+    {
+        $session = [];
+        $once = new FormOnce($session);
+        $key = $once->issue('form');
+        $calls = 0;
+        $action = static function () use (&$calls): array {
+            $calls++;
+
+            return ['type' => 'success', 'message' => 'Создано ' . $calls, 'redirect' => '/x'];
+        };
+
+        $first = $once->run('form', $key, $action, 'устарела', 'уже отправлена');
+        $second = (new FormOnce($session))->run('form', $key, $action, 'устарела', 'уже отправлена');
+
+        self::assertSame(1, $calls);
+        self::assertSame(FormOnce::FRESH, $first['claim']);
+        self::assertSame(FormOnce::REPLAY, $second['claim']);
+        self::assertSame($first['result'], $second['result'], 'Повтор получает тот же ответ, включая служебные поля.');
+
+        // Новый ключ — новая отрисовка формы: действие выполняется снова.
+        $third = $once->run('form', $once->issue('form'), $action, 'устарела', 'уже отправлена');
+        self::assertSame(2, $calls);
+        self::assertSame(FormOnce::FRESH, $third['claim']);
+    }
+
+    public function testRunWithoutAKnownKeyDoesNothing(): void
+    {
+        $session = [];
+        $once = new FormOnce($session);
+        $once->issue('form');
+        $calls = 0;
+        $action = static function () use (&$calls): array {
+            $calls++;
+
+            return ['type' => 'success', 'message' => 'ok'];
+        };
+
+        foreach ([null, '', str_repeat('ab', 16)] as $key) {
+            $outcome = $once->run('form', $key, $action, 'устарела', 'уже отправлена');
+            self::assertSame(FormOnce::UNKNOWN, $outcome['claim']);
+            self::assertSame(['type' => 'error', 'message' => 'устарела'], $outcome['result']);
+        }
+        self::assertSame(0, $calls);
+    }
+
+    public function testRunErrorOrExceptionKeepsTheKeyUsable(): void
+    {
+        $session = [];
+        $once = new FormOnce($session);
+        $key = $once->issue('form');
+
+        $invalid = $once->run('form', $key, static fn (): array => ['type' => 'error', 'message' => 'ошибка ввода'], 's', 'p');
+        self::assertSame(FormOnce::FRESH, $invalid['claim']);
+
+        try {
+            $once->run('form', $key, static function (): array {
+                throw new \RuntimeException('сбой');
+            }, 's', 'p');
+            self::fail('Исключение действия пробрасывается.');
+        } catch (\RuntimeException) {
+        }
+
+        $fixed = $once->run('form', $key, static fn (): array => ['type' => 'success', 'message' => 'ok'], 's', 'p');
+        self::assertSame(FormOnce::FRESH, $fixed['claim'], 'Ни ошибка ввода, ни сбой ключ не сжигают.');
+        self::assertSame('ok', $fixed['result']['message']);
+    }
+
+    public function testRunReplayWithoutAStoredResultReportsTheFormAsAlreadySent(): void
+    {
+        $session = [];
+        $once = new FormOnce($session);
+        $key = $once->issue('form');
+        // Первый запрос захватил ключ, но итог ещё не записал.
+        $once->claim('form', $key);
+
+        $outcome = $once->run('form', $key, static fn (): array => ['type' => 'success', 'message' => 'дубль'], 's', 'уже отправлена');
+
+        self::assertSame(FormOnce::REPLAY, $outcome['claim']);
+        self::assertSame(['type' => 'error', 'message' => 'уже отправлена'], $outcome['result']);
+    }
+
     public function testKeysExpireAndOnlyTheLatestAreKept(): void
     {
         $now = 1_000_000;

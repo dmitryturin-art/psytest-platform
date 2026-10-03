@@ -35,15 +35,18 @@
     <section class="owner-invites" aria-labelledby="owner-client-assign-title">
         <h2 id="owner-client-assign-title">Новое назначение</h2>
         <p class="owner-help">Ссылка действует 14 дней и открывается один раз. Отправьте её клиенту сами — платформа ничего не отправляет.</p>
-        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/invites/create" class="owner-form">
+        {# form_key — одноразовый ключ этой отрисовки: двойное нажатие не создаёт
+           второе приглашение, повтор показывает ту же ссылку (07.K6b). #}
+        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/invites/create" class="owner-form" data-submit-once>
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="form_key" value="{{ invite_form_key }}">
             <label for="assignment-test">Методика</label>
             <select id="assignment-test" name="test_id" required>
                 {% for test in invite_tests %}<option value="{{ test.id }}">{{ test.name }}</option>{% endfor %}
             </select>
             <label for="assignment-note">Заметка к назначению (не показывается клиенту)</label>
             <textarea id="assignment-note" name="owner_note" maxlength="1000" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary">Создать назначение</button>
+            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">Создать назначение</button>
         </form>
     </section>
 
@@ -81,4 +84,9 @@
         </form>
     </section>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+{# Блокировка кнопки после отправки; без JS повтор отсекает сервер (07.K6b). #}
+<script src="{{ asset('js/owner-forms.js') }}"></script>
 {% endblock %}

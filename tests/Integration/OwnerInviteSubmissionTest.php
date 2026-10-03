@@ -190,6 +190,54 @@ final class OwnerInviteSubmissionTest extends TestCase
         self::assertSame(0, $this->countInvitesWithNote($note));
     }
 
+    /**
+     * «Новое назначение» в карточке клиента (07.K6b): клиент задан адресом
+     * страницы, повтор с тем же ключом даёт ту же ссылку.
+     */
+    public function testClientCardAssignmentIsCreatedOnceForTheCardsClient(): void
+    {
+        $clientId = $this->clients->create('Карточка назначения ' . bin2hex(random_bytes(4)), '');
+        $this->clientIds[] = $clientId;
+        $note = 'Назначение ' . bin2hex(random_bytes(4));
+        // Поле client_id формы не может подменить клиента из адреса страницы.
+        $post = $this->post($this->submission()->issueKey(), [
+            'owner_note' => $note,
+            'client_id' => OwnerInviteSubmission::NEW_CLIENT,
+            'new_client_label' => 'Подмена',
+        ]);
+
+        $first = $this->submission()->submit($post, $this->availableIds(), $clientId);
+        $second = $this->submission()->submit($post, $this->availableIds(), $clientId);
+
+        self::assertSame('success', $first['type']);
+        self::assertStringStartsWith('Назначение создано.', $first['message']);
+        $invite = $this->track($first);
+        self::assertSame($clientId, $invite['client_id']);
+        self::assertSame($first, $second);
+        self::assertSame(1, $this->countInvitesWithNote($note));
+        self::assertNull($this->db->selectOne('SELECT id FROM therapist_clients WHERE label = ?', ['Подмена']));
+    }
+
+    public function testClientCardAssignmentErrorKeepsTheKeyAndAMissingKeyCreatesNothing(): void
+    {
+        $clientId = $this->clients->create('Карточка ошибки ' . bin2hex(random_bytes(4)), '');
+        $this->clientIds[] = $clientId;
+        $note = 'Ошибка назначения ' . bin2hex(random_bytes(4));
+        $key = $this->submission()->issueKey();
+
+        $missing = $this->submission()->submit($this->post(null, ['owner_note' => $note]), $this->availableIds(), $clientId);
+        $badTest = $this->submission()->submit($this->post($key, ['test_id' => '999999', 'owner_note' => $note]), $this->availableIds(), $clientId);
+        self::assertSame('error', $missing['type']);
+        self::assertSame('error', $badTest['type']);
+        self::assertStringStartsWith('Не удалось создать назначение', $badTest['message']);
+        self::assertSame(0, $this->countInvitesWithNote($note));
+
+        $fixed = $this->submission()->submit($this->post($key, ['owner_note' => $note]), $this->availableIds(), $clientId);
+        self::assertSame('success', $fixed['type']);
+        $this->track($fixed);
+        self::assertSame(1, $this->countInvitesWithNote($note));
+    }
+
     private function submission(): OwnerInviteSubmission
     {
         return new OwnerInviteSubmission(

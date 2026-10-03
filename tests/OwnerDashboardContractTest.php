@@ -201,9 +201,13 @@ final class OwnerDashboardContractTest extends TestCase
             (int) strpos($controller, 'public function caseReportStatus(') - (int) strpos($controller, 'public function requestCaseReports('),
         );
 
-        self::assertStringContainsString("\$_POST['owner_context']", $requestAction);
+        // С 07.K6b заказ разбирает OwnerCaseReportOrder: контекст — только поле формы.
+        $order = (string) file_get_contents($this->projectRoot . '/core/OwnerCaseReportOrder.php');
+        self::assertStringContainsString('->submit($sessionId, (string) $case[\'test_slug\'], $mode, $this->postData())', $requestAction);
+        self::assertStringContainsString("\$post['owner_context']", $order);
         foreach (['client_label', 'owner_note', 'client_id', 'label'] as $ownerOnlyField) {
             self::assertStringNotContainsString($ownerOnlyField, $requestAction, $ownerOnlyField);
+            self::assertStringNotContainsString($ownerOnlyField, $order, $ownerOnlyField);
         }
 
         $template = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
@@ -637,7 +641,7 @@ final class OwnerDashboardContractTest extends TestCase
 
         self::assertStringContainsString('<input type="hidden" name="form_key" value="{{ invite_form_key }}">', $template);
         self::assertStringContainsString("'invite_form_key' => \$this->inviteSubmission()->issueKey()", $controller);
-        self::assertStringContainsString('->submit($post, $availableIds)', $controller);
+        self::assertStringContainsString('->submit($this->postData(), $this->activeTestIds())', $controller);
 
         self::assertStringContainsString('<option value="__new__">Новый клиент…</option>', $template);
         self::assertSame('__new__', \PsyTest\Core\OwnerInviteSubmission::NEW_CLIENT);
@@ -651,6 +655,53 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("asset('js/owner-forms.js')", $template);
         self::assertStringContainsString('button.disabled = true', $script);
         self::assertStringContainsString("select.value === '__new__'", $script);
+    }
+
+    /**
+     * Остальные формы кабинета, создающие сущности или платные задания
+     * (07.K6b): у каждой одноразовый ключ и блокировка кнопки.
+     */
+    public function testEntityAndPaidOrderFormsCarryAOneTimeKey(): void
+    {
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+
+        $clients = (string) file_get_contents($this->projectRoot . '/templates/owner-clients.twig');
+        self::assertStringContainsString('<input type="hidden" name="form_key" value="{{ client_form_key }}">', $clients);
+        self::assertStringContainsString("'client_form_key' => \$this->clientSubmission()->issueKey()", $controller);
+
+        $client = (string) file_get_contents($this->projectRoot . '/templates/owner-client.twig');
+        self::assertStringContainsString('<input type="hidden" name="form_key" value="{{ invite_form_key }}">', $client);
+        self::assertSame(2, substr_count($controller, "'invite_form_key' => \$this->inviteSubmission()->issueKey()"));
+
+        $case = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        self::assertStringContainsString('name="form_key" value="{{ order_keys.all }}"', $case);
+        self::assertStringContainsString('name="form_key" value="{{ order_keys[item.kind] }}"', $case);
+        self::assertStringContainsString('name="form_key" value="{{ form_key }}"', $case, 'Макрос «Заказать заново».');
+        self::assertSame(2, substr_count($case, 'reorder_form(case, item, csrf_token, basePath, order_keys[item.kind])'));
+        self::assertStringContainsString("'order_keys' => \$ai['available'] ? \$this->caseReportOrder()->issueKeys() : null", $controller);
+
+        // Каждая форма заказа на карточке кейса — с ключом и блокировкой.
+        preg_match_all('#<form method="post" action="[^"]*/reports/request"[^>]*>.*?</form>#s', $case, $orders);
+        self::assertCount(3, $orders[0]);
+        foreach ($orders[0] as $form) {
+            self::assertStringContainsString('data-submit-once', $form);
+            self::assertStringContainsString('name="form_key"', $form);
+            self::assertStringContainsString('data-busy-text="Заказываем…"', $form);
+        }
+
+        foreach ([$clients, $client] as $template) {
+            self::assertStringContainsString('data-submit-once', $template);
+            self::assertStringContainsString('data-busy-text="Создаём…"', $template);
+        }
+        self::assertMatchesRegularExpression('#/reports/notify" class="owner-action-form" data-submit-once>#', $case);
+
+        $editor = (string) file_get_contents($this->projectRoot . '/templates/owner-report-editor.twig');
+        self::assertStringContainsString('/restore" class="owner-action-form" data-submit-once>', $editor);
+        self::assertStringContainsString('/publish" class="owner-action-form owner-publish-form" data-submit-once>', $editor);
+
+        foreach ([$clients, $client, $case, $editor] as $template) {
+            self::assertStringContainsString("asset('js/owner-forms.js')", $template);
+        }
     }
 
     /**
