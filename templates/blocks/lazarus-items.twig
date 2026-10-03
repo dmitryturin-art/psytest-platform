@@ -1,3 +1,6 @@
+{# 04.U1: собственный контейнер прокрутки — на телефоне страница не уезжает вбок.
+   В PDF (_pdf из ResultSectionRenderer) обёртки нет: вёрстка DomPDF прежняя. #}
+{% if not _pdf|default(false) %}<div class="table-scroll" role="region" aria-label="Таблица пунктов" tabindex="0">{% endif %}
 <table class="lazarus-items-table">
     <thead>
         <tr>
@@ -23,6 +26,7 @@
         {% endfor %}
     </tbody>
 </table>
+{% if not _pdf|default(false) %}</div>{% endif %}
 <p class="lazarus-items-hint">
     <strong>Расхождение</strong> — разница между вашей оценкой и тем, как, по вашему мнению, ответил бы партнёр.
     Положительное значение — вы оценили пункт выше, отрицательное — ниже, чем ожидаете от партнёра.

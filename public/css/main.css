@@ -4277,6 +4277,98 @@ body {
     background: #e3f2fd;
 }
 
+/* ---------------------------------------------------------------- 04.U1
+   Таблицы результата на телефоне. Широкая таблица живёт в собственном
+   контейнере прокрутки (.table-scroll из blocks/scales-table.twig и
+   blocks/lazarus-items.twig), страница вбок не уезжает. Край, за которым
+   ещё есть столбцы, гаснет маской; маска привязана к прокрутке самого
+   контейнера (scroll-driven animation) и появляется, только когда
+   таблица действительно шире. Где анимация не поддерживается, остаётся
+   обычная прокрутка без подсказки. PDF-шаблоны этих классов не знают:
+   DomPDF видит прежнюю таблицу в простом блоке. */
+
+.table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+/* Контейнер прокрутки не схлопывает поля с соседями, поэтому нижний
+   отступ таблицы шкал переносится на него: на desktop высота прежняя. */
+.table-scroll--scores {
+    margin-bottom: var(--spacing-xl);
+}
+
+.table-scroll--scores > .scores-table {
+    margin-bottom: 0;
+}
+
+@supports (animation-timeline: scroll(self inline)) {
+    .table-scroll {
+        animation: table-scroll-hint linear both;
+        animation-timeline: scroll(self inline);
+    }
+}
+
+@keyframes table-scroll-hint {
+    from {
+        -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+        mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+    }
+    50% {
+        -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+        mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+    }
+    to {
+        -webkit-mask-image: linear-gradient(to right, transparent, #000 32px);
+        mask-image: linear-gradient(to right, transparent, #000 32px);
+    }
+}
+
+@media (max-width: 768px) {
+    /* Длинные названия шкал переносятся по слогам, а не распирают столбец */
+    .scores-table td:nth-child(2),
+    .lazarus-items-table th,
+    .lazarus-items-table .item-text {
+        -webkit-hyphens: auto;
+        hyphens: auto;
+        overflow-wrap: break-word;
+    }
+
+    /* Если слог не находится (скобки, кавычки), название всё равно
+       переносится внутри своего столбца, а не расширяет таблицу. */
+    .scores-table td:nth-child(2) {
+        overflow-wrap: anywhere;
+    }
+
+    /* Пояснение группы — отдельной строкой под её названием */
+    .scores-table .category-note {
+        display: block;
+        margin-left: 0;
+    }
+
+    .lazarus-items-table th,
+    .lazarus-items-table td {
+        padding: var(--spacing-sm) var(--spacing-xs);
+    }
+}
+
+@media (max-width: 480px) {
+    .results-content {
+        padding: var(--spacing-md);
+    }
+}
+
+@media print {
+    .table-scroll {
+        overflow: visible;
+        animation: none;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+}
+
 /* ---------------------------------------------------------------- 07.K5j
    Блок «Выгрузка» в карточке кейса. Форма только выбирает состав документа,
    поэтому она компактна и на 390×844 складывается в одну колонку. */
