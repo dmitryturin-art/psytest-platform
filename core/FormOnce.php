@@ -116,6 +116,57 @@ final class FormOnce
         }
     }
 
+    /**
+     * Выполнить действие формы не больше одного раза на ключ (07.K6b).
+     *
+     * Общий порядок для всех форм кабинета, чтобы его не повторять в каждой:
+     *
+     * - нет ключа или он неизвестен — действие не выполняется, ответ
+     *   `$staleMessage` с типом `error`;
+     * - ключ уже отработал — действие не выполняется, ответ — сохранённый
+     *   итог первого запроса (или `$pendingMessage`, если первый запрос ещё не
+     *   записал итог либо упал);
+     * - свежий ключ — действие выполняется. Итог с типом `error` означает «ничего
+     *   не сделано» (ошибка ввода): ключ возвращается в оборот. Любой другой
+     *   итог запоминается для повторов. Исключение тоже возвращает ключ.
+     *
+     * @param \Closure(): array<string, string> $action Итог действия: поля flash и служебные поля вызывающего.
+     * @return array{claim: string, result: array<string, string>}
+     */
+    public function run(string $form, mixed $key, \Closure $action, string $staleMessage, string $pendingMessage): array
+    {
+        $claim = $this->claim($form, $key);
+        if ($claim === self::UNKNOWN || !is_string($key)) {
+            return ['claim' => self::UNKNOWN, 'result' => ['type' => 'error', 'message' => $staleMessage]];
+        }
+        if ($claim === self::REPLAY) {
+            $stored = $this->result($form, $key);
+
+            return [
+                'claim' => self::REPLAY,
+                'result' => $stored !== null && isset($stored['type'], $stored['message'])
+                    ? $stored
+                    : ['type' => 'error', 'message' => $pendingMessage],
+            ];
+        }
+
+        try {
+            $result = $action();
+        } catch (\Throwable $e) {
+            $this->release($form, $key);
+
+            throw $e;
+        }
+
+        if (($result['type'] ?? 'error') === 'error') {
+            $this->release($form, $key);
+        } else {
+            $this->complete($form, $key, $result);
+        }
+
+        return ['claim' => self::FRESH, 'result' => $result];
+    }
+
     /** @return array<string, string>|null */
     public function result(string $form, string $key): ?array
     {

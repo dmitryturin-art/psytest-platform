@@ -40,29 +40,44 @@ final class OwnerInviteSubmission
     /**
      * Обработать POST формы и вернуть сообщение для кабинета.
      *
+     * `$fixedClientId` — форма «Новое назначение» в карточке клиента (07.K6b):
+     * клиент задан адресом страницы, а не полем формы. Ключи у обеих форм
+     * общие: это одна и та же операция «создать приглашение».
+     *
      * @param array<string, mixed> $post
      * @param list<int> $availableTestIds Активные методики, доступные для приглашения.
      * @return array{type: string, message: string, invite_url?: string}
      */
-    public function submit(array $post, array $availableTestIds): array
+    public function submit(array $post, array $availableTestIds, ?string $fixedClientId = null): array
     {
-        $key = $post['form_key'] ?? null;
-        $claim = $this->once->claim(self::FORM, $key);
-        if ($claim === FormOnce::UNKNOWN || !is_string($key)) {
-            return [
-                'type' => 'error',
-                'message' => 'Форма устарела или уже была обработана. Приглашение не создано: обновите страницу и отправьте форму ещё раз.',
-            ];
-        }
-        if ($claim === FormOnce::REPLAY) {
-            return $this->replayFlash($this->once->result(self::FORM, $key));
+        if ($fixedClientId !== null) {
+            $post['client_id'] = $fixedClientId;
+            $post['new_client_label'] = '';
         }
 
+        $outcome = $this->once->run(
+            self::FORM,
+            $post['form_key'] ?? null,
+            fn (): array => $this->create($post, $availableTestIds, $fixedClientId !== null),
+            'Форма устарела или уже была обработана. Приглашение не создано: обновите страницу и отправьте форму ещё раз.',
+            'Эта форма уже отправлена. Второе приглашение не создано: обновите страницу и проверьте список приглашений.',
+        );
+
+        return self::flash($outcome['result']);
+    }
+
+    /**
+     * @param array<string, mixed> $post
+     * @param list<int> $availableTestIds
+     * @return array<string, string>
+     */
+    private function create(array $post, array $availableTestIds, bool $fromClientCard): array
+    {
         $error = $this->validate($post, $availableTestIds);
         if ($error !== null) {
-            $this->once->release(self::FORM, $key);
-
-            return ['type' => 'error', 'message' => $error];
+            return ['type' => 'error', 'message' => $fromClientCard
+                ? 'Не удалось создать назначение: выберите поддерживаемую методику и сократите заметку до 1000 символов.'
+                : $error];
         }
 
         $testId = (int) $post['test_id'];
@@ -82,21 +97,19 @@ final class OwnerInviteSubmission
             if ($this->db->inTransaction()) {
                 $this->db->rollback();
             }
-            $this->once->release(self::FORM, $key);
 
             throw $e;
         }
 
-        $flash = [
+        return [
             'type' => 'success',
-            'message' => $clientChoice === self::NEW_CLIENT
-                ? 'Карточка клиента и одноразовое приглашение созданы. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.'
-                : 'Одноразовое приглашение создано. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
+            'message' => match (true) {
+                $fromClientCard => 'Назначение создано. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
+                $clientChoice === self::NEW_CLIENT => 'Карточка клиента и одноразовое приглашение созданы. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
+                default => 'Одноразовое приглашение создано. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
+            },
             'invite_url' => $this->appUrl . '/invite/' . $invite['token'],
         ];
-        $this->once->complete(self::FORM, $key, $flash);
-
-        return $flash;
     }
 
     /**
@@ -127,24 +140,16 @@ final class OwnerInviteSubmission
     }
 
     /**
-     * @param array<string, string>|null $result
+     * @param array<string, string> $result
      * @return array{type: string, message: string, invite_url?: string}
      */
-    private function replayFlash(?array $result): array
+    private static function flash(array $result): array
     {
-        if ($result !== null && isset($result['type'], $result['message'])) {
-            $flash = ['type' => $result['type'], 'message' => $result['message']];
-            if (isset($result['invite_url'])) {
-                $flash['invite_url'] = $result['invite_url'];
-            }
-
-            return $flash;
+        $flash = ['type' => $result['type'] ?? 'error', 'message' => $result['message'] ?? ''];
+        if (isset($result['invite_url'])) {
+            $flash['invite_url'] = $result['invite_url'];
         }
 
-        // Первый запрос ещё не завершился или упал: второго приглашения не будет.
-        return [
-            'type' => 'error',
-            'message' => 'Эта форма уже отправлена. Второе приглашение не создано: обновите страницу и проверьте список приглашений.',
-        ];
+        return $flash;
     }
 }
