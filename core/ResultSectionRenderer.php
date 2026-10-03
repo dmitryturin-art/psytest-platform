@@ -56,7 +56,10 @@ final class ResultSectionRenderer
                 if (str_ends_with($template, '.twig')) {
                     $template = substr($template, 0, -5);
                 }
-                $html .= ($this->blockRenderer)($template, $section->data);
+                // `_pdf` — признак печатного контекста для блока: веб-обёртки
+                // (контейнер прокрутки таблиц, 04.U1) в DomPDF не выводятся,
+                // иначе меняется вёрстка документа.
+                $html .= ($this->blockRenderer)($template, $section->data + ['_pdf' => true]);
             } elseif ($section->type === ResultSection::TYPE_RAW_HTML) {
                 $html .= $section->data['html'] ?? '';
             }
