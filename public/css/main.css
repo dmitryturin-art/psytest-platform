@@ -4369,6 +4369,27 @@ body {
     }
 }
 
+/* Шапка кабинета на телефоне: пункты меню не рвутся посередине; если меню
+   не помещается рядом с логотипом, оно целиком уходит второй строкой. */
+@media (max-width: 480px) {
+    .owner-nav .nav-link {
+        padding-inline: var(--spacing-sm);
+        white-space: nowrap;
+    }
+
+    .site-header:has(.owner-nav) {
+        height: auto;
+        min-height: var(--header-height);
+    }
+
+    .site-header:has(.owner-nav) .header-content {
+        flex-wrap: wrap;
+        height: auto;
+        min-height: var(--header-height);
+        column-gap: var(--spacing-sm);
+    }
+}
+
 /* ---------------------------------------------------------------- 07.K5j
    Блок «Выгрузка» в карточке кейса. Форма только выбирает состав документа,
    поэтому она компактна и на 390×844 складывается в одну колонку. */
