@@ -174,6 +174,75 @@ final class RendererContractTest extends TestCase
         }
     }
 
+    /**
+     * 04.U1: на телефоне таблица результата прокручивается в собственном
+     * контейнере, а не растягивает страницу. Обёртка общая для веб-страницы,
+     * карточки кейса и версии для печати (все рендерят блок через include).
+     *
+     * @return array<string, array{class-string}>
+     */
+    public static function tableModuleProvider(): array
+    {
+        return [
+            'lazarus' => [LazarusModule::class],
+            'smil' => [SmilModule::class],
+        ];
+    }
+
+    #[DataProvider('tableModuleProvider')]
+    public function testEveryWebResultTableHasItsOwnScrollContainer(string $moduleClass): void
+    {
+        $module = new $moduleClass();
+        $twig = $this->strictTwig();
+        $tables = 0;
+
+        foreach ($module->buildSections($this->webResults($module)) as $section) {
+            if (!in_array($section->block, ['blocks/scales-table.twig', 'blocks/lazarus-items.twig'], true)) {
+                continue;
+            }
+            $html = $twig->render(
+                $section->block,
+                ['basePath' => '', 'appName' => 'PsyTest'] + $section->data + ['_section_type' => $section->type]
+            );
+
+            $count = substr_count($html, '<table');
+            self::assertSame(
+                $count,
+                preg_match_all('/<div class="table-scroll[^"]*"[^>]*>\s*<table/u', $html),
+                "Каждая таблица блока {$section->block} должна лежать в .table-scroll."
+            );
+            $tables += $count;
+        }
+
+        self::assertGreaterThan(0, $tables, 'Предусловие: модуль выводит таблицу результата.');
+    }
+
+    #[DataProvider('tableModuleProvider')]
+    public function testPdfTablesStayWithoutWebScrollContainer(string $moduleClass): void
+    {
+        $module = new $moduleClass();
+        $renderer = new \PsyTest\Core\ResultSectionRenderer(
+            fn (string $template, array $data): string => $this->strictTwig()->render($template . '.twig', $data)
+        );
+
+        $html = $renderer->renderToHtml($module->buildSections(['is_pdf' => true] + $this->pdfResults($module)));
+
+        self::assertStringContainsString('<table', $html);
+        self::assertStringNotContainsString(
+            'table-scroll',
+            $html,
+            'DomPDF раскладывает обёртку иначе: PDF результата не должен измениться.'
+        );
+    }
+
+    public function testScrollContainerStylesScrollTheTableNotThePage(): void
+    {
+        $css = (string) file_get_contents(dirname(__DIR__) . '/public/css/main.css');
+
+        self::assertMatchesRegularExpression('/\.table-scroll\s*\{[^}]*overflow-x:\s*auto/', $css);
+        self::assertMatchesRegularExpression('/@media print\s*\{\s*\.table-scroll\s*\{[^}]*overflow:\s*visible/', $css);
+    }
+
     public function testCanonicalSmilChartComponentIsUntouched(): void
     {
         $module = new SmilModule();

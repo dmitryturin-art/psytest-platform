@@ -1,3 +1,6 @@
+{# 04.U1: собственный контейнер прокрутки — на телефоне страница не уезжает вбок.
+   В PDF (_pdf из ResultSectionRenderer) обёртки нет: вёрстка DomPDF прежняя. #}
+{% if not _pdf|default(false) %}<div class="table-scroll table-scroll--scores" role="region" aria-label="Таблица шкал" tabindex="0">{% endif %}
 <table class="scores-table {{ class|default('') }}">
     <thead>
         <tr>
@@ -56,3 +59,4 @@
         {% endif %}
     </tbody>
 </table>
+{% if not _pdf|default(false) %}</div>{% endif %}
