@@ -20,6 +20,13 @@
 
 ## 2026-10-03
 
+### 08.B30 — staging-выкладка U1 + K6b (`3297e16`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-3297e16`; deployed runtime `3297e16` (merge PR #135 и #136; полная матрица 5.7/8.0 зелёная на #136). Миграций нет.
+- Сделано: артефакт `release-3297e16.tar.gz`, SHA-256 `5eb65634…9171` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/3297e16`.
+- Проверки: `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`.
+- Rollback: `public_html` → `releases/a4392ba/public`, `current` → `releases/a4392ba`.
+
 ### 07.K6b — одноразовый ключ у форм «Создать карточку», назначения из карточки клиента и заказа разбора
 
 - Этап / ветка / commit: этап 07, `codex/07-k6b-form-once` от `main` `54b2e0b`; commits `757a580`, `e846798` (исполнитель Opus, БД `psytest_wt_k6b`). Запущен по «давай 1 и 2» владельца 03.10.
