@@ -62,16 +62,16 @@
                     <pre class="owner-revision-text">{{ revision.content }}</pre>
                 </details>
                 <div class="owner-revision-actions">
-                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/restore" class="owner-action-form">
+                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/restore" class="owner-action-form" data-submit-once>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="revision_id" value="{{ revision.id }}">
-                        <button type="submit" class="btn btn-outline">Восстановить</button>
+                        <button type="submit" class="btn btn-outline" data-busy-text="Восстанавливаем…">Восстановить</button>
                     </form>
-                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/publish" class="owner-action-form owner-publish-form">
+                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ session_id }}/reports/{{ report.id }}/publish" class="owner-action-form owner-publish-form" data-submit-once>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="revision_id" value="{{ revision.id }}">
                         <label><input type="checkbox" name="confirm_publish" value="publish" required> Клиент увидит ровно эту версию на своей странице результата и в PDF.</label>
-                        <button type="submit" class="btn btn-primary">Опубликовать клиенту</button>
+                        <button type="submit" class="btn btn-primary" data-busy-text="Публикуем…">Опубликовать клиенту</button>
                     </form>
                 </div>
             </li>
@@ -92,4 +92,6 @@
 <script src="{{ asset('vendor/toastui-editor/toastui-editor-all.min.js') }}"></script>
 <script src="{{ asset('vendor/toastui-editor/i18n/ru-ru.min.js') }}"></script>
 <script src="{{ asset('js/owner-report-editor.js') }}"></script>
+{# Блокировка кнопок восстановления и публикации после первого нажатия (07.K6b). #}
+<script src="{{ asset('js/owner-forms.js') }}"></script>
 {% endblock %}

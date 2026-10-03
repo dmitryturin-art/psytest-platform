@@ -18,13 +18,16 @@
 
     <section class="owner-invites" aria-labelledby="owner-client-create-title">
         <h2 id="owner-client-create-title">Новая карточка</h2>
-        <form method="post" action="{{ basePath }}/admin/clients/create" class="owner-form">
+        {# form_key — одноразовый ключ этой отрисовки: двойное нажатие не создаёт
+           вторую карточку (07.K6b). #}
+        <form method="post" action="{{ basePath }}/admin/clients/create" class="owner-form" data-submit-once>
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="form_key" value="{{ client_form_key }}">
             <label for="client-label">Подпись клиента (видна только вам)</label>
             <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off">
             <label for="client-note">Заметка о работе (необязательно)</label>
             <textarea id="client-note" name="note" maxlength="1000" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary">Создать карточку</button>
+            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">Создать карточку</button>
         </form>
     </section>
 
@@ -44,4 +47,9 @@
         {% else %}<p class="owner-help">Карточек пока нет.</p>{% endif %}
     </section>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+{# Блокировка кнопки после отправки; без JS повтор отсекает сервер (07.K6b). #}
+<script src="{{ asset('js/owner-forms.js') }}"></script>
 {% endblock %}

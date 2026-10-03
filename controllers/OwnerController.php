@@ -22,6 +22,8 @@ use PsyTest\Core\CaseExportPresenter;
 use PsyTest\Core\ClientReportNotifier;
 use PsyTest\Core\FormOnce;
 use PsyTest\Core\InvitedCasePresenter;
+use PsyTest\Core\OwnerCaseReportOrder;
+use PsyTest\Core\OwnerClientSubmission;
 use PsyTest\Core\OwnerDashboardAuthenticator;
 use PsyTest\Core\OwnerInviteSubmission;
 use PsyTest\Core\PDFGenerator;
@@ -47,7 +49,7 @@ use PsyTest\Modules\TestModuleInterface;
 final class OwnerController extends BaseController
 {
     /** Клинический контекст для модели: короткая справка специалиста, а не файл истории болезни. */
-    public const OWNER_CONTEXT_MAX_LENGTH = 4000;
+    public const OWNER_CONTEXT_MAX_LENGTH = OwnerCaseReportOrder::OWNER_CONTEXT_MAX_LENGTH;
 
     private OwnerDashboardAuthenticator $authenticator;
     private TherapistCaseService $cases;
@@ -145,6 +147,7 @@ final class OwnerController extends BaseController
         echo $this->view->render('owner-clients', [
             'flash' => $this->takeFlash(),
             'clients' => $this->clients->listForOwner(),
+            'client_form_key' => $this->clientSubmission()->issueKey(),
         ]);
     }
 
@@ -154,17 +157,40 @@ final class OwnerController extends BaseController
             return;
         }
 
-        $label = $_POST['label'] ?? '';
-        $note = $_POST['note'] ?? '';
-        $email = $_POST['email'] ?? '';
-        if (!$this->isValidClientInput($label, $note, $email)) {
-            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать карточку: подпись обязательна (до 120 символов), заметка — до 1000 символов, email — корректный адрес или пусто.']);
-            $this->redirect('/admin/clients');
-        }
+        $outcome = $this->clientSubmission()->submit($this->postData());
+        $this->setFlash(['type' => $outcome['type'], 'message' => $outcome['message']]);
+        $this->redirect($outcome['redirect']);
+    }
 
-        $clientId = $this->clients->create((string) $label, (string) $note, (string) $email);
-        $this->setFlash(['type' => 'success', 'message' => 'Карточка клиента создана.']);
-        $this->redirect('/admin/clients/' . $clientId);
+    private function clientSubmission(): OwnerClientSubmission
+    {
+        return new OwnerClientSubmission($this->clients, $this->formOnce());
+    }
+
+    /**
+     * Одноразовые ключи форм кабинета (07.K6a–K6b) живут в сессии владельца.
+     */
+    private function formOnce(): FormOnce
+    {
+        return new FormOnce($_SESSION);
+    }
+
+    /** @return array<string, mixed> */
+    private function postData(): array
+    {
+        /** @var array<string, mixed> $post */
+        $post = $_POST;
+
+        return $post;
+    }
+
+    /** @return list<int> */
+    private function activeTestIds(): array
+    {
+        return array_map(
+            static fn (array $test): int => (int) $test['id'],
+            array_values($this->moduleLoader->getActiveModules()),
+        );
     }
 
     public function viewClient(string $clientId): void
@@ -186,6 +212,7 @@ final class OwnerController extends BaseController
             'assignments' => $card['assignments'],
             'history' => $card['history'],
             'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
+            'invite_form_key' => $this->inviteSubmission()->issueKey(),
         ]);
     }
 
@@ -223,19 +250,9 @@ final class OwnerController extends BaseController
             return;
         }
 
-        $testId = $this->validTestId($_POST['test_id'] ?? null);
-        $note = $_POST['owner_note'] ?? '';
-        if ($testId === null || !is_string($note) || mb_strlen(trim($note)) > 1000) {
-            $this->setFlash(['type' => 'error', 'message' => 'Не удалось создать назначение: выберите поддерживаемую методику и сократите заметку до 1000 символов.']);
-            $this->redirect('/admin/clients/' . $clientId);
-        }
-
-        $invite = $this->invites->create($testId, trim($note), $clientId);
-        $this->setFlash([
-            'type' => 'success',
-            'message' => 'Назначение создано. Скопируйте ссылку сейчас: повторно она в кабинете не показывается.',
-            'invite_url' => $this->appUrl . '/invite/' . $invite['token'],
-        ]);
+        // Та же операция, что «Новое приглашение» на главной, с клиентом из
+        // адреса страницы: повтор отправки отсекается тем же ключом (07.K6b).
+        $this->setFlash($this->inviteSubmission()->submit($this->postData(), $this->activeTestIds(), $clientId));
         $this->redirect('/admin/clients/' . $clientId);
     }
 
@@ -290,13 +307,7 @@ final class OwnerController extends BaseController
             return;
         }
 
-        $availableIds = array_map(
-            static fn (array $test): int => (int) $test['id'],
-            array_values($this->moduleLoader->getActiveModules()),
-        );
-        /** @var array<string, mixed> $post */
-        $post = $_POST;
-        $this->setFlash($this->inviteSubmission()->submit($post, $availableIds));
+        $this->setFlash($this->inviteSubmission()->submit($this->postData(), $this->activeTestIds()));
         $this->redirect('/admin');
     }
 
@@ -306,7 +317,7 @@ final class OwnerController extends BaseController
             $this->db,
             $this->clients,
             $this->invites,
-            new FormOnce($_SESSION),
+            $this->formOnce(),
             $this->appUrl,
         );
     }
@@ -386,6 +397,8 @@ final class OwnerController extends BaseController
             'case' => $case,
             'ai' => $ai,
             'notify' => $this->notifySection($sessionId, $case, $ai),
+            // У каждой формы заказа на странице свой одноразовый ключ (07.K6b).
+            'order_keys' => $ai['available'] ? $this->caseReportOrder()->issueKeys() : null,
         ]);
     }
 
@@ -576,16 +589,6 @@ final class OwnerController extends BaseController
             return;
         }
 
-        if (($_POST['ai_consent'] ?? null) !== '1') {
-            $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: нужно подтвердить передачу обезличенных результатов внешнему AI-сервису.');
-        }
-
-        $ownerContext = $_POST['owner_context'] ?? '';
-        if (!is_string($ownerContext) || mb_strlen(trim($ownerContext)) > self::OWNER_CONTEXT_MAX_LENGTH) {
-            $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: клинический контекст длиннее ' . self::OWNER_CONTEXT_MAX_LENGTH . ' символов.');
-        }
-        $ownerContext = trim((string) $ownerContext);
-
         $session = $this->sessionManager->getSessionById($sessionId);
         if ($session === null) {
             $this->notFound();
@@ -593,60 +596,16 @@ final class OwnerController extends BaseController
             return;
         }
 
-        $slug = (string) $case['test_slug'];
         $mode = (new ResultPresenter($this->db, $this->sessionManager))->reportMode($session);
-        $registry = PromptRegistry::default($this->db);
-        $reports = new AiReportRepository($this->db);
-
-        if (!(new AiSettings($this->db))->isAiEnabled()) {
-            $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: ' . AiClient::DISABLED_REASON . '.');
+        $order = $this->caseReportOrder()->submit($sessionId, (string) $case['test_slug'], $mode, $this->postData());
+        $queued = $order['queued'];
+        // Повтор того же отправления (двойной клик) получает ответ первого и
+        // ничего не запускает: задания уже стоят или отработаны.
+        if ($order['type'] === 'error' || $queued === 0) {
+            $this->caseFlashBack($sessionId, $order['type'] !== 'error', $order['message']);
         }
 
-        try {
-            $context = (new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, new AiSettings($this->db)))
-                ->build($sessionId, $slug, $mode);
-        } catch (AiProviderException $e) {
-            $this->caseFlashBack($sessionId, false, 'Черновики не заказаны: ' . $e->getMessage());
-        }
-
-        $queued = 0;
-        // Из карточки можно перезаказать один вид («Заказать заново» у готового
-        // или неудавшегося черновика) либо оба сразу.
-        $onlyKind = $_POST['kind'] ?? null;
-        $kinds = in_array($onlyKind, [Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL], true)
-            ? [$onlyKind]
-            : [Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL];
-        foreach ($kinds as $kind) {
-            $prompt = $registry->published($slug, $mode, $kind);
-            if ($prompt === null) {
-                continue;
-            }
-
-            // Клинический контекст пишет специалист и адресует специалисту: в
-            // понятный клиентский разбор он не подмешивается (phase 07, WP3).
-            $reports->request(
-                $sessionId,
-                $slug,
-                $mode,
-                $kind,
-                $prompt,
-                $context,
-                $prompt->allowsOwnerContext && $ownerContext !== '' ? $ownerContext : null,
-                // Кабинет — единственное место, откуда исчерпанное задание
-                // можно заказать заново: это явное действие специалиста.
-                true,
-            );
-            $queued++;
-        }
-
-        if ($queued === 0) {
-            $this->caseFlashBack($sessionId, false, 'Для этой методики и режима разбор пока не открыт.');
-        }
-
-        $this->setFlash([
-            'type' => 'success',
-            'message' => 'Черновики поставлены в очередь. Обычно это 2–5 минут — страница обновится сама.',
-        ]);
+        $this->setFlash(['type' => 'success', 'message' => $order['message']]);
 
         // Расписания на хостинге нет, поэтому очередь двигает сам заказ. Если
         // задан CLI PHP (`AI_WORKER_PHP_BIN`), работа уходит в отдельный
@@ -661,6 +620,7 @@ final class OwnerController extends BaseController
         header('Content-Length: 0');
         ResponseFinisher::finish();
 
+        $reports = new AiReportRepository($this->db);
         $generator = $this->reportGenerator();
         for ($i = 0; $i < $queued; $i++) {
             $job = $reports->claimNext();
@@ -682,6 +642,19 @@ final class OwnerController extends BaseController
     private function caseAiAnchor(string $sessionId): string
     {
         return '/admin/invited-case/' . $sessionId . '#owner-case-ai';
+    }
+
+    private function caseReportOrder(): OwnerCaseReportOrder
+    {
+        $settings = new AiSettings($this->db);
+
+        return new OwnerCaseReportOrder(
+            new AiReportRepository($this->db),
+            PromptRegistry::default($this->db),
+            $settings,
+            new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, $settings),
+            $this->formOnce(),
+        );
     }
 
     private function reportGenerator(): AiReportGenerator
@@ -1131,17 +1104,6 @@ final class OwnerController extends BaseController
             ? ['type' => 'success', 'message' => 'Кейс и известные связанные файлы удалены без возможности восстановления.']
             : ['type' => 'error', 'message' => 'Удаление не выполнено. Проверьте подтверждение и попробуйте найти кейс заново.']);
         $this->redirect('/admin');
-    }
-
-    private function validTestId(mixed $rawTestId): ?int
-    {
-        $testId = filter_var($rawTestId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-        $availableIds = array_map(
-            static fn (array $test): int => (int) $test['id'],
-            $this->moduleLoader->getActiveModules(),
-        );
-
-        return is_int($testId) && in_array($testId, $availableIds, true) ? $testId : null;
     }
 
     /** Проверка полей карточки до записи — общая с формой приглашения. */

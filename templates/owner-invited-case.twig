@@ -2,14 +2,17 @@
 {# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
 {% set ownerArea = true %}
 
-{% macro reorder_form(case, item, csrf_token, basePath) %}
+{% macro reorder_form(case, item, csrf_token, basePath, form_key) %}
     {# Готовый черновик можно заказать заново: новый ответ модели ляжет следующей
-       версией, правки специалиста и публикация не затрагиваются. #}
-    <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form owner-reorder-form">
+       версией, правки специалиста и публикация не затрагиваются. form_key —
+       одноразовый ключ этой отрисовки: двойное нажатие не ставит второй
+       платный прогон (07.K6b). #}
+    <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form owner-reorder-form" data-submit-once>
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="form_key" value="{{ form_key }}">
         <input type="hidden" name="ai_consent" value="1">
         <input type="hidden" name="kind" value="{{ item.kind }}">
-        <button type="submit" class="btn btn-outline">Заказать заново</button>
+        <button type="submit" class="btn btn-outline" data-busy-text="Заказываем…">Заказать заново</button>
         <span class="owner-help">Новый текст модели добавится новой версией; ваши правки и публикация сохранятся.</span>
     </form>
 {% endmacro %}
@@ -142,15 +145,17 @@
 
         {% if not ai.has_jobs %}
             <p class="owner-help">Черновики заказываются один раз на оба вида: понятный разбор для клиента и профессиональное заключение для вас.</p>
-            <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-form owner-action-form">
+            {# У каждой формы заказа на странице свой одноразовый ключ (07.K6b). #}
+            <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-form owner-action-form" data-submit-once>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="form_key" value="{{ order_keys.all }}">
                 <label class="owner-field">
                     <span>Клинический контекст для модели (необязательно, до {{ ai.owner_context_max }} символов)</span>
                     <textarea name="owner_context" rows="5" maxlength="{{ ai.owner_context_max }}" placeholder="Запрос клиента, данные интервью, особенности — то, что вы обычно дописываете к промпту."></textarea>
                 </label>
                 <p class="owner-help">Этот блок уходит только в профессиональное заключение и заполняется вручную: подпись и заметка карточки клиента в него не подставляются.</p>
                 <label><input type="checkbox" name="ai_consent" value="1" required> Передать обезличенные структурированные результаты внешнему AI-сервису; имя, email, подпись клиента и ссылка не передаются.</label>
-                <button type="submit" class="btn btn-primary">Заказать черновики</button>
+                <button type="submit" class="btn btn-primary" data-busy-text="Заказываем…">Заказать черновики</button>
             </form>
         {% else %}
             {% set aiWaiting = ai.kinds|filter(item => item.status == 'pending' or item.status == 'running')|length > 0 %}
@@ -183,11 +188,12 @@
                     <p class="owner-help" role="status">Задание в работе.</p>
                 {% elseif item.status == 'failed' %}
                     <p class="owner-notice owner-notice--error" role="alert">Не получилось подготовить черновик{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}.</p>
-                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form">
+                    <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form" data-submit-once>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="form_key" value="{{ order_keys[item.kind] }}">
                         <input type="hidden" name="ai_consent" value="1">
                         <input type="hidden" name="kind" value="{{ item.kind }}">
-                        <button type="submit" class="btn btn-primary">Заказать заново</button>
+                        <button type="submit" class="btn btn-primary" data-busy-text="Заказываем…">Заказать заново</button>
                     </form>
                 {% elseif item.status == 'none' %}
                     <p class="owner-help">Задание не создавалось.</p>
@@ -196,9 +202,11 @@
                         <p class="owner-notice owner-notice--success">Опубликована версия №{{ item.published.revision_no }} от {{ item.published.published_at|date("d.m.Y H:i") }}.</p>
                         {# Письмо предлагается только после публикации и только по нажатию: автоматической отправки нет (D-054). #}
                         {% if notify.has_email %}
-                            <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/notify" class="owner-action-form">
+                            {# Второе письмо двойное нажатие не отправит и без ключа формы:
+                               уведомление по разбору — не чаще раза в 10 минут (07.K6b). #}
+                            <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/notify" class="owner-action-form" data-submit-once>
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                <button type="submit" class="btn btn-primary">Уведомить клиента на email</button>
+                                <button type="submit" class="btn btn-primary" data-busy-text="Отправляем…">Уведомить клиента на email</button>
                             </form>
                             <p class="owner-help">В письме нет текста разбора и ссылки: клиент открывает ту же страницу результата, которую получил после прохождения.{% if notify.last_at %} Последнее уведомление: {{ notify.last_at|date("d.m.Y H:i") }}.{% endif %}</p>
                         {% else %}
@@ -209,14 +217,14 @@
                         <p class="owner-help">Клиенту пока ничего не опубликовано.</p>
                     {% endif %}
                     <p><a class="btn btn-primary" href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/edit">Редактировать и публиковать</a></p>
-                    {{ _self.reorder_form(case, item, csrf_token, basePath) }}
+                    {{ _self.reorder_form(case, item, csrf_token, basePath, order_keys[item.kind]) }}
                 {% else %}
                     {# Только чтение: профессиональное заключение не правится под клиента. #}
                     <details class="owner-case-ai-details">
                         <summary>Показать заключение</summary>
                         <div class="ai-report__body">{{ item.html|raw }}</div>
                     </details>
-                    {{ _self.reorder_form(case, item, csrf_token, basePath) }}
+                    {{ _self.reorder_form(case, item, csrf_token, basePath, order_keys[item.kind]) }}
                 {% endif %}
             </article>
             {% endfor %}
@@ -269,4 +277,5 @@
 {# Подключается только на карточке кейса: опрос состояния черновиков нужен
    лишь здесь и не должен висеть на остальных страницах кабинета. #}
 <script src="{{ asset('js/owner-case.js') }}"></script>
+<script src="{{ asset('js/owner-forms.js') }}"></script>
 {% endblock %}
