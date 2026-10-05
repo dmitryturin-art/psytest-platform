@@ -894,6 +894,9 @@ class SmilModule extends BaseTestModule implements RefreshesAdditionalScores
             'scores' => $scores,
             'labels' => $labels,
             'chart_id' => 'smilClassicProfile',
+            // DomPDF не исполняет JS: в PDF тот же профиль идёт картинкой
+            // (07.WP7b). Веб-блок этот ключ не читает.
+            'pdf_image_renderer' => SmilProfileImageRenderer::class,
         ];
     }
 
