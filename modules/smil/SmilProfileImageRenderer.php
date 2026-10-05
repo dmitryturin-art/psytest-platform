@@ -73,7 +73,7 @@ final class SmilProfileImageRenderer implements ProfileChartImageRenderer
     public const POINT_STROKE = 1.0;
 
     /** Подпись T у точки: кегль в единицах бланка. */
-    public const LABEL_SIZE = 7.5;
+    public const LABEL_SIZE = 9.0;
 
     private readonly string $backgroundPath;
     private readonly ?string $fontPath;
@@ -145,6 +145,13 @@ final class SmilProfileImageRenderer implements ProfileChartImageRenderer
         if ($background === false) {
             throw new \RuntimeException('SMIL profile background is unreadable');
         }
+        // Бумага скана — 248–255, а не чистый белый: на странице PDF бланк
+        // выглядел серой плашкой. Подъём яркости делает фон белым, линии
+        // бланка темнее 10 остаются практически чёрными.
+        // Бланк — палитровый PNG; фильтр по палитре в GD в десятки раз
+        // медленнее, чем по truecolor-копии.
+        imagepalettetotruecolor($background);
+        imagefilter($background, IMG_FILTER_BRIGHTNESS, 8);
 
         $image = imagecreatetruecolor($width, $height);
         if ($image === false) {
@@ -177,12 +184,14 @@ final class SmilProfileImageRenderer implements ProfileChartImageRenderer
         $this->drawLabels($image, $validity, self::VALIDITY_X);
         $this->drawLabels($image, $clinical, self::CLINICAL_X);
 
-        // Палитра вместо truecolor: бланк серый, цветов на графике четыре —
-        // файл в несколько раз меньше без видимой потери.
-        imagetruecolortopalette($image, false, 128);
+        // Truecolor без альфа-канала, а не палитра: палитровый PNG вдвое
+        // меньше, но DomPDF перекодирует его через GD и тратит на страницу
+        // в пять раз больше времени (замер 07.WP7b: 536 мс против 106 мс),
+        // а итоговый PDF выходит даже крупнее.
+        imagesavealpha($image, false);
 
         ob_start();
-        $ok = imagepng($image, null, 9);
+        $ok = imagepng($image, null, 6);
         $png = (string) ob_get_clean();
         if (!$ok || $png === '') {
             throw new \RuntimeException('PNG encoding failed');
