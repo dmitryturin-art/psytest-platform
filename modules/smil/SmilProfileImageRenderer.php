@@ -10,12 +10,10 @@
  * её. Здесь то же самое рисуется средствами GD на том же бланке, в три раза
  * крупнее (1680×1863) — для печати на ширину страницы.
  *
- * Одно сознательное отличие от веба: высота точки считается по линиям
- * самого бланка (T = 70 лежит на линии «70»). У JS-графика собственная
- * линейная шкала (T 20→y 580, T 100→y 40), которая с сеткой бланка не
- * совпадает; это дефект веб-версии, он зафиксирован отдельно и здесь не
- * копируется. Подсказки с точными значениями на бумаге невозможны, поэтому
- * рядом с каждой точкой подписано её T — печатная замена hover-подсказки.
+ * Высота точки считается по линиям самого бланка (T = 70 лежит на линии
+ * «70»); таблица линий — `SmilProfileGrid`, общая с веб-графиком (05.C1).
+ * Подсказки с точными значениями на бумаге невозможны, поэтому рядом с
+ * каждой точкой подписано её T — печатная замена hover-подсказки.
  */
 
 declare(strict_types=1);
@@ -33,9 +31,9 @@ final class SmilProfileImageRenderer implements ProfileChartImageRenderer
     /** Во сколько раз PNG крупнее веб-графика. */
     public const SCALE = 3;
 
-    /** Диапазон T, как в `tScoreToY()` веб-графика. */
-    public const T_MIN = 20;
-    public const T_MAX = 100;
+    /** Диапазон T — общий с веб-графиком (`SmilProfileGrid`). */
+    public const T_MIN = SmilProfileGrid::T_MIN;
+    public const T_MAX = SmilProfileGrid::T_MAX;
 
     /** X-центры шкал из веб-графика: L, F, K, затем 1–9, 0. */
     public const VALIDITY_X = [102, 138, 168];
@@ -45,22 +43,10 @@ final class SmilProfileImageRenderer implements ProfileChartImageRenderer
     public const DIVIDER_X = 178;
 
     /**
-     * Y линий бланка по T, измерено по самому изображению (центр линии,
-     * среднее по ширине сетки). Между линиями — линейная интерполяция.
+     * Y линий бланка по T (координаты бланка 560×621). Единый источник —
+     * `SmilProfileGrid::LINE_Y`; веб-график получает ту же таблицу.
      */
-    public const GRID_Y = [
-        20 => 561.6,
-        30 => 508.5,
-        40 => 451.7,
-        50 => 398.1,
-        60 => 343.5,
-        70 => 291.5,
-        80 => 238.3,
-        90 => 185.3,
-        100 => 130.3,
-        110 => 74.9,
-        120 => 20.7,
-    ];
+    public const GRID_Y = SmilProfileGrid::LINE_Y;
 
     /** Цвета веб-графика: darkblue, darkgreen, crimson, white. */
     public const COLOR_LINE = [0, 0, 139];
@@ -108,20 +94,12 @@ final class SmilProfileImageRenderer implements ProfileChartImageRenderer
     }
 
     /**
-     * Y точки на бланке (в единицах веб-графика) для T-балла.
-     * Значения вне диапазона веб-графика прижимаются к его границам.
+     * Y точки на бланке (в единицах веб-графика) для T-балла — та же функция,
+     * что у веб-графика: `SmilProfileGrid::tScoreToY()`.
      */
     public static function tScoreToY(float $tScore): float
     {
-        $t = max((float) self::T_MIN, min((float) self::T_MAX, $tScore));
-        $lower = (int) (floor($t / 10) * 10);
-        $upper = min(120, $lower + 10);
-        if ($upper === $lower) {
-            return self::GRID_Y[$lower];
-        }
-        $ratio = ($t - $lower) / ($upper - $lower);
-
-        return self::GRID_Y[$lower] + (self::GRID_Y[$upper] - self::GRID_Y[$lower]) * $ratio;
+        return SmilProfileGrid::tScoreToY($tScore);
     }
 
     /**

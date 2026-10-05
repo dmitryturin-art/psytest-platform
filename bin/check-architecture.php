@@ -142,6 +142,7 @@ if (file_exists($projectRoot . '/modules/smil/SmilModule.php')) {
     require_once $projectRoot . '/modules/smil/Scoring/TScoreCalculator.php';
     require_once $projectRoot . '/modules/smil/Scoring/ValidityAssessor.php';
     require_once $projectRoot . '/modules/smil/Scoring/AdditionalScalesCalculator.php';
+    require_once $projectRoot . '/modules/smil/SmilProfileGrid.php';
     require_once $projectRoot . '/modules/smil/SmilModule.php';
     
     try {
