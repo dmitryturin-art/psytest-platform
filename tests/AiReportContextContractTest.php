@@ -225,17 +225,48 @@ final class AiReportContextContractTest extends TestCase
     public function testGlossaryCoversEveryScaleTheRegistryCanCalculate(): void
     {
         // Глоссарий адресуется id реестра, а не кодам: переименование шкалы не
-        // должна оставлять её без пояснения. Партии 05.S3.1–05.S3.4 —
-        // 105 шкал, и с 07.G7 покрыты все пять партий целиком.
+        // должна оставлять её без пояснения. Партии 05.S3.1–05.S3.6 —
+        // 109 шкал, и с 07.G8 покрыты все шесть партий целиком, включая
+        // четыре шкалы одного пола (в контекст респондента уходят только его).
         $registry = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-v2.json'), true, 512, JSON_THROW_ON_ERROR);
         $glossary = json_decode((string) file_get_contents(dirname(__DIR__) . '/modules/smil/additional-scales-glossary.json'), true, 512, JSON_THROW_ON_ERROR);
 
         $registryIds = array_map(static fn (array $scale): string => (string) $scale['id'], (array) $registry['scales']);
         $explainedIds = array_keys((array) $glossary['scales']);
 
-        self::assertCount(105, $registryIds, 'Предусловие: реестр состоит из 105 шкал.');
+        self::assertCount(109, $registryIds, 'Предусловие: реестр состоит из 109 шкал.');
         self::assertSame([], array_diff($registryIds, $explainedIds), 'Каждая шкала реестра обязана иметь запись в глоссарии.');
         self::assertSame([], array_diff($explainedIds, $registryIds), 'Пояснение по шкале вне реестра только занимает место.');
+    }
+
+    /**
+     * 05.S3.6 / 07.G8: шкалы одного пола и их пояснения уходят наружу только по
+     * полу респондента. Записи другого пола в глоссарии есть, но в контекст
+     * конкретного разбора не попадают.
+     */
+    public function testSexSpecificScalesReachTheContextOnlyForTheirOwnSex(): void
+    {
+        $own = ['female' => ['RGF', 'SBF'], 'male' => ['RGM', 'SBM']];
+        foreach ($own as $gender => $codes) {
+            $payload = $this->smil()->aiReportContext($this->smilResults($gender), 'individual');
+            self::assertIsArray($payload);
+            $sent = array_map(static fn (array $scale): string => (string) $scale['code'], $payload['additional_scales']);
+            $other = $own[$gender === 'female' ? 'male' : 'female'];
+
+            self::assertCount(107, $sent, "{$gender}: шкалы своего пола");
+            foreach ($codes as $code) {
+                self::assertContains($code, $sent);
+                self::assertArrayHasKey($code, $payload['additional_scales_glossary']);
+                self::assertStringContainsString(
+                    $gender === 'female' ? 'только для женщин' : 'только для мужчин',
+                    (string) $payload['additional_scales_glossary'][$code]['meaning'],
+                );
+            }
+            foreach ($other as $code) {
+                self::assertNotContains($code, $sent, "{$gender}: {$code} другого пола");
+                self::assertArrayNotHasKey($code, $payload['additional_scales_glossary']);
+            }
+        }
     }
 
     public function testSmilShipsTheLevelRuleSoTheModelDoesNotInventItsOwn(): void
@@ -298,9 +329,14 @@ final class AiReportContextContractTest extends TestCase
         // Фактический размер на эталонном профиле — 90 614 знаков. Ориентир владельца
         // был 90 000, и партия его перешагнула: порог поставлен по факту плюс запас
         // около 5 % — 95 000.
-        // ВНИМАНИЕ: дальше полный режим наращивать некуда. Партия S3.6 должна идти
-        // либо на компактном режиме по умолчанию, либо с сокращёнными полями source.
-        // См. отчёт пакета 05.S3.5 + 07.G7.
+        // 07.G8 (05.S3.6): +2 шкалы своего пола у респондента и их записи. Новые
+        // записи идут с короткой ссылкой в source (документ, страница, код), без
+        // пересказа сверки — подробности в docs/smil-glossary-verification.md.
+        // Факт на эталонном профиле — 94 055 знаков (женский), 93 861 (мужской);
+        // порог 95 000 не менялся, запас около 1 %.
+        // ВНИМАНИЕ: дальше полный режим наращивать некуда. Следующее расширение —
+        // сначала сократить source у записей S3.5 до короткой ссылки, и только потом
+        // обсуждать порог.
         self::assertLessThan(95000, mb_strlen($json), 'Нагрузка СМИЛ перестала быть компактной.');
     }
 
@@ -313,11 +349,12 @@ final class AiReportContextContractTest extends TestCase
         $full = (string) json_encode((new SmilGlossaryCompactor(SmilGlossaryCompactor::MODE_FULL))->apply($context), JSON_UNESCAPED_UNICODE);
         $compact = (string) json_encode((new SmilGlossaryCompactor(SmilGlossaryCompactor::MODE_COMPACT))->apply($context), JSON_UNESCAPED_UNICODE);
 
-        // Факт на эталонном профиле после 07.G7: 90 591 знак в полном режиме
-        // против 62 216 в компактном (−31 %). Ориентир владельца был ≤ 35 000, но на
+        // Факт на эталонном профиле после 07.G8: 94 055 знаков в полном режиме
+        // против 64 782 в компактном (−31 %, отношение 0,69); запас до порога 65 000 —
+        // около 200 знаков. Ориентир владельца был ≤ 35 000, но на
         // этом синтетическом профиле он недостижим: ответы идут циклом 0-1-2,
         // T разбегаются по всему диапазону, и половина шкал оказывается
-        // вне среднего диапазона (52 из 105), то есть сохраняет полную запись. На живом профиле
+        // вне среднего диапазона (53 из 107), то есть сохраняет полную запись. На живом профиле
         // средних шкал заметно больше, и экономия выше. Порог 65 000 — факт плюс
         // запас около 5 % — стережёт регресс, отношение к полному режиму — саму
         // суть режима.
@@ -350,7 +387,7 @@ final class AiReportContextContractTest extends TestCase
             $short += $mid ? 1 : 0;
         }
 
-        self::assertSame(53, $short, 'Факт на эталонном профиле: 53 кратких записи из 105.');
+        self::assertSame(54, $short, 'Факт на эталонном профиле: 54 кратких записи из 107.');
         self::assertSame($context['additional_scales'], $compact['additional_scales'], 'Сами шкалы режим не трогает.');
         self::assertSame($context['additional_scales_without_glossary'], $compact['additional_scales_without_glossary']);
         self::assertSame($context['levels']['bands'], $compact['levels']['bands'], 'Полосы уровней режим не трогает.');
