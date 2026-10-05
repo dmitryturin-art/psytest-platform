@@ -1,0 +1,36 @@
+{% extends "layout.twig" %}
+{# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
+{% set ownerArea = true %}
+
+{% block title %}Версии заключения — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a><a class="nav-link" href="{{ basePath }}/admin/invited-case/{{ session_id }}">К кейсу</a></nav>{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-versions-title">
+    <p class="owner-panel-eyebrow">Профессиональное заключение · только чтение</p>
+    <h1 id="owner-versions-title">Версии заключения</h1>
+    <p class="owner-help">{{ case.test_name }}{% if case.client_label %} · {{ case.client_label }}{% endif %}</p>
+    <p class="owner-help">Профессиональное заключение не правится и клиенту не публикуется. Здесь сохранены тексты модели после каждого заказа.</p>
+    <p><a href="{{ basePath }}/admin/invited-case/{{ session_id }}">← К кейсу</a></p>
+
+    <section class="owner-editor-history" aria-labelledby="owner-versions-list-title">
+        <h2 id="owner-versions-list-title">Версии</h2>
+        <ol class="owner-revision-list">
+            {% for revision in versions %}
+            <li class="owner-revision">
+                <p class="owner-revision-head">
+                    Версия №{{ revision.revision_no }} · {{ revision.source == 'ai' ? 'черновик модели' : 'правка специалиста' }} · {{ revision.created_at|date("d.m.Y H:i") }}
+                </p>
+                <details class="owner-revision-details">
+                    <summary>Посмотреть</summary>
+                    <div class="ai-report__body">{{ revision.html|raw }}</div>
+                </details>
+            </li>
+            {% else %}
+            <li><p class="owner-help">Версий пока нет.</p></li>
+            {% endfor %}
+        </ol>
+    </section>
+</section>
+{% endblock %}
