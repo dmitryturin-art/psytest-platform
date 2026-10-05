@@ -156,4 +156,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 43. Выкладка `ca9c1b4` (05.10): веб-график СМИЛ на делениях бланка (05.C1); миграций нет; одно SSH-подключение (архив через stdin). SHA-256 `71c485185f623409551269a4d22ff37b3655c8b9303b8454f227977417ec250e` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/6753f97/public` и `current` на `releases/6753f97`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+44. Выкладка `97577af` (05.10): выгрузка кейса в Word (07.K5m), зависимость `phpoffice/phpword`; миграций нет; одно SSH-подключение; `ZipArchive` у CLI PHP 8.3 есть. SHA-256 `11a7e08bf89177a95d48594111ebc3bd6161cda33012809048759cadb589fe7f` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/ca9c1b4/public` и `current` на `releases/ca9c1b4`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
