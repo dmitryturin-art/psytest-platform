@@ -158,4 +158,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 44. Выкладка `97577af` (05.10): выгрузка кейса в Word (07.K5m), зависимость `phpoffice/phpword`; миграций нет; одно SSH-подключение; `ZipArchive` у CLI PHP 8.3 есть. SHA-256 `11a7e08bf89177a95d48594111ebc3bd6161cda33012809048759cadb589fe7f` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/ca9c1b4/public` и `current` на `releases/ca9c1b4`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+45. Выкладка `e5a15b5` (05.10): анкета приложением в конце PDF и версии для печати кейса (07.K5n); миграций нет; одно SSH-подключение. SHA-256 `1765c47e0e5714b863d071356053920ba60063a632e0522bcd6d473b05e60470` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/97577af/public` и `current` на `releases/97577af`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.

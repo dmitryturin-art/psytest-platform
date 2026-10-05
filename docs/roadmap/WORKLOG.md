@@ -20,6 +20,13 @@
 
 ## 2026-10-05
 
+### 08.B35 — staging-выкладка K5n (`e5a15b5`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-e5a15b5`; deployed runtime `e5a15b5` (merge PR #147). Миграций нет.
+- Сделано: одно SSH-подключение (архив через stdin, `NumberOfPasswordPrompts=1`): SHA-256 `1765c47e…0470` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/e5a15b5`.
+- Проверки (по HTTP): `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`. Выгрузка в Word на стенде подтверждена владельцем 05.10 («проверил, все ок») на предыдущем релизе.
+- Rollback: `public_html` → `releases/97577af/public`, `current` → `releases/97577af`.
+
 ### 07.K5n — анкета приложением в конце также в PDF и версии для печати кейса
 
 - Этап / ветка / commit: этап 07, `codex/07-k5n-export-answers-appendix` от `main` `fb012a2`; правка ведущего (два шаблона и тест). По просьбе владельца 05.10 после приёмки Word: «сделай тот же порядок в PDF и версии для печати».
