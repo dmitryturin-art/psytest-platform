@@ -46,6 +46,17 @@ final class AiReportRevisionService
         );
     }
 
+    /** Сколько версий у разбора. */
+    public function count(string $reportId): int
+    {
+        $row = $this->db->selectOne(
+            'SELECT COUNT(*) AS total FROM ai_report_revisions WHERE report_id = ?',
+            [$reportId],
+        );
+
+        return (int) ($row['total'] ?? 0);
+    }
+
     /** @return array<string, mixed>|null */
     public function revision(string $reportId, string $revisionId): ?array
     {
