@@ -124,20 +124,6 @@
             {{ _self.sections(document.sections) }}
         </section>
 
-        {% if document.options.include_answers %}
-        <section class="case-export__part">
-            <h2>{% if document.pair %}Анкеты обоих партнёров{% else %}Анкета по пунктам{% endif %}</h2>
-            {% if document.pair %}
-                {% for sheet in document.pair.questionnaires %}
-                    <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
-                    {{ _self.answer_list(sheet.rows) }}
-                {% endfor %}
-            {% else %}
-                {{ _self.answer_list(document.answers) }}
-            {% endif %}
-        </section>
-        {% endif %}
-
         {% if document.professional %}
         <section class="case-export__part">
             <h2>Профессиональное заключение</h2>
@@ -161,6 +147,20 @@
         <section class="case-export__part">
             <h2>Заметка к назначению</h2>
             <p class="case-export__note">{{ document.note }}</p>
+        </section>
+        {% endif %}
+
+        {% if document.options.include_answers %}
+        <section class="case-export__part">
+            <h2>{% if document.pair %}Приложение. Анкеты обоих партнёров{% else %}Приложение. Анкета по пунктам{% endif %}</h2>
+            {% if document.pair %}
+                {% for sheet in document.pair.questionnaires %}
+                    <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
+                    {{ _self.answer_list(sheet.rows) }}
+                {% endfor %}
+            {% else %}
+                {{ _self.answer_list(document.answers) }}
+            {% endif %}
         </section>
         {% endif %}
 

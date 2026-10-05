@@ -142,6 +142,28 @@ final class CaseExportTest extends TestCase
         self::assertStringContainsString('owner-answer-list', $withAnswers);
     }
 
+    public function testTheQuestionnaireIsAnAppendixAfterTheResultAndTheNote(): void
+    {
+        // Замечание владельца 05.10: 566 строк анкеты СМИЛ перед заключениями
+        // заставляли долго листать до содержательной части — анкета идёт в конце.
+        $html = $this->printHtml($this->smilSessionId, $this->smil, ['include_answers' => '1', 'include_note' => '1']);
+
+        $appendix = mb_strpos($html, 'Приложение. Анкета по пунктам');
+        self::assertNotFalse($appendix);
+        foreach (['Базовый результат', 'Заметка к назначению'] as $earlier) {
+            $position = mb_strpos($html, '<h2>' . $earlier);
+            self::assertNotFalse($position, $earlier);
+            self::assertGreaterThan($position, $appendix, 'Анкета должна стоять после раздела «' . $earlier . '».');
+        }
+
+        $pdf = (string) file_get_contents(dirname(__DIR__, 2) . '/templates/owner-case-export-pdf.twig');
+        self::assertGreaterThan(
+            mb_strpos($pdf, 'Заметка к назначению'),
+            mb_strpos($pdf, 'Приложение. Анкета по пунктам'),
+            'В PDF анкета тоже идёт приложением после заметки.',
+        );
+    }
+
     public function testTheNoteAppearsOnlyWhenTheSpecialistAsksForIt(): void
     {
         $document = $this->document($this->smilSessionId, $this->smil, []);

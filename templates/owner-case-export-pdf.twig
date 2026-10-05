@@ -51,20 +51,6 @@
     {{ sections_html|raw }}
 </div>
 
-{% if document.options.include_answers %}
-<div style="page-break-before: always;">
-    <h2>{% if document.pair %}Анкеты обоих партнёров{% else %}Анкета по пунктам{% endif %}</h2>
-    {% if document.pair %}
-        {% for sheet in document.pair.questionnaires %}
-            <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
-            {{ _self.answer_list(sheet.rows) }}
-        {% endfor %}
-    {% else %}
-        {{ _self.answer_list(document.answers) }}
-    {% endif %}
-</div>
-{% endif %}
-
 {% if document.professional %}
 <div style="page-break-before: always;">
     <h2>Профессиональное заключение</h2>
@@ -88,6 +74,20 @@
 <div style="page-break-before: always;">
     <h2>Заметка к назначению</h2>
     <p>{{ document.note }}</p>
+</div>
+{% endif %}
+
+{% if document.options.include_answers %}
+<div style="page-break-before: always;">
+    <h2>{% if document.pair %}Приложение. Анкеты обоих партнёров{% else %}Приложение. Анкета по пунктам{% endif %}</h2>
+    {% if document.pair %}
+        {% for sheet in document.pair.questionnaires %}
+            <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
+            {{ _self.answer_list(sheet.rows) }}
+        {% endfor %}
+    {% else %}
+        {{ _self.answer_list(document.answers) }}
+    {% endif %}
 </div>
 {% endif %}
 
