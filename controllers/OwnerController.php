@@ -937,6 +937,13 @@ final class OwnerController extends BaseController
 
         [$document, $module] = $prepared;
 
+        // Без ext-zip собрать .docx нельзя: вместо фатальной ошибки — понятное
+        // сообщение в карточке кейса, PDF и печать при этом работают.
+        if (!class_exists(\ZipArchive::class)) {
+            $this->setFlash(['type' => 'error', 'message' => 'Выгрузка в Word недоступна на этом сервере (нет расширения zip). Используйте PDF или версию для печати.']);
+            $this->redirect('/admin/invited-case/' . $sessionId);
+        }
+
         $docx = (new CaseExportDocx(
             fn (string $template, array $data): string => $this->view->render($template, $data),
         ))->render($document);
