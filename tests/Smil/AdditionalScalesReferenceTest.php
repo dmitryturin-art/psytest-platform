@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
 
 /**
- * Независимые reference cases партий 05.S3.1–05.S3.5 (WP5).
+ * Независимые reference cases партий 05.S3.1–05.S3.6 (WP5).
  *
  * Ожидаемые значения в tests/fixtures/smil-additional-reference.json
  * посчитаны bin/smil-additional-reference.py прямо по транскрипции источника,
@@ -118,13 +118,44 @@ final class AdditionalScalesReferenceTest extends TestCase
         self::assertStringContainsString('transcription', $provenance['input']);
         self::assertStringContainsString('вне PHP', $provenance['independence']);
         self::assertNotEmpty($provenance['formula']);
-        self::assertCount(105, $provenance['entries']);
-        self::assertCount(105, $provenance['batches']);
+        self::assertCount(109, $provenance['entries']);
+        self::assertCount(109, $provenance['batches']);
         self::assertSame(
-            ['05.S3.1' => 16, '05.S3.2' => 19, '05.S3.3' => 20, '05.S3.4' => 20, '05.S3.5' => 30],
+            ['05.S3.1' => 16, '05.S3.2' => 19, '05.S3.3' => 20, '05.S3.4' => 20, '05.S3.5' => 30, '05.S3.6' => 4],
             array_count_values($provenance['batches']),
             'эталон обязан покрывать все партии целиком'
         );
+        self::assertSame(
+            ['175' => 'female', '176' => 'male', '178' => 'female', '179' => 'male'],
+            $provenance['sex_specific'],
+            'эталон выводит применимость по полу из заглушек источника независимо от PHP'
+        );
+    }
+
+    /**
+     * 05.S3.6: в каждом наборе — ровно шкалы его пола.
+     *
+     * Наборы эталона покрывают оба пола; в мужских нет №175/№178, в женских — №176/№179,
+     * и всего в каждом наборе 107 шкал из 109 реестра.
+     */
+    public function testEveryCaseHoldsOnlyTheScalesOfItsSex(): void
+    {
+        $sexes = [];
+        foreach ($this->fixture['cases'] as $name => $case) {
+            $sex = str_ends_with($name, '_female') ? 'female' : 'male';
+            $sexes[$sex] = true;
+            self::assertCount(107, $case, "{$name}: шкалы своего пола");
+            $own = $sex === 'female' ? ['RGF', 'SBF'] : ['RGM', 'SBM'];
+            $other = $sex === 'female' ? ['RGM', 'SBM'] : ['RGF', 'SBF'];
+            foreach ($own as $code) {
+                self::assertArrayHasKey($code, $case, "{$name}: {$code}");
+            }
+            foreach ($other as $code) {
+                self::assertArrayNotHasKey($code, $case, "{$name}: {$code} другого пола");
+            }
+        }
+        self::assertArrayHasKey('male', $sexes, 'эталон покрывает мужские наборы');
+        self::assertArrayHasKey('female', $sexes, 'эталон покрывает женские наборы');
     }
 
     /**

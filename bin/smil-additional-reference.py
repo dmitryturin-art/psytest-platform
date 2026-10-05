@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Независимые эталоны дополнительных шкал СМИЛ (партии 05.S3.1-05.S3.5).
+"""Независимые эталоны дополнительных шкал СМИЛ (партии 05.S3.1-05.S3.6).
 
 Скрипт считает ожидаемые raw и T **по транскрипции источника**
 (docs/smil-additional-scales-transcription.json), а не по runtime-данным PHP
 и не по modules/smil/additional-scales-v2.json. Это и делает эталон
 независимым: PHP-тест сравнивает свой расчёт с этим файлом, и совпадение
 означает согласие двух независимых реализаций с источником.
+
+Применимость по полу (05.S3.6) выводится тоже из транскрипции, а не из списка
+PHP-сборщика: шкала считается для пола, только если его нормы в источнике не
+заглушка 0.001 / 0.001. Для другого пола шкалы в наборе нет вовсе.
 
 Только стандартная библиотека. Запуск: python3 bin/smil-additional-reference.py
 Результат: tests/fixtures/smil-additional-reference.json
@@ -25,7 +29,8 @@ OUTPUT = os.path.join(ROOT, "tests", "fixtures", "smil-additional-reference.json
 TOTAL_QUESTIONS = 566
 SEED = 20260915
 
-# Партия -> (номер записи транскрипции -> runtime-код). Все пять утверждены 15.09.2026.
+# Партия -> (номер записи транскрипции -> runtime-код). Пять первых утверждены 15.09.2026,
+# шестая (шкалы одного пола) — 05.10.2026.
 # Списки дублируют bin/smil-build-batch.php намеренно: эталон не должен читать
 # ни runtime-файл шкал, ни PHP-код.
 BATCHES = {
@@ -144,9 +149,15 @@ BATCHES = {
         211: "Wa",
         212: "SDF",
     },
+    "05.S3.6": {
+        175: "RGF",
+        176: "RGM",
+        178: "SBF",
+        179: "SBM",
+    },
 }
 
-# Плоский список в порядке вывода: партии 1-5, внутри партии — по номеру записи.
+# Плоский список в порядке вывода: партии 1-6, внутри партии — по номеру записи.
 BATCH = [
     (number, code, batch)
     for batch, codes in BATCHES.items()
@@ -156,6 +167,9 @@ BATCH = [
 ANSWER_YES = 1
 ANSWER_NO = 0
 ANSWER_UNKNOWN = 2
+
+# Нормы-заглушка источника: «шкала не для этого пола» (№175, 176, 178, 179).
+PLACEHOLDER = 0.001
 
 T_MIN = 20
 T_MAX = 100
@@ -168,6 +182,12 @@ def php_round(value: float) -> float:
     if value >= 0:
         return math.floor(value + 0.5)
     return math.ceil(value - 0.5)
+
+
+def applies(entry: dict, sex: str) -> bool:
+    """Шкала считается для пола, если его нормы в источнике — не заглушка 0.001 / 0.001."""
+    norms = entry[sex]
+    return not (norms["M"] == PLACEHOLDER and norms["sigma"] == PLACEHOLDER)
 
 
 def score(entry: dict, answers: dict, sex: str) -> dict:
@@ -238,11 +258,12 @@ def main() -> None:
         for sex in ("male", "female"):
             case = {}
             for number, code, _batch in BATCH:
-                case[code] = score(entries[number], answers, sex)
+                if applies(entries[number], sex):
+                    case[code] = score(entries[number], answers, sex)
             cases[f"{set_name}_{sex}"] = case
 
     output = {
-        "title": "Независимые эталоны дополнительных шкал СМИЛ, партии 05.S3.1-05.S3.5",
+        "title": "Независимые эталоны дополнительных шкал СМИЛ, партии 05.S3.1-05.S3.6",
         "generated_by": "bin/smil-additional-reference.py",
         "provenance": {
             "source": doc["source"],
@@ -252,12 +273,18 @@ def main() -> None:
                 "ключи и нормы взяты прямо из транскрипции источника."
             ),
             "entries": {str(number): code for number, code, _batch in BATCH},
+            "sex_specific": {
+                str(number): next(sex for sex in ("male", "female") if applies(entries[number], sex))
+                for number, _code, _batch in BATCH
+                if not (applies(entries[number], "male") and applies(entries[number], "female"))
+            },
             "batches": {str(number): batch for number, _code, batch in BATCH},
             "formula": (
                 "raw = число ответов «верно» по списку true плюс «неверно» по списку false "
                 "(«не знаю» = 2 и пропуски не считаются); "
                 "T = 50 + 10 * (raw - M) / sigma по нормам пола, округление до целого "
-                "(половинки от нуля, как PHP round), зажим [20, 100]."
+                "(половинки от нуля, как PHP round), зажим [20, 100]. "
+                "Шкала входит в набор пола, только если его нормы в источнике не заглушка 0.001 / 0.001."
             ),
             "answer_encoding": {"0": "неверно", "1": "верно", "2": "не знаю"},
             "answer_sets": {
