@@ -230,7 +230,11 @@ class SmilModule extends BaseTestModule implements RefreshesAdditionalScores
             'clinical_scales' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
             'full_version' => true,
             'total_questions' => 566,
-            'additional_scales_count' => 105,
+            // Размер реестра дополнительных шкал (05.S3.1–S3.6), а не число строк
+            // результата: респонденту считается 107 — шкалы другого пола не идут.
+            // Пользователю это число не показывается; таблица результата считает
+            // свои строки сама (buildAdditionalScalesData → count).
+            'additional_scales_count' => 109,
         ]);
     }
 
@@ -340,7 +344,7 @@ class SmilModule extends BaseTestModule implements RefreshesAdditionalScores
     /**
      * Пересчитать только дополнительные шкалы по сохранённым ответам (05.S4a).
      *
-     * Реестр дополнительных шкал растёт после прохождения (35 → 105 к 15.09),
+     * Реестр дополнительных шкал растёт после прохождения (35 → 109 к 05.10),
      * а результат считается один раз при завершении. Базовый профиль,
      * достоверность, индексы и интерпретация — проверенное scoring core — здесь
      * не пересчитываются и возвращаются как есть; меняется только
@@ -358,7 +362,13 @@ class SmilModule extends BaseTestModule implements RefreshesAdditionalScores
             return $results;
         }
 
-        $registry = $this->additionalCalc->codes();
+        $gender = $results['gender'] ?? $answers['gender'] ?? 'male';
+        $gender = is_string($gender) ? $gender : 'male';
+
+        // Набор сравнивается с реестром для пола этой сессии: шкалы одного пола
+        // (05.S3.6) у респондента другого пола не считаются и не должны делать
+        // результат «устаревшим» при каждом чтении.
+        $registry = $this->additionalCalc->codes($gender);
         $stored = is_array($results['additional_scores'] ?? null)
             ? array_map('strval', array_keys($results['additional_scores']))
             : null;
@@ -366,11 +376,7 @@ class SmilModule extends BaseTestModule implements RefreshesAdditionalScores
             return $results;
         }
 
-        $gender = $results['gender'] ?? $answers['gender'] ?? 'male';
-        $results['additional_scores'] = $this->additionalCalc->calculate(
-            $answers,
-            is_string($gender) ? $gender : 'male',
-        );
+        $results['additional_scores'] = $this->additionalCalc->calculate($answers, $gender);
 
         return $results;
     }

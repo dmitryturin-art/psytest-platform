@@ -19,7 +19,7 @@ use PsyTest\Modules\Smil\SmilModule;
  * Сохранённые результаты СМИЛ на прежнем реестре дополнительных шкал (05.S4a).
  *
  * Кейс, пройденный до расширения реестра, хранит 35 дополнительных шкал. При
- * чтении через единую точку он получает все 105, обновление записывается в БД
+ * чтении через единую точку он получает все шкалы своего пола (107 из 109), обновление записывается в БД
  * один раз, базовый расчёт не меняется. Без ответов пересчитывать не из чего.
  */
 #[Group('database')]
@@ -55,9 +55,9 @@ final class SmilAdditionalScoresRefreshTest extends TestCase
 
         $session = $this->sessions->withFreshResults($this->sessionById($id), $this->smil);
 
-        self::assertCount(105, $session['calculated_results']['additional_scores']);
+        self::assertCount(107, $session['calculated_results']['additional_scores']);
         $storedAfter = $this->storedResults($id);
-        self::assertCount(105, $storedAfter['additional_scores']);
+        self::assertCount(107, $storedAfter['additional_scores']);
         foreach ($storedBefore as $key => $value) {
             if ($key === 'additional_scores') {
                 continue;
@@ -106,13 +106,13 @@ final class SmilAdditionalScoresRefreshTest extends TestCase
     {
         $pageId = $this->staleSession(withAnswers: true);
         $results = (new ResultPresenter($this->db, $this->sessions))->results($this->sessionById($pageId), $this->smil);
-        self::assertCount(105, $results['additional_scores']);
+        self::assertCount(107, $results['additional_scores']);
 
         $aiId = $this->staleSession(withAnswers: true);
         $context = (new AiReportContextBuilder($this->sessions, (new ModuleLoader(null, $this->db))->discover()))
             ->build($aiId, 'smil', 'individual');
-        self::assertCount(105, $context['additional_scales']);
-        self::assertCount(105, $this->storedResults($aiId)['additional_scores']);
+        self::assertCount(107, $context['additional_scales']);
+        self::assertCount(107, $this->storedResults($aiId)['additional_scores']);
     }
 
     public function testBulkRefreshCountsAndDryRunWritesNothing(): void
@@ -129,7 +129,7 @@ final class SmilAdditionalScoresRefreshTest extends TestCase
 
         $real = $refresher->refreshAll('smil', $this->smil);
         self::assertSame($dry['updated'], $real['updated']);
-        self::assertCount(105, $this->storedResults($staleId)['additional_scores']);
+        self::assertCount(107, $this->storedResults($staleId)['additional_scores']);
 
         $again = $refresher->refreshAll('smil', $this->smil);
         self::assertSame(0, $again['updated']);

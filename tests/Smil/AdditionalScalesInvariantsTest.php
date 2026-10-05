@@ -7,7 +7,7 @@ namespace PsyTest\Tests\Smil;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Инварианты партий дополнительных шкал 05.S3.1–05.S3.5 (WP4).
+ * Инварианты партий дополнительных шкал 05.S3.1–05.S3.6 (WP4).
  *
  * Runtime-файл modules/smil/additional-scales-v2.json собирается скриптом
  * bin/smil-build-batch.php из транскрипции приложения Собчик. Тест стережёт
@@ -171,6 +171,27 @@ final class AdditionalScalesInvariantsTest extends TestCase
         212 => 'SDF',
     ];
 
+    /**
+     * Партия 05.S3.6: 4 шкалы только для одного пола.
+     *
+     * Нормы источник даёт только для «своего» пола, для другого напечатана заглушка
+     * 0.001 / 0.001. В runtime у записи поле applies_to и нормы одного пола.
+     */
+    private const BATCH_6 = [
+        175 => 'RGF',
+        176 => 'RGM',
+        178 => 'SBF',
+        179 => 'SBM',
+    ];
+
+    /** Номер записи => пол, к которому шкала применима (закрытый список). */
+    private const SEX_SPECIFIC = [
+        175 => 'female',
+        176 => 'male',
+        178 => 'female',
+        179 => 'male',
+    ];
+
     /** Партия => номера записей. */
     private const BATCH_LABELS = [
         '05.S3.1' => self::BATCH_1,
@@ -178,6 +199,7 @@ final class AdditionalScalesInvariantsTest extends TestCase
         '05.S3.3' => self::BATCH_3,
         '05.S3.4' => self::BATCH_4,
         '05.S3.5' => self::BATCH_5,
+        '05.S3.6' => self::BATCH_6,
     ];
 
     /**
@@ -259,12 +281,12 @@ final class AdditionalScalesInvariantsTest extends TestCase
      */
     private static function batch(): array
     {
-        return self::BATCH_1 + self::BATCH_2 + self::BATCH_3 + self::BATCH_4 + self::BATCH_5;
+        return self::BATCH_1 + self::BATCH_2 + self::BATCH_3 + self::BATCH_4 + self::BATCH_5 + self::BATCH_6;
     }
 
     public function testBothBatchesArePresentWithExpectedCodesAndOrder(): void
     {
-        self::assertCount(105, $this->scales);
+        self::assertCount(109, $this->scales);
 
         $expectedOrder = [];
         foreach (self::BATCH_LABELS as $label => $codes) {
@@ -276,7 +298,7 @@ final class AdditionalScalesInvariantsTest extends TestCase
         self::assertSame(
             $expectedOrder,
             array_map(static fn (array $scale): string => $scale['code'], $this->scales),
-            'порядок: партии 1–5, внутри партии — по номеру записи'
+            'порядок: партии 1–6, внутри партии — по номеру записи'
         );
 
         foreach ($this->scales as $scale) {
@@ -286,7 +308,8 @@ final class AdditionalScalesInvariantsTest extends TestCase
                 isset(self::BATCH_2[$number]) => '05.S3.2',
                 isset(self::BATCH_3[$number]) => '05.S3.3',
                 isset(self::BATCH_4[$number]) => '05.S3.4',
-                default => '05.S3.5',
+                isset(self::BATCH_5[$number]) => '05.S3.5',
+                default => '05.S3.6',
             };
             self::assertSame($expectedBatch, $scale['batch'] ?? null, "№{$number}: партия");
         }
@@ -322,10 +345,11 @@ final class AdditionalScalesInvariantsTest extends TestCase
             self::assertSame($this->sorted($entry['true']), $this->sorted($scale['key']['true']), "№{$number}: ключ «верно»");
             self::assertSame($this->sorted($entry['false']), $this->sorted($scale['key']['false']), "№{$number}: ключ «неверно»");
 
-            foreach (['male', 'female'] as $sex) {
+            foreach (self::sexesOf($scale) as $sex) {
                 self::assertSame($entry[$sex]['M'], $scale['norms'][$sex]['M'], "№{$number}: M {$sex}");
                 self::assertSame($entry[$sex]['sigma'], $scale['norms'][$sex]['sigma'], "№{$number}: sigma {$sex}");
             }
+            self::assertSame(self::sexesOf($scale), array_keys($scale['norms']), "№{$number}: нормы только применимых полов");
         }
     }
 
@@ -354,7 +378,7 @@ final class AdditionalScalesInvariantsTest extends TestCase
     {
         foreach ($this->scales as $scale) {
             $code = $scale['code'];
-            foreach (['male', 'female'] as $sex) {
+            foreach (self::sexesOf($scale) as $sex) {
                 $mean = (float) $scale['norms'][$sex]['M'];
                 $sigma = (float) $scale['norms'][$sex]['sigma'];
 
@@ -417,6 +441,37 @@ final class AdditionalScalesInvariantsTest extends TestCase
         }
     }
 
+    /**
+     * 05.S3.6: применимость по полу — закрытый список, и основание у него в источнике.
+     *
+     * У «чужого» пола в транскрипции обязана стоять заглушка 0.001 / 0.001, у своего —
+     * настоящие нормы; в runtime заглушка не попадает. У любой другой шкалы заглушки
+     * нет и applies_to не стоит.
+     */
+    public function testSexSpecificScalesCarryOnlyTheirOwnSexNorms(): void
+    {
+        $marked = [];
+        foreach ($this->scales as $scale) {
+            $number = (int) $scale['source']['entry'];
+            $entry = $this->entries[$number];
+            if (!isset($scale['applies_to'])) {
+                foreach (['male', 'female'] as $sex) {
+                    self::assertNotSame(0.001, (float) $entry[$sex]['sigma'], "№{$number}: заглушка у шкалы без applies_to ({$sex})");
+                }
+                continue;
+            }
+
+            $marked[$number] = $scale['applies_to'];
+            $other = $scale['applies_to'] === 'female' ? 'male' : 'female';
+            self::assertSame(['M' => 0.001, 'sigma' => 0.001], $entry[$other], "№{$number}: у другого пола в источнике не заглушка");
+            self::assertArrayNotHasKey($other, $scale['norms'], "№{$number}: заглушка попала в runtime");
+            self::assertGreaterThan(1.0, (float) $scale['norms'][$scale['applies_to']]['sigma'], "№{$number}: нормы своего пола");
+        }
+
+        ksort($marked);
+        self::assertSame(self::SEX_SPECIFIC, $marked, 'состав шкал одного пола закреплён');
+    }
+
     public function testRetiredUnverifiedCodesAreGoneFromRuntime(): void
     {
         $codes = array_map(static fn (array $scale): string => $scale['code'], $this->scales);
@@ -436,6 +491,18 @@ final class AdditionalScalesInvariantsTest extends TestCase
         exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/bin/smil-build-batch.php') . ' --check 2>&1', $output, $code);
 
         self::assertSame(0, $code, "bin/smil-build-batch.php --check: " . implode("\n", $output));
+    }
+
+    /**
+     * Полы, для которых шкала считается.
+     *
+     * @param array<string, mixed> $scale
+     *
+     * @return list<string>
+     */
+    private static function sexesOf(array $scale): array
+    {
+        return isset($scale['applies_to']) ? [(string) $scale['applies_to']] : ['male', 'female'];
     }
 
     /**

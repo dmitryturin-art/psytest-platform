@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\Smil\Scoring\AdditionalScalesCalculator;
 
 /**
- * Поведение калькулятора дополнительных шкал на партиях 05.S3.1–05.S3.5.
+ * Поведение калькулятора дополнительных шкал на партиях 05.S3.1–05.S3.6.
  *
  * Численные ожидания живут в AdditionalScalesReferenceTest (независимый
  * эталон по источнику); здесь проверяется контракт: форма результата,
@@ -37,7 +37,7 @@ final class AdditionalScalesCalculatorTest extends TestCase
     {
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
 
-        self::assertCount(105, $results);
+        self::assertCount(107, $results, '105 шкал обоих полов + 2 мужские (05.S3.6)');
         $expected = [
             'A', 'R', 'Es', 'Do', 'Re', 'CYN', 'OH', 'LRN', 'MAT', 'DPR', 'DSU', 'DRT', 'DOV', 'DRX', 'DPN', 'EGO',
             'CNV', 'GLM', 'DNS', 'EGC', 'HDC', 'HLT', 'HYP', 'HYS', 'ARP', 'SOM', 'HYO', 'HYL', 'IMP',
@@ -47,6 +47,7 @@ final class AdditionalScalesCalculatorTest extends TestCase
             'ALD', 'RSP', 'Ca', 'Cl', 'Cs', 'CRM1', 'Do2', 'CRM2', 'Ds', 'DSb', 'IMV',
             'GMA', 'HCO', 'Hv', 'Hy2', 'Hy5', 'In', 'IQR', 'CHO', 'Mf4', 'Or',
             'Pr', 'RCD', 'SCZ', 'To', 'TCH', 'ULC', 'LAC', 'Wa', 'SDF',
+            'RGM', 'SBM',
         ];
         foreach ($expected as $code) {
             self::assertArrayHasKey($code, $results, "шкала {$code} отсутствует");
@@ -199,6 +200,9 @@ final class AdditionalScalesCalculatorTest extends TestCase
 
         foreach ($this->definitions as $definition) {
             $code = $definition['code'];
+            if (($definition['applies_to'] ?? 'male') !== 'male') {
+                continue;
+            }
             self::assertSame(count($definition['key']['true']), $results[$code]['raw'], "{$code}: raw при всех «верно»");
             self::assertSame($results[$code]['max_raw'], $results[$code]['answered'], "{$code}: answered");
         }
@@ -227,10 +231,47 @@ final class AdditionalScalesCalculatorTest extends TestCase
 
         foreach ($male as $code => $scale) {
             self::assertSame($definitions[$code]['norms']['male']['M'], $scale['M'], "{$code}: мужская M");
-            self::assertSame($definitions[$code]['norms']['female']['M'], $female[$code]['M'], "{$code}: женская M");
+        }
+        foreach ($female as $code => $scale) {
+            self::assertSame($definitions[$code]['norms']['female']['M'], $scale['M'], "{$code}: женская M");
         }
 
         self::assertNotEquals($male['A']['t'], $female['A']['t'], 'нормы пола должны влиять на T');
+    }
+
+    /**
+     * 05.S3.6: шкала одного пола у респондента другого пола отсутствует вовсе.
+     *
+     * Не 0, не T = 50 по заглушке источника и не строка с пустыми значениями — ключа
+     * в результате нет. codes() для каждого пола совпадает с набором calculate(),
+     * иначе проверка актуальности сохранённого результата переписывала бы его вечно.
+     */
+    public function testSexSpecificScalesAppearOnlyForTheirOwnSex(): void
+    {
+        $answers = $this->uniformAnswers(1);
+        $male = $this->calc->calculate($answers, 'male');
+        $female = $this->calc->calculate($answers, 'female');
+
+        self::assertCount(107, $male);
+        self::assertCount(107, $female);
+        foreach (['RGM', 'SBM'] as $code) {
+            self::assertArrayHasKey($code, $male);
+            self::assertArrayNotHasKey($code, $female, "{$code}: мужская шкала у женщины");
+        }
+        foreach (['RGF', 'SBF'] as $code) {
+            self::assertArrayHasKey($code, $female);
+            self::assertArrayNotHasKey($code, $male, "{$code}: женская шкала у мужчины");
+        }
+
+        self::assertSame('Шкала «Ригидность (женская)»', $female['RGF']['name']);
+        self::assertSame('Шкала «Стабильность профиля (мужская)»', $male['SBM']['name']);
+        self::assertSame(5.26, $female['RGF']['M']);
+        self::assertSame(1.52, $female['RGF']['sigma']);
+        self::assertSame(18.14, $male['SBM']['M']);
+
+        self::assertSame(array_keys($male), $this->calc->codes('male'));
+        self::assertSame(array_keys($female), $this->calc->codes('female'));
+        self::assertSame($this->calc->codes('male'), $this->calc->codes('anything-else'), 'неизвестный пол — как в calculate()');
     }
 
     public function testTScoresStayInsideTheBasicScaleRange(): void
