@@ -8,11 +8,13 @@
     "dompdf/dompdf": "^3.0",
     "monolog/monolog": "^3.0",
     "phpmailer/phpmailer": "^7.1",
+    "phpoffice/phpword": "^1.4",
     "ramsey/uuid": "^4.7",
     "robmorgan/phinx": "^0.16",
     "twig/twig": "^3.0"
   },
   "suggest": {
+    "ext-zip": "Выгрузка кейса специалиста в Word (.docx): PhpWord собирает документ через ZipArchive",
     "ext-gd": "Канонический профиль СМИЛ в PDF картинкой (GD с PNG и FreeType); без него PDF откатывается к статической HTML-подмене"
   },
   "require-dev": {

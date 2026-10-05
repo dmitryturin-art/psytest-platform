@@ -99,9 +99,13 @@ final class ResultSectionRenderer
     }
 
     /**
+     * PNG профильного графика от рендерера, объявленного модулем, либо `null`
+     * (не объявлен, недоступен или упал). Тем же путём график берёт и выгрузка
+     * кейса в Word (07.K5m): растр один, откат у вызывающего свой.
+     *
      * @param array<string, mixed> $data
      */
-    private function profileChartImage(array $data): ?string
+    public function profileChartImage(array $data): ?string
     {
         $class = $data['pdf_image_renderer'] ?? null;
         if (!is_string($class) || $class === '') {

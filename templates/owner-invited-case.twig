@@ -255,10 +255,12 @@
             <p class="owner-export-actions">
                 <button type="submit" class="btn btn-primary">Скачать PDF</button>
                 <button type="submit" class="btn btn-outline"
+                        formaction="{{ basePath }}/admin/invited-case/{{ case.id }}/export.docx">Word</button>
+                <button type="submit" class="btn btn-outline"
                         formaction="{{ basePath }}/admin/invited-case/{{ case.id }}/print"
                         formtarget="_blank">Версия для печати</button>
             </p>
-            <p class="owner-help">Версия для печати открывается в новой вкладке: из неё браузер сохраняет документ в PDF или Word.</p>
+            <p class="owner-help">Word (.docx) — редактируемый файл: заключение можно доработать и напечатать. Версия для печати открывается в новой вкладке.</p>
         </form>
     </section>
     {% endif %}

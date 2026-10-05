@@ -18,6 +18,7 @@ use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptFixtureContext;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\Ai\SmilGlossaryCompactor;
+use PsyTest\Core\CaseExportDocx;
 use PsyTest\Core\CaseExportPresenter;
 use PsyTest\Core\ClientReportNotifier;
 use PsyTest\Core\FormOnce;
@@ -916,6 +917,44 @@ final class OwnerController extends BaseController
         header('Content-Disposition: attachment; filename="case_' . $module . '_' . date('YmdHis') . '.pdf"');
         header('Content-Length: ' . strlen($pdf));
         echo $pdf;
+        exit;
+    }
+
+    /**
+     * Выгрузка кейса в Word.
+     * GET /admin/invited-case/{sessionId}/export.docx
+     *
+     * Тот же документ, что PDF и печать (один `CaseExportPresenter`), но
+     * редактируемый: специалист дорабатывает заключение в Word. Файл
+     * собирается в памяти запроса и на сервере не остаётся.
+     */
+    public function exportCaseDocx(string $sessionId): void
+    {
+        $prepared = $this->caseExport($sessionId);
+        if ($prepared === null) {
+            return;
+        }
+
+        [$document, $module] = $prepared;
+
+        // Без ext-zip собрать .docx нельзя: вместо фатальной ошибки — понятное
+        // сообщение в карточке кейса, PDF и печать при этом работают.
+        if (!class_exists(\ZipArchive::class)) {
+            $this->setFlash(['type' => 'error', 'message' => 'Выгрузка в Word недоступна на этом сервере (нет расширения zip). Используйте PDF или версию для печати.']);
+            $this->redirect('/admin/invited-case/' . $sessionId);
+        }
+
+        $docx = (new CaseExportDocx(
+            fn (string $template, array $data): string => $this->view->render($template, $data),
+        ))->render($document);
+
+        header('Content-Type: ' . CaseExportDocx::CONTENT_TYPE);
+        header('Content-Disposition: attachment; filename="case_' . $module . '_' . date('YmdHis') . '.docx"');
+        header('Content-Length: ' . strlen($docx));
+        // Клинический материал: ни в индекс, ни в общий кэш.
+        header('X-Robots-Tag: noindex, nofollow');
+        header('Cache-Control: no-store');
+        echo $docx;
         exit;
     }
 
