@@ -149,4 +149,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 39. Выкладка `3297e16` (03.10): таблицы результата на телефоне (04.U1) и одноразовый ключ форм кабинета (07.K6b); миграций нет. SHA-256 `5eb656341c3e42e772e044cefa8f07b36ec374db01930e734dcb08ef39b39171` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
 
-Rollback текущего релиза: атомарно направить `public_html` на `releases/a4392ba/public` и `current` на `releases/a4392ba`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
+40. Выкладка `e340cb7` (05.10): партия S3.6 — четыре шкалы только для одного пола, 109 в реестре; миграций нет; `php8.3 bin/smil-refresh-additional.php` обновил 4 сессии. SHA-256 `8938f9806c4a53743fba7e339ede8ecef6d69e433106eba0dfb0063f2d07dc9d` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`.
+
+Rollback текущего релиза: атомарно направить `public_html` на `releases/3297e16/public` и `current` на `releases/3297e16`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
