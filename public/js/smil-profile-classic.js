@@ -22,21 +22,25 @@
 
         const scoresData = container.getAttribute('data-scores');
         const labelsData = container.getAttribute('data-labels');
+        const gridData = container.getAttribute('data-grid');
 
-        if (!scoresData || !labelsData) return;
+        if (!scoresData || !labelsData || !gridData) return;
 
         const scores = JSON.parse(scoresData);
         const labels = JSON.parse(labelsData);
+        const grid = JSON.parse(gridData);
 
         if (scores.length === 0) return;
+        // Without the blank's grid the points cannot be placed on its lines.
+        if (!grid || !Array.isArray(grid.lines) || grid.lines.length < 2) return;
 
-        renderClassicProfile(container, scores, labels);
+        renderClassicProfile(container, scores, labels, grid);
     }
 
     /**
      * Render classic MMPI profile with dual curves
      */
-    function renderClassicProfile(container, scores, labels) {
+    function renderClassicProfile(container, scores, labels, grid) {
         // SVG viewBox dimensions (from reference)
         const viewBox = {
             width: 560,
@@ -60,8 +64,8 @@
                 <div class="classic-profile-holder">
                     <img src="/images/smil-profile-bg.png" alt="СМИЛ профиль" class="profile-background">
                     <svg class="profile-overlay" viewBox="0 0 ${viewBox.width} ${viewBox.height}">
-                        ${renderCurve(validityScores, validityLabels, validityPositions)}
-                        ${renderCurve(clinicalScores, clinicalLabels, clinicalPositions)}
+                        ${renderCurve(validityScores, validityLabels, validityPositions, grid)}
+                        ${renderCurve(clinicalScores, clinicalLabels, clinicalPositions, grid)}
                     </svg>
                 </div>
                 <div class="profile-legend">
@@ -101,15 +105,15 @@
     /**
      * Render a single curve (validity or clinical)
      */
-    function renderCurve(scores, labels, xPositions) {
+    function renderCurve(scores, labels, xPositions, grid) {
         let svg = '';
 
         // Render connecting lines
         for (let i = 0; i < scores.length - 1; i++) {
             const x1 = xPositions[i];
-            const y1 = tScoreToY(scores[i]);
+            const y1 = tScoreToY(scores[i], grid);
             const x2 = xPositions[i + 1];
-            const y2 = tScoreToY(scores[i + 1]);
+            const y2 = tScoreToY(scores[i + 1], grid);
 
             svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="darkblue" stroke-width="4"/>`;
         }
@@ -117,7 +121,7 @@
         // Render points with tooltip support
         for (let i = 0; i < scores.length; i++) {
             const x = xPositions[i];
-            const y = tScoreToY(scores[i]);
+            const y = tScoreToY(scores[i], grid);
             const color = getPointColor(scores[i]);
             const tooltipText = `${labels[i]}: T=${scores[i]} (${getLevel(scores[i])})`;
 
@@ -130,26 +134,28 @@
     }
 
     /**
-     * Convert T-score to Y coordinate
-     * Reference: T-score 30 = bottom, T-score 100 = top
+     * Convert T-score to Y coordinate on the Sobchik blank (viewBox 560x621).
+     *
+     * The grid comes from the server (SmilProfileGrid, shared with the PDF
+     * image): {t_min, t_max, lines: [[T, y], ...]} where y is the centre of
+     * the blank's line labelled T. A T-score is clamped to [t_min, t_max]
+     * and interpolated linearly between the neighbouring lines, so T = 70
+     * sits exactly on the blank's "70" line.
      */
-    function tScoreToY(tScore) {
-        // Based on reference image analysis:
-        // T=30 → y≈550
-        // T=50 → y≈350
-        // T=70 → y≈150
-        // Linear interpolation
+    function tScoreToY(tScore, grid) {
+        const lines = grid.lines;
+        const t = Math.max(grid.t_min, Math.min(grid.t_max, Number(tScore)));
 
-        const minT = 20;
-        const maxT = 100;
-        const minY = 580;  // Bottom of chart
-        const maxY = 40;   // Top of chart
-
-        // Clamp T-score
-        const clampedT = Math.max(minT, Math.min(maxT, tScore));
-
-        // Linear interpolation
-        const y = minY - ((clampedT - minT) / (maxT - minT)) * (minY - maxY);
+        let y = lines[lines.length - 1][1];
+        for (let i = 0; i < lines.length - 1; i++) {
+            const lower = lines[i];
+            const upper = lines[i + 1];
+            if (t >= lower[0] && t <= upper[0]) {
+                const ratio = (t - lower[0]) / (upper[0] - lower[0]);
+                y = lower[1] + (upper[1] - lower[1]) * ratio;
+                break;
+            }
+        }
 
         return y.toFixed(1);
     }
