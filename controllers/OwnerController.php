@@ -563,6 +563,11 @@ final class OwnerController extends BaseController
                     ? ReportMarkdown::toHtml((string) $report['content'])
                     : null,
                 'published' => $published,
+                // Версии профессионального заключения смотрят отдельной
+                // страницей, только когда есть что сравнивать (07.K7).
+                'versions_count' => $kind === Prompt::KIND_PROFESSIONAL && $report !== null
+                    ? $revisions->count((string) $report['id'])
+                    : 0,
             ];
         }
 
@@ -736,6 +741,57 @@ final class OwnerController extends BaseController
             'latest_html' => $latest === null ? null : ReportMarkdown::toHtml((string) $latest['content']),
             'published' => $published,
             'content_max' => AiReportRevisionService::CONTENT_MAX_LENGTH,
+        ]);
+    }
+
+    /**
+     * История версий профессионального заключения, только чтение (07.K7).
+     * Понятный разбор уходит в свой редактор: история там уже есть.
+     * GET /admin/invited-case/{sessionId}/reports/{reportId}/versions
+     */
+    public function caseReportVersions(string $sessionId, string $reportId): void
+    {
+        $case = $this->ownedCase($sessionId);
+        if ($case === null) {
+            return;
+        }
+
+        $report = Security::isValidUuid($reportId)
+            ? (new AiReportRepository($this->db))->find($reportId)
+            : null;
+        if ($report === null || (string) $report['session_id'] !== $sessionId) {
+            $this->notFound();
+
+            return;
+        }
+        if ((string) $report['report_kind'] === Prompt::KIND_CLEAR) {
+            $this->redirect('/admin/invited-case/' . $sessionId . '/reports/' . $reportId . '/edit');
+        }
+        if ((string) $report['report_kind'] !== Prompt::KIND_PROFESSIONAL) {
+            $this->notFound();
+
+            return;
+        }
+
+        $revisions = new AiReportRevisionService($this->db);
+        if ((string) $report['status'] === AiReportRepository::STATUS_READY && $revisions->count($reportId) === 0) {
+            // Готовый отчёт до введения истории получает версию №1; у отчёта с
+            // историей текст не пересевается (профессиональное не правится).
+            $revisions->seedFromContent($reportId, (string) ($report['content'] ?? ''));
+        }
+
+        $versions = [];
+        foreach (array_reverse($revisions->revisions($reportId)) as $revision) {
+            $revision['html'] = ReportMarkdown::toHtml((string) $revision['content']);
+            $versions[] = $revision;
+        }
+
+        header('X-Robots-Tag: noindex, nofollow');
+
+        echo $this->view->render('owner-report-versions', [
+            'session_id' => $sessionId,
+            'case' => $case,
+            'versions' => $versions,
         ]);
     }
 

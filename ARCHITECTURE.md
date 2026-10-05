@@ -96,6 +96,7 @@ HTTP request
 | POST | `/admin/invited-case/{sessionId}/reports/request` | `OwnerController::requestCaseReports` | заказать оба черновика ИИ-разбора по кейсу (согласие + клинический контекст) |
 | GET | `/admin/invited-case/{sessionId}/reports/status` | `OwnerController::caseReportStatus` | owner-only JSON со статусами заданий (без текста черновика) |
 | GET | `/admin/invited-case/{sessionId}/reports/{reportId}/edit` | `OwnerController::editCaseReport` | редактор понятного разбора: текст, предпросмотр, история версий |
+| GET | `/admin/invited-case/{sessionId}/reports/{reportId}/versions` | `OwnerController::caseReportVersions` | история версий профессионального заключения только для чтения (`X-Robots-Tag: noindex`); для понятного разбора — редирект в редактор |
 | POST | `/admin/invited-case/{sessionId}/reports/{reportId}/revisions` | `OwnerController::saveCaseReportRevision` | сохранить правку как новую версию |
 | POST | `/admin/invited-case/{sessionId}/reports/{reportId}/restore` | `OwnerController::restoreCaseReportRevision` | восстановить старую версию копией в новую |
 | POST | `/admin/invited-case/{sessionId}/reports/{reportId}/publish` | `OwnerController::publishCaseReport` | опубликовать выбранную версию клиенту (с подтверждением) |

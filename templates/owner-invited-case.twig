@@ -224,6 +224,9 @@
                         <summary>Показать заключение</summary>
                         <div class="ai-report__body">{{ item.html|raw }}</div>
                     </details>
+                    {% if item.versions_count > 1 %}
+                        <p><a href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/versions">Версии ({{ item.versions_count }})</a></p>
+                    {% endif %}
                     {{ _self.reorder_form(case, item, csrf_token, basePath, order_keys[item.kind]) }}
                 {% endif %}
             </article>

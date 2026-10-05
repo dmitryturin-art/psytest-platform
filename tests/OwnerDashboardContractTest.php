@@ -37,6 +37,7 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/request'", $routes);
         self::assertStringContainsString("\$router->get('/admin/invited-case/{sessionId}/reports/status'", $routes);
         self::assertStringContainsString("\$router->get('/admin/invited-case/{sessionId}/reports/{reportId}/edit'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/invited-case/{sessionId}/reports/{reportId}/versions'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/revisions'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/restore'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/publish'", $routes);
