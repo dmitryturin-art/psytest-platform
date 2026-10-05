@@ -10,7 +10,8 @@ use PsyTest\Modules\Smil\SmilModule;
 /**
  * Пересчёт только дополнительных шкал по сохранённым ответам (05.S4a).
  *
- * Кейсы, пройденные до расширения реестра (35 шкал), должны получить все 105,
+ * Кейсы, пройденные до расширения реестра (35 шкал), должны получить все шкалы
+ * своего пола (107 из 109: две шкалы 05.S3.6 — только для другого пола),
  * а проверенное scoring core — базовые шкалы, достоверность, профиль, индексы
  * и интерпретация — остаться байт-в-байт прежним.
  */
@@ -41,7 +42,7 @@ final class RefreshAdditionalScoresTest extends TestCase
 
         $refreshed = $this->module->refreshAdditionalScores($stale, $this->answers);
 
-        self::assertCount(105, $refreshed['additional_scores']);
+        self::assertCount(107, $refreshed['additional_scores']);
         self::assertSame($fresh['additional_scores'], $refreshed['additional_scores']);
         foreach (self::CORE_KEYS as $key) {
             self::assertSame(
@@ -71,6 +72,38 @@ final class RefreshAdditionalScoresTest extends TestCase
         $fresh = $this->module->calculateResults($this->answers);
 
         self::assertSame($fresh, $this->module->refreshAdditionalScores($fresh, $this->answers));
+    }
+
+    /**
+     * 05.S3.6: результат на 105 шкалах до партии одного пола обновляется ровно один раз.
+     *
+     * После обновления набор кодов совпадает с реестром для пола сессии, поэтому
+     * повторное чтение ничего не меняет — для обоих полов. Если бы сравнение шло
+     * с полным реестром (109), каждая сессия считалась бы устаревшей вечно.
+     */
+    public function testResultBeforeTheSexSpecificBatchIsRefreshedOnceForBothSexes(): void
+    {
+        foreach (['male' => ['RGM', 'SBM'], 'female' => ['RGF', 'SBF']] as $gender => $own) {
+            $answers = $this->answers;
+            $answers['gender'] = $gender;
+            $fresh = $this->module->calculateResults($answers);
+            self::assertSame($gender, $fresh['gender']);
+            self::assertCount(107, $fresh['additional_scores'], "{$gender}: шкалы своего пола");
+
+            $before = $fresh;
+            foreach (['RGF', 'RGM', 'SBF', 'SBM'] as $code) {
+                unset($before['additional_scores'][$code]);
+            }
+            self::assertCount(105, $before['additional_scores']);
+
+            $refreshed = $this->module->refreshAdditionalScores($before, $answers);
+            self::assertSame($fresh['additional_scores'], $refreshed['additional_scores'], "{$gender}: обновлён");
+            foreach ($own as $code) {
+                self::assertArrayHasKey($code, $refreshed['additional_scores']);
+            }
+            self::assertSame($refreshed, $this->module->refreshAdditionalScores($refreshed, $answers), "{$gender}: идемпотентно");
+            self::assertSame($fresh, $this->module->refreshAdditionalScores($fresh, $answers), "{$gender}: свежий не трогается");
+        }
     }
 
     public function testWithoutItemAnswersNothingChanges(): void

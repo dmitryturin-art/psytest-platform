@@ -40,22 +40,25 @@ final class AdditionalScalesCalculator
     }
 
     /**
-     * Коды шкал, которые калькулятор сейчас считает, в порядке реестра.
+     * Коды шкал, которые калькулятор считает для респондента данного пола, в порядке реестра.
      *
      * Нужен, чтобы отличить результат, посчитанный на прежнем реестре, от
-     * актуального: тот же фильтр, что и в calculate().
+     * актуального: тот же фильтр, что и в calculate(). Шкалы только для одного
+     * пола (поле applies_to) входят в набор лишь для своего пола — иначе результат
+     * любой сессии вечно расходился бы с реестром.
+     *
+     * @param string $gender 'male' или 'female'.
      *
      * @return list<string>
      */
-    public function codes(): array
+    public function codes(string $gender): array
     {
+        $sex = self::sex($gender);
         $codes = [];
         foreach ($this->scales as $scale) {
-            $code = (string) ($scale['code'] ?? '');
-            if ($code === '' || !isset($scale['key'], $scale['norms'])) {
-                continue;
+            if ($this->appliesTo($scale, $sex)) {
+                $codes[] = (string) $scale['code'];
             }
-            $codes[] = $code;
         }
 
         return $codes;
@@ -75,14 +78,14 @@ final class AdditionalScalesCalculator
      */
     public function calculate(array $answers, string $gender): array
     {
-        $sex = $gender === 'female' ? 'female' : 'male';
+        $sex = self::sex($gender);
         $results = [];
 
         foreach ($this->scales as $scale) {
-            $code = (string) ($scale['code'] ?? '');
-            if ($code === '' || !isset($scale['key'], $scale['norms'])) {
+            if (!$this->appliesTo($scale, $sex)) {
                 continue;
             }
+            $code = (string) $scale['code'];
 
             $raw = 0;
             $answered = 0;
@@ -109,9 +112,9 @@ final class AdditionalScalesCalculator
                 }
             }
 
-            // Нормы даны для обоих полов у каждой шкалы партии; fallback на
-            // мужские остаётся только страховкой от неполного определения.
-            $norms = $scale['norms'][$sex] ?? $scale['norms']['male'] ?? [];
+            // appliesTo() уже гарантировал нормы пола респондента: у шкалы одного
+            // пола нормы другого в runtime нет, и подставлять чужие нельзя.
+            $norms = $scale['norms'][$sex];
             $mean = $norms['M'] ?? 0;
             $sigma = $norms['sigma'] ?? 0;
 
@@ -141,6 +144,32 @@ final class AdditionalScalesCalculator
         }
 
         return $results;
+    }
+
+    private static function sex(string $gender): string
+    {
+        return $gender === 'female' ? 'female' : 'male';
+    }
+
+    /**
+     * Считается ли шкала для респондента этого пола.
+     *
+     * Шкала без кода, ключа или норм своего пола не считается вовсе. Шкала с
+     * applies_to (05.S3.6: «Ригидность», «Стабильность профиля») — только для
+     * указанного пола; для другого её в результате нет, а не 0 и не пустая строка.
+     *
+     * @param array<string, mixed> $scale
+     */
+    private function appliesTo(array $scale, string $sex): bool
+    {
+        if ((string) ($scale['code'] ?? '') === '' || !isset($scale['key'], $scale['norms'])) {
+            return false;
+        }
+        if (isset($scale['applies_to']) && $scale['applies_to'] !== $sex) {
+            return false;
+        }
+
+        return isset($scale['norms'][$sex]['M'], $scale['norms'][$sex]['sigma']);
     }
 
     /**
