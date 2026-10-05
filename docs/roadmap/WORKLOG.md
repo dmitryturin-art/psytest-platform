@@ -20,6 +20,13 @@
 
 ## 2026-10-05
 
+### 08.B34 — staging-выкладка K5m (`97577af`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-97577af`; deployed runtime `97577af` (merge PR #145, полная матрица 5.7/8.0 зелёная). Миграций нет; новая зависимость `phpoffice/phpword` в архиве релиза.
+- Сделано: одно SSH-подключение (архив через stdin, `NumberOfPasswordPrompts=1`): SHA-256 `11a7e08b…fe7f` совпал; `.env` из прежнего релиза; в том же сеансе проверено `ZipArchive` у CLI PHP 8.3 — есть; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/97577af`.
+- Проверки (по HTTP): `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`. Наличие zip у веб-PHP отдельно не проверялось: при его отсутствии кнопка «Word» покажет сообщение в карточке кейса — проверяет владелец первым скачиванием.
+- Rollback: `public_html` → `releases/ca9c1b4/public`, `current` → `releases/ca9c1b4`.
+
 ### 07.K5m — выгрузка кейса специалиста в Word (.docx)
 
 - Этап / ветка / commit: этап 07, `codex/07-k5m-case-export-docx` от `main` `ffc9440`; commits `778a1b4`, `9a20591` (исполнитель Sonnet, БД `psytest_wt_k5m`) + правка ведущего (защита при отсутствии ext-zip). Запущен по «давай выгрузку кейса в Word» владельца 05.10.
