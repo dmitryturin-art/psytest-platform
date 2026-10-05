@@ -20,6 +20,13 @@
 
 ## 2026-10-05
 
+### 08.B33 — staging-выкладка C1 (`ca9c1b4`), первая по правилу одного SSH-подключения
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-ca9c1b4`; deployed runtime `ca9c1b4` (merge PR #143). Миграций нет.
+- Сделано: архив `release-ca9c1b4.tar.gz` передан через stdin и развёрнут в том же SSH-сеансе (`-o NumberOfPasswordPrompts=1`): SHA-256 `71c48518…250e` совпал; `.env` из прежнего релиза; pre-deploy dump (gzip -t OK); `public_html`/`current` атомарно на `releases/ca9c1b4`. Одно подключение, отказов нет.
+- Проверки (по HTTP, без входа на сервер): `/`, `/api/health`, `/admin/login` — `200`, `/test/smil` — `404`; отдаваемый `js/smil-profile-classic.js` содержит чтение сетки `grid`.
+- Rollback: `public_html` → `releases/6753f97/public`, `current` → `releases/6753f97`.
+
 ### 05.C1 — веб-график СМИЛ: точки на делениях бланка (исправление дефекта)
 
 - Этап / ветка / commit: этап 05, `codex/05-c1-smil-web-chart-grid` от `main` `6753f97`; commits `7830576`, `eeefb4f`, `7fbac1b` (исполнитель Opus, БД `psytest_wt_c1`). Запущен по «график на сайте исправляй» владельца 05.10 — явное разрешение на правку канонического графика (PRODUCT_RULES §8: воспроизводимый дефект).
