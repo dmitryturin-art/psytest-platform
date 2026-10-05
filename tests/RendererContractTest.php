@@ -102,7 +102,7 @@ final class RendererContractTest extends TestCase
         self::assertNotSame('', trim($html), "PDF rendering produced no HTML for {$moduleClass}.");
     }
 
-    public function testPdfProfileChartIsStaticBarChartWithoutJavaScript(): void
+    public function testPdfProfileChartIsStaticWithoutJavaScript(): void
     {
         $module = new SmilModule();
         $results = ['is_pdf' => true] + $this->pdfResults($module);

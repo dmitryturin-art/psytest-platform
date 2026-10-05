@@ -1,0 +1,34 @@
+{# Канонический профиль СМИЛ в PDF (07.WP7b).
+
+   Картинку рисует `SmilProfileImageRenderer` модуля СМИЛ — тот же бланк, те же
+   две ломаные, точки и цвета, что у веб-графика (`smil-profile-classic.js`);
+   сюда она приходит data URI. Легенда — тексты веб-графика.
+
+   DomPDF понимает только простой CSS: раскладка — таблицами, без flex и
+   inline-block; график и легенда не разрываются между страницами. #}
+<table style="width:100%;border-collapse:collapse;border:none;page-break-inside:avoid;page-break-before:avoid;margin:1em 0;">
+    <tr>
+        <td style="border:none;background:#fff;padding:0 0 0.5em;text-align:center;font-size:11pt;font-weight:bold;color:#2c3e50;">Профиль личности (T-баллы)</td>
+    </tr>
+    <tr>
+        <td style="border:none;background:#fff;padding:0;text-align:center;">
+            <img src="{{ image_src }}" alt="Профиль СМИЛ: L, F, K и шкалы 1–9, 0 в T-баллах" style="width:13.5cm;">
+        </td>
+    </tr>
+    <tr>
+        <td style="border:none;background:#fff;padding:0.4em 0 0;text-align:center;font-size:8pt;color:#333;">
+            <span style="color:#00008b;font-weight:bold;">&#9473;&#9473;</span> Кривая 1: Шкалы достоверности (L, F, K)
+            &nbsp;&nbsp;&nbsp;
+            <span style="color:#00008b;font-weight:bold;">&#9473;&#9473;</span> Кривая 2: Клинические шкалы (1-9, 0)
+        </td>
+    </tr>
+    <tr>
+        <td style="border:none;background:#fff;padding:0.2em 0 0;text-align:center;font-size:8pt;color:#333;">
+            <span style="color:#006400;">&#9679;</span> Норма (30-70T)
+            &nbsp;&nbsp;&nbsp;
+            <span style="color:#dc143c;">&#9679;</span> Отклонение (&lt;30T или &gt;70T)
+            &nbsp;&nbsp;&nbsp;
+            Число у точки — T-балл шкалы
+        </td>
+    </tr>
+</table>
