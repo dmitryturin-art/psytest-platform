@@ -215,11 +215,6 @@ final class CaseExportDocx
         $section->addTitle($pair !== null ? 'Индивидуальный результат' : 'Базовый результат', 1);
         $this->sections($section, $writer, $sections);
 
-        if ($options['include_answers']) {
-            $section->addPageBreak();
-            $this->answers($section, $writer, $document);
-        }
-
         $professional = $document['professional'] ?? null;
         if (is_array($professional)) {
             $section->addPageBreak();
@@ -244,6 +239,14 @@ final class CaseExportDocx
                     $section->addText(DocxHtmlWriter::clean(trim($line)));
                 }
             }
+        }
+
+        // Анкета — приложением после заключений и заметки (замечание владельца
+        // 05.10): у СМИЛ это 566 строк, и перед заключениями они заставляли
+        // долго листать до содержательной части.
+        if ($options['include_answers']) {
+            $section->addPageBreak();
+            $this->answers($section, $writer, $document);
         }
 
         $this->closing($section, $document);
@@ -316,13 +319,13 @@ final class CaseExportDocx
         $pair = $document['pair'];
 
         if ($pair === null) {
-            $section->addTitle('Анкета по пунктам', 1);
+            $section->addTitle('Приложение. Анкета по пунктам', 1);
             $writer->append($section, $this->answersTable($document['answers']));
 
             return;
         }
 
-        $section->addTitle('Анкеты обоих партнёров', 1);
+        $section->addTitle('Приложение. Анкеты обоих партнёров', 1);
         foreach ($pair['questionnaires'] as $sheet) {
             $section->addTitle(
                 DocxHtmlWriter::clean((string) $sheet['label']) . ($sheet['is_case'] ? ' · этот кейс' : ''),

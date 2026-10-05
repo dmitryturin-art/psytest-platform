@@ -265,6 +265,14 @@ MD;
         ]))['word/document.xml']);
         $full = $this->plainText($dom);
         self::assertStringContainsString('Анкета по пунктам', $full);
+        // Анкета идёт приложением после результата, заключений и заметки.
+        $appendix = mb_strpos($full, 'Приложение. Анкета по пунктам');
+        self::assertNotFalse($appendix);
+        foreach (['Базовый результат', 'Заметка к назначению'] as $earlier) {
+            $position = mb_strpos($full, $earlier);
+            self::assertNotFalse($position, $earlier);
+            self::assertGreaterThan($position, $appendix, 'Анкета должна стоять после раздела «' . $earlier . '».');
+        }
         self::assertStringContainsString('Заметка к назначению', $full);
         self::assertStringContainsString('Назначено перед первой сессией.', $full);
 
