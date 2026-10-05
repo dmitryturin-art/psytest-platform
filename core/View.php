@@ -52,6 +52,8 @@ class View
         $this->twig->addGlobal('appUrl', $configLoader->appUrl());
         $this->twig->addGlobal('basePath', $this->getBasePath());
         $this->twig->addGlobal('isDebug', $isDebug);
+        // 04.D1: временное подключение прототипов оформления (?proto=a|b), только из allowlist.
+        $this->twig->addGlobal('designProto', in_array($_GET['proto'] ?? '', ['a', 'b'], true) ? $_GET['proto'] : null);
 
         // Набор функций шаблонов общий с тестами рендеринга: см. TemplateFunctions.
         TemplateFunctions::register(

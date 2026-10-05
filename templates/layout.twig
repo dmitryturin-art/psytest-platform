@@ -15,6 +15,7 @@
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/main.css') }}">
     {% block extra_css %}{% endblock %}
+    {% if designProto %}<link rel="stylesheet" href="{{ asset('css/proto-' ~ designProto ~ '.css') }}">{% endif %}
     
     <!-- Privacy & Security -->
     <meta name="robots" content="noindex, nofollow">
