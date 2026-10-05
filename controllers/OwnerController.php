@@ -774,8 +774,9 @@ final class OwnerController extends BaseController
         }
 
         $revisions = new AiReportRevisionService($this->db);
-        if ((string) $report['status'] === AiReportRepository::STATUS_READY) {
-            // Готовый отчёт до введения истории получает версию №1 (идемпотентно).
+        if ((string) $report['status'] === AiReportRepository::STATUS_READY && $revisions->count($reportId) === 0) {
+            // Готовый отчёт до введения истории получает версию №1; у отчёта с
+            // историей текст не пересевается (профессиональное не правится).
             $revisions->seedFromContent($reportId, (string) ($report['content'] ?? ''));
         }
 
