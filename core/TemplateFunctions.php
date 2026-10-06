@@ -45,6 +45,11 @@ final class TemplateFunctions
             'status_label',
             static fn (?string $value): string => OwnerLabels::status($value),
         ));
+        // Тон метки статуса (`status status--<тон>`): словарь там же, в OwnerLabels.
+        $twig->addFilter(new TwigFilter(
+            'status_tone',
+            static fn (?string $value): string => OwnerLabels::tone($value),
+        ));
         $twig->addFilter(new TwigFilter(
             'retention_label',
             static fn (?string $value): string => OwnerLabels::retention($value),

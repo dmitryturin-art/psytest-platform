@@ -57,12 +57,12 @@
             {% for assignment in assignments %}
                 <li>
                     <strong>{{ assignment.test_name }}</strong> —
-                    {% if assignment.display_status == 'completed' %}завершено
+                    <span class="status status--{{ (assignment.display_status ?: 'pending')|status_tone }}">{% if assignment.display_status == 'completed' %}завершено
                     {% elseif assignment.display_status == 'opened' %}открыто
                     {% elseif assignment.display_status == 'revoked' %}отозвано
                     {% elseif assignment.display_status == 'expired' %}срок истёк
                     {% elseif assignment.display_status == 'result_deleted' %}результат удалён
-                    {% else %}ожидает открытия{% endif %}
+                    {% else %}ожидает открытия{% endif %}</span>
                     <small>создано {{ assignment.created_at|date("d.m.Y H:i") }}{% if assignment.completed_at %} · завершено {{ assignment.completed_at|date("d.m.Y H:i") }}{% endif %}</small>
                     {% if assignment.owner_note %}<p>{{ assignment.owner_note }}</p>{% endif %}
                     {% if assignment.claimed_session_id %}
