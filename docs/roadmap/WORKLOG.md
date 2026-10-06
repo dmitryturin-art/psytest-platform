@@ -20,6 +20,21 @@
 
 ## 2026-10-06
 
+### 08.B39 — staging-выкладка K9 (`16b6f6a`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-16b6f6a`; deployed runtime `16b6f6a` (merge PR #155). Миграций нет (phinx: 20 `up`, no-op).
+- Сделано: одно SSH-подключение по рецепту (stdin, `--strip-components=1`, `NumberOfPasswordPrompts=1`): SHA-256 `c2bbfb06…ce2d7` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-16b6f6a.sql.gz` (219 844 байта, gzip -t OK); `public_html`/`current` атомарно на `releases/16b6f6a`.
+- Проверки (по HTTP): `/`, `/api/health`, `/admin/login`, `/js/owner-attach.js` — `200`, `/test/smil` — `404`.
+- Rollback: `public_html` → `releases/73af7802/public`, `current` → `releases/73af7802`.
+
+### 07.K9 — привязка приглашения к клиенту и смена клиента
+
+- Этап / ветка / commit: этап 07 (кабинет), `codex/07-k9-attach-invite-client` от `main` `38abb66`; `26289f1`, `bf9cad2`, `76b4ee7`; merge PR #155 → `16b6f6a`. Исполнитель Sonnet (БД `psytest_wt_k9`), приёмка ведущим. Сигнал владельца 06.10: кейс по приглашению, отправленному до создания карточки клиента, нужно привязывать к любому клиенту, пройденный или нет; «Делай».
+- Сделано: (1) `TestInviteService::attachClient()` с исходами `ATTACH_DONE/CHANGED/UNCHANGED/MISSING/REFUSED` для любой строки приглашения (ожидает, открыто, завершено, срок истёк, отозвано, архив, корзина); новый клиент создаётся в той же транзакции по валидации `TherapistClientService::isValidInput`; события журнала `invite_client_attached` / `invite_client_changed`; токен, сессия, результаты и разборы не трогаются, retention class сессии не меняется. (2) `core/OwnerInviteClientAttach.php` — одноразовый ключ формы, подтверждение смены (`confirm_change=1`), сообщения на русском («Кейс привязан к клиенту «…»», «Клиент изменён на «…»», «Уже привязано к этому клиенту»; без сессии — «Приглашение привязано…»); при ошибке ключ сохраняется для повторной отправки. (3) POST `/admin/invites/attach-client` (`OwnerController::attachInviteClient`, CSRF, `return` через `OwnerInviteBulkAction::safeReturn`); без `client_id` отдаётся серверная страница `owner-invite-attach.twig` (путь без JS по образцу K8). (4) UI по системе 04.D2: пункт «Привязать к клиенту» / «Сменить клиента» в меню «⋯» списка приглашений и карточки клиента; в шапке кейса кнопка «Привязать к клиенту» либо ссылка на клиента и ghost-кнопка «Сменить»; общий диалог `blocks/owner-attach-dialog.twig` + `blocks/owner-attach-fields.twig` с «Новый клиент…», текущий клиент «(сейчас)» отключён; `public/js/owner-attach.js`; в корзине действие недоступно. (5) `TherapistClientService::findForOwner` отдаёт `client_id` по назначениям. (6) Docs: `INVITE_FLOW.md` раздел «Привязка и смена клиента (07.K9)», `ARCHITECTURE.md` маршрут.
+- Проверки и evidence: исполнитель — `tests/Integration/InviteAttachClientTest.php` (10) и `tests/OwnerInviteAttachContractTest.php` (6); PHPUnit 696 tests / 51 583 assertions OK (у исполнителя `PDFGeneratorSmokeTest` упирался в 128M, прошёл с `memory_limit=1G`; локальная среда, не K9), analyse OK, lint OK, архитектура OK, baseline 141/141; браузер 1440/390: привязка из меню списка, «Новый клиент…» со страницы кейса, смена с подтверждением, кейс в карточке нового клиента, страница без JS (7 снимков в scratchpad `k9/`). Ведущий: снимки просмотрены, `bin/local-gate.sh` на Docker MySQL 5.7.44 — **пройден**; CI PR #155 — 3/3 pass.
+- Не сделано: отвязка клиента (`detachClient`) намеренно не делалась.
+- Следующий шаг: приёмка владельцем на стенде (привязать реальный кейс, отправленный до создания карточки).
+
 ### 08.B38 — staging-выкладка D2 (`73af780`)
 
 - Этап / ветка / commit: этап 08, `codex/08-deploy-73af7802`; deployed runtime `73af7802` (merge PR #153). Миграций нет (phinx: 20 `up`, no-op).
