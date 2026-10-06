@@ -18,39 +18,6 @@
         {% if flash.invite_url %}<p class="owner-invite-url"><input aria-label="Ссылка-приглашение" type="text" readonly value="{{ flash.invite_url }}"></p>{% endif %}
     {% endif %}
 
-    <section class="owner-invites" aria-labelledby="owner-client-edit-title">
-        <h2 id="owner-client-edit-title">Подпись, заметка и email</h2>
-        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/update" class="owner-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <label for="client-label">Подпись клиента</label>
-            <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off" value="{{ client.label }}">
-            <label for="client-note">Заметка о работе</label>
-            <textarea id="client-note" name="note" maxlength="1000" rows="3">{{ client.note }}</textarea>
-            <label for="client-email">Email клиента (необязательно, только для уведомлений)</label>
-            <input id="client-email" name="email" type="email" maxlength="254" autocomplete="off" value="{{ client.email }}">
-            <p class="owner-help">Адрес нужен ровно для одного письма — «разбор готов». Платформа не отправляет его сама: письмо уходит только по вашей кнопке в карточке кейса. Очистите поле, чтобы удалить адрес.</p>
-            <button type="submit" class="btn btn-outline">Сохранить</button>
-        </form>
-    </section>
-
-    <section class="owner-invites" aria-labelledby="owner-client-assign-title">
-        <h2 id="owner-client-assign-title">Новое назначение</h2>
-        <p class="owner-help">Ссылка действует 14 дней и открывается один раз. Отправьте её клиенту сами — платформа ничего не отправляет.</p>
-        {# form_key — одноразовый ключ этой отрисовки: двойное нажатие не создаёт
-           второе приглашение, повтор показывает ту же ссылку (07.K6b). #}
-        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/invites/create" class="owner-form" data-submit-once>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" name="form_key" value="{{ invite_form_key }}">
-            <label for="assignment-test">Методика</label>
-            <select id="assignment-test" name="test_id" required>
-                {% for test in invite_tests %}<option value="{{ test.id }}">{{ test.name }}</option>{% endfor %}
-            </select>
-            <label for="assignment-note">Заметка к назначению (не показывается клиенту)</label>
-            <textarea id="assignment-note" name="owner_note" maxlength="1000" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">{{ ui.icon('plus') }}Создать назначение</button>
-        </form>
-    </section>
-
     <section class="owner-invites" aria-labelledby="owner-client-assignments-title">
         {% set client_url = basePath ~ '/admin/clients/' ~ client.id %}
         {% set test_suffix = assignment_test ? 'test=' ~ assignment_test|url_encode : '' %}
@@ -59,9 +26,9 @@
             {# Переключатель рабочих, архива и корзины (07.K8). По умолчанию архив и
                корзина скрыты: открываются явным выбором. #}
             <nav class="view-tabs" aria-label="Вид списка">
-                <a class="view-tabs__tab" href="{{ client_url }}{% if test_suffix %}?{{ test_suffix }}{% endif %}"{% if assignment_view == 'active' %} aria-current="page"{% endif %}>Рабочие</a>
-                <a class="view-tabs__tab" href="{{ client_url }}?status=archived{% if test_suffix %}&amp;{{ test_suffix }}{% endif %}"{% if assignment_view == 'archived' %} aria-current="page"{% endif %}>{{ ui.icon('archive') }}Архив <span class="view-tabs__count">{{ archived_count }}</span></a>
-                <a class="view-tabs__tab" href="{{ client_url }}?status=trash{% if test_suffix %}&amp;{{ test_suffix }}{% endif %}"{% if assignment_view == 'trash' %} aria-current="page"{% endif %}>{{ ui.icon('trash') }}Корзина <span class="view-tabs__count">{{ trashed_count }}</span></a>
+                <a class="view-tabs__tab" href="{{ client_url }}{% if test_suffix %}?{{ test_suffix }}{% endif %}"{% if assignment_view == 'active' %} aria-current="page"{% endif %}>Рабочие <span class="view-tabs__count">{{ active_count ?? 0 }}</span></a>
+                <a class="view-tabs__tab" href="{{ client_url }}?status=archived{% if test_suffix %}&amp;{{ test_suffix }}{% endif %}"{% if assignment_view == 'archived' %} aria-current="page"{% endif %}>Архив <span class="view-tabs__count">{{ archived_count }}</span></a>
+                <a class="view-tabs__tab" href="{{ client_url }}?status=trash{% if test_suffix %}&amp;{{ test_suffix }}{% endif %}"{% if assignment_view == 'trash' %} aria-current="page"{% endif %}>Корзина <span class="view-tabs__count">{{ trashed_count }}</span></a>
             </nav>
         </div>
         <form method="get" action="{{ client_url }}" class="filter-bar" aria-label="Фильтр назначений" data-auto-submit>
@@ -78,6 +45,7 @@
                 {% if assignment_test %}<a class="filter-bar__reset" href="{{ client_url }}{% if assignment_view != 'active' %}?status={{ assignment_view }}{% endif %}">{{ ui.icon('close') }}Сбросить</a>{% endif %}
             </div>
         </form>
+        <p class="filter-counts" aria-live="polite">Показано: {{ assignments|length }}</p>
         {% if assignment_view == 'trash' %}
             <p class="owner-help">Через {{ trash_days }} дней кейсы из корзины удаляются окончательно. До этого их можно восстановить.</p>
         {% endif %}
@@ -115,6 +83,39 @@
                 </tbody>
             </table>
         {% else %}<p class="owner-help">{% if assignment_view == 'active' and not assignment_test %}Назначений пока нет.{% else %}Здесь ничего нет.{% endif %}</p>{% endif %}
+    </section>
+
+    <section class="owner-invites" aria-labelledby="owner-client-assign-title">
+        <h2 id="owner-client-assign-title">Новое назначение</h2>
+        <p class="owner-help">Ссылка действует 14 дней и открывается один раз. Отправьте её клиенту сами — платформа ничего не отправляет.</p>
+        {# form_key — одноразовый ключ этой отрисовки: двойное нажатие не создаёт
+           второе приглашение, повтор показывает ту же ссылку (07.K6b). #}
+        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/invites/create" class="owner-form" data-submit-once>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="form_key" value="{{ invite_form_key }}">
+            <label for="assignment-test">Методика</label>
+            <select id="assignment-test" name="test_id" required>
+                {% for test in invite_tests %}<option value="{{ test.id }}">{{ test.name }}</option>{% endfor %}
+            </select>
+            <label for="assignment-note">Заметка к назначению (не показывается клиенту)</label>
+            <textarea id="assignment-note" name="owner_note" maxlength="1000" rows="3"></textarea>
+            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">{{ ui.icon('plus') }}Создать назначение</button>
+        </form>
+    </section>
+
+    <section class="owner-invites" aria-labelledby="owner-client-edit-title">
+        <h2 id="owner-client-edit-title">Подпись, заметка и email</h2>
+        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/update" class="owner-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="client-label">Подпись клиента</label>
+            <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off" value="{{ client.label }}">
+            <label for="client-note">Заметка о работе</label>
+            <textarea id="client-note" name="note" maxlength="1000" rows="3">{{ client.note }}</textarea>
+            <label for="client-email">Email клиента (необязательно, только для уведомлений)</label>
+            <input id="client-email" name="email" type="email" maxlength="254" autocomplete="off" value="{{ client.email }}">
+            <p class="owner-help">Адрес нужен ровно для одного письма — «разбор готов». Платформа не отправляет его сама: письмо уходит только по вашей кнопке в карточке кейса. Очистите поле, чтобы удалить адрес.</p>
+            <button type="submit" class="btn btn-outline">Сохранить</button>
+        </form>
     </section>
 
     {% include 'blocks/owner-invite-dialog.twig' %}

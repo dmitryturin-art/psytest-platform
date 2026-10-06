@@ -238,6 +238,7 @@ final class OwnerController extends BaseController
         $filter = InviteFilter::fromQuery($_GET, $slugs);
         $archivedCount = count(array_filter($card['assignments'], static fn (array $a): bool => $a['trashed_at'] === null && $a['archived_at'] !== null));
         $trashedCount = count(array_filter($card['assignments'], static fn (array $a): bool => $a['trashed_at'] !== null));
+        $activeCount = count($card['assignments']) - $archivedCount - $trashedCount;
         // Рабочий вид — без архива и корзины; они открываются явным выбором.
         $view = in_array($filter->status, [InviteFilter::STATUS_ARCHIVED, InviteFilter::STATUS_TRASH], true)
             ? $filter->status
@@ -255,6 +256,7 @@ final class OwnerController extends BaseController
             'history' => $card['history'],
             'assignment_view' => $view,
             'assignment_test' => $filter->testSlug ?? '',
+            'active_count' => $activeCount,
             'archived_count' => $archivedCount,
             'trashed_count' => $trashedCount,
             'bulk_form_key' => $this->inviteBulk()->issueKey(),

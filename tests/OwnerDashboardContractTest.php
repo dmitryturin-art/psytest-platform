@@ -781,6 +781,10 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertMatchesRegularExpression('#href="/admin" aria-current="page">Рабочие <span class="view-tabs__count">2</span>#', $html);
         self::assertMatchesRegularExpression('#href="/admin\?status=archived">.*?Архив <span class="view-tabs__count">1</span>#', $html);
         self::assertMatchesRegularExpression('#href="/admin\?status=trash">.*?Корзина <span class="view-tabs__count">3</span>#', $html);
+        // В списке статусов нет архива и корзины: это вкладки, а не статус работы.
+        self::assertStringContainsString('<select id="filter-status" name="status">', $html);
+        self::assertStringNotContainsString('<option value="archived"', $html);
+        self::assertStringNotContainsString('<option value="trash"', $html);
         // Фильтры применяются сразу со скриптом; без него остаётся кнопка «Применить».
         self::assertStringContainsString('data-auto-submit', $html);
         self::assertStringContainsString('filter-bar__apply">Применить</button>', $html);
@@ -810,6 +814,10 @@ final class OwnerDashboardContractTest extends TestCase
         $trash = $render([$row('trash-1', 'claimed', 'completed', '11111111-1111-4111-8111-111111111111', [
             'trashed_at' => '2026-09-30 10:00:00', 'purge_at' => '2026-10-30 10:00:00',
         ])], 'trash');
+        // Набор переключают только вкладки: в корзине выбора статуса нет, вид держит скрытое поле.
+        self::assertStringNotContainsString('id="filter-status"', $trash);
+        self::assertStringContainsString('<input type="hidden" name="status" value="trash">', $trash);
+        self::assertMatchesRegularExpression('#href="/admin\?status=trash" aria-current="page">Корзина#', $trash);
         self::assertStringContainsString('formaction="/admin/invites/restore" name="invite_id" value="trash-1"', $trash);
         self::assertStringContainsString('formaction="/admin/invites/purge" name="invite_id" value="trash-1" data-confirm="purge"', $trash);
         self::assertStringContainsString('будет удалён 30.10.2026', $trash);
@@ -887,6 +895,17 @@ final class OwnerDashboardContractTest extends TestCase
         // Цвета — только переменные; единственное исключение — стрелка списка в data-URI.
         $withoutDataUri = (string) preg_replace('#url\("data:[^"]*"\)#', '', $css);
         self::assertDoesNotMatchRegularExpression('/#[0-9a-fA-F]{3,8}\b/', $withoutDataUri);
+
+        // Кнопки на всём сайте — прямоугольник 8 px с контуром 1 px (одобрено владельцем 06.10).
+        $main = (string) file_get_contents($this->projectRoot . '/public/css/main.css');
+        self::assertMatchesRegularExpression('/\n\.btn \{[^}]*border: 1px solid transparent;[^}]*border-radius: var\(--radius-sm\);/', $main);
+        self::assertMatchesRegularExpression('/\n\.btn-primary \{[^}]*background: var\(--color-accent-mist\);/', $main);
+
+        // Карточка клиента: сначала назначения, ниже — новая ссылка и правка карточки.
+        $client = (string) file_get_contents($this->projectRoot . '/templates/owner-client.twig');
+        $assignments = (int) strpos($client, 'owner-client-assignments-title');
+        self::assertLessThan((int) strpos($client, 'owner-client-assign-title'), $assignments);
+        self::assertLessThan((int) strpos($client, 'owner-client-edit-title'), $assignments);
 
         // Каждый значок, на который ссылаются шаблоны, есть в спрайте.
         $sprite = (string) file_get_contents($this->projectRoot . '/templates/blocks/icons.twig');

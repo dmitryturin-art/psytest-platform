@@ -1,8 +1,7 @@
-{# Метка состояния приглашения для кабинета (07.K8): статус работы плюс отметки архива и корзины. #}
+{# Метка состояния приглашения для кабинета (07.K8). Архив и корзину показывают вкладки списка (04.D2), поэтому отдельной отметки рядом нет. #}
 <span class="status status--{{ (invite.display_status ?: 'pending')|status_tone }}">{% if invite.display_status == 'completed' %}завершено
 {% elseif invite.display_status == 'opened' %}открыто
 {% elseif invite.display_status == 'revoked' %}отозвано
 {% elseif invite.display_status == 'expired' %}срок истёк
 {% elseif invite.display_status == 'result_deleted' %}результат удалён
 {% else %}ожидает открытия{% endif %}</span>
-{% if invite.trashed_at %}<span class="status-flag status-flag--trash">в корзине</span>{% elseif invite.archived_at %}<span class="status-flag">в архиве</span>{% endif %}

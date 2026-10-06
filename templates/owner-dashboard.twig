@@ -59,13 +59,18 @@
     </section>
 
     <section class="owner-invites" aria-labelledby="owner-invites-history-title">
+        {# Набор (вкладка) и уточняющие фильтры внутри него. «Сбросить» снимает фильтры,
+           но оставляет открытую вкладку. #}
+        {% set view_set = filter.status in ['archived', 'trash'] ? filter.status : 'active' %}
+        {% set view_url = basePath ~ '/admin' ~ (view_set != 'active' ? '?status=' ~ view_set : '') %}
+        {% set has_filters = filter.clientId or filter.withoutClient or filter.testSlug or filter.query != '' or filter.status not in ['active', 'archived', 'trash'] %}
         <div class="list-head">
             <h2 id="owner-invites-history-title">Приглашения</h2>
             {# Вид списка: рабочие, архив, корзина (07.K8). Счётчики — по всему кабинету. #}
             <nav class="view-tabs" aria-label="Вид списка">
                 <a class="view-tabs__tab" href="{{ basePath }}/admin"{% if filter.status not in ['archived', 'trash'] %} aria-current="page"{% endif %}>Рабочие <span class="view-tabs__count">{{ invite_counts.active ?? 0 }}</span></a>
-                <a class="view-tabs__tab" href="{{ basePath }}/admin?status=archived"{% if filter.status == 'archived' %} aria-current="page"{% endif %}>{{ ui.icon('archive') }}Архив <span class="view-tabs__count">{{ invite_counts.archived ?? 0 }}</span></a>
-                <a class="view-tabs__tab" href="{{ basePath }}/admin?status=trash"{% if filter.status == 'trash' %} aria-current="page"{% endif %}>{{ ui.icon('trash') }}Корзина <span class="view-tabs__count">{{ invite_counts.trash ?? 0 }}</span></a>
+                <a class="view-tabs__tab" href="{{ basePath }}/admin?status=archived"{% if filter.status == 'archived' %} aria-current="page"{% endif %}>Архив <span class="view-tabs__count">{{ invite_counts.archived ?? 0 }}</span></a>
+                <a class="view-tabs__tab" href="{{ basePath }}/admin?status=trash"{% if filter.status == 'trash' %} aria-current="page"{% endif %}>Корзина <span class="view-tabs__count">{{ invite_counts.trash ?? 0 }}</span></a>
             </nav>
         </div>
 
@@ -88,13 +93,19 @@
                     {% for test in invite_tests %}<option value="{{ test.slug }}"{% if filter.testSlug == test.slug %} selected{% endif %}>{{ test.name }}</option>{% endfor %}
                 </select>
             </div>
+            {# Архив и корзину переключают только вкладки выше. Внутри них статус работы
+               не выбирается: фильтр держит один набор, и вид сохраняется скрытым полем. #}
+            {% if filter.status in ['archived', 'trash'] %}
+                <input type="hidden" name="status" value="{{ filter.status }}">
+            {% else %}
             <div class="filter-bar__field">
                 <label for="filter-status" class="visually-hidden">Статус</label>
                 <select id="filter-status" name="status">
-                    {% set status_options = {'active': 'Все статусы', 'pending': 'Ожидает', 'opened': 'Открыто', 'completed': 'Завершено', 'revoked': 'Отозвано', 'expired': 'Срок истёк', 'archived': 'Архив', 'trash': 'Корзина'} %}
+                    {% set status_options = {'active': 'Все статусы', 'pending': 'Ожидает', 'opened': 'Открыто', 'completed': 'Завершено', 'revoked': 'Отозвано', 'expired': 'Срок истёк'} %}
                     {% for value, label in status_options %}<option value="{{ value }}"{% if filter.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
                 </select>
             </div>
+            {% endif %}
             <div class="filter-bar__field filter-bar__search">
                 <label for="filter-q" class="visually-hidden">Поиск по заметке и клиенту</label>
                 {{ ui.icon('search') }}
@@ -102,7 +113,7 @@
             </div>
             <div class="filter-bar__actions">
                 <button type="submit" class="btn btn-outline btn-sm filter-bar__apply">Применить</button>
-                {% if not filter.isDefault %}<a class="filter-bar__reset" href="{{ basePath }}/admin">{{ ui.icon('close') }}Сбросить</a>{% endif %}
+                {% if has_filters %}<a class="filter-bar__reset" href="{{ view_url }}">{{ ui.icon('close') }}Сбросить</a>{% endif %}
             </div>
         </form>
         <p class="filter-counts" aria-live="polite">Показано: {{ invites|length }}</p>
@@ -167,8 +178,10 @@
                     <button type="button" class="btn btn-ghost btn-sm" data-bulk-clear hidden>{{ ui.icon('close') }}Снять выбор</button>
                 </div>
             </div>
-        {% elseif filter.isDefault %}<p class="owner-help">Приглашений пока нет. Создайте первую ссылку выше.</p>
-        {% else %}<p class="owner-help">По этим условиям ничего не найдено. <a href="{{ basePath }}/admin">Сбросить фильтры</a></p>{% endif %}
+        {% elseif has_filters %}<p class="owner-help">По этим условиям ничего не найдено. <a href="{{ view_url }}">Сбросить фильтры</a></p>
+        {% elseif view_set == 'archived' %}<p class="owner-help">В архиве пусто.</p>
+        {% elseif view_set == 'trash' %}<p class="owner-help">Корзина пуста.</p>
+        {% else %}<p class="owner-help">Приглашений пока нет. Создайте первую ссылку выше.</p>{% endif %}
     </section>
 
     {% include 'blocks/owner-invite-dialog.twig' %}
