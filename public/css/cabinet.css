@@ -209,15 +209,28 @@
     transition: border-color 0.15s;
 }
 
-.filter-bar select {
+/* Выпадающий список кабинета — один вид везде: фильтры, формы, диалоги.
+   Своя стрелка с отступом от края вместо системной (в Chrome она прилипает к рамке). */
+.owner-dashboard-page select {
     appearance: none;
     -webkit-appearance: none;
+    padding-right: 2.25rem;
     text-overflow: ellipsis;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%235e574f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 0.625rem center;
+    background-position: right 0.75rem center;
     background-size: 0.75rem;
     cursor: pointer;
+}
+
+.owner-dashboard-page select:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.filter-bar select {
+    padding-right: 2rem;
+    background-position: right 0.625rem center;
 }
 
 .filter-bar input[type="search"] {
