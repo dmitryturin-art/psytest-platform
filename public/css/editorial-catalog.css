@@ -1,16 +1,18 @@
-/* Public landing and catalog — direction A: warm editorial. */
+/* Публичная главная и каталог. Свои имена переменных сохранены, но значения
+   берутся из общей системы main.css (04.D1): та же бумага, акцент и антиква,
+   что в результате и кабинете. */
 :root {
-    --editorial-ink: #251f21;
-    --editorial-muted: #6e6365;
-    --editorial-paper: #f5efe8;
-    --editorial-surface: #fffaf4;
-    --editorial-line: #d7c9bd;
-    --editorial-accent: #793f4c;
-    --editorial-accent-dark: #5f2d39;
-    --editorial-accent-soft: #ead3d6;
-    --editorial-positive: #376b58;
-    --editorial-display: Georgia, "Times New Roman", serif;
-    --editorial-shadow: 0 18px 50px rgba(56, 38, 40, 0.1);
+    --editorial-ink: var(--color-text);
+    --editorial-muted: var(--color-text-light);
+    --editorial-paper: var(--color-bg);
+    --editorial-surface: var(--color-bg-soft);
+    --editorial-line: var(--color-border);
+    --editorial-accent: var(--color-primary);
+    --editorial-accent-dark: var(--color-primary-dark);
+    --editorial-accent-soft: var(--color-primary-tint);
+    --editorial-positive: var(--color-primary-dark);
+    --editorial-display: var(--font-serif);
+    --editorial-shadow: var(--shadow-lg);
 }
 
 .editorial-home-page,
@@ -58,11 +60,12 @@
 .tests-list-page .editorial-page-heading h1 { font-size: clamp(2.25rem, 4vw, 4rem); }
 .editorial-hero__lead { max-width: 43rem; margin: 1.8rem 0 0; color: var(--editorial-muted); font-size: clamp(1.08rem, 1.6vw, 1.3rem); }
 .editorial-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
-.editorial-button { display: inline-flex; min-height: 3.1rem; align-items: center; justify-content: center; padding: 0 1.4rem; border: 1px solid transparent; border-radius: 0.625rem; font-weight: 750; text-decoration: none; transition: transform 0.2s, background 0.2s; }
-.editorial-button:hover { transform: translateY(-2px); }
-.editorial-button--primary { color: #fff; background: var(--editorial-accent); }
-.editorial-button--primary:hover { background: var(--editorial-accent-dark); }
-.editorial-button--secondary { color: var(--editorial-ink); border-color: var(--editorial-line); background: var(--editorial-surface); }
+.editorial-button { display: inline-flex; min-height: 3.1rem; align-items: center; justify-content: center; padding: 0 1.6rem; border: 2px solid transparent; border-radius: var(--radius-full); font-weight: 600; text-decoration: none; transition: background-color 0.15s, color 0.15s; }
+.editorial-button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.editorial-button--primary { color: var(--color-bg-white); background: var(--editorial-accent); border-color: var(--editorial-accent); }
+.editorial-button--primary:hover { background: var(--editorial-accent-dark); border-color: var(--editorial-accent-dark); }
+.editorial-button--secondary { color: var(--color-primary-dark); border-color: var(--editorial-accent); background: var(--color-bg-white); }
+.editorial-button--secondary:hover { background: var(--color-primary-tint); }
 .editorial-trust-list { display: flex; flex-wrap: wrap; gap: 0.65rem 1.5rem; margin: 2rem 0 0; padding: 0; color: var(--editorial-muted); font-size: 0.84rem; list-style: none; }
 .editorial-trust-list li::before { margin-right: 0.45rem; color: var(--editorial-positive); content: "✓"; font-weight: 900; }
 
