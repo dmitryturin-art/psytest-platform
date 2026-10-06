@@ -215,6 +215,101 @@ final class TestInviteService
             : self::DELETE_REFUSED;
     }
 
+    /**
+     * Приглашение и его текущий клиент для проверки перед привязкой (07.K9).
+     *
+     * @return array{id: string, client_id: ?string, client_label: ?string, claimed_session_id: ?string}|null
+     */
+    public function clientOfInvite(string $inviteId): ?array
+    {
+        $row = $this->db->selectOne(
+            'SELECT invites.id, invites.client_id, invites.claimed_session_id, clients.label AS client_label
+             FROM test_invites AS invites
+             LEFT JOIN therapist_clients AS clients ON clients.id = invites.client_id
+             WHERE invites.id = :id',
+            ['id' => $inviteId],
+        );
+        if ($row === null) {
+            return null;
+        }
+
+        return [
+            'id' => (string) $row['id'],
+            'client_id' => $row['client_id'] === null ? null : (string) $row['client_id'],
+            'client_label' => $row['client_label'] === null ? null : (string) $row['client_label'],
+            'claimed_session_id' => $row['claimed_session_id'] === null ? null : (string) $row['claimed_session_id'],
+        ];
+    }
+
+    public const ATTACH_DONE = 'attached';
+    public const ATTACH_CHANGED = 'changed';
+    public const ATTACH_UNCHANGED = 'unchanged';
+    public const ATTACH_MISSING = 'missing';
+    public const ATTACH_REFUSED = 'refused';
+
+    /**
+     * Привязывает приглашение (а с ним кейс) к карточке клиента или меняет клиента (07.K9).
+     *
+     * Работает для любой строки: ожидающей, открытой, завершённой, просроченной,
+     * отозванной, из архива и из корзины. Токен, сессия, результат, разборы и
+     * срок хранения не затрагиваются: меняется только `client_id`.
+     *
+     * Клиент — существующая карточка (`$clientId`) либо, при `$clientId === null`
+     * и непустой подписи, новая карточка с теми же проверками, что на странице
+     * «Клиенты»; карточка и привязка создаются одной транзакцией. Повторная
+     * привязка к тому же клиенту ничего не пишет. Первая привязка и смена клиента
+     * попадают в журнал владельца без имён и идентификаторов.
+     *
+     * @return self::ATTACH_*
+     */
+    public function attachClient(string $inviteId, ?string $clientId, string $newClientLabel = ''): string
+    {
+        $invite = $this->db->selectOne('SELECT id, client_id FROM test_invites WHERE id = :id', ['id' => $inviteId]);
+        if ($invite === null) {
+            return self::ATTACH_MISSING;
+        }
+        if ($clientId !== null) {
+            if ($this->db->selectOne('SELECT id FROM therapist_clients WHERE id = :id', ['id' => $clientId]) === null) {
+                return self::ATTACH_REFUSED;
+            }
+        } elseif (!TherapistClientService::isValidInput($newClientLabel, '')) {
+            return self::ATTACH_REFUSED;
+        }
+        $previous = $invite['client_id'] === null ? null : (string) $invite['client_id'];
+        if ($clientId !== null && $previous === $clientId) {
+            return self::ATTACH_UNCHANGED;
+        }
+
+        $this->db->beginTransaction();
+        try {
+            if ($clientId === null) {
+                $clientId = Uuid::uuid4()->toString();
+                $this->db->insert('therapist_clients', [
+                    'id' => $clientId,
+                    'label' => trim($newClientLabel),
+                    'note' => null,
+                    'email' => null,
+                ]);
+            }
+            $this->db->update('test_invites', ['client_id' => $clientId], 'id = ?', [$inviteId]);
+            $this->db->insert('activity_log', [
+                'session_id' => null,
+                'test_id' => null,
+                'action' => $previous === null ? 'invite_client_attached' : 'invite_client_changed',
+                'details' => json_encode(['actor' => 'owner'], JSON_THROW_ON_ERROR),
+            ]);
+            $this->db->commit();
+        } catch (\Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+
+            throw $exception;
+        }
+
+        return $previous === null ? self::ATTACH_DONE : self::ATTACH_CHANGED;
+    }
+
     /** Через сколько дней корзина стирается окончательно (07.K8). */
     public const TRASH_RETENTION_DAYS = 30;
 
