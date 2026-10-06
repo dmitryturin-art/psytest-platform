@@ -46,6 +46,21 @@
     {% if case.pair %}
         <p class="owner-case-pair-badge">Парное прохождение · этот кейс — {{ case.pair.label }}</p>
     {% endif %}
+    {% if trashed ?? false %}
+        {# Кейс в корзине (07.K8): только чтение до восстановления. #}
+        <div class="owner-notice owner-notice--error owner-trash-banner" role="status">
+            <p><strong>В корзине, будет удалён {{ case.purge_at|date("d.m.Y") }}.</strong> Заказ и правка разборов недоступны. Клиентская страница результата продолжает работать до окончательного удаления.</p>
+            <form method="post" action="{{ basePath }}/admin/invites/restore" class="owner-action-form" data-submit-once>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="form_key" value="{{ bulk_form_key }}">
+                <input type="hidden" name="return" value="/admin/invited-case/{{ case.id }}">
+                <input type="hidden" name="invite_ids[]" value="{{ case.invite_id }}">
+                <button type="submit" class="btn btn-primary" data-busy-text="Восстанавливаем…">Восстановить</button>
+            </form>
+        </div>
+    {% elseif case.archived_at ?? false %}
+        <p class="owner-help">Кейс в архиве. Это только пометка в списке: для клиента ничего не изменилось.</p>
+    {% endif %}
     {# Заказ черновиков отвечает якорем на раздел «ИИ-разбор»: флеш показывается
        там же, рядом с кнопкой. Наверх он попадает только когда раздела нет. #}
     {% set aiSectionShown = case.completed_at and ai.available %}
@@ -126,7 +141,7 @@
         {% endif %}
     </section>
 
-    {% if case.completed_at and not ai.available %}
+    {% if case.completed_at and not ai.available and not (trashed ?? false) %}
     <section class="owner-case-ai" aria-labelledby="owner-case-ai-title">
         <h2 id="owner-case-ai-title">ИИ-разбор</h2>
         <p class="owner-help">Для этой методики расширенный разбор пока не настроен: опубликованных промптов нет. Сейчас разбор доступен для Лазаруса и СМИЛ.</p>

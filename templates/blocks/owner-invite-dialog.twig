@@ -1,0 +1,25 @@
+{# Один диалог подтверждения на страницу (07.K8). Тексты берёт скрипт из
+   шаблонов ниже по data-confirm кнопки; без JS кнопки ведут на страницу
+   подтверждения, так что одиночный клик ничего не удаляет. #}
+<dialog class="owner-dialog" id="owner-invite-dialog" aria-labelledby="owner-dialog-title">
+    <form method="dialog" class="owner-dialog__body">
+        <h2 id="owner-dialog-title" data-dialog-title></h2>
+        <p data-dialog-selected></p>
+        <p data-dialog-text></p>
+        <label class="owner-dialog__check" data-dialog-check hidden><input type="checkbox" data-dialog-check-input> Я понимаю, что удаление необратимо.</label>
+        <div class="owner-dialog__actions">
+            <button type="submit" value="cancel" class="btn btn-outline">Отмена</button>
+            <button type="submit" value="confirm" class="btn btn-danger" data-dialog-confirm></button>
+        </div>
+    </form>
+    <template data-dialog-template="trash">
+        <span data-title>Переместить в корзину?</span>
+        <span data-text>Кейс переместится в корзину и будет окончательно удалён через {{ trash_days }} дней: ответы, результат, разборы и их версии, выгрузки. Карточка клиента останется. До этого его можно восстановить.</span>
+        <span data-confirm-label>В корзину</span>
+    </template>
+    <template data-dialog-template="purge">
+        <span data-title>Удалить окончательно?</span>
+        <span data-text>Ответы, результат, разборы и их версии, выгрузки и заметка будут стёрты без возможности восстановления. Карточка клиента останется.</span>
+        <span data-confirm-label>Удалить сейчас</span>
+    </template>
+</dialog>

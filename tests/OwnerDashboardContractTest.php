@@ -739,4 +739,122 @@ final class OwnerDashboardContractTest extends TestCase
         );
         self::assertStringContainsString('data-busy-text="Удаляем…">Удалить</button>', $html);
     }
+
+    /**
+     * Архив, корзина и фильтры (07.K8): пять POST-маршрутов, список-таблица с
+     * общей формой действий, подтверждение без JavaScript и скрипт-улучшение.
+     */
+    public function testInviteArchiveTrashRoutesAndTableMarkup(): void
+    {
+        $routes = (string) file_get_contents($this->projectRoot . '/public/index.php');
+        foreach (['archive' => 'archiveInvites', 'unarchive' => 'unarchiveInvites', 'trash' => 'trashInvites', 'restore' => 'restoreInvites', 'purge' => 'purgeInvites'] as $path => $method) {
+            self::assertStringContainsString("\$router->post('/admin/invites/{$path}', [OwnerController::class, '{$method}'])", $routes);
+        }
+
+        $twig = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($this->projectRoot . '/templates'), ['cache' => false]);
+        \PsyTest\Core\TemplateFunctions::register($twig);
+        $row = static fn (string $id, string $status, string $display, ?string $session, array $extra = []): array => $extra + [
+            'id' => $id, 'status' => $status, 'display_status' => $display, 'claimed_session_id' => $session,
+            'test_name' => 'Методика ' . $id, 'test_slug' => 'bdi', 'created_at' => '2026-09-27 10:00:00', 'owner_note' => null,
+            'client_label' => null, 'client_id' => null, 'archived_at' => null, 'trashed_at' => null, 'purge_at' => null,
+        ];
+        $render = fn (array $invites, string $status = 'active') => $twig->render('owner-dashboard.twig', [
+            'appName' => 'PsyTest', 'basePath' => '', 'csrf_token' => 'synthetic-csrf',
+            'invites' => $invites, 'invite_tests' => [['id' => 1, 'slug' => 'bdi', 'name' => 'BDI']],
+            'clients' => [['id' => '11111111-1111-4111-8111-111111111111', 'label' => 'Клиент']],
+            'filter' => \PsyTest\Core\InviteFilter::fromQuery(['status' => $status], ['bdi']),
+            'filter_url' => $status === 'active' ? '/admin' : '/admin?status=' . $status,
+            'invite_counts' => ['active' => 2, 'archived' => 1, 'trash' => 3],
+            'invite_form_key' => 'k', 'bulk_form_key' => 'bulk-key', 'trash_days' => 30,
+        ]);
+
+        $html = $render([
+            $row('pending-1', 'pending', 'pending', null),
+            $row('done-1', 'claimed', 'completed', '11111111-1111-4111-8111-111111111111'),
+        ]);
+        // Фильтры — GET-форма, счётчики на месте.
+        self::assertStringContainsString('<form method="get" action="/admin" class="filter-bar"', $html);
+        foreach (['name="client"', 'name="test"', 'name="status"', 'name="q"'] as $field) {
+            self::assertStringContainsString($field, $html);
+        }
+        self::assertStringContainsString('в архиве: 1', $html);
+        self::assertStringContainsString('в корзине: 3', $html);
+        // Общая форма действий несёт CSRF, одноразовый ключ и адрес возврата.
+        self::assertMatchesRegularExpression(
+            '#id="invite-bulk-form" class="invite-bulk-form" data-bulk-form>\s*<input type="hidden" name="csrf_token" value="synthetic-csrf">\s*<input type="hidden" name="form_key" value="bulk-key">\s*<input type="hidden" name="return" value="/admin">#',
+            $html,
+        );
+        // Ожидающее приглашение: «Отозвать», но не архив и не корзина; завершённое — наоборот.
+        self::assertSame(1, substr_count($html, 'action="/admin/invites/revoke"'));
+        self::assertSame(1, substr_count($html, 'name="invite_id" value="done-1" data-confirm="trash"'));
+        self::assertStringNotContainsString('value="pending-1" data-confirm', $html);
+        self::assertStringContainsString('formaction="/admin/invites/archive" name="invite_id" value="done-1"', $html);
+        self::assertStringContainsString('name="invite_ids[]" value="done-1" form="invite-bulk-form"', $html);
+        self::assertStringContainsString('<dialog class="owner-dialog" id="owner-invite-dialog"', $html);
+        self::assertStringContainsString('js/owner-invites.js', $html);
+        // Диалог называет последствия: срок, состав удаляемого и сохранность карточки клиента.
+        self::assertStringContainsString('окончательно удалён через 30 дней: ответы, результат, разборы и их версии, выгрузки. Карточка клиента останется. До этого его можно восстановить.', $html);
+
+        // Корзина: «Восстановить» и «Удалить сейчас», дата удаления, ссылка на кейс остаётся.
+        $trash = $render([$row('trash-1', 'claimed', 'completed', '11111111-1111-4111-8111-111111111111', [
+            'trashed_at' => '2026-09-30 10:00:00', 'purge_at' => '2026-10-30 10:00:00',
+        ])], 'trash');
+        self::assertStringContainsString('formaction="/admin/invites/restore" name="invite_id" value="trash-1"', $trash);
+        self::assertStringContainsString('formaction="/admin/invites/purge" name="invite_id" value="trash-1" data-confirm="purge"', $trash);
+        self::assertStringContainsString('будет удалён 30.10.2026', $trash);
+        self::assertStringContainsString('/admin/invited-case/11111111-1111-4111-8111-111111111111', $trash);
+        self::assertStringNotContainsString('name="invite_id" value="trash-1" data-confirm="trash"', $trash);
+
+        // Отозванное неоткрытое: мгновенное «Удалить» остаётся, корзины нет.
+        $revoked = $render([$row('revoked-1', 'revoked', 'revoked', null)]);
+        self::assertSame(1, substr_count($revoked, 'action="/admin/invites/delete"'));
+        self::assertStringNotContainsString('value="revoked-1" data-confirm="trash"', $revoked);
+    }
+
+    public function testTrashAndPurgeNeverRunFromASingleClickWithoutConfirmation(): void
+    {
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        $body = substr($controller, (int) strpos($controller, 'private function bulkInviteAction('));
+        $body = substr($body, 0, (int) strpos($body, 'public function viewInvitedCase('));
+        self::assertStringContainsString('$this->requireOwner()', $body);
+        self::assertStringContainsString('in_array($action, OwnerInviteBulkAction::CONFIRMED_ACTIONS, true)', $body);
+        self::assertStringContainsString("(\$post['confirmed'] ?? null) !== '1'", $body);
+        self::assertStringContainsString("'owner-invites-confirm'", $body);
+        self::assertStringContainsString('OwnerInviteBulkAction::safeReturn(', $body);
+        self::assertSame(['trash', 'purge'], \PsyTest\Core\OwnerInviteBulkAction::CONFIRMED_ACTIONS);
+
+        $confirm = (string) file_get_contents($this->projectRoot . '/templates/owner-invites-confirm.twig');
+        self::assertStringContainsString('name="confirmed" value="1"', $confirm);
+        self::assertStringContainsString('name="csrf_token"', $confirm);
+        self::assertStringContainsString('name="form_key"', $confirm);
+        self::assertStringContainsString('name="confirm_delete" value="delete" required', $confirm);
+
+        // Диалог — только улучшение: скрипт сам ставит подтверждение, сервер его требует.
+        $script = (string) file_get_contents($this->projectRoot . '/public/js/owner-invites.js');
+        self::assertStringContainsString("confirmedField.value = '1'", $script);
+        self::assertStringContainsString('requestSubmit(button)', $script);
+    }
+
+    public function testCasePageIsReadOnlyInTheTrashAndOffersRestore(): void
+    {
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        self::assertStringContainsString("if (\$writable && \$case['trashed_at'] !== null)", $controller);
+        // Заказ черновиков, уведомление и все правки отчёта идут через проверку записи.
+        self::assertSame(3, substr_count($controller, '$this->ownedCase($sessionId, true)'));
+        self::assertStringContainsString('private function editableReport(', $controller);
+
+        $template = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        self::assertStringContainsString('В корзине, будет удалён {{ case.purge_at|date("d.m.Y") }}', $template);
+        self::assertStringContainsString('action="{{ basePath }}/admin/invites/restore"', $template);
+    }
+
+    public function testCleanupCronPurgesTheTrash(): void
+    {
+        $cron = (string) file_get_contents($this->projectRoot . '/bin/cleanup-sessions.php');
+        self::assertStringContainsString('purgeTrash(', $cron);
+        self::assertStringContainsString('TestInviteService::TRASH_RETENTION_DAYS', $cron);
+        self::assertStringContainsString("'invites_purged'", $cron);
+        self::assertStringContainsString("'cases_purged'", $cron);
+        self::assertSame(30, \PsyTest\Core\TestInviteService::TRASH_RETENTION_DAYS);
+    }
 }

@@ -1,0 +1,18 @@
+{# Кнопки архива и корзины одной строки (07.K8). Все они — кнопки общей формы
+   `bulk_form_id`: одиночный `invite_id` главнее отмеченных галочек. «В корзину» и
+   «Удалить сейчас» без JS приводят на страницу подтверждения, а не выполняются
+   сразу; с JS их перехватывает диалог (data-confirm). #}
+{% set bulk_form_id = bulk_form_id ?? 'invite-bulk-form' %}
+{% if invite.trashed_at %}
+    <button type="submit" class="btn btn-outline btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/restore" name="invite_id" value="{{ invite.id }}">Восстановить</button>
+    <button type="submit" class="btn btn-danger btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/purge" name="invite_id" value="{{ invite.id }}" data-confirm="purge">Удалить сейчас</button>
+{% elseif invite.status != 'pending' or invite.display_status == 'expired' %}
+    {% if invite.archived_at %}
+        <button type="submit" class="btn btn-outline btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/unarchive" name="invite_id" value="{{ invite.id }}">Из архива</button>
+    {% else %}
+        <button type="submit" class="btn btn-outline btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/archive" name="invite_id" value="{{ invite.id }}">В архив</button>
+    {% endif %}
+    {% if not (hide_trash ?? false) %}
+        <button type="submit" class="btn btn-danger btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/trash" name="invite_id" value="{{ invite.id }}" data-confirm="trash">В корзину</button>
+    {% endif %}
+{% endif %}
