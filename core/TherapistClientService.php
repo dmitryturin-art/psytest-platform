@@ -87,19 +87,44 @@ final class TherapistClientService
         return true;
     }
 
-    /** @return list<array<string, mixed>> */
-    public function listForOwner(int $limit = 100): array
+    /**
+     * Список карточек. Корзина в счётчики не входит: кейс в корзине уже
+     * «удалён» с точки зрения владельца (07.K8).
+     *
+     * @param string $search Часть подписи карточки (без учёта регистра).
+     * @param string|null $testSlug Только клиенты, у которых есть назначение этой методики.
+     * @return list<array<string, mixed>>
+     */
+    public function listForOwner(int $limit = 100, string $search = '', ?string $testSlug = null): array
     {
+        $where = [];
+        $params = [];
+        $search = trim($search);
+        if ($search !== '') {
+            $where[] = "clients.label LIKE :search ESCAPE '!'";
+            $params['search'] = '%' . InviteFilter::escapeLike($search) . '%';
+        }
+        if ($testSlug !== null && $testSlug !== '') {
+            $where[] = 'EXISTS (SELECT 1 FROM test_invites AS own
+                                INNER JOIN tests AS own_tests ON own_tests.id = own.test_id
+                                WHERE own.client_id = clients.id AND own.trashed_at IS NULL
+                                  AND own_tests.slug = :test_slug)';
+            $params['test_slug'] = $testSlug;
+        }
+        $whereSql = $where === [] ? '' : 'WHERE ' . implode(' AND ', $where);
+
         return $this->db->select(
             "SELECT clients.id, clients.label, clients.note, clients.created_at, clients.updated_at,
                     COUNT(invites.id) AS assignment_count,
                     SUM(CASE WHEN sessions.status = 'completed' THEN 1 ELSE 0 END) AS completed_count
              FROM therapist_clients AS clients
-             LEFT JOIN test_invites AS invites ON invites.client_id = clients.id
+             LEFT JOIN test_invites AS invites ON invites.client_id = clients.id AND invites.trashed_at IS NULL
              LEFT JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
+             {$whereSql}
              GROUP BY clients.id, clients.label, clients.note, clients.created_at, clients.updated_at
              ORDER BY clients.created_at DESC
              LIMIT " . max(1, min($limit, 200)),
+            $params,
         );
     }
 
@@ -118,21 +143,23 @@ final class TherapistClientService
             return null;
         }
 
-        $assignments = TestInviteService::withDisplayStatus($this->db->select(
+        $assignments = TestInviteService::withDisplayStatus(TestInviteService::withPurgeDate($this->db->select(
             'SELECT invites.id, invites.owner_note, invites.status, invites.created_at, invites.expires_at,
                     invites.claimed_at, invites.claimed_session_id,
-                    tests.name AS test_name, sessions.status AS session_status, sessions.completed_at
+                    invites.archived_at, invites.trashed_at,
+                    tests.name AS test_name, tests.slug AS test_slug, sessions.status AS session_status, sessions.completed_at
              FROM test_invites AS invites
              INNER JOIN tests ON tests.id = invites.test_id
              LEFT JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
              WHERE invites.client_id = :client_id
              ORDER BY invites.created_at DESC',
             ['client_id' => $id],
-        ));
+        )));
 
         $history = array_values(array_filter(
             $assignments,
-            static fn (array $assignment): bool => $assignment['display_status'] === 'completed',
+            static fn (array $assignment): bool => $assignment['display_status'] === 'completed'
+                && $assignment['trashed_at'] === null,
         ));
         usort(
             $history,

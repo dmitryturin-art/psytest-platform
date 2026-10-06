@@ -215,23 +215,142 @@ final class TestInviteService
             : self::DELETE_REFUSED;
     }
 
+    /** Через сколько дней корзина стирается окончательно (07.K8). */
+    public const TRASH_RETENTION_DAYS = 30;
+
     /** @return list<array<string, mixed>> */
     public function recentForOwner(int $limit = 20): array
     {
+        return $this->listForOwner(InviteFilter::none(), $limit);
+    }
+
+    /**
+     * Список приглашений владельца по фильтру (07.K8).
+     *
+     * Без фильтра по статусу архив и корзина скрыты: они открываются только
+     * явным выбором. Строки корзины получают `purge_at` — дату окончательного
+     * удаления.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listForOwner(InviteFilter $filter, int $limit = 100): array
+    {
+        [$where, $params] = $filter->toSql();
         $invites = $this->db->select(
             "SELECT invites.id, invites.owner_note, invites.status, invites.created_at, invites.expires_at,
                     invites.claimed_at, invites.claimed_session_id, invites.client_id,
-                    tests.name AS test_name, sessions.status AS session_status, sessions.completed_at,
+                    invites.archived_at, invites.trashed_at,
+                    tests.name AS test_name, tests.slug AS test_slug,
+                    sessions.status AS session_status, sessions.completed_at,
                     clients.label AS client_label
              FROM test_invites AS invites
              INNER JOIN tests ON tests.id = invites.test_id
              LEFT JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
              LEFT JOIN therapist_clients AS clients ON clients.id = invites.client_id
+             WHERE {$where}
              ORDER BY invites.created_at DESC
-            LIMIT " . max(1, min($limit, 50)),
+             LIMIT " . max(1, min($limit, 200)),
+            $params,
         );
 
-        return self::withDisplayStatus($invites);
+        return self::withDisplayStatus(self::withPurgeDate($invites));
+    }
+
+    /**
+     * Добавляет `purge_at` — дату окончательного удаления строки из корзины.
+     *
+     * @param list<array<string, mixed>> $invites
+     * @return list<array<string, mixed>>
+     */
+    public static function withPurgeDate(array $invites): array
+    {
+        foreach ($invites as &$invite) {
+            $invite['purge_at'] = ($invite['trashed_at'] ?? null) === null
+                ? null
+                : (new DateTimeImmutable((string) $invite['trashed_at']))
+                    ->modify('+' . self::TRASH_RETENTION_DAYS . ' days')
+                    ->format('Y-m-d H:i:s');
+        }
+        unset($invite);
+
+        return $invites;
+    }
+
+    /**
+     * Сколько приглашений в рабочем списке, архиве и корзине.
+     *
+     * @return array{active: int, archived: int, trash: int}
+     */
+    public function countsForOwner(): array
+    {
+        $row = $this->db->selectOne(
+            'SELECT SUM(trashed_at IS NULL AND archived_at IS NULL) AS active,
+                    SUM(trashed_at IS NULL AND archived_at IS NOT NULL) AS archived,
+                    SUM(trashed_at IS NOT NULL) AS trash
+             FROM test_invites',
+        ) ?? [];
+
+        return [
+            'active' => (int) ($row['active'] ?? 0),
+            'archived' => (int) ($row['archived'] ?? 0),
+            'trash' => (int) ($row['trash'] ?? 0),
+        ];
+    }
+
+    /**
+     * В архив: только то, что не ждёт открытия по живой ссылке. Ожидающее
+     * приглашение сначала отзывается. Повтор по уже заархивированному — 0.
+     *
+     * @param list<string> $ids
+     */
+    public function archive(array $ids): int
+    {
+        return $this->mark($ids, "archived_at = NOW()", 'trashed_at IS NULL AND archived_at IS NULL AND ' . self::NOT_LIVE_PENDING);
+    }
+
+    /** @param list<string> $ids */
+    public function unarchive(array $ids): int
+    {
+        return $this->mark($ids, 'archived_at = NULL', 'trashed_at IS NULL AND archived_at IS NOT NULL');
+    }
+
+    /**
+     * В корзину: мягкое удаление, данные остаются до очистки. Отметка архива
+     * снимается, чтобы восстановление возвращало строку в рабочий список.
+     *
+     * @param list<string> $ids
+     */
+    public function trash(array $ids): int
+    {
+        return $this->mark($ids, 'trashed_at = NOW(), archived_at = NULL', 'trashed_at IS NULL AND ' . self::NOT_LIVE_PENDING);
+    }
+
+    /** @param list<string> $ids */
+    public function restore(array $ids): int
+    {
+        return $this->mark($ids, 'trashed_at = NULL', 'trashed_at IS NOT NULL');
+    }
+
+    /** Ожидающее приглашение с живой ссылкой нельзя ни архивировать, ни убрать в корзину. */
+    private const NOT_LIVE_PENDING = "NOT (status = 'pending' AND expires_at > NOW())";
+
+    /**
+     * @param list<string> $ids
+     * @param string $set Фиксированный фрагмент `SET`, не из пользовательского ввода.
+     * @param string $guard Фиксированное условие допустимого исходного состояния.
+     */
+    private function mark(array $ids, string $set, string $guard): int
+    {
+        $ids = array_values(array_unique(array_filter($ids, Security::isValidUuid(...))));
+        if ($ids === []) {
+            return 0;
+        }
+        $marks = implode(', ', array_fill(0, count($ids), '?'));
+
+        return $this->db->execute(
+            "UPDATE test_invites SET {$set} WHERE id IN ({$marks}) AND {$guard}",
+            $ids,
+        )->rowCount();
     }
 
     /**
@@ -269,7 +388,8 @@ final class TestInviteService
         $case = $this->db->selectOne(
             "SELECT sessions.id, sessions.status, sessions.created_at, sessions.completed_at,
                     sessions.answers, sessions.calculated_results, tests.name AS test_name, tests.slug AS test_slug,
-                    invites.owner_note, invites.claimed_at, invites.client_id, clients.label AS client_label
+                    invites.owner_note, invites.claimed_at, invites.client_id, clients.label AS client_label,
+                    invites.id AS invite_id, invites.archived_at, invites.trashed_at
              FROM test_invites AS invites
              INNER JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
              INNER JOIN tests ON tests.id = sessions.test_id
@@ -282,6 +402,11 @@ final class TestInviteService
             return null;
         }
 
+        $case['purge_at'] = $case['trashed_at'] === null
+            ? null
+            : (new DateTimeImmutable((string) $case['trashed_at']))
+                ->modify('+' . self::TRASH_RETENTION_DAYS . ' days')
+                ->format('Y-m-d H:i:s');
         $case['answers'] = json_decode((string) $case['answers'], true, 512, JSON_THROW_ON_ERROR);
         $case['calculated_results'] = json_decode((string) $case['calculated_results'], true, 512, JSON_THROW_ON_ERROR);
 

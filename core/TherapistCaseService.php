@@ -164,6 +164,90 @@ final class TherapistCaseService
         return true;
     }
 
+    public const PURGE_DONE = 'purged';
+    public const PURGE_MISSING = 'missing';
+    public const PURGE_REFUSED = 'refused';
+
+    /**
+     * Окончательно удаляет приглашение из корзины (07.K8).
+     *
+     * Из корзины, и только из неё: строка вне корзины остаётся нетронутой, так
+     * что «Удалить сейчас» нельзя применить к рабочему кейсу ни гонкой, ни
+     * подделкой формы. С кейсом уходит всё, что уходит при ручном удалении:
+     * ответы, результат, разборы и их версии, выгрузки, заметка. Карточка
+     * клиента остаётся. Повтор по уже удалённой строке — `PURGE_MISSING`.
+     *
+     * @return self::PURGE_*
+     */
+    public function purgeTrashed(string $inviteId): string
+    {
+        $invite = $this->db->selectOne(
+            'SELECT id, claimed_session_id, trashed_at FROM test_invites WHERE id = :id',
+            ['id' => $inviteId],
+        );
+        if ($invite === null) {
+            return self::PURGE_MISSING;
+        }
+        if ($invite['trashed_at'] === null) {
+            return self::PURGE_REFUSED;
+        }
+
+        $this->purgeRow($invite);
+
+        return self::PURGE_DONE;
+    }
+
+    /**
+     * Стирает всё, что пролежало в корзине дольше порога (ежедневная очистка).
+     *
+     * Один сбойный кейс не останавливает остальные: исключение гасится, а кейс
+     * остаётся в корзине до следующего запуска.
+     *
+     * @return array{invites: int, cases: int, failed: int}
+     */
+    public function purgeTrash(\DateTimeImmutable $olderThan): array
+    {
+        $rows = $this->db->select(
+            'SELECT id, claimed_session_id, trashed_at FROM test_invites
+             WHERE trashed_at IS NOT NULL AND trashed_at < :older_than',
+            ['older_than' => $olderThan->format('Y-m-d H:i:s')],
+        );
+
+        $result = ['invites' => 0, 'cases' => 0, 'failed' => 0];
+        foreach ($rows as $row) {
+            try {
+                $hadCase = $row['claimed_session_id'] !== null;
+                if ($this->purgeRow($row)) {
+                    ++$result['invites'];
+                    if ($hadCase) {
+                        ++$result['cases'];
+                    }
+                }
+            } catch (\Throwable) {
+                ++$result['failed'];
+            }
+        }
+
+        return $result;
+    }
+
+    /** @param array<string, mixed> $invite */
+    private function purgeRow(array $invite): bool
+    {
+        if ($invite['claimed_session_id'] === null) {
+            // Отозванное или просроченное приглашение: клиентских данных нет.
+            return $this->db->delete('test_invites', 'id = ? AND trashed_at IS NOT NULL', [$invite['id']]) === 1;
+        }
+
+        if (!$this->lifecycle->deleteSessionAndArtifacts((string) $invite['claimed_session_id'])) {
+            // Сессии уже нет (прежнее удаление): остаётся осиротевшая строка приглашения.
+            return $this->db->delete('test_invites', 'id = ? AND trashed_at IS NOT NULL', [$invite['id']]) === 1;
+        }
+        $this->writeOwnerAuditEvent('therapist_case_purged');
+
+        return true;
+    }
+
     private function writeOwnerAuditEvent(string $action): void
     {
         $this->db->insert('activity_log', [
