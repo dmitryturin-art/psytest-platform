@@ -602,7 +602,7 @@ final class OwnerController extends BaseController
         InvitedCasePresenter $presenter,
         array $case,
     ): ?array {
-        $session = $this->sessionManager->getSessionById($sessionId);
+        $session = $this->sessionManager->getRetainedSessionById($sessionId);
         if ($session === null) {
             return null;
         }
@@ -612,7 +612,7 @@ final class OwnerController extends BaseController
             return null;
         }
 
-        $partner = $this->sessionManager->getSessionById($pair['partner_session_id']);
+        $partner = $this->sessionManager->getRetainedSessionById($pair['partner_session_id']);
         if ($partner === null) {
             return null;
         }
@@ -713,7 +713,7 @@ final class OwnerController extends BaseController
         (new AiReportRepository($this->db))->releaseStuck();
         $this->relaunchWorkerIfQueued($sessionId);
 
-        $session = $this->sessionManager->getSessionById($sessionId);
+        $session = $this->sessionManager->getRetainedSessionById($sessionId);
         $mode = $session === null
             ? 'individual'
             : (new ResultPresenter($this->db, $this->sessionManager))->reportMode($session);
@@ -774,7 +774,7 @@ final class OwnerController extends BaseController
             return;
         }
 
-        $session = $this->sessionManager->getSessionById($sessionId);
+        $session = $this->sessionManager->getRetainedSessionById($sessionId);
         if ($session === null) {
             $this->notFound();
 

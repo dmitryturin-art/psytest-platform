@@ -67,7 +67,7 @@ final class ResultPresenter
         $position = $firstId === $sessionId ? 1 : 2;
 
         $partnerSessionId = $position === 1 ? $secondId : $firstId;
-        $partnerSession = $this->sessions->getSessionById($partnerSessionId);
+        $partnerSession = $this->sessions->getRetainedSessionById($partnerSessionId);
         if ($partnerSession !== null) {
             $partnerSession = $this->sessions->withFreshResults($partnerSession, $module);
         }
@@ -116,8 +116,8 @@ final class ResultPresenter
 
         $firstId = (string) $comparison['session_1_id'];
         $secondId = (string) $comparison['session_2_id'];
-        $first = $this->sessions->getSessionById($firstId);
-        $second = $this->sessions->getSessionById($secondId);
+        $first = $this->sessions->getRetainedSessionById($firstId);
+        $second = $this->sessions->getRetainedSessionById($secondId);
         if ($first === null || $second === null) {
             return null;
         }

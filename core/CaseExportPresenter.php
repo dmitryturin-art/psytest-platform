@@ -141,7 +141,7 @@ final class CaseExportPresenter
         array $caseAnswers,
         bool $includeAnswers,
     ): ?array {
-        $session = $this->sessions->getSessionById($sessionId);
+        $session = $this->sessions->getRetainedSessionById($sessionId);
         if ($session === null) {
             return null;
         }
@@ -151,7 +151,7 @@ final class CaseExportPresenter
             return null;
         }
 
-        $partner = $this->sessions->getSessionById($pair['partner_session_id']);
+        $partner = $this->sessions->getRetainedSessionById($pair['partner_session_id']);
         if ($partner === null) {
             return null;
         }
@@ -239,7 +239,7 @@ final class CaseExportPresenter
      */
     private function report(string $sessionId, TestModuleInterface $module, string $kind): ?array
     {
-        $session = $this->sessions->getSessionById($sessionId);
+        $session = $this->sessions->getRetainedSessionById($sessionId);
         $mode = $session === null
             ? 'individual'
             : (new ResultPresenter($this->db, $this->sessions))->reportMode($session);

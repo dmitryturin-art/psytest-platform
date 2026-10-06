@@ -137,6 +137,35 @@ class SessionManager
     }
 
     /**
+     * Сохранённая сессия по ID без учёта срока публичной ссылки (07.K10).
+     *
+     * `expires_at` — срок, в течение которого работает ссылка на результат и
+     * можно продолжить прохождение. Хранением записи управляет retention
+     * class и очистка. Кабинет специалиста, выгрузка кейса, внешний разбор и
+     * сборка пары опираются на запись, а не на ссылку, поэтому читают её
+     * здесь: иначе через 30 дней кейс терял парный результат и ИИ-разборы.
+     * Маршруты по токену и продолжение прохождения остаются на
+     * `getSessionByResultToken()` / `getSessionById()`.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getRetainedSessionById(string $sessionId): ?array
+    {
+        $session = $this->db->selectOne(
+            "SELECT * FROM test_sessions WHERE id = :id AND status NOT IN ('expired', 'deleted')",
+            ['id' => $sessionId],
+        );
+
+        if ($session) {
+            $session['answers'] = !empty($session['answers']) ? json_decode($session['answers'], true) : [];
+            $session['calculated_results'] = !empty($session['calculated_results']) ? json_decode($session['calculated_results'], true) : [];
+            $session['demographics'] = !empty($session['demographics']) ? json_decode($session['demographics'], true) : [];
+        }
+
+        return $session;
+    }
+
+    /**
      * Сессия с актуальным результатом для показа (05.S4a).
      *
      * Единая точка для страницы результата, PDF, кабинетов, выгрузки кейса и
