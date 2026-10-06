@@ -23,9 +23,11 @@ use PsyTest\Core\CaseExportPresenter;
 use PsyTest\Core\ClientReportNotifier;
 use PsyTest\Core\FormOnce;
 use PsyTest\Core\InvitedCasePresenter;
+use PsyTest\Core\InviteFilter;
 use PsyTest\Core\OwnerCaseReportOrder;
 use PsyTest\Core\OwnerClientSubmission;
 use PsyTest\Core\OwnerDashboardAuthenticator;
+use PsyTest\Core\OwnerInviteBulkAction;
 use PsyTest\Core\OwnerInviteSubmission;
 use PsyTest\Core\PDFGenerator;
 use PsyTest\Core\ReportMarkdown;
@@ -130,12 +132,24 @@ final class OwnerController extends BaseController
             return;
         }
 
+        $tests = array_values($this->moduleLoader->getActiveModules());
+        $filter = InviteFilter::fromQuery(
+            $_GET,
+            array_map(static fn (array $test): string => (string) $test['slug'], $tests),
+        );
+        $invites = $this->invites->listForOwner($filter);
+
         echo $this->view->render('owner-dashboard', [
             'flash' => $this->takeFlash(),
-            'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
-            'invites' => $this->invites->recentForOwner(),
+            'invite_tests' => $tests,
+            'invites' => $invites,
+            'filter' => $filter,
+            'filter_url' => $filter->toUrl(),
+            'invite_counts' => $this->invites->countsForOwner(),
             'clients' => $this->clients->listForOwner(),
             'invite_form_key' => $this->inviteSubmission()->issueKey(),
+            'bulk_form_key' => $this->inviteBulk()->issueKey(),
+            'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
         ]);
     }
 
@@ -145,10 +159,20 @@ final class OwnerController extends BaseController
             return;
         }
 
+        $tests = array_values($this->moduleLoader->getActiveModules());
+        $slugs = array_map(static fn (array $test): string => (string) $test['slug'], $tests);
+        $test = $_GET['test'] ?? '';
+        $test = is_string($test) && in_array($test, $slugs, true) ? $test : '';
+        $search = $_GET['q'] ?? '';
+        $search = is_string($search) ? trim(mb_substr($search, 0, InviteFilter::QUERY_MAX_LENGTH)) : '';
+
         echo $this->view->render('owner-clients', [
             'flash' => $this->takeFlash(),
-            'clients' => $this->clients->listForOwner(),
+            'clients' => $this->clients->listForOwner(100, $search, $test === '' ? null : $test),
             'client_form_key' => $this->clientSubmission()->issueKey(),
+            'invite_tests' => $tests,
+            'filter_test' => $test,
+            'filter_query' => $search,
         ]);
     }
 
@@ -207,11 +231,35 @@ final class OwnerController extends BaseController
             return;
         }
 
+        $slugs = array_map(
+            static fn (array $test): string => (string) $test['slug'],
+            array_values($this->moduleLoader->getActiveModules()),
+        );
+        $filter = InviteFilter::fromQuery($_GET, $slugs);
+        $archivedCount = count(array_filter($card['assignments'], static fn (array $a): bool => $a['trashed_at'] === null && $a['archived_at'] !== null));
+        $trashedCount = count(array_filter($card['assignments'], static fn (array $a): bool => $a['trashed_at'] !== null));
+        // Рабочий вид — без архива и корзины; они открываются явным выбором.
+        $view = in_array($filter->status, [InviteFilter::STATUS_ARCHIVED, InviteFilter::STATUS_TRASH], true)
+            ? $filter->status
+            : InviteFilter::STATUS_ACTIVE;
+        $assignments = array_values(array_filter($card['assignments'], static fn (array $a): bool => match ($view) {
+            InviteFilter::STATUS_TRASH => $a['trashed_at'] !== null,
+            InviteFilter::STATUS_ARCHIVED => $a['trashed_at'] === null && $a['archived_at'] !== null,
+            default => $a['trashed_at'] === null && $a['archived_at'] === null,
+        } && ($filter->testSlug === null || $a['test_slug'] === $filter->testSlug)));
+
         echo $this->view->render('owner-client', [
             'flash' => $this->takeFlash(),
             'client' => $card['client'],
-            'assignments' => $card['assignments'],
+            'assignments' => $assignments,
             'history' => $card['history'],
+            'assignment_view' => $view,
+            'assignment_test' => $filter->testSlug ?? '',
+            'archived_count' => $archivedCount,
+            'trashed_count' => $trashedCount,
+            'bulk_form_key' => $this->inviteBulk()->issueKey(),
+            'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
+            'return_url' => '/admin/clients/' . $clientId . ($view === InviteFilter::STATUS_ACTIVE ? '' : '?status=' . $view),
             'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
             'invite_form_key' => $this->inviteSubmission()->issueKey(),
         ]);
@@ -361,6 +409,76 @@ final class OwnerController extends BaseController
         $this->redirect('/admin');
     }
 
+    private function inviteBulk(): OwnerInviteBulkAction
+    {
+        return new OwnerInviteBulkAction($this->invites, $this->cases, $this->formOnce());
+    }
+
+    public function archiveInvites(): void
+    {
+        $this->bulkInviteAction(OwnerInviteBulkAction::ARCHIVE);
+    }
+
+    public function unarchiveInvites(): void
+    {
+        $this->bulkInviteAction(OwnerInviteBulkAction::UNARCHIVE);
+    }
+
+    public function trashInvites(): void
+    {
+        $this->bulkInviteAction(OwnerInviteBulkAction::TRASH);
+    }
+
+    public function restoreInvites(): void
+    {
+        $this->bulkInviteAction(OwnerInviteBulkAction::RESTORE);
+    }
+
+    public function purgeInvites(): void
+    {
+        $this->bulkInviteAction(OwnerInviteBulkAction::PURGE);
+    }
+
+    /**
+     * Архив, корзина, восстановление и удаление приглашений (07.K8).
+     *
+     * «В корзину» и «Удалить сейчас» без подтверждения (`confirmed=1`, его
+     * ставит диалог или страница подтверждения) ничего не меняют: контроллер
+     * показывает страницу подтверждения. Так одиночный клик без JavaScript
+     * не удаляет и не отправляет в корзину ничего.
+     */
+    private function bulkInviteAction(string $action): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $post = $this->postData();
+        $bulk = $this->inviteBulk();
+        $return = OwnerInviteBulkAction::safeReturn($post['return'] ?? null);
+        $ids = OwnerInviteBulkAction::selectedIds($post);
+
+        if (
+            $ids !== []
+            && in_array($action, OwnerInviteBulkAction::CONFIRMED_ACTIONS, true)
+            && ($post['confirmed'] ?? null) !== '1'
+        ) {
+            echo $this->view->render('owner-invites-confirm', [
+                'action' => $action,
+                'count' => count($ids),
+                'invite_ids' => $ids,
+                'return_url' => $return,
+                'bulk_form_key' => $bulk->issueKey(),
+                'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
+            ]);
+
+            return;
+        }
+
+        $this->setFlash($bulk->submit($action, $post));
+        $this->redirect($return);
+    }
+
     public function viewInvitedCase(string $sessionId): void
     {
         if (!$this->requireOwner()) {
@@ -392,10 +510,17 @@ final class OwnerController extends BaseController
         $case['pair'] = $this->pairSection($sessionId, $module, $presenter, $case);
 
         $ai = $this->aiSection($sessionId, (string) $case['test_slug']);
+        $trashed = $case['trashed_at'] !== null;
+        if ($trashed) {
+            // Только чтение: форм заказа и правки в корзине нет.
+            $ai['available'] = false;
+        }
 
         echo $this->view->render('owner-invited-case', [
             'flash' => $this->takeFlash(),
             'case' => $case,
+            'trashed' => $trashed,
+            'bulk_form_key' => $trashed ? $this->inviteBulk()->issueKey() : null,
             'ai' => $ai,
             'notify' => $this->notifySection($sessionId, $case, $ai),
             // У каждой формы заказа на странице свой одноразовый ключ (07.K6b).
@@ -487,7 +612,7 @@ final class OwnerController extends BaseController
      */
     public function notifyClientAboutReport(string $sessionId): void
     {
-        if ($this->ownedCase($sessionId) === null) {
+        if ($this->ownedCase($sessionId, true) === null) {
             return;
         }
 
@@ -590,7 +715,7 @@ final class OwnerController extends BaseController
      */
     public function requestCaseReports(string $sessionId): void
     {
-        $case = $this->ownedCase($sessionId);
+        $case = $this->ownedCase($sessionId, true);
         if ($case === null) {
             return;
         }
@@ -1039,7 +1164,7 @@ final class OwnerController extends BaseController
      *
      * @return array<string, mixed>|null
      */
-    private function ownedCase(string $sessionId): ?array
+    private function ownedCase(string $sessionId, bool $writable = false): ?array
     {
         if (!$this->requireOwner()) {
             return null;
@@ -1050,6 +1175,12 @@ final class OwnerController extends BaseController
             $this->notFound();
 
             return null;
+        }
+        // Кейс в корзине доступен только для чтения: заказ разборов, правка и
+        // публикация возвращаются вместе с восстановлением.
+        if ($writable && $case['trashed_at'] !== null) {
+            $this->setFlash(['type' => 'error', 'message' => 'Кейс в корзине: он только для чтения. Восстановите его, чтобы заказывать и править разборы.']);
+            $this->redirect('/admin/invited-case/' . $sessionId);
         }
 
         return $case;
@@ -1066,7 +1197,7 @@ final class OwnerController extends BaseController
      */
     private function editableReport(string $sessionId, string $reportId): ?array
     {
-        if ($this->ownedCase($sessionId) === null) {
+        if ($this->ownedCase($sessionId, true) === null) {
             return null;
         }
 

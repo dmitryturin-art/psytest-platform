@@ -33,6 +33,24 @@
 
     <section class="owner-invites" aria-labelledby="owner-client-list-title">
         <h2 id="owner-client-list-title">Список клиентов</h2>
+        <form method="get" action="{{ basePath }}/admin/clients" class="filter-bar" role="search" aria-label="Фильтры клиентов">
+            <div class="filter-bar__field filter-bar__field--wide">
+                <label for="clients-q">Поиск по подписи</label>
+                <input id="clients-q" name="q" type="search" maxlength="80" autocomplete="off" value="{{ filter_query }}">
+            </div>
+            <div class="filter-bar__field">
+                <label for="clients-test">Методика назначена</label>
+                <select id="clients-test" name="test">
+                    <option value="">Любая</option>
+                    {% for test in invite_tests %}<option value="{{ test.slug }}"{% if filter_test == test.slug %} selected{% endif %}>{{ test.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="filter-bar__actions">
+                <button type="submit" class="btn btn-primary">Применить</button>
+                {% if filter_query or filter_test %}<a class="btn btn-outline" href="{{ basePath }}/admin/clients">Сбросить</a>{% endif %}
+            </div>
+        </form>
+        <p class="filter-counts" aria-live="polite">Показано: {{ clients|length }}</p>
         {% if clients %}
             <ul class="owner-invite-list">
             {% for client in clients %}
@@ -44,6 +62,7 @@
                 </li>
             {% endfor %}
             </ul>
+        {% elseif filter_query or filter_test %}<p class="owner-help">По этим условиям ничего не найдено. <a href="{{ basePath }}/admin/clients">Сбросить фильтры</a></p>
         {% else %}<p class="owner-help">Карточек пока нет.</p>{% endif %}
     </section>
 </section>
