@@ -33,6 +33,27 @@ final class OwnerLabels
         RetentionPolicy::ACCOUNT => 'аккаунт посетителя',
     ];
 
+    /**
+     * Тон метки статуса (04.D1): модификатор класса `status--*` в main.css.
+     * Покрывает состояния сессии и приглашения (`display_status`). Неизвестное
+     * значение получает нейтральный тон, подпись при этом не меняется.
+     */
+    private const TONE = [
+        'completed' => 'done',
+        'partial' => 'open',
+        'opened' => 'open',
+        'pending' => 'pending',
+        'revoked' => 'muted',
+        'expired' => 'muted',
+        'result_deleted' => 'muted',
+        'deleted' => 'failed',
+    ];
+
+    public static function tone(?string $value): string
+    {
+        return self::TONE[$value ?? ''] ?? 'muted';
+    }
+
     public static function status(?string $value): string
     {
         return self::lookup(self::STATUS, $value);

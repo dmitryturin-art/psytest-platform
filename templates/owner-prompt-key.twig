@@ -50,7 +50,7 @@
 
         <form method="post" action="{{ key_path }}/reset" class="owner-action-form">
             {{ csrf_field() }}
-            <button type="submit" class="btn btn-sm">Вернуть к manifest (версия {{ manifest_version }})</button>
+            <button type="submit" class="btn btn-outline btn-sm">Вернуть к manifest (версия {{ manifest_version }})</button>
         </form>
     </section>
 
@@ -59,7 +59,7 @@
         <p class="owner-help">Источник: {{ selected.source ?: 'не указан' }}. Клинический контекст специалиста {{ selected.allowsOwnerContext ? 'принимается' : 'не принимается' }}.</p>
         <pre class="owner-prompt-text">{{ selected.text }}</pre>
 
-        <p><a class="btn btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}">Предпросмотр запроса на фикстуре</a></p>
+        <p><a class="btn btn-outline btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}">Предпросмотр запроса на фикстуре</a></p>
 
         <form method="post" action="{{ key_path }}/trial" class="owner-form">
             {{ csrf_field() }}
@@ -68,7 +68,7 @@
                 <input type="checkbox" name="confirm_trial" value="1" required>
                 Подтверждаю обращение к внешнему провайдеру с синтетическим набором ответов. Результат нигде не сохраняется.
             </label>
-            <button type="submit" class="btn btn-sm"{% if not ai_enabled %} disabled{% endif %}>Пробный вызов на fixture</button>
+            <button type="submit" class="btn btn-outline btn-sm"{% if not ai_enabled %} disabled{% endif %}>Пробный вызов на fixture</button>
         </form>
     </section>
 

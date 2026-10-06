@@ -64,19 +64,19 @@
             {% for invite in invites %}
                 <li>
                     <strong>{{ invite.test_name }}</strong> —
-                    {% if invite.display_status == 'completed' %}завершено
+                    <span class="status status--{{ (invite.display_status ?: 'pending')|status_tone }}">{% if invite.display_status == 'completed' %}завершено
                     {% elseif invite.display_status == 'opened' %}открыто
                     {% elseif invite.display_status == 'revoked' %}отозвано
                     {% elseif invite.display_status == 'expired' %}срок истёк
                     {% elseif invite.display_status == 'result_deleted' %}результат удалён
-                    {% else %}ожидает открытия{% endif %}
+                    {% else %}ожидает открытия{% endif %}</span>
                     <small>создано {{ invite.created_at|date("d.m.Y H:i") }}{% if invite.client_label %} · клиент: <a href="{{ basePath }}/admin/clients/{{ invite.client_id }}">{{ invite.client_label }}</a>{% endif %}</small>
                     {% if invite.owner_note %}<p>{{ invite.owner_note }}</p>{% endif %}
                     {% if invite.status == 'pending' %}
                         <form method="post" action="{{ basePath }}/admin/invites/revoke" class="owner-action-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                             <input type="hidden" name="invite_id" value="{{ invite.id }}">
-                            <button type="submit" class="btn btn-outline">Отозвать</button>
+                            <button type="submit" class="btn btn-danger">Отозвать</button>
                         </form>
                     {% elseif invite.status == 'revoked' and not invite.claimed_session_id %}
                         {# Отозванное и не открытое приглашение можно убрать из
@@ -84,7 +84,7 @@
                         <form method="post" action="{{ basePath }}/admin/invites/delete" class="owner-action-form" data-submit-once>
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                             <input type="hidden" name="invite_id" value="{{ invite.id }}">
-                            <button type="submit" class="btn btn-outline" data-busy-text="Удаляем…">Удалить</button>
+                            <button type="submit" class="btn btn-danger" data-busy-text="Удаляем…">Удалить</button>
                         </form>
                     {% elseif invite.claimed_session_id %}
                         <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ invite.claimed_session_id }}">Открыть кейс</a>
@@ -108,7 +108,7 @@
             <dl class="owner-case-details">
                 <div><dt>Методика</dt><dd>{{ case.test_name }}</dd></div>
                 <div><dt>Создана</dt><dd>{{ case.created_at|date("d.m.Y H:i") }}</dd></div>
-                <div><dt>Статус</dt><dd>{{ case.status|status_label }}</dd></div>
+                <div><dt>Статус</dt><dd><span class="status status--{{ case.status|status_tone }}">{{ case.status|status_label }}</span></dd></div>
                 <div><dt>Режим хранения</dt><dd>{{ case.retention_class|retention_label }}</dd></div>
             </dl>
 
@@ -120,7 +120,7 @@
                     <form method="post" action="{{ basePath }}/admin/case/assign" class="owner-action-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="session_id" value="{{ case.id }}">
-                        <button type="submit" class="btn btn-success">Назначить как кейс клиента</button>
+                        <button type="submit" class="btn btn-primary">Назначить как кейс клиента</button>
                     </form>
                     <p class="owner-help">После назначения эта сессия перестанет участвовать в автоматической 180-дневной очистке.</p>
                 {% elseif case.retention_class == 'therapist_case' %}

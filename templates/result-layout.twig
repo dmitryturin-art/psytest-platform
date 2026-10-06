@@ -20,12 +20,12 @@
 
     <div class="results-actions">
         <a href="{{ basePath }}{{ result_base }}/pdf"
-           class="btn btn-secondary" target="_blank">📄 Скачать PDF</a>
+           class="btn btn-outline" target="_blank">📄 Скачать PDF</a>
         {% if account_view %}
         <a href="{{ basePath }}/account" class="btn btn-outline">← Мои результаты</a>
         {% else %}
         <button class="btn btn-outline" onclick="copyResultLink()">🔗 Копировать ссылку</button>
-        <button class="btn btn-outline" onclick="openDeleteModal()">🗑️ Удалить данные</button>
+        <button class="btn btn-danger" onclick="openDeleteModal()">🗑️ Удалить данные</button>
         {% endif %}
     </div>
 

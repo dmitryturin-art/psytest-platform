@@ -26,7 +26,7 @@
     <!-- Action Buttons -->
     <div class="results-actions">
         <a href="{{ basePath }}/result/{{ test.slug }}/{{ session.session_token }}/pdf"
-           class="btn btn-secondary" target="_blank">
+           class="btn btn-outline" target="_blank">
             📄 Скачать PDF
         </a>
         <button class="btn btn-outline" onclick="copyResultLink()">
@@ -65,7 +65,7 @@
             {{ pair_comparison_html|raw }}
         </div>
         <a href="{{ basePath }}/pair/{{ pair_comparison.id }}/pdf" 
-           class="btn btn-secondary" target="_blank">
+           class="btn btn-outline" target="_blank">
             📄 Скачать сравнение в PDF
         </a>
     </div>
@@ -78,7 +78,7 @@
         <h3>🗑️ Удалить мои данные?</h3>
         <p>Ссылка на результат станет недоступна. Ответы, рассчитанный результат и необязательные данные профиля будут очищены из тестовой сессии.</p>
         <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeDeleteModal()">Отмена</button>
+            <button class="btn btn-outline" onclick="closeDeleteModal()">Отмена</button>
             <button class="btn btn-danger" onclick="confirmDelete()">Да, удалить</button>
         </div>
     </div>
