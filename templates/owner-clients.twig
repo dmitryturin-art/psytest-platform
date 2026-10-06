@@ -7,6 +7,7 @@
 {% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a><a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a><a class="nav-link" href="{{ basePath }}/admin/prompts">Промпты</a></nav>{% endblock %}
 
 {% block content %}
+{% import 'blocks/icons.twig' as ui %}
 <section class="owner-panel" aria-labelledby="owner-clients-title">
     <p class="owner-panel-eyebrow">Кабинет специалиста</p>
     <h1 id="owner-clients-title">Клиенты</h1>
@@ -27,43 +28,61 @@
             <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off">
             <label for="client-note">Заметка о работе (необязательно)</label>
             <textarea id="client-note" name="note" maxlength="1000" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">Создать карточку</button>
+            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">{{ ui.icon('plus') }}Создать карточку</button>
         </form>
     </section>
 
     <section class="owner-invites" aria-labelledby="owner-client-list-title">
-        <h2 id="owner-client-list-title">Список клиентов</h2>
-        <form method="get" action="{{ basePath }}/admin/clients" class="filter-bar" role="search" aria-label="Фильтры клиентов">
-            <div class="filter-bar__field filter-bar__field--wide">
-                <label for="clients-q">Поиск по подписи</label>
-                <input id="clients-q" name="q" type="search" maxlength="80" autocomplete="off" value="{{ filter_query }}">
-            </div>
+        <div class="list-head">
+            <h2 id="owner-client-list-title">Список клиентов</h2>
+        </div>
+        <form method="get" action="{{ basePath }}/admin/clients" class="filter-bar" role="search" aria-label="Фильтры клиентов" data-auto-submit>
             <div class="filter-bar__field">
-                <label for="clients-test">Методика назначена</label>
+                <label for="clients-test" class="visually-hidden">Методика назначена</label>
                 <select id="clients-test" name="test">
-                    <option value="">Любая</option>
+                    <option value="">Любая методика</option>
                     {% for test in invite_tests %}<option value="{{ test.slug }}"{% if filter_test == test.slug %} selected{% endif %}>{{ test.name }}</option>{% endfor %}
                 </select>
             </div>
+            <div class="filter-bar__field filter-bar__search">
+                <label for="clients-q" class="visually-hidden">Поиск по подписи</label>
+                {{ ui.icon('search') }}
+                <input id="clients-q" name="q" type="search" maxlength="80" autocomplete="off" placeholder="Поиск по подписи" value="{{ filter_query }}">
+            </div>
             <div class="filter-bar__actions">
-                <button type="submit" class="btn btn-primary">Применить</button>
-                {% if filter_query or filter_test %}<a class="btn btn-outline" href="{{ basePath }}/admin/clients">Сбросить</a>{% endif %}
+                <button type="submit" class="btn btn-outline btn-sm filter-bar__apply">Применить</button>
+                {% if filter_query or filter_test %}<a class="filter-bar__reset" href="{{ basePath }}/admin/clients">{{ ui.icon('close') }}Сбросить</a>{% endif %}
             </div>
         </form>
         <p class="filter-counts" aria-live="polite">Показано: {{ clients|length }}</p>
         {% if clients %}
-            <ul class="owner-invite-list">
-            {% for client in clients %}
-                <li>
-                    <strong><a href="{{ basePath }}/admin/clients/{{ client.id }}">{{ client.label }}</a></strong>
-                    <small>назначений: {{ client.assignment_count }} · завершено: {{ client.completed_count ?: 0 }} · создан {{ client.created_at|date("d.m.Y") }}</small>
-                    {% if client.note %}<p>{{ client.note }}</p>{% endif %}
-                    <a class="btn btn-outline" href="{{ basePath }}/admin/clients/{{ client.id }}">Открыть карточку</a>
-                </li>
-            {% endfor %}
-            </ul>
+            <table class="cab-table client-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Клиент и заметка</th>
+                        <th scope="col" class="cab-table__num">Назначений</th>
+                        <th scope="col" class="cab-table__num">Завершено</th>
+                        <th scope="col" class="cab-table__date">Создан</th>
+                        <th scope="col" class="cab-table__actions"><span class="visually-hidden">Действия</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for client in clients %}
+                    <tr>
+                        <td data-label="Клиент" class="cab-table__main">
+                            <a class="cab-table__title" href="{{ basePath }}/admin/clients/{{ client.id }}">{{ client.label }}</a>
+                            {% if client.note %}<span class="cab-table__sub" title="{{ client.note }}">{{ client.note }}</span>{% endif %}
+                        </td>
+                        <td data-label="Назначений" class="cab-table__num">{{ client.assignment_count }}</td>
+                        <td data-label="Завершено" class="cab-table__num">{{ client.completed_count ?: 0 }}</td>
+                        <td data-label="Создан" class="cab-table__date"><time datetime="{{ client.created_at|date('Y-m-d') }}">{{ client.created_at|date("d.m.Y") }}</time></td>
+                        <td class="cab-table__actions"><div class="row-actions"><a class="row-actions__open" href="{{ basePath }}/admin/clients/{{ client.id }}" aria-label="Открыть карточку: {{ client.label }}">Открыть карточку</a></div></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         {% elseif filter_query or filter_test %}<p class="owner-help">По этим условиям ничего не найдено. <a href="{{ basePath }}/admin/clients">Сбросить фильтры</a></p>
-        {% else %}<p class="owner-help">Карточек пока нет.</p>{% endif %}
+        {% else %}<p class="owner-help">Карточек пока нет. Создайте первую выше.</p>{% endif %}
     </section>
 </section>
 {% endblock %}
@@ -71,4 +90,5 @@
 {% block extra_js %}
 {# Блокировка кнопки после отправки; без JS повтор отсекает сервер (07.K6b). #}
 <script src="{{ asset('js/owner-forms.js') }}"></script>
+<script src="{{ asset('js/owner-cabinet.js') }}"></script>
 {% endblock %}
