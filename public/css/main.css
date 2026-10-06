@@ -1803,8 +1803,11 @@ input[type="radio"] {
         flex-direction: column;
     }
 
+    /* На телефоне прилипшая панель закрывала варианты ответа — она идёт в потоке. */
     .test-navigation {
+        position: static;
         flex-direction: column;
+        box-shadow: none;
     }
 
     .test-navigation .btn {
