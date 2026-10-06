@@ -901,3 +901,37 @@ a.cab-table__title:hover {
         justify-content: flex-start;
     }
 }
+
+/* ---------- Привязка и смена клиента (07.K9) ---------- */
+
+.owner-attach-confirm {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.owner-attach-confirm[hidden] {
+    display: none;
+}
+
+.owner-attach-confirm p {
+    margin: 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-md);
+    line-height: 1.55;
+}
+
+.owner-case-client {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.owner-case-client__form {
+    display: inline;
+    margin: 0;
+}
+
+.owner-dialog .owner-form {
+    max-width: none;
+}

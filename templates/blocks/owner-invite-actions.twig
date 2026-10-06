@@ -17,7 +17,6 @@
     {% if invite.claimed_session_id %}
         <a class="row-actions__open" href="{{ basePath }}/admin/invited-case/{{ invite.claimed_session_id }}">{{ case_label ?? 'Открыть кейс' }}</a>
     {% endif %}
-    {% if invite.trashed_at or can_revoke or can_archive %}
     <details class="row-menu" data-row-menu>
         <summary class="row-menu__toggle" aria-label="Другие действия: {{ invite.test_name }}" title="Другие действия">{{ ui.icon('more') }}</summary>
         <div class="row-menu__list">
@@ -26,6 +25,12 @@
                 <span class="row-menu__sep" aria-hidden="true"></span>
                 <button type="submit" class="row-menu__item row-menu__item--danger" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/purge" name="invite_id" value="{{ invite.id }}" data-confirm="purge">{{ ui.icon('delete') }}<span>Удалить сейчас</span></button>
             {% else %}
+                {# Привязка и смена клиента (07.K9): работает для любой строки вне корзины. Без JS кнопка
+                   приводит на страницу выбора клиента, с JS её перехватывает диалог. #}
+                {% set attach_client_id = invite.client_id ?? '' %}
+                {% set attach_client_label = attach_label ?? invite.client_label ?? '' %}
+                <button type="submit" class="row-menu__item" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/attach-client" name="invite_id" value="{{ invite.id }}" data-attach data-client-id="{{ attach_client_id }}" data-client-label="{{ attach_client_label }}" data-test-name="{{ invite.test_name }}">{{ ui.icon('client') }}<span>{% if attach_client_id %}Сменить клиента{% else %}Привязать к клиенту{% endif %}</span></button>
+                <span class="row-menu__sep" aria-hidden="true"></span>
                 {% if can_revoke %}
                     <form method="post" action="{{ basePath }}/admin/invites/revoke" class="row-menu__form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -55,5 +60,4 @@
             {% endif %}
         </div>
     </details>
-    {% endif %}
 </div>

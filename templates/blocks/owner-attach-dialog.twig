@@ -1,0 +1,15 @@
+{# Один диалог «Привязать к клиенту / Сменить клиента» на страницу (07.K9).
+   Открывает owner-attach.js по кнопкам [data-attach]; без JS те же кнопки
+   ведут на серверную страницу owner-invite-attach. Вид — как у диалога
+   подтверждения (04.D2). Переменные: attach_form_key, attach_return, clients. #}
+<dialog class="owner-dialog" id="owner-attach-dialog" aria-labelledby="owner-attach-title">
+    <form method="post" action="{{ basePath }}/admin/invites/attach-client" class="owner-dialog__body owner-form" data-attach-form data-submit-once>
+        <h2 id="owner-attach-title" data-attach-title>Привязать к клиенту</h2>
+        <p data-attach-subject></p>
+        {% include 'blocks/owner-attach-fields.twig' with {form_key: attach_form_key, return_url: attach_return, uid: 'dlg-attach', invite: null} %}
+        <div class="owner-dialog__actions">
+            <button type="button" class="btn btn-outline" data-attach-cancel>Отмена</button>
+            <button type="submit" class="btn btn-primary" data-attach-submit data-busy-text="Привязываем…">Привязать</button>
+        </div>
+    </form>
+</dialog>

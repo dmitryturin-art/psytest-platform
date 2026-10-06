@@ -28,6 +28,7 @@ use PsyTest\Core\OwnerCaseReportOrder;
 use PsyTest\Core\OwnerClientSubmission;
 use PsyTest\Core\OwnerDashboardAuthenticator;
 use PsyTest\Core\OwnerInviteBulkAction;
+use PsyTest\Core\OwnerInviteClientAttach;
 use PsyTest\Core\OwnerInviteSubmission;
 use PsyTest\Core\PDFGenerator;
 use PsyTest\Core\ReportMarkdown;
@@ -149,6 +150,7 @@ final class OwnerController extends BaseController
             'clients' => $this->clients->listForOwner(),
             'invite_form_key' => $this->inviteSubmission()->issueKey(),
             'bulk_form_key' => $this->inviteBulk()->issueKey(),
+            'attach_form_key' => $this->inviteAttach()->issueKey(),
             'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
         ]);
     }
@@ -262,6 +264,8 @@ final class OwnerController extends BaseController
             'bulk_form_key' => $this->inviteBulk()->issueKey(),
             'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
             'return_url' => '/admin/clients/' . $clientId . ($view === InviteFilter::STATUS_ACTIVE ? '' : '?status=' . $view),
+            'attach_form_key' => $this->inviteAttach()->issueKey(),
+            'clients' => $this->clients->listForOwner(),
             'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
             'invite_form_key' => $this->inviteSubmission()->issueKey(),
         ]);
@@ -481,6 +485,51 @@ final class OwnerController extends BaseController
         $this->redirect($return);
     }
 
+    private function inviteAttach(): OwnerInviteClientAttach
+    {
+        return new OwnerInviteClientAttach($this->invites, $this->clients, $this->formOnce());
+    }
+
+    /**
+     * Привязка приглашения к клиенту и смена клиента (07.K9).
+     *
+     * Запрос без выбранного клиента (`client_id`) — это нажатие пункта меню без
+     * JavaScript: ничего не меняется, показывается страница выбора с той же
+     * формой, что и диалог. С JavaScript диалог отправляет форму уже с клиентом.
+     */
+    public function attachInviteClient(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $post = $this->postData();
+        $return = OwnerInviteBulkAction::safeReturn($post['return'] ?? null);
+        $inviteId = $post['invite_id'] ?? null;
+
+        if (!array_key_exists('client_id', $post)) {
+            $invite = is_string($inviteId) && Security::isValidUuid($inviteId)
+                ? $this->invites->clientOfInvite(strtolower($inviteId))
+                : null;
+            if ($invite === null) {
+                $this->setFlash(['type' => 'error', 'message' => 'Приглашение не найдено: возможно, оно уже удалено.']);
+                $this->redirect($return);
+            }
+
+            echo $this->view->render('owner-invite-attach', [
+                'invite' => $invite,
+                'clients' => $this->clients->listForOwner(),
+                'return_url' => $return,
+                'attach_form_key' => $this->inviteAttach()->issueKey(),
+            ]);
+
+            return;
+        }
+
+        $this->setFlash($this->inviteAttach()->submit($post));
+        $this->redirect($return);
+    }
+
     public function viewInvitedCase(string $sessionId): void
     {
         if (!$this->requireOwner()) {
@@ -523,6 +572,9 @@ final class OwnerController extends BaseController
             'case' => $case,
             'trashed' => $trashed,
             'bulk_form_key' => $trashed ? $this->inviteBulk()->issueKey() : null,
+            // Кейс в корзине — только чтение: привязка и смена клиента недоступны.
+            'attach_form_key' => $trashed ? null : $this->inviteAttach()->issueKey(),
+            'clients' => $trashed ? [] : $this->clients->listForOwner(),
             'ai' => $ai,
             'notify' => $this->notifySection($sessionId, $case, $ai),
             // У каждой формы заказа на странице свой одноразовый ключ (07.K6b).
