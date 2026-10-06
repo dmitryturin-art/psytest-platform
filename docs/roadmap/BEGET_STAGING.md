@@ -166,4 +166,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 48. Выкладка `73af7802` (06.10): «лёгкий кабинет» (04.D2) — новые `public/css/cabinet.css`, `public/js/owner-cabinet.js`, система кнопок по всему сайту; миграций нет; одно SSH-подключение по рецепту (stdin, `--strip-components=1`). SHA-256 `8294719a65250eb200056d6f8cd9783c4f8c1a183475bdbf49050b6b8277c39b` совпал; dump проверен. Смоук: основные маршруты, `/css/cabinet.css`, `/js/owner-cabinet.js` `200`, `/test/smil` `404`. Rollback: `releases/55f357e`.
 
+49. Выкладка `16b6f6a` (06.10): привязка приглашения к клиенту (07.K9); миграций нет; одно SSH-подключение по рецепту. SHA-256 `c2bbfb06573e51e869dda50369852a2c4d16255a4f84495b8ab7c461bbbce2d7` совпал; dump проверен. Смоук: основные маршруты и `/js/owner-attach.js` `200`, `/test/smil` `404`. Rollback: `releases/73af7802`.
+
 Rollback текущего релиза: атомарно направить `public_html` на `releases/e5a15b5/public` и `current` на `releases/e5a15b5`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
