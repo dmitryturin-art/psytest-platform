@@ -60,12 +60,13 @@
 .tests-list-page .editorial-page-heading h1 { font-size: clamp(2.25rem, 4vw, 4rem); }
 .editorial-hero__lead { max-width: 43rem; margin: 1.8rem 0 0; color: var(--editorial-muted); font-size: clamp(1.08rem, 1.6vw, 1.3rem); }
 .editorial-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
-.editorial-button { display: inline-flex; min-height: 3.1rem; align-items: center; justify-content: center; padding: 0 1.6rem; border: 2px solid transparent; border-radius: var(--radius-full); font-weight: 600; text-decoration: none; transition: background-color 0.15s, color 0.15s; }
+/* Кнопки — та же система, что .btn (04.D2): прямоугольник 8 px, контур 1 px, мятная основная. */
+.editorial-button { display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; padding: 0 1.4rem; border: 1px solid transparent; border-radius: var(--radius-sm); font-weight: 550; text-decoration: none; transition: background-color 0.15s, border-color 0.15s, color 0.15s; }
 .editorial-button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.editorial-button--primary { color: var(--color-bg-white); background: var(--editorial-accent); border-color: var(--editorial-accent); }
-.editorial-button--primary:hover { background: var(--editorial-accent-dark); border-color: var(--editorial-accent-dark); }
-.editorial-button--secondary { color: var(--color-primary-dark); border-color: var(--editorial-accent); background: var(--color-bg-white); }
-.editorial-button--secondary:hover { background: var(--color-primary-tint); }
+.editorial-button--primary { color: var(--color-primary-dark); background: var(--color-accent-mist); border-color: var(--color-accent-mist-line); }
+.editorial-button--primary:hover { background: var(--color-accent-mist-strong); border-color: var(--editorial-accent); }
+.editorial-button--secondary { color: var(--color-primary-dark); border-color: var(--color-accent-mist-line); background: var(--color-bg-white); }
+.editorial-button--secondary:hover { background: var(--color-primary-tint); border-color: var(--editorial-accent); }
 .editorial-trust-list { display: flex; flex-wrap: wrap; gap: 0.65rem 1.5rem; margin: 2rem 0 0; padding: 0; color: var(--editorial-muted); font-size: 0.84rem; list-style: none; }
 .editorial-trust-list li::before { margin-right: 0.45rem; color: var(--editorial-positive); content: "✓"; font-weight: 900; }
 

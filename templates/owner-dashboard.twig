@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block content %}
+{% import 'blocks/icons.twig' as ui %}
 <section class="owner-panel" aria-labelledby="owner-dashboard-title">
     <p class="owner-panel-eyebrow">Технический доступ</p>
     <h1 id="owner-dashboard-title">Кабинет владельца</h1>
@@ -53,17 +54,32 @@
             </div>
             <label for="invite-note">Заметка для себя (не показывается клиенту)</label>
             <textarea id="invite-note" name="owner_note" maxlength="1000" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">Создать ссылку</button>
+            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">{{ ui.icon('plus') }}Создать ссылку</button>
         </form>
     </section>
 
     <section class="owner-invites" aria-labelledby="owner-invites-history-title">
-        <h2 id="owner-invites-history-title">Приглашения</h2>
+        {# Набор (вкладка) и уточняющие фильтры внутри него. «Сбросить» снимает фильтры,
+           но оставляет открытую вкладку. #}
+        {% set view_set = filter.status in ['archived', 'trash'] ? filter.status : 'active' %}
+        {% set view_url = basePath ~ '/admin' ~ (view_set != 'active' ? '?status=' ~ view_set : '') %}
+        {% set has_filters = filter.clientId or filter.withoutClient or filter.testSlug or filter.query != '' or filter.status not in ['active', 'archived', 'trash'] %}
+        <div class="list-head">
+            <h2 id="owner-invites-history-title">Приглашения</h2>
+            {# Вид списка: рабочие, архив, корзина (07.K8). Счётчики — по всему кабинету. #}
+            <nav class="view-tabs" aria-label="Вид списка">
+                <a class="view-tabs__tab" href="{{ basePath }}/admin"{% if filter.status not in ['archived', 'trash'] %} aria-current="page"{% endif %}>Рабочие <span class="view-tabs__count">{{ invite_counts.active ?? 0 }}</span></a>
+                <a class="view-tabs__tab" href="{{ basePath }}/admin?status=archived"{% if filter.status == 'archived' %} aria-current="page"{% endif %}>Архив <span class="view-tabs__count">{{ invite_counts.archived ?? 0 }}</span></a>
+                <a class="view-tabs__tab" href="{{ basePath }}/admin?status=trash"{% if filter.status == 'trash' %} aria-current="page"{% endif %}>Корзина <span class="view-tabs__count">{{ invite_counts.trash ?? 0 }}</span></a>
+            </nav>
+        </div>
 
-        {# Фильтры (07.K8): форма GET, состояние живёт в адресе страницы. #}
-        <form method="get" action="{{ basePath }}/admin" class="filter-bar" role="search" aria-label="Фильтры приглашений">
+        {# Фильтры (07.K8): форма GET, состояние живёт в адресе страницы. С JS список
+           обновляется сразу при выборе (data-auto-submit), кнопка «Применить» остаётся
+           только для работы без скриптов. #}
+        <form method="get" action="{{ basePath }}/admin" class="filter-bar" role="search" aria-label="Фильтры приглашений" data-auto-submit>
             <div class="filter-bar__field">
-                <label for="filter-client">Клиент</label>
+                <label for="filter-client" class="visually-hidden">Клиент</label>
                 <select id="filter-client" name="client">
                     <option value="">Все клиенты</option>
                     <option value="none"{% if filter.withoutClient %} selected{% endif %}>Без клиента</option>
@@ -71,29 +87,36 @@
                 </select>
             </div>
             <div class="filter-bar__field">
-                <label for="filter-test">Методика</label>
+                <label for="filter-test" class="visually-hidden">Методика</label>
                 <select id="filter-test" name="test">
                     <option value="">Все методики</option>
                     {% for test in invite_tests %}<option value="{{ test.slug }}"{% if filter.testSlug == test.slug %} selected{% endif %}>{{ test.name }}</option>{% endfor %}
                 </select>
             </div>
+            {# Архив и корзину переключают только вкладки выше. Внутри них статус работы
+               не выбирается: фильтр держит один набор, и вид сохраняется скрытым полем. #}
+            {% if filter.status in ['archived', 'trash'] %}
+                <input type="hidden" name="status" value="{{ filter.status }}">
+            {% else %}
             <div class="filter-bar__field">
-                <label for="filter-status">Статус</label>
+                <label for="filter-status" class="visually-hidden">Статус</label>
                 <select id="filter-status" name="status">
-                    {% set status_options = {'active': 'Все активные', 'pending': 'Ожидает', 'opened': 'Открыто', 'completed': 'Завершено', 'revoked': 'Отозвано', 'expired': 'Срок истёк', 'archived': 'Архив', 'trash': 'Корзина'} %}
+                    {% set status_options = {'active': 'Все статусы', 'pending': 'Ожидает', 'opened': 'Открыто', 'completed': 'Завершено', 'revoked': 'Отозвано', 'expired': 'Срок истёк'} %}
                     {% for value, label in status_options %}<option value="{{ value }}"{% if filter.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
                 </select>
             </div>
-            <div class="filter-bar__field filter-bar__field--wide">
-                <label for="filter-q">Поиск по заметке и клиенту</label>
-                <input id="filter-q" name="q" type="search" maxlength="80" autocomplete="off" value="{{ filter.query }}">
+            {% endif %}
+            <div class="filter-bar__field filter-bar__search">
+                <label for="filter-q" class="visually-hidden">Поиск по заметке и клиенту</label>
+                {{ ui.icon('search') }}
+                <input id="filter-q" name="q" type="search" maxlength="80" autocomplete="off" placeholder="Поиск по заметке и клиенту" value="{{ filter.query }}">
             </div>
             <div class="filter-bar__actions">
-                <button type="submit" class="btn btn-primary">Применить</button>
-                {% if not filter.isDefault %}<a class="btn btn-outline" href="{{ basePath }}/admin">Сбросить</a>{% endif %}
+                <button type="submit" class="btn btn-outline btn-sm filter-bar__apply">Применить</button>
+                {% if has_filters %}<a class="filter-bar__reset" href="{{ view_url }}">{{ ui.icon('close') }}Сбросить</a>{% endif %}
             </div>
         </form>
-        <p class="filter-counts" aria-live="polite">Показано: {{ invites|length }} · <a href="{{ basePath }}/admin?status=archived">в архиве: {{ invite_counts.archived ?? 0 }}</a> · <a href="{{ basePath }}/admin?status=trash">в корзине: {{ invite_counts.trash ?? 0 }}</a></p>
+        <p class="filter-counts" aria-live="polite">Показано: {{ invites|length }}</p>
         {% if filter.status == 'trash' %}
             <p class="owner-help">Корзина очищается автоматически: через {{ trash_days }} дней кейс удаляется окончательно со всеми ответами, разборами и выгрузками. До этого его можно восстановить.</p>
         {% elseif filter.status == 'archived' %}
@@ -111,86 +134,67 @@
         </form>
 
         {% if invites %}
-            <div class="table-scroll">
-            <table class="invite-table">
+            <table class="cab-table invite-table">
                 <thead>
                     <tr>
-                        <th scope="col" class="invite-table__check"><input type="checkbox" data-bulk-all aria-label="Выбрать все"></th>
-                        <th scope="col">Методика</th>
-                        <th scope="col">Клиент</th>
-                        <th scope="col">Статус</th>
-                        <th scope="col">Создано</th>
-                        <th scope="col">Заметка</th>
-                        <th scope="col">Действия</th>
+                        <th scope="col" class="cab-table__check"><input type="checkbox" class="cab-check" data-bulk-all aria-label="Выбрать все"></th>
+                        <th scope="col">Методика и заметка</th>
+                        <th scope="col" class="cab-table__client">Клиент</th>
+                        <th scope="col" class="cab-table__status">Статус</th>
+                        <th scope="col" class="cab-table__date">Создано</th>
+                        <th scope="col" class="cab-table__actions"><span class="visually-hidden">Действия</span></th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for invite in invites %}
                     <tr>
-                        <td class="invite-table__check"><input type="checkbox" name="invite_ids[]" value="{{ invite.id }}" form="invite-bulk-form" data-bulk-row aria-label="Выбрать приглашение {{ invite.test_name }}"{% if invite.status == 'pending' and invite.display_status == 'pending' %} disabled{% endif %}></td>
-                        <td data-label="Методика"><strong>{{ invite.test_name }}</strong></td>
-                        <td data-label="Клиент">{% if invite.client_label %}<a href="{{ basePath }}/admin/clients/{{ invite.client_id }}">{{ invite.client_label }}</a>{% else %}<span class="owner-help">—</span>{% endif %}</td>
-                        <td data-label="Статус">{% include 'blocks/owner-invite-status.twig' %}{% if invite.trashed_at and invite.purge_at %}<small class="invite-table__hint">будет удалён {{ invite.purge_at|date("d.m.Y") }}</small>{% endif %}</td>
-                        <td data-label="Создано">{{ invite.created_at|date("d.m.Y") }}</td>
-                        <td data-label="Заметка" class="invite-table__note">{% if invite.owner_note %}<span title="{{ invite.owner_note }}">{{ invite.owner_note|length > 80 ? invite.owner_note|slice(0, 80) ~ '…' : invite.owner_note }}</span>{% endif %}</td>
-                        <td data-label="Действия" class="invite-table__actions"><div class="invite-actions">
-                            {% if invite.status == 'pending' and invite.display_status == 'pending' %}
-                                <form method="post" action="{{ basePath }}/admin/invites/revoke" class="owner-action-form">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                    <input type="hidden" name="invite_id" value="{{ invite.id }}">
-                                    <button type="submit" class="btn btn-danger btn-sm">Отозвать</button>
-                                </form>
-                            {% endif %}
-                            {% if invite.claimed_session_id %}
-                                <a class="btn btn-outline btn-sm" href="{{ basePath }}/admin/invited-case/{{ invite.claimed_session_id }}">Открыть кейс</a>
-                            {% endif %}
-                            {% if invite.status == 'revoked' and not invite.claimed_session_id and not invite.trashed_at %}
-                                {# Отозванное и не открытое приглашение можно убрать из
-                                   списка сразу (07.K6c): клиентских данных за ним нет. #}
-                                <form method="post" action="{{ basePath }}/admin/invites/delete" class="owner-action-form" data-submit-once>
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                    <input type="hidden" name="invite_id" value="{{ invite.id }}">
-                                    <button type="submit" class="btn btn-danger btn-sm" data-busy-text="Удаляем…">Удалить</button>
-                                </form>
-                                {% include 'blocks/owner-invite-actions.twig' with {hide_trash: true} %}
-                            {% else %}
-                                {% include 'blocks/owner-invite-actions.twig' %}
-                            {% endif %}
-                        </div>
+                        <td class="cab-table__check"><input type="checkbox" class="cab-check" name="invite_ids[]" value="{{ invite.id }}" form="invite-bulk-form" data-bulk-row aria-label="Выбрать приглашение {{ invite.test_name }}"{% if invite.status == 'pending' and invite.display_status == 'pending' %} disabled title="Действующую ссылку сначала отзовите — в меню «⋯»"{% endif %}></td>
+                        <td data-label="Методика" class="cab-table__main">
+                            <span class="cab-table__title">{{ invite.test_name }}</span>
+                            {% if invite.owner_note %}<span class="cab-table__sub" title="{{ invite.owner_note }}">{{ invite.owner_note }}</span>{% endif %}
                         </td>
+                        <td data-label="Клиент" class="cab-table__client">{% if invite.client_label %}<a class="quiet-link" href="{{ basePath }}/admin/clients/{{ invite.client_id }}">{{ invite.client_label }}</a>{% else %}<span class="cab-table__none">без клиента</span>{% endif %}</td>
+                        <td data-label="Статус" class="cab-table__status">{% include 'blocks/owner-invite-status.twig' %}{% if invite.trashed_at and invite.purge_at %}<small class="cab-table__hint">будет удалён {{ invite.purge_at|date("d.m.Y") }}</small>{% endif %}</td>
+                        <td data-label="Создано" class="cab-table__date"><time datetime="{{ invite.created_at|date('Y-m-d') }}">{{ invite.created_at|date("d.m.Y") }}</time></td>
+                        <td class="cab-table__actions">{% include 'blocks/owner-invite-actions.twig' with {lifecycle: true} %}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
-            </div>
             <div class="bulk-bar">
                 <div class="bulk-bar__inner" data-bulk-bar>
                     <span class="bulk-bar__count">Выбрано: <strong data-bulk-count>0</strong></span>
                     {% if filter.status == 'trash' %}
-                        <button type="submit" form="invite-bulk-form" class="btn btn-outline btn-sm" formaction="{{ basePath }}/admin/invites/restore">Восстановить</button>
-                        <button type="submit" form="invite-bulk-form" class="btn btn-danger btn-sm" formaction="{{ basePath }}/admin/invites/purge" data-confirm="purge">Удалить сейчас</button>
+                        <button type="submit" form="invite-bulk-form" class="btn btn-outline btn-sm" formaction="{{ basePath }}/admin/invites/restore">{{ ui.icon('restore') }}Восстановить</button>
+                        <button type="submit" form="invite-bulk-form" class="btn btn-danger btn-sm" formaction="{{ basePath }}/admin/invites/purge" data-confirm="purge">{{ ui.icon('delete') }}Удалить сейчас</button>
                     {% else %}
                         {% if filter.status == 'archived' %}
-                            <button type="submit" form="invite-bulk-form" class="btn btn-outline btn-sm" formaction="{{ basePath }}/admin/invites/unarchive">Из архива</button>
+                            <button type="submit" form="invite-bulk-form" class="btn btn-outline btn-sm" formaction="{{ basePath }}/admin/invites/unarchive">{{ ui.icon('unarchive') }}Из архива</button>
                         {% else %}
-                            <button type="submit" form="invite-bulk-form" class="btn btn-outline btn-sm" formaction="{{ basePath }}/admin/invites/archive">В архив</button>
+                            <button type="submit" form="invite-bulk-form" class="btn btn-outline btn-sm" formaction="{{ basePath }}/admin/invites/archive">{{ ui.icon('archive') }}В архив</button>
                         {% endif %}
-                        <button type="submit" form="invite-bulk-form" class="btn btn-danger btn-sm" formaction="{{ basePath }}/admin/invites/trash" data-confirm="trash">В корзину</button>
+                        <button type="submit" form="invite-bulk-form" class="btn btn-danger btn-sm" formaction="{{ basePath }}/admin/invites/trash" data-confirm="trash">{{ ui.icon('trash') }}В корзину</button>
                     {% endif %}
+                    <button type="button" class="btn btn-ghost btn-sm" data-bulk-clear hidden>{{ ui.icon('close') }}Снять выбор</button>
                 </div>
             </div>
-        {% elseif filter.isDefault %}<p class="owner-help">Приглашений пока нет.</p>
-        {% else %}<p class="owner-help">По этим условиям ничего не найдено. <a href="{{ basePath }}/admin">Сбросить фильтры</a></p>{% endif %}
+        {% elseif has_filters %}<p class="owner-help">По этим условиям ничего не найдено. <a href="{{ view_url }}">Сбросить фильтры</a></p>
+        {% elseif view_set == 'archived' %}<p class="owner-help">В архиве пусто.</p>
+        {% elseif view_set == 'trash' %}<p class="owner-help">Корзина пуста.</p>
+        {% else %}<p class="owner-help">Приглашений пока нет. Создайте первую ссылку выше.</p>{% endif %}
     </section>
 
     {% include 'blocks/owner-invite-dialog.twig' %}
 
+    <section class="owner-invites" aria-labelledby="owner-lookup-title">
+    <h2 id="owner-lookup-title">Найти сессию по ссылке</h2>
     <form method="post" action="{{ basePath }}/admin/case/lookup" class="owner-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label for="result-reference">Ссылка на результат или токен</label>
         <input id="result-reference" name="result_reference" type="text" inputmode="url" autocomplete="off" required>
-        <button type="submit" class="btn btn-primary">Найти сессию</button>
+        <button type="submit" class="btn btn-outline">{{ ui.icon('search') }}Найти сессию</button>
     </form>
+    </section>
 
     {% if case %}
         <section class="owner-case" aria-labelledby="owner-case-title">
@@ -259,4 +263,5 @@
    работает целиком: поле имени просто всегда видно, а повтор ловит сервер. #}
 <script src="{{ asset('js/owner-forms.js') }}"></script>
 <script src="{{ asset('js/owner-invites.js') }}"></script>
+<script src="{{ asset('js/owner-cabinet.js') }}"></script>
 {% endblock %}

@@ -14,7 +14,7 @@
         var sent = false;
         var buttons = form.querySelectorAll('button[type="submit"]');
         var labels = Array.prototype.map.call(buttons, function (button) {
-            return button.textContent;
+            return button.innerHTML;
         });
 
         form.addEventListener('submit', function (event) {
@@ -42,7 +42,7 @@
             sent = false;
             Array.prototype.forEach.call(buttons, function (button, index) {
                 button.disabled = false;
-                button.textContent = labels[index];
+                button.innerHTML = labels[index];
             });
         });
     });

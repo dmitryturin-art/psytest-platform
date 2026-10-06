@@ -7,6 +7,7 @@
 {% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">Приглашения</a><a class="nav-link" href="{{ basePath }}/admin/clients">К списку клиентов</a><a class="nav-link" href="{{ basePath }}/admin/prompts">Промпты</a></nav>{% endblock %}
 
 {% block content %}
+{% import 'blocks/icons.twig' as ui %}
 <section class="owner-panel" aria-labelledby="owner-client-title">
     <p class="owner-panel-eyebrow">Карточка клиента</p>
     <h1 id="owner-client-title">{{ client.label }}</h1>
@@ -17,19 +18,71 @@
         {% if flash.invite_url %}<p class="owner-invite-url"><input aria-label="Ссылка-приглашение" type="text" readonly value="{{ flash.invite_url }}"></p>{% endif %}
     {% endif %}
 
-    <section class="owner-invites" aria-labelledby="owner-client-edit-title">
-        <h2 id="owner-client-edit-title">Подпись, заметка и email</h2>
-        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/update" class="owner-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <label for="client-label">Подпись клиента</label>
-            <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off" value="{{ client.label }}">
-            <label for="client-note">Заметка о работе</label>
-            <textarea id="client-note" name="note" maxlength="1000" rows="3">{{ client.note }}</textarea>
-            <label for="client-email">Email клиента (необязательно, только для уведомлений)</label>
-            <input id="client-email" name="email" type="email" maxlength="254" autocomplete="off" value="{{ client.email }}">
-            <p class="owner-help">Адрес нужен ровно для одного письма — «разбор готов». Платформа не отправляет его сама: письмо уходит только по вашей кнопке в карточке кейса. Очистите поле, чтобы удалить адрес.</p>
-            <button type="submit" class="btn btn-primary">Сохранить</button>
+    <section class="owner-invites" aria-labelledby="owner-client-assignments-title">
+        {% set client_url = basePath ~ '/admin/clients/' ~ client.id %}
+        {% set test_suffix = assignment_test ? 'test=' ~ assignment_test|url_encode : '' %}
+        <div class="list-head">
+            <h2 id="owner-client-assignments-title">Назначения</h2>
+            {# Переключатель рабочих, архива и корзины (07.K8). По умолчанию архив и
+               корзина скрыты: открываются явным выбором. #}
+            <nav class="view-tabs" aria-label="Вид списка">
+                <a class="view-tabs__tab" href="{{ client_url }}{% if test_suffix %}?{{ test_suffix }}{% endif %}"{% if assignment_view == 'active' %} aria-current="page"{% endif %}>Рабочие <span class="view-tabs__count">{{ active_count ?? 0 }}</span></a>
+                <a class="view-tabs__tab" href="{{ client_url }}?status=archived{% if test_suffix %}&amp;{{ test_suffix }}{% endif %}"{% if assignment_view == 'archived' %} aria-current="page"{% endif %}>Архив <span class="view-tabs__count">{{ archived_count }}</span></a>
+                <a class="view-tabs__tab" href="{{ client_url }}?status=trash{% if test_suffix %}&amp;{{ test_suffix }}{% endif %}"{% if assignment_view == 'trash' %} aria-current="page"{% endif %}>Корзина <span class="view-tabs__count">{{ trashed_count }}</span></a>
+            </nav>
+        </div>
+        <form method="get" action="{{ client_url }}" class="filter-bar" aria-label="Фильтр назначений" data-auto-submit>
+            <div class="filter-bar__field">
+                <label for="assignment-filter-test" class="visually-hidden">Методика</label>
+                <select id="assignment-filter-test" name="test">
+                    <option value="">Все методики</option>
+                    {% for test in invite_tests %}<option value="{{ test.slug }}"{% if assignment_test == test.slug %} selected{% endif %}>{{ test.name }}</option>{% endfor %}
+                </select>
+            </div>
+            {% if assignment_view != 'active' %}<input type="hidden" name="status" value="{{ assignment_view }}">{% endif %}
+            <div class="filter-bar__actions">
+                <button type="submit" class="btn btn-outline btn-sm filter-bar__apply">Применить</button>
+                {% if assignment_test %}<a class="filter-bar__reset" href="{{ client_url }}{% if assignment_view != 'active' %}?status={{ assignment_view }}{% endif %}">{{ ui.icon('close') }}Сбросить</a>{% endif %}
+            </div>
         </form>
+        <p class="filter-counts" aria-live="polite">Показано: {{ assignments|length }}</p>
+        {% if assignment_view == 'trash' %}
+            <p class="owner-help">Через {{ trash_days }} дней кейсы из корзины удаляются окончательно. До этого их можно восстановить.</p>
+        {% endif %}
+        <form method="post" action="{{ basePath }}/admin/invites/archive" id="client-bulk-form" data-bulk-form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="form_key" value="{{ bulk_form_key }}">
+            <input type="hidden" name="return" value="{{ return_url }}">
+            <input type="hidden" name="confirmed" value="" data-confirmed>
+            <input type="hidden" name="confirm_delete" value="" data-confirm-delete>
+        </form>
+        {% if assignments %}
+            <table class="cab-table assignment-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Методика и заметка</th>
+                        <th scope="col" class="cab-table__status">Статус</th>
+                        <th scope="col" class="cab-table__date">Создано</th>
+                        <th scope="col" class="cab-table__date">Завершено</th>
+                        <th scope="col" class="cab-table__actions"><span class="visually-hidden">Действия</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for assignment in assignments %}
+                    <tr>
+                        <td data-label="Методика" class="cab-table__main">
+                            <span class="cab-table__title">{{ assignment.test_name }}</span>
+                            {% if assignment.owner_note %}<span class="cab-table__sub" title="{{ assignment.owner_note }}">{{ assignment.owner_note }}</span>{% endif %}
+                        </td>
+                        <td data-label="Статус" class="cab-table__status">{% include 'blocks/owner-invite-status.twig' with {invite: assignment} %}{% if assignment.trashed_at %}<small class="cab-table__hint">будет удалён {{ assignment.purge_at|date("d.m.Y") }}</small>{% endif %}</td>
+                        <td data-label="Создано" class="cab-table__date"><time datetime="{{ assignment.created_at|date('Y-m-d') }}">{{ assignment.created_at|date("d.m.Y") }}</time></td>
+                        <td data-label="Завершено" class="cab-table__date">{% if assignment.completed_at %}<time datetime="{{ assignment.completed_at|date('Y-m-d') }}">{{ assignment.completed_at|date("d.m.Y") }}</time>{% else %}<span class="cab-table__none">—</span>{% endif %}</td>
+                        <td class="cab-table__actions">{% include 'blocks/owner-invite-actions.twig' with {invite: assignment, bulk_form_id: 'client-bulk-form'} %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}<p class="owner-help">{% if assignment_view == 'active' and not assignment_test %}Назначений пока нет.{% else %}Здесь ничего нет.{% endif %}</p>{% endif %}
     </section>
 
     <section class="owner-invites" aria-labelledby="owner-client-assign-title">
@@ -46,59 +99,23 @@
             </select>
             <label for="assignment-note">Заметка к назначению (не показывается клиенту)</label>
             <textarea id="assignment-note" name="owner_note" maxlength="1000" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">Создать назначение</button>
+            <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">{{ ui.icon('plus') }}Создать назначение</button>
         </form>
     </section>
 
-    <section class="owner-invites" aria-labelledby="owner-client-assignments-title">
-        <h2 id="owner-client-assignments-title">Назначения</h2>
-        {# Фильтр по методике и переключатель архива/корзины (07.K8). По умолчанию
-           архив и корзина скрыты: открываются явным выбором. #}
-        <form method="get" action="{{ basePath }}/admin/clients/{{ client.id }}" class="filter-bar" aria-label="Фильтр назначений">
-            <div class="filter-bar__field">
-                <label for="assignment-filter-test">Методика</label>
-                <select id="assignment-filter-test" name="test">
-                    <option value="">Все методики</option>
-                    {% for test in invite_tests %}<option value="{{ test.slug }}"{% if assignment_test == test.slug %} selected{% endif %}>{{ test.name }}</option>{% endfor %}
-                </select>
-            </div>
-            {% if assignment_view != 'active' %}<input type="hidden" name="status" value="{{ assignment_view }}">{% endif %}
-            <div class="filter-bar__actions">
-                <button type="submit" class="btn btn-primary">Применить</button>
-                {% if assignment_test %}<a class="btn btn-outline" href="{{ basePath }}/admin/clients/{{ client.id }}{% if assignment_view != 'active' %}?status={{ assignment_view }}{% endif %}">Сбросить</a>{% endif %}
-            </div>
-        </form>
-        <p class="filter-counts">
-            {% if assignment_view == 'active' %}Рабочие назначения{% else %}<a href="{{ basePath }}/admin/clients/{{ client.id }}{% if assignment_test %}?test={{ assignment_test }}{% endif %}">Рабочие назначения</a>{% endif %}
-            · {% if assignment_view == 'archived' %}архив ({{ archived_count }}){% else %}<a href="{{ basePath }}/admin/clients/{{ client.id }}?status=archived{% if assignment_test %}&amp;test={{ assignment_test }}{% endif %}">показать архив ({{ archived_count }})</a>{% endif %}
-            · {% if assignment_view == 'trash' %}корзина ({{ trashed_count }}){% else %}<a href="{{ basePath }}/admin/clients/{{ client.id }}?status=trash{% if assignment_test %}&amp;test={{ assignment_test }}{% endif %}">корзина ({{ trashed_count }})</a>{% endif %}
-        </p>
-        {% if assignment_view == 'trash' %}
-            <p class="owner-help">Через {{ trash_days }} дней кейсы из корзины удаляются окончательно. До этого их можно восстановить.</p>
-        {% endif %}
-        <form method="post" action="{{ basePath }}/admin/invites/archive" id="client-bulk-form" data-bulk-form>
+    <section class="owner-invites" aria-labelledby="owner-client-edit-title">
+        <h2 id="owner-client-edit-title">Подпись, заметка и email</h2>
+        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/update" class="owner-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" name="form_key" value="{{ bulk_form_key }}">
-            <input type="hidden" name="return" value="{{ return_url }}">
-            <input type="hidden" name="confirmed" value="" data-confirmed>
-            <input type="hidden" name="confirm_delete" value="" data-confirm-delete>
+            <label for="client-label">Подпись клиента</label>
+            <input id="client-label" name="label" type="text" maxlength="120" required autocomplete="off" value="{{ client.label }}">
+            <label for="client-note">Заметка о работе</label>
+            <textarea id="client-note" name="note" maxlength="1000" rows="3">{{ client.note }}</textarea>
+            <label for="client-email">Email клиента (необязательно, только для уведомлений)</label>
+            <input id="client-email" name="email" type="email" maxlength="254" autocomplete="off" value="{{ client.email }}">
+            <p class="owner-help">Адрес нужен ровно для одного письма — «разбор готов». Платформа не отправляет его сама: письмо уходит только по вашей кнопке в карточке кейса. Очистите поле, чтобы удалить адрес.</p>
+            <button type="submit" class="btn btn-outline">Сохранить</button>
         </form>
-        {% if assignments %}
-            <ul class="owner-invite-list">
-            {% for assignment in assignments %}
-                <li>
-                    <strong>{{ assignment.test_name }}</strong> —
-                    {% include 'blocks/owner-invite-status.twig' with {invite: assignment} %}
-                    <small>создано {{ assignment.created_at|date("d.m.Y H:i") }}{% if assignment.completed_at %} · завершено {{ assignment.completed_at|date("d.m.Y H:i") }}{% endif %}{% if assignment.trashed_at %} · будет удалён {{ assignment.purge_at|date("d.m.Y") }}{% endif %}</small>
-                    {% if assignment.owner_note %}<p>{{ assignment.owner_note }}</p>{% endif %}
-                    {% if assignment.claimed_session_id %}
-                        <a class="btn btn-outline" href="{{ basePath }}/admin/invited-case/{{ assignment.claimed_session_id }}">Ответы и результат</a>
-                    {% endif %}
-                    {% include 'blocks/owner-invite-actions.twig' with {invite: assignment, bulk_form_id: 'client-bulk-form'} %}
-                </li>
-            {% endfor %}
-            </ul>
-        {% else %}<p class="owner-help">{% if assignment_view == 'active' and not assignment_test %}Назначений пока нет.{% else %}Здесь ничего нет.{% endif %}</p>{% endif %}
     </section>
 
     {% include 'blocks/owner-invite-dialog.twig' %}
@@ -119,4 +136,5 @@
 {# Блокировка кнопки после отправки; без JS повтор отсекает сервер (07.K6b). #}
 <script src="{{ asset('js/owner-forms.js') }}"></script>
 <script src="{{ asset('js/owner-invites.js') }}"></script>
+<script src="{{ asset('js/owner-cabinet.js') }}"></script>
 {% endblock %}

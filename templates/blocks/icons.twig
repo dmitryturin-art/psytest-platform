@@ -1,0 +1,30 @@
+{# Значки кабинета (04.D2): один встроенный SVG-спрайт, без шрифтов и внешних хостов.
+   Сетка 20×20, линия 1.5, цвет — currentColor. Спрайт выводит layout.twig один раз
+   на страницу кабинета; значок ставится макросом:
+       {% import 'blocks/icons.twig' as ui %} … {{ ui.icon('archive') }}
+   Значок всегда рядом с подписью или с aria-label у кнопки: сам по себе он скрыт
+   от экранного диктора (aria-hidden). #}
+
+{% macro icon(name, extra_class) %}<svg class="icon{% if extra_class %} {{ extra_class }}{% endif %}" aria-hidden="true" focusable="false"><use href="#i-{{ name }}"></use></svg>{% endmacro %}
+
+{% macro sprite() %}
+<svg xmlns="http://www.w3.org/2000/svg" class="icon-sprite" aria-hidden="true" focusable="false">
+    <defs>
+        <symbol id="i-open" viewBox="0 0 20 20"><path d="M8 5.5h6.5V12M14.5 5.5 6 14"/></symbol>
+        <symbol id="i-archive" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="4" rx="1"/><path d="M4.5 8v7a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V8M8.25 11h3.5"/></symbol>
+        <symbol id="i-unarchive" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="4" rx="1"/><path d="M4.5 8v7a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V8M10 14v-3.75M8.25 12 10 10.25 11.75 12"/></symbol>
+        <symbol id="i-trash" viewBox="0 0 20 20"><path d="M3.75 6h12.5M8 6V4.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V6M5.5 6l.7 9.1a1 1 0 0 0 1 .9h5.6a1 1 0 0 0 1-.9L14.5 6M8.5 9v4M11.5 9v4"/></symbol>
+        <symbol id="i-delete" viewBox="0 0 20 20"><path d="M3.75 6h12.5M8 6V4.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V6M5.5 6l.7 9.1a1 1 0 0 0 1 .9h5.6a1 1 0 0 0 1-.9L14.5 6M8.5 9.5l3 3M11.5 9.5l-3 3"/></symbol>
+        <symbol id="i-restore" viewBox="0 0 20 20"><path d="M4.25 10a5.75 5.75 0 1 0 1.7-4.07M4.25 3.75v3.5h3.5"/></symbol>
+        <symbol id="i-revoke" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6.25"/><path d="M5.6 14.4 14.4 5.6"/></symbol>
+        <symbol id="i-filter" viewBox="0 0 20 20"><path d="M3.5 5h13l-5 6v4.5l-3-1.5v-3z"/></symbol>
+        <symbol id="i-search" viewBox="0 0 20 20"><circle cx="8.75" cy="8.75" r="4.75"/><path d="m12.25 12.25 4 4"/></symbol>
+        <symbol id="i-more" viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none"/><circle cx="10" cy="10" r="1.25" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10" r="1.25" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="i-check" viewBox="0 0 20 20"><path d="m4.75 10.5 3.5 3.5 7-7.5"/></symbol>
+        <symbol id="i-close" viewBox="0 0 20 20"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></symbol>
+        <symbol id="i-client" viewBox="0 0 20 20"><circle cx="10" cy="7" r="3"/><path d="M4.5 16.25a5.5 5.5 0 0 1 11 0"/></symbol>
+        <symbol id="i-calendar" viewBox="0 0 20 20"><rect x="3.5" y="4.5" width="13" height="12" rx="1.5"/><path d="M3.5 8.25h13M7 3v3M13 3v3"/></symbol>
+        <symbol id="i-plus" viewBox="0 0 20 20"><path d="M10 4.5v11M4.5 10h11"/></symbol>
+    </defs>
+</svg>
+{% endmacro %}

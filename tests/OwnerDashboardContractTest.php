@@ -734,10 +734,10 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertSame(1, substr_count($html, 'action="/admin/invites/delete"'));
         self::assertSame(1, substr_count($html, 'action="/admin/invites/revoke"'));
         self::assertMatchesRegularExpression(
-            '#action="/admin/invites/delete" class="owner-action-form" data-submit-once>\s*<input type="hidden" name="csrf_token" value="synthetic-csrf">\s*<input type="hidden" name="invite_id" value="revoked-1">#',
+            '#action="/admin/invites/delete" class="row-menu__form" data-submit-once>\s*<input type="hidden" name="csrf_token" value="synthetic-csrf">\s*<input type="hidden" name="invite_id" value="revoked-1">#',
             $html,
         );
-        self::assertStringContainsString('data-busy-text="Удаляем…">Удалить</button>', $html);
+        self::assertStringContainsString('data-busy-text="Удаляем…"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-delete"></use></svg><span>Удалить</span></button>', $html);
     }
 
     /**
@@ -777,8 +777,23 @@ final class OwnerDashboardContractTest extends TestCase
         foreach (['name="client"', 'name="test"', 'name="status"', 'name="q"'] as $field) {
             self::assertStringContainsString($field, $html);
         }
-        self::assertStringContainsString('в архиве: 1', $html);
-        self::assertStringContainsString('в корзине: 3', $html);
+        // Переключатель вида (04.D2): рабочие, архив и корзина со счётчиками.
+        self::assertMatchesRegularExpression('#href="/admin" aria-current="page">Рабочие <span class="view-tabs__count">2</span>#', $html);
+        self::assertMatchesRegularExpression('#href="/admin\?status=archived">.*?Архив <span class="view-tabs__count">1</span>#', $html);
+        self::assertMatchesRegularExpression('#href="/admin\?status=trash">.*?Корзина <span class="view-tabs__count">3</span>#', $html);
+        // В списке статусов нет архива и корзины: это вкладки, а не статус работы.
+        self::assertStringContainsString('<select id="filter-status" name="status">', $html);
+        self::assertStringNotContainsString('<option value="archived"', $html);
+        self::assertStringNotContainsString('<option value="trash"', $html);
+        // Фильтры применяются сразу со скриптом; без него остаётся кнопка «Применить».
+        self::assertStringContainsString('data-auto-submit', $html);
+        self::assertStringContainsString('filter-bar__apply">Применить</button>', $html);
+        // Действия строки: ссылка на кейс и одно меню «⋯», значки из встроенного спрайта.
+        self::assertSame(2, substr_count($html, '<details class="row-menu" data-row-menu>'));
+        self::assertStringContainsString('<a class="row-actions__open" href="/admin/invited-case/11111111-1111-4111-8111-111111111111">Открыть кейс</a>', $html);
+        self::assertStringContainsString('<symbol id="i-more"', $html);
+        self::assertStringContainsString("css/cabinet.css", $html);
+        self::assertStringContainsString('js/owner-cabinet.js', $html);
         // Общая форма действий несёт CSRF, одноразовый ключ и адрес возврата.
         self::assertMatchesRegularExpression(
             '#id="invite-bulk-form" class="invite-bulk-form" data-bulk-form>\s*<input type="hidden" name="csrf_token" value="synthetic-csrf">\s*<input type="hidden" name="form_key" value="bulk-key">\s*<input type="hidden" name="return" value="/admin">#',
@@ -799,6 +814,10 @@ final class OwnerDashboardContractTest extends TestCase
         $trash = $render([$row('trash-1', 'claimed', 'completed', '11111111-1111-4111-8111-111111111111', [
             'trashed_at' => '2026-09-30 10:00:00', 'purge_at' => '2026-10-30 10:00:00',
         ])], 'trash');
+        // Набор переключают только вкладки: в корзине выбора статуса нет, вид держит скрытое поле.
+        self::assertStringNotContainsString('id="filter-status"', $trash);
+        self::assertStringContainsString('<input type="hidden" name="status" value="trash">', $trash);
+        self::assertMatchesRegularExpression('#href="/admin\?status=trash" aria-current="page">Корзина#', $trash);
         self::assertStringContainsString('formaction="/admin/invites/restore" name="invite_id" value="trash-1"', $trash);
         self::assertStringContainsString('formaction="/admin/invites/purge" name="invite_id" value="trash-1" data-confirm="purge"', $trash);
         self::assertStringContainsString('будет удалён 30.10.2026', $trash);
@@ -856,5 +875,48 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("'invites_purged'", $cron);
         self::assertStringContainsString("'cases_purged'", $cron);
         self::assertSame(30, \PsyTest\Core\TestInviteService::TRASH_RETENTION_DAYS);
+    }
+
+    /**
+     * Слой кабинета (04.D2): подключается только в кабинете, общие классы меняет
+     * только под классом страницы кабинета и берёт цвета из :root main.css.
+     */
+    public function testCabinetLayerIsScopedToTheCabinetAndUsesTokens(): void
+    {
+        $layout = (string) file_get_contents($this->projectRoot . '/templates/layout.twig');
+        self::assertStringContainsString("{% if ownerArea|default(false) %}<link rel=\"stylesheet\" href=\"{{ asset('css/cabinet.css') }}\">{% endif %}", $layout);
+        self::assertStringContainsString("{% if ownerArea|default(false) %}{% import 'blocks/icons.twig' as ui %}{{ ui.sprite() }}{% endif %}", $layout);
+
+        $css = (string) file_get_contents($this->projectRoot . '/public/css/cabinet.css');
+        // Общие классы переопределяются только внутри кабинета.
+        foreach (['.btn', '.btn-primary', '.btn-outline', '.btn-danger', '.status', '.owner-panel'] as $shared) {
+            self::assertDoesNotMatchRegularExpression('#^' . preg_quote($shared, '#') . '[\s{:,.]#m', $css, $shared . ' must be scoped');
+        }
+        // Цвета — только переменные; единственное исключение — стрелка списка в data-URI.
+        $withoutDataUri = (string) preg_replace('#url\("data:[^"]*"\)#', '', $css);
+        self::assertDoesNotMatchRegularExpression('/#[0-9a-fA-F]{3,8}\b/', $withoutDataUri);
+
+        // Кнопки на всём сайте — прямоугольник 8 px с контуром 1 px (одобрено владельцем 06.10).
+        $main = (string) file_get_contents($this->projectRoot . '/public/css/main.css');
+        self::assertMatchesRegularExpression('/\n\.btn \{[^}]*border: 1px solid transparent;[^}]*border-radius: var\(--radius-sm\);/', $main);
+        self::assertMatchesRegularExpression('/\n\.btn-primary \{[^}]*background: var\(--color-accent-mist\);/', $main);
+
+        // Карточка клиента: сначала назначения, ниже — новая ссылка и правка карточки.
+        $client = (string) file_get_contents($this->projectRoot . '/templates/owner-client.twig');
+        $assignments = (int) strpos($client, 'owner-client-assignments-title');
+        self::assertLessThan((int) strpos($client, 'owner-client-assign-title'), $assignments);
+        self::assertLessThan((int) strpos($client, 'owner-client-edit-title'), $assignments);
+
+        // Каждый значок, на который ссылаются шаблоны, есть в спрайте.
+        $sprite = (string) file_get_contents($this->projectRoot . '/templates/blocks/icons.twig');
+        $used = [];
+        foreach (glob($this->projectRoot . '/templates/{,blocks/}*.twig', GLOB_BRACE) ?: [] as $file) {
+            preg_match_all("#ui\\.icon\\('([a-z-]+)'\\)#", (string) file_get_contents($file), $matches);
+            $used = array_merge($used, $matches[1]);
+        }
+        self::assertNotEmpty($used);
+        foreach (array_unique($used) as $name) {
+            self::assertStringContainsString('<symbol id="i-' . $name . '"', $sprite);
+        }
     }
 }
