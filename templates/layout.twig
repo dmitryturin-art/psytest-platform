@@ -14,6 +14,8 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/main.css') }}">
+    {# Слой кабинета специалиста (04.D2): тихие кнопки, меню строки, фильтры, списки. #}
+    {% if ownerArea|default(false) %}<link rel="stylesheet" href="{{ asset('css/cabinet.css') }}">{% endif %}
     {% block extra_css %}{% endblock %}
     
     <!-- Privacy & Security -->
@@ -21,6 +23,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
 </head>
 <body class="{% block body_class %}{% endblock %}">
+    {% if ownerArea|default(false) %}{% import 'blocks/icons.twig' as ui %}{{ ui.sprite() }}{% endif %}
     <!-- Header -->
     <header class="site-header">
         <div class="container">

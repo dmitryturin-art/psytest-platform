@@ -52,6 +52,18 @@
             sync();
         });
     }
+    // «Снять выбор» есть только со скриптом: без него панель и так видна целиком.
+    var clear = document.querySelector('[data-bulk-clear]');
+    if (clear) {
+        clear.hidden = false;
+        clear.addEventListener('click', function () {
+            rows().forEach(function (box) { box.checked = false; });
+            sync();
+            if (master) {
+                master.focus();
+            }
+        });
+    }
     sync();
 
     // Диалог подтверждения: один <dialog>, тексты из <template data-dialog-template>.

@@ -5,4 +5,4 @@
 {% elseif invite.display_status == 'expired' %}срок истёк
 {% elseif invite.display_status == 'result_deleted' %}результат удалён
 {% else %}ожидает открытия{% endif %}</span>
-{% if invite.trashed_at %}<span class="status status--failed">в корзине</span>{% elseif invite.archived_at %}<span class="status status--muted">в архиве</span>{% endif %}
+{% if invite.trashed_at %}<span class="status-flag status-flag--trash">в корзине</span>{% elseif invite.archived_at %}<span class="status-flag">в архиве</span>{% endif %}

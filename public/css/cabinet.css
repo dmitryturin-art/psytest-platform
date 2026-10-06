@@ -1,0 +1,993 @@
+/* ============================================================================
+   Кабинет специалиста — отдельный слой (04.D2 «Лёгкий кабинет»).
+
+   Подключается в layout.twig только на страницах кабинета (ownerArea) после
+   main.css. Все цвета, размеры и тени — переменные из :root в main.css; своих
+   значений здесь нет (исключение — стрелка списка в data-URI, где переменные
+   не работают). Общие классы (.btn, .status, .owner-panel) переопределяются
+   под `.owner-dashboard-page`, поэтому публичные страницы, прохождение теста
+   и страница результата этот слой не видят.
+
+   Порядок: значки → кнопки → статус → вид списка и фильтры → таблица →
+   действия строки и меню → панель выбранного → диалог → телефон.
+   ========================================================================== */
+
+/* ---------- Значки: встроенный спрайт blocks/icons.twig ---------- */
+
+.icon-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.icon {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vertical-align: -0.2em;
+}
+
+/* ---------- Кнопки: одна основная на экран, остальное тихое ----------
+   .btn-primary  — светлая мятная заливка, тёмно-зелёный текст;
+   .btn-outline  — тихая: белая, контур в волосок, чернильный текст;
+   .btn-ghost    — текстовая, без контура;
+   .btn-danger   — тихая, красный только в тексте; тинт и контур при наведении.
+   В диалоге подтверждения опасная кнопка — залитая: это и есть решение. */
+
+.owner-dashboard-page .btn {
+    min-height: 2.5rem;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+    border-width: 1px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-md);
+    font-weight: 550;
+    letter-spacing: 0.005em;
+}
+
+.owner-dashboard-page .btn .icon {
+    width: 1rem;
+    height: 1rem;
+    margin-left: -0.125rem;
+}
+
+.owner-dashboard-page .btn-sm {
+    min-height: 2.125rem;
+    padding: 0.3125rem 0.75rem;
+    font-size: var(--font-size-sm);
+}
+
+.owner-dashboard-page .btn-primary {
+    background: var(--color-accent-mist);
+    border-color: var(--color-accent-mist-line);
+    color: var(--color-primary-dark);
+}
+
+.owner-dashboard-page .btn-primary:hover:not(:disabled) {
+    background: var(--color-accent-mist-strong);
+    border-color: var(--color-primary);
+    color: var(--color-primary-dark);
+}
+
+.owner-dashboard-page .btn-outline {
+    background: var(--color-bg-white);
+    border-color: var(--color-hairline);
+    color: var(--color-text);
+}
+
+.owner-dashboard-page .btn-outline:hover:not(:disabled) {
+    background: var(--color-hover);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+}
+
+.owner-dashboard-page .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-text-light);
+}
+
+.owner-dashboard-page .btn-ghost:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+.owner-dashboard-page .btn-danger {
+    background: var(--color-bg-white);
+    border-color: var(--color-hairline);
+    color: var(--color-danger);
+}
+
+.owner-dashboard-page .btn-danger:hover:not(:disabled) {
+    background: var(--color-danger-tint);
+    border-color: var(--color-danger-line);
+    color: var(--color-danger-dark);
+}
+
+.owner-dashboard-page .btn:disabled {
+    border-color: var(--color-border);
+}
+
+/* ---------- Карточка кабинета и формы: легче, без лишнего веса ---------- */
+
+.owner-dashboard-page .owner-panel {
+    box-shadow: var(--shadow-sm);
+}
+
+/* Надпись над заголовком — обычным регистром и тихим цветом, без разрядки капсом. */
+.owner-dashboard-page .owner-panel-eyebrow {
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.owner-dashboard-page .owner-form label,
+.owner-dashboard-page .owner-delete-form label {
+    font-weight: 500;
+}
+
+/* ---------- Статус: точка и подпись, без заливки ---------- */
+
+.owner-dashboard-page .status {
+    gap: 0.4375rem;
+    padding: 0;
+    background: none;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.owner-dashboard-page .status::before {
+    content: "";
+    flex: none;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: var(--status-dot-muted);
+}
+
+.owner-dashboard-page .status--done::before { background: var(--status-dot-done); }
+.owner-dashboard-page .status--open::before { background: var(--status-dot-open); }
+.owner-dashboard-page .status--pending::before { background: var(--status-dot-pending); }
+
+.owner-dashboard-page .status--muted {
+    color: var(--color-text-light);
+}
+
+.owner-dashboard-page .status--failed {
+    color: var(--color-danger-dark);
+}
+
+.owner-dashboard-page .status--failed::before { background: var(--status-dot-failed); }
+
+/* Отметка «в архиве» / «в корзине» рядом со статусом. */
+.status-flag {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0 0.375rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+    line-height: 1.45;
+    white-space: nowrap;
+}
+
+.status-flag--trash {
+    border-color: var(--color-danger-line);
+    color: var(--color-danger-dark);
+}
+
+/* ---------- Шапка списка и переключатель «Рабочие · Архив · Корзина» ---------- */
+
+.list-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm) var(--spacing-lg);
+}
+
+.owner-dashboard-page .list-head h2 {
+    margin: 0;
+}
+
+.view-tabs {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.view-tabs__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 7px;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.view-tabs__tab .icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.view-tabs__tab:hover {
+    color: var(--color-text);
+}
+
+.view-tabs__tab[aria-current="page"] {
+    background: var(--color-bg-white);
+    color: var(--color-primary-dark);
+    box-shadow: var(--shadow-sm), 0 0 0 1px var(--color-border);
+}
+
+.view-tabs__tab:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.view-tabs__count {
+    color: var(--color-text-light);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Фильтры: одна лёгкая строка без рамки ---------- */
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: 1.25rem;
+}
+
+.filter-bar__field {
+    position: relative;
+    flex: 0 1 12.5rem;
+    min-width: 9rem;
+}
+
+.filter-bar__search {
+    flex: 1 1 15rem;
+}
+
+.filter-bar select,
+.filter-bar input[type="search"] {
+    width: 100%;
+    min-height: 2.375rem;
+    padding: 0.4375rem 2rem 0.4375rem 0.75rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-white);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    transition: border-color 0.15s;
+}
+
+.filter-bar select {
+    appearance: none;
+    -webkit-appearance: none;
+    text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%235e574f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.625rem center;
+    background-size: 0.75rem;
+    cursor: pointer;
+}
+
+.filter-bar input[type="search"] {
+    padding-left: 2.125rem;
+    padding-right: 0.75rem;
+}
+
+.filter-bar input[type="search"]::placeholder {
+    color: var(--color-text-light);
+}
+
+.filter-bar__search .icon {
+    position: absolute;
+    top: 50%;
+    left: 0.6875rem;
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-text-light);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.filter-bar select:hover,
+.filter-bar input[type="search"]:hover {
+    border-color: var(--color-border-strong);
+}
+
+.filter-bar select:focus-visible,
+.filter-bar input:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-tint-strong);
+}
+
+.filter-bar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* Со скриптом список обновляется сразу — «Применить» не нужна. */
+.filter-bar--auto .filter-bar__apply {
+    display: none;
+}
+
+.filter-bar__reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: 6px;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+}
+
+.filter-bar__reset .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.filter-bar__reset:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+.filter-counts {
+    margin: 0.75rem 0 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+}
+
+.filter-counts a {
+    color: var(--color-primary);
+}
+
+/* Пояснение к виду списка (архив, корзина) — тихая строка над таблицей. */
+.filter-counts + .owner-help,
+.filter-bar + .owner-help {
+    margin: 0.5rem 0 0;
+    font-size: var(--font-size-sm);
+}
+
+/* ---------- Таблица списков кабинета: приглашения, клиенты, назначения ---------- */
+
+.cab-table {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    font-size: var(--font-size-md);
+    font-variant-numeric: tabular-nums;
+}
+
+.cab-table th {
+    padding: 0.5rem 0.75rem 0.625rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.cab-table td {
+    padding: 0.875rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+.cab-table tbody tr:nth-child(even) {
+    background: var(--table-zebra-bg);
+}
+
+.cab-table tbody tr {
+    transition: background-color 0.12s;
+}
+
+@media (hover: hover) {
+    .cab-table tbody tr:hover {
+        background: var(--color-hover);
+    }
+}
+
+/* Отмеченная строка — единственное место таблицы, где есть зелёный тинт. */
+.cab-table tbody tr:has(.cab-check:checked) {
+    background: var(--color-primary-tint);
+}
+
+.cab-table__check { width: 2.75rem; text-align: center; }
+.cab-table__client { width: 9.5rem; }
+.cab-table__status { width: 12.5rem; }
+.cab-table__date { width: 7.25rem; white-space: nowrap; }
+.cab-table__num { width: 7.5rem; }
+.cab-table__actions { width: 10.5rem; }
+
+.cab-table th.cab-table__check,
+.cab-table td.cab-table__check {
+    padding-inline: 0.5rem 0.25rem;
+}
+
+.cab-table__title {
+    display: block;
+    color: var(--color-text);
+    font-weight: 550;
+    line-height: 1.35;
+}
+
+a.cab-table__title {
+    text-decoration: none;
+}
+
+a.cab-table__title:hover {
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Заметка — одна строка; полный текст в подсказке (title). */
+.cab-table__sub {
+    display: block;
+    margin-top: 0.125rem;
+    overflow: hidden;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    line-height: 1.45;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cab-table__hint {
+    display: block;
+    margin-top: 0.125rem;
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+}
+
+.cab-table__none {
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+.cab-table td.cab-table__date,
+.cab-table td.cab-table__num {
+    color: var(--color-text-light);
+}
+
+/* Клиент в строке — тихая ссылка: чернила и тонкое подчёркивание. */
+.quiet-link {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-strong);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+.quiet-link:hover {
+    color: var(--color-primary-dark);
+    text-decoration-color: currentColor;
+}
+
+/* Флажок выбора строки. */
+.cab-check {
+    display: inline-grid;
+    place-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    border: 1px solid var(--color-control-line);
+    border-radius: 5px;
+    background: var(--color-bg-white);
+    vertical-align: middle;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background-color 0.12s, border-color 0.12s;
+}
+
+.cab-check::before {
+    content: "";
+    width: 0.625rem;
+    height: 0.625rem;
+    background: var(--color-bg-white);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
+    transform: scale(0);
+    transition: transform 0.12s;
+}
+
+.cab-check:hover:not(:disabled) {
+    border-color: var(--color-primary);
+}
+
+.cab-check:checked,
+.cab-check:indeterminate {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+}
+
+.cab-check:checked::before {
+    transform: scale(1);
+}
+
+.cab-check:indeterminate::before {
+    height: 2px;
+    clip-path: none;
+    transform: scale(1);
+}
+
+.cab-check:disabled {
+    border-color: var(--color-border);
+    background: var(--color-bg-soft);
+    cursor: not-allowed;
+}
+
+.cab-check:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* ---------- Действия строки: ссылка «Открыть кейс» + меню «⋯» ---------- */
+
+.row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+}
+
+.row-actions__open {
+    padding: 0.375rem 0.5rem;
+    border-radius: 6px;
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 550;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.row-actions__open:hover {
+    background: var(--color-primary-tint);
+    color: var(--color-primary-dark);
+}
+
+.row-actions__open:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.row-menu {
+    position: relative;
+}
+
+.row-menu > summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 6px;
+    color: var(--color-text-light);
+    list-style: none;
+    cursor: pointer;
+}
+
+.row-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.row-menu > summary:hover,
+.row-menu[open] > summary {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+.row-menu > summary:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.row-menu__list {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 30;
+    display: grid;
+    gap: 1px;
+    min-width: 12.5rem;
+    padding: 0.3125rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-white);
+    box-shadow: var(--shadow-pop);
+}
+
+.row-menu--up .row-menu__list {
+    top: auto;
+    bottom: calc(100% + 4px);
+}
+
+.row-menu__form {
+    display: block;
+    margin: 0;
+}
+
+.row-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    min-height: 2.25rem;
+    padding: 0.375rem 0.625rem;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.row-menu__item .icon {
+    color: var(--color-text-light);
+}
+
+.row-menu__item:hover {
+    background: var(--color-hover);
+}
+
+.row-menu__item:focus-visible {
+    outline: none;
+    background: var(--color-hover);
+    box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+
+.row-menu__item--danger,
+.row-menu__item--danger .icon {
+    color: var(--color-danger);
+}
+
+.row-menu__item--danger:hover {
+    background: var(--color-danger-tint);
+    color: var(--color-danger-dark);
+}
+
+.row-menu__item:disabled {
+    color: var(--color-text-light);
+    cursor: progress;
+}
+
+.row-menu__sep {
+    display: block;
+    height: 1px;
+    margin: 0.25rem 0.375rem;
+    background: var(--color-border);
+}
+
+/* ---------- Панель выбранного: всплывает снизу, только при выборе ---------- */
+
+.bulk-bar {
+    position: sticky;
+    bottom: var(--spacing-md);
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    margin-top: var(--spacing-md);
+    pointer-events: none;
+}
+
+.bulk-bar__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 0.4375rem 0.4375rem 0.4375rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-bg-white);
+    box-shadow: var(--shadow-pop);
+    pointer-events: auto;
+}
+
+.bulk-bar__inner[hidden] {
+    display: none;
+}
+
+.bulk-bar__count {
+    margin-right: 0.5rem;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+.bulk-bar__count strong {
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Кнопки страницы подтверждения без JS (owner-invites-confirm.twig). */
+.owner-invite-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+/* ---------- Диалог подтверждения ---------- */
+
+.owner-dialog {
+    width: min(30rem, calc(100vw - 2rem));
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 16px;
+    background: var(--color-bg-white);
+    color: var(--color-text);
+    box-shadow: var(--shadow-dialog);
+}
+
+.owner-dialog::backdrop {
+    background: rgba(42, 38, 34, 0.32);
+}
+
+.owner-dialog__body {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.owner-dialog__body h2 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.owner-dialog__body p {
+    margin: 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-md);
+    line-height: 1.55;
+}
+
+.owner-dialog__body p[data-dialog-selected] {
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.owner-dialog__check {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-height: 44px;
+    font-weight: 500;
+}
+
+.owner-dialog__check[hidden] {
+    display: none;
+}
+
+.owner-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin-top: 0.5rem;
+}
+
+.owner-dashboard-page .owner-dialog .btn-danger {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+    color: var(--color-bg-white);
+}
+
+.owner-dashboard-page .owner-dialog .btn-danger:hover:not(:disabled) {
+    background: var(--color-danger-dark);
+    border-color: var(--color-danger-dark);
+    color: var(--color-bg-white);
+}
+
+.owner-dashboard-page .owner-dialog .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ---------- Сенсорный экран: цели не меньше 44 px ---------- */
+
+@media (pointer: coarse) {
+    .owner-dashboard-page .btn,
+    .owner-dashboard-page .btn-sm,
+    .filter-bar select,
+    .filter-bar input[type="search"],
+    .row-menu__item {
+        min-height: 44px;
+    }
+
+    .row-menu > summary {
+        width: 44px;
+        height: 44px;
+    }
+
+    .row-actions__open {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    .cab-check {
+        width: 1.375rem;
+        height: 1.375rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cab-table tbody tr,
+    .cab-check,
+    .cab-check::before {
+        transition: none;
+    }
+}
+
+/* ---------- Телефон: таблица сворачивается в карточки ---------- */
+
+@media (max-width: 600px) {
+    .list-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .view-tabs {
+        display: flex;
+        width: 100%;
+    }
+
+    .view-tabs__tab {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding-inline: 0.5rem;
+    }
+
+    .filter-bar__field {
+        flex: 1 1 calc(50% - var(--spacing-sm));
+        min-width: 0;
+    }
+
+    .filter-bar__search {
+        flex-basis: 100%;
+    }
+
+    .cab-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .cab-table,
+    .cab-table tbody,
+    .cab-table tr,
+    .cab-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .cab-table tbody tr,
+    .cab-table tbody tr:nth-child(even) {
+        position: relative;
+        margin-bottom: 0.75rem;
+        padding: 0.875rem 0.875rem 0.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        background: var(--color-bg-white);
+    }
+
+    .cab-table td {
+        padding: 0.1875rem 0;
+        border-bottom: 0;
+    }
+
+    .cab-table td[data-label] {
+        display: grid;
+        grid-template-columns: 5.5rem minmax(0, 1fr);
+        gap: var(--spacing-sm);
+        align-items: baseline;
+    }
+
+    .cab-table td[data-label]::before {
+        content: attr(data-label);
+        color: var(--color-text-light);
+        font-size: var(--font-size-xs);
+    }
+
+    /* Название и заметка — заголовок карточки, без подписи столбца. */
+    .cab-table td.cab-table__main {
+        display: block;
+        padding-bottom: 0.5rem;
+    }
+
+    .cab-table td.cab-table__main::before {
+        display: none;
+    }
+
+    .cab-table__sub {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .invite-table td.cab-table__main {
+        padding-left: 2.25rem;
+    }
+
+    .cab-table td.cab-table__check {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        width: auto;
+        padding: 0;
+    }
+
+    /* Меню «⋯» — в правом верхнем углу карточки; внизу только «Открыть кейс». */
+    .cab-table td.cab-table__main {
+        padding-right: 2.75rem;
+    }
+
+    .cab-table td.cab-table__actions {
+        padding: 0;
+    }
+
+    .cab-table td.cab-table__actions .row-actions {
+        justify-content: flex-start;
+    }
+
+    .cab-table td.cab-table__actions .row-menu {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+
+    .cab-table td.cab-table__actions:has(.row-actions__open) {
+        margin-top: 0.375rem;
+        padding-top: 0.375rem;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .cab-table td.cab-table__actions .row-actions__open {
+        margin-left: -0.5rem;
+    }
+
+    .bulk-bar {
+        bottom: var(--spacing-sm);
+    }
+
+    .bulk-bar__inner {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

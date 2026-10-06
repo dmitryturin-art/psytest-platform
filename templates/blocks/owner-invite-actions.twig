@@ -1,18 +1,59 @@
-{# Кнопки архива и корзины одной строки (07.K8). Все они — кнопки общей формы
-   `bulk_form_id`: одиночный `invite_id` главнее отмеченных галочек. «В корзину» и
-   «Удалить сейчас» без JS приводят на страницу подтверждения, а не выполняются
-   сразу; с JS их перехватывает диалог (data-confirm). #}
+{# Действия строки приглашения (07.K8, вид — 04.D2): главная ссылка «Открыть кейс»
+   плюс одно меню «⋯» с остальным. Меню — нативный <details>: без JS открывается и
+   закрывается так же, скрипт только добавляет Escape, щелчок мимо и разворот вверх.
+
+   Кнопки архива и корзины — кнопки общей формы `bulk_form_id`: одиночный `invite_id`
+   главнее отмеченных галочек. «В корзину» и «Удалить сейчас» без JS приводят на
+   страницу подтверждения, а не выполняются сразу; с JS их перехватывает диалог
+   (data-confirm). `lifecycle` добавляет «Отозвать» и мгновенное «Удалить» отозванного
+   неоткрытого приглашения (07.K6c) — это есть только в общем списке. #}
+{% import 'blocks/icons.twig' as ui %}
 {% set bulk_form_id = bulk_form_id ?? 'invite-bulk-form' %}
-{% if invite.trashed_at %}
-    <button type="submit" class="btn btn-outline btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/restore" name="invite_id" value="{{ invite.id }}">Восстановить</button>
-    <button type="submit" class="btn btn-danger btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/purge" name="invite_id" value="{{ invite.id }}" data-confirm="purge">Удалить сейчас</button>
-{% elseif invite.status != 'pending' or invite.display_status == 'expired' %}
-    {% if invite.archived_at %}
-        <button type="submit" class="btn btn-outline btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/unarchive" name="invite_id" value="{{ invite.id }}">Из архива</button>
-    {% else %}
-        <button type="submit" class="btn btn-outline btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/archive" name="invite_id" value="{{ invite.id }}">В архив</button>
+{% set lifecycle = lifecycle ?? false %}
+{% set can_revoke = lifecycle and invite.status == 'pending' and invite.display_status == 'pending' %}
+{% set can_delete = lifecycle and invite.status == 'revoked' and not invite.claimed_session_id and not invite.trashed_at %}
+{% set can_archive = not invite.trashed_at and (invite.status != 'pending' or invite.display_status == 'expired') %}
+<div class="row-actions">
+    {% if invite.claimed_session_id %}
+        <a class="row-actions__open" href="{{ basePath }}/admin/invited-case/{{ invite.claimed_session_id }}">{{ case_label ?? 'Открыть кейс' }}</a>
     {% endif %}
-    {% if not (hide_trash ?? false) %}
-        <button type="submit" class="btn btn-danger btn-sm" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/trash" name="invite_id" value="{{ invite.id }}" data-confirm="trash">В корзину</button>
+    {% if invite.trashed_at or can_revoke or can_archive %}
+    <details class="row-menu" data-row-menu>
+        <summary class="row-menu__toggle" aria-label="Другие действия: {{ invite.test_name }}" title="Другие действия">{{ ui.icon('more') }}</summary>
+        <div class="row-menu__list">
+            {% if invite.trashed_at %}
+                <button type="submit" class="row-menu__item" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/restore" name="invite_id" value="{{ invite.id }}">{{ ui.icon('restore') }}<span>Восстановить</span></button>
+                <span class="row-menu__sep" aria-hidden="true"></span>
+                <button type="submit" class="row-menu__item row-menu__item--danger" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/purge" name="invite_id" value="{{ invite.id }}" data-confirm="purge">{{ ui.icon('delete') }}<span>Удалить сейчас</span></button>
+            {% else %}
+                {% if can_revoke %}
+                    <form method="post" action="{{ basePath }}/admin/invites/revoke" class="row-menu__form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="invite_id" value="{{ invite.id }}">
+                        <button type="submit" class="row-menu__item row-menu__item--danger">{{ ui.icon('revoke') }}<span>Отозвать ссылку</span></button>
+                    </form>
+                {% endif %}
+                {% if can_archive %}
+                    {% if invite.archived_at %}
+                        <button type="submit" class="row-menu__item" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/unarchive" name="invite_id" value="{{ invite.id }}">{{ ui.icon('unarchive') }}<span>Из архива</span></button>
+                    {% else %}
+                        <button type="submit" class="row-menu__item" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/archive" name="invite_id" value="{{ invite.id }}">{{ ui.icon('archive') }}<span>В архив</span></button>
+                    {% endif %}
+                    <span class="row-menu__sep" aria-hidden="true"></span>
+                    {% if can_delete %}
+                        {# Отозванное и не открытое приглашение можно убрать сразу (07.K6c):
+                           клиентских данных за ним нет, поэтому корзина не нужна. #}
+                        <form method="post" action="{{ basePath }}/admin/invites/delete" class="row-menu__form" data-submit-once>
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="invite_id" value="{{ invite.id }}">
+                            <button type="submit" class="row-menu__item row-menu__item--danger" data-busy-text="Удаляем…">{{ ui.icon('delete') }}<span>Удалить</span></button>
+                        </form>
+                    {% else %}
+                        <button type="submit" class="row-menu__item row-menu__item--danger" form="{{ bulk_form_id }}" formaction="{{ basePath }}/admin/invites/trash" name="invite_id" value="{{ invite.id }}" data-confirm="trash">{{ ui.icon('trash') }}<span>В корзину</span></button>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </div>
+    </details>
     {% endif %}
-{% endif %}
+</div>
