@@ -77,7 +77,7 @@
                         <td data-label="Статус" class="cab-table__status">{% include 'blocks/owner-invite-status.twig' with {invite: assignment} %}{% if assignment.trashed_at %}<small class="cab-table__hint">будет удалён {{ assignment.purge_at|date("d.m.Y") }}</small>{% endif %}</td>
                         <td data-label="Создано" class="cab-table__date"><time datetime="{{ assignment.created_at|date('Y-m-d') }}">{{ assignment.created_at|date("d.m.Y") }}</time></td>
                         <td data-label="Завершено" class="cab-table__date">{% if assignment.completed_at %}<time datetime="{{ assignment.completed_at|date('Y-m-d') }}">{{ assignment.completed_at|date("d.m.Y") }}</time>{% else %}<span class="cab-table__none">—</span>{% endif %}</td>
-                        <td class="cab-table__actions">{% include 'blocks/owner-invite-actions.twig' with {invite: assignment, bulk_form_id: 'client-bulk-form'} %}</td>
+                        <td class="cab-table__actions">{% include 'blocks/owner-invite-actions.twig' with {invite: assignment, bulk_form_id: 'client-bulk-form', attach_label: client.label} %}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -119,6 +119,7 @@
     </section>
 
     {% include 'blocks/owner-invite-dialog.twig' %}
+    {% include 'blocks/owner-attach-dialog.twig' with {attach_return: return_url} %}
 
     <section class="owner-case" aria-labelledby="owner-client-delete-title">
         <h2 id="owner-client-delete-title">Удаление клиента</h2>
@@ -136,5 +137,6 @@
 {# Блокировка кнопки после отправки; без JS повтор отсекает сервер (07.K6b). #}
 <script src="{{ asset('js/owner-forms.js') }}"></script>
 <script src="{{ asset('js/owner-invites.js') }}"></script>
+<script src="{{ asset('js/owner-attach.js') }}"></script>
 <script src="{{ asset('js/owner-cabinet.js') }}"></script>
 {% endblock %}

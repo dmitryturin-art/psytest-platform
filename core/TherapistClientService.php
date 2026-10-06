@@ -145,7 +145,7 @@ final class TherapistClientService
 
         $assignments = TestInviteService::withDisplayStatus(TestInviteService::withPurgeDate($this->db->select(
             'SELECT invites.id, invites.owner_note, invites.status, invites.created_at, invites.expires_at,
-                    invites.claimed_at, invites.claimed_session_id,
+                    invites.claimed_at, invites.claimed_session_id, invites.client_id,
                     invites.archived_at, invites.trashed_at,
                     tests.name AS test_name, tests.slug AS test_slug, sessions.status AS session_status, sessions.completed_at
              FROM test_invites AS invites

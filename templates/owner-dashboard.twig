@@ -185,6 +185,7 @@
     </section>
 
     {% include 'blocks/owner-invite-dialog.twig' %}
+    {% include 'blocks/owner-attach-dialog.twig' with {attach_return: filter_url} %}
 
     <section class="owner-invites" aria-labelledby="owner-lookup-title">
     <h2 id="owner-lookup-title">Найти сессию по ссылке</h2>
@@ -263,5 +264,6 @@
    работает целиком: поле имени просто всегда видно, а повтор ловит сервер. #}
 <script src="{{ asset('js/owner-forms.js') }}"></script>
 <script src="{{ asset('js/owner-invites.js') }}"></script>
+<script src="{{ asset('js/owner-attach.js') }}"></script>
 <script src="{{ asset('js/owner-cabinet.js') }}"></script>
 {% endblock %}

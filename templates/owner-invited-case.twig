@@ -1,6 +1,7 @@
 {% extends "layout.twig" %}
 {# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
 {% set ownerArea = true %}
+{% import 'blocks/icons.twig' as ui %}
 
 {% macro reorder_form(case, item, csrf_token, basePath, form_key) %}
     {# Готовый черновик можно заказать заново: новый ответ модели ляжет следующей
@@ -71,7 +72,21 @@
         <div><dt>Статус</dt><dd><span class="status status--{{ case.status|status_tone }}">{{ case.status|status_label }}</span></dd></div>
         <div><dt>Открыто</dt><dd>{{ case.claimed_at|date("d.m.Y H:i") }}</dd></div>
         <div><dt>Завершено</dt><dd>{% if case.completed_at %}{{ case.completed_at|date("d.m.Y H:i") }}{% else %}ещё нет{% endif %}</dd></div>
-        {% if case.client_label %}<div><dt>Клиент</dt><dd><a href="{{ basePath }}/admin/clients/{{ case.client_id }}">{{ case.client_label }}</a></dd></div>{% endif %}
+        {# Клиент кейса (07.K9): привязка и смена — тихие кнопки, диалог один на страницу.
+           В корзине кейс только для чтения, поэтому кнопок нет. #}
+        {% if case.client_label or not (trashed ?? false) %}
+        <div><dt>Клиент</dt><dd class="owner-case-client">
+            {% if case.client_label %}<a href="{{ basePath }}/admin/clients/{{ case.client_id }}">{{ case.client_label }}</a>{% else %}<span class="cab-table__none">не привязан</span>{% endif %}
+            {% if not (trashed ?? false) %}
+            <form method="post" action="{{ basePath }}/admin/invites/attach-client" class="owner-case-client__form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="return" value="/admin/invited-case/{{ case.id }}">
+                <input type="hidden" name="invite_id" value="{{ case.invite_id ?? '' }}">
+                <button type="submit" class="btn btn-sm {% if case.client_id ?? false %}btn-ghost{% else %}btn-outline{% endif %}" data-attach data-client-id="{{ case.client_id ?? '' }}" data-client-label="{{ case.client_label ?? '' }}" data-test-name="{{ case.test_name }}">{% if case.client_id ?? false %}Сменить{% else %}{{ ui.icon('client') }}Привязать к клиенту{% endif %}</button>
+            </form>
+            {% endif %}
+        </dd></div>
+        {% endif %}
         {% if case.owner_note %}<div class="owner-case-details__wide"><dt>Заметка специалиста</dt><dd>{{ case.owner_note }}</dd></div>{% endif %}
     </dl>
     {% if case.completed_at %}
@@ -291,6 +306,9 @@
         </form>
     </section>
 </section>
+{% if not (trashed ?? false) %}
+    {% include 'blocks/owner-attach-dialog.twig' with {attach_return: '/admin/invited-case/' ~ case.id, attach_form_key: attach_form_key ?? '', clients: clients ?? []} %}
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -298,4 +316,5 @@
    лишь здесь и не должен висеть на остальных страницах кабинета. #}
 <script src="{{ asset('js/owner-case.js') }}"></script>
 <script src="{{ asset('js/owner-forms.js') }}"></script>
+<script src="{{ asset('js/owner-attach.js') }}"></script>
 {% endblock %}

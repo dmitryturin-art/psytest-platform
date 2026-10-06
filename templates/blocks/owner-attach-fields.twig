@@ -1,0 +1,24 @@
+{# Поля формы «Привязать к клиенту / Сменить клиента» (07.K9). Общие для диалога
+   и для страницы без JavaScript, чтобы форма была одна. Переменные: form_key,
+   return_url, clients; invite (id, client_id, client_label) — только на странице
+   без JS; в диалоге их ставит owner-attach.js по data-атрибутам кнопки. #}
+{% set uid = uid ?? 'attach' %}
+{% set current_id = invite.client_id ?? '' %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="form_key" value="{{ form_key }}">
+<input type="hidden" name="return" value="{{ return_url }}" data-attach-return>
+<input type="hidden" name="invite_id" value="{{ invite.id ?? '' }}" data-attach-invite>
+<label for="{{ uid }}-client">Клиент</label>
+<select id="{{ uid }}-client" name="client_id" data-new-client-select required>
+    <option value="" disabled selected>Выберите клиента</option>
+    <option value="__new__">Новый клиент…</option>
+    {% for client in clients %}<option value="{{ client.id }}"{% if current_id == client.id %} disabled{% endif %}>{{ client.label }}{% if current_id == client.id %} (сейчас){% endif %}</option>{% endfor %}
+</select>
+<div class="owner-new-client" data-new-client-field>
+    <label for="{{ uid }}-new-client">Имя нового клиента <small data-new-client-hint>(только если выбран «Новый клиент…»)</small></label>
+    <input id="{{ uid }}-new-client" name="new_client_label" type="text" maxlength="120" autocomplete="off">
+</div>
+<div class="owner-attach-confirm" data-attach-confirm{% if current_id == '' %} hidden{% endif %}>
+    <p>Кейс будет перенесён из карточки «<span data-attach-from>{{ invite.client_label ?? '' }}</span>» в выбранную. Результат и ссылка не меняются.</p>
+    <label class="owner-dialog__check"><input type="checkbox" name="confirm_change" value="1" data-attach-confirm-input{% if current_id != '' %} required{% endif %}> Понимаю, перенести кейс</label>
+</div>

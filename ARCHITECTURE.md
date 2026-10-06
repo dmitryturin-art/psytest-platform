@@ -92,6 +92,7 @@ HTTP request
 | POST | `/admin/invites/archive` | `OwnerController::archiveInvites` | убрать приглашения (одно или отмеченные) в архив; клиентские ссылки не меняются (07.K8) |
 | POST | `/admin/invites/unarchive` | `OwnerController::unarchiveInvites` | вернуть приглашения из архива (07.K8) |
 | POST | `/admin/invites/trash` | `OwnerController::trashInvites` | переместить в корзину (мягкое удаление, 30 дней); без `confirmed=1` показывает страницу подтверждения (07.K8) |
+| POST | `/admin/invites/attach-client` | `OwnerController::attachInviteClient` | привязать приглашение (и кейс) к клиенту или сменить клиента: `invite_id`, `client_id` (`__new__` + `new_client_label`), `return`, `confirm_change=1` при смене; без `client_id` показывает страницу выбора для работы без JS; одноразовый `form_key` (07.K9) |
 | POST | `/admin/invites/restore` | `OwnerController::restoreInvites` | восстановить приглашения из корзины (07.K8) |
 | POST | `/admin/invites/purge` | `OwnerController::purgeInvites` | окончательно удалить кейс из корзины (нужны `confirmed=1` и `confirm_delete=delete`) (07.K8) |
 | GET | `/admin/invited-case/{sessionId}` | `OwnerController::viewInvitedCase` | защищённо показать базовый результат и читаемую анкету invitation case |
