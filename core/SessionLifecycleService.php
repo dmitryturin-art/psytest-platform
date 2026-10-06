@@ -42,9 +42,23 @@ final class SessionLifecycleService
     public function purgeExpiredAnonymousSessions(DateTimeImmutable $now): int
     {
         $cutoff = $this->retentionPolicy->anonymousCutoff($now)->format('Y-m-d H:i:s');
+        // Анонимный партнёр пары не удаляется, пока второй участник хранится
+        // дольше (кейс специалиста, аккаунт): пара ушла бы каскадом и кейс
+        // потерял бы парный результат (07.K10). Класс партнёра не меняется.
         $sessions = $this->db->select(
-            'SELECT id FROM test_sessions WHERE retention_class = :retention_class AND created_at <= :cutoff',
-            ['retention_class' => RetentionPolicy::ANONYMOUS, 'cutoff' => $cutoff],
+            'SELECT s.id FROM test_sessions AS s
+              WHERE s.retention_class = :retention_class AND s.created_at <= :cutoff
+                AND NOT EXISTS (
+                    SELECT 1 FROM pair_comparisons AS p, test_sessions AS other
+                     WHERE ((p.session_1_id = s.id AND other.id = p.session_2_id)
+                         OR (p.session_2_id = s.id AND other.id = p.session_1_id))
+                       AND other.retention_class <> :anonymous
+                )',
+            [
+                'retention_class' => RetentionPolicy::ANONYMOUS,
+                'cutoff' => $cutoff,
+                'anonymous' => RetentionPolicy::ANONYMOUS,
+            ],
         );
 
         $deleted = 0;

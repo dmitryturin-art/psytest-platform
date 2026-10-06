@@ -39,7 +39,7 @@ final class AiReportContextBuilder
      */
     public function build(string $sessionId, string $testSlug, string $mode): array
     {
-        $session = $this->sessions->getSessionById($sessionId);
+        $session = $this->sessions->getRetainedSessionById($sessionId);
         if ($session === null) {
             throw new AiProviderException('Сессия разбора не найдена.');
         }
@@ -81,8 +81,8 @@ final class AiReportContextBuilder
             throw new AiProviderException('Парное сравнение для этой сессии не найдено.');
         }
 
-        $first = $this->sessions->getSessionById((string) $comparison['session_1_id']);
-        $second = $this->sessions->getSessionById((string) $comparison['session_2_id']);
+        $first = $this->sessions->getRetainedSessionById((string) $comparison['session_1_id']);
+        $second = $this->sessions->getRetainedSessionById((string) $comparison['session_2_id']);
 
         if ($first === null || $second === null) {
             throw new AiProviderException('Одна из сессий пары не найдена.');

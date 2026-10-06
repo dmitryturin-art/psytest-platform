@@ -77,6 +77,39 @@ final class SessionLifecycleServiceTest extends TestCase
     }
 
     /**
+     * 07.K10: анонимный партнёр пары живёт, пока второй участник — кейс.
+     *
+     * Пара удаляется каскадом вместе с любой своей сессией, поэтому очистка
+     * анонимного партнёра стёрла бы парный результат из кейса специалиста.
+     * Retention class партнёра не меняется: когда кейс удалят, партнёр снова
+     * подпадает под обычный срок от своего `created_at`.
+     */
+    public function testKeepsAnAnonymousPartnerWhileTheOtherSideIsRetained(): void
+    {
+        $case = $this->sessions->createSession($this->testId);
+        $partner = $this->sessions->createSession($this->testId);
+        $comparison = $this->sessions->createPairComparison($this->testId, $case['id'], $partner['id'], ['fixture' => true]);
+        $this->db->update('test_sessions', ['created_at' => '2026-02-01 12:00:00', 'retention_class' => RetentionPolicy::THERAPIST_CASE], 'id = ?', [$case['id']]);
+        $this->db->update('test_sessions', ['created_at' => '2026-02-01 12:00:00'], 'id = ?', [$partner['id']]);
+
+        try {
+            $this->lifecycle->purgeExpiredAnonymousSessions(new DateTimeImmutable('2026-08-16 12:00:00'));
+
+            $kept = $this->db->selectOne('SELECT retention_class FROM test_sessions WHERE id = ?', [$partner['id']]);
+            self::assertIsArray($kept);
+            self::assertSame(RetentionPolicy::ANONYMOUS, $kept['retention_class']);
+            self::assertNotNull($this->db->selectOne('SELECT id FROM pair_comparisons WHERE id = ?', [$comparison['id']]));
+
+            // Кейс удалён — партнёр снова обычная анонимная сессия с прошедшим сроком.
+            self::assertTrue($this->lifecycle->deleteSessionAndArtifacts($case['id']));
+            $this->lifecycle->purgeExpiredAnonymousSessions(new DateTimeImmutable('2026-08-16 12:00:00'));
+            self::assertNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$partner['id']]));
+        } finally {
+            $this->db->delete('test_sessions', 'id IN (?, ?)', [$case['id'], $partner['id']]);
+        }
+    }
+
+    /**
      * Долг K2: файлы переживают откат чужой транзакции.
      *
      * Удаление карточки клиента с несколькими сессиями идёт одной транзакцией
