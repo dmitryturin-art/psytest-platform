@@ -164,4 +164,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 47. Выкладка `55f357e` (06.10): фильтры, архив и корзина приглашений (07.K8); миграция `20261006010000 AddInviteArchiveTrash` применена после проверенного dump; два SSH-подключения (первое остановилось на распаковке без `--strip-components=1` до переключения; до этого два отказа входа из-за неверного чтения `.env` на стороне ведущего, правило записано). SHA-256 `05d26b21147be0d02812265d9d218a15bb521405f2ec24f483726a5e6838b336` совпал. Смоук: основные маршруты и `/js/owner-invites.js` `200`, `/test/smil` `404`. Rollback: `releases/9e77508`.
 
+48. Выкладка `73af7802` (06.10): «лёгкий кабинет» (04.D2) — новые `public/css/cabinet.css`, `public/js/owner-cabinet.js`, система кнопок по всему сайту; миграций нет; одно SSH-подключение по рецепту (stdin, `--strip-components=1`). SHA-256 `8294719a65250eb200056d6f8cd9783c4f8c1a183475bdbf49050b6b8277c39b` совпал; dump проверен. Смоук: основные маршруты, `/css/cabinet.css`, `/js/owner-cabinet.js` `200`, `/test/smil` `404`. Rollback: `releases/55f357e`.
+
 Rollback текущего релиза: атомарно направить `public_html` на `releases/e5a15b5/public` и `current` на `releases/e5a15b5`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
