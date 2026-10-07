@@ -18,6 +18,25 @@
 ```
 
 
+## 2026-10-07
+
+### 08.B42 — staging-выкладка K11 (`bc8f598`)
+
+- Этап / ветка / commit: этап 08, `codex/08-deploy-bc8f598`; deployed runtime `bc8f598` (merge PR #161). Миграция `20261007010000 AddClientTrash` применена (phinx: 21 `up`).
+- Сделано: одно SSH-подключение по рецепту (stdin, `--strip-components=1`, `NumberOfPasswordPrompts=1`): SHA-256 `619a1b00…c792` совпал; `.env` из прежнего релиза; pre-deploy dump `backups/pre-deploy-bc8f598.sql.gz` (219 847 байт, gzip -t OK) до миграции; `public_html`/`current` атомарно на `releases/bc8f598`.
+- Проверки (по HTTP): `/`, `/api/health`, `/admin/login`, `/js/owner-client-trash.js` — `200`, `/test/smil` — `404`.
+- Rollback: `public_html` → `releases/85f2115/public`, `current` → `releases/85f2115`; откат миграции `phinx rollback -t 20261006010000` из `releases/bc8f598` (удалит `trashed_at` у карточек; карточки из корзины станут рабочими).
+
+### 07.K11 — корзина для карточек клиентов
+
+- Этап / ветка / commit: этап 07 (кабинет), `codex/07-k11-client-trash` от `main` `25d9955`; `07532f2`, `ebe3186`, `43e4215` (исполнитель Sonnet, БД `psytest_wt_k11`), `b85d8e4` (ведущий); merge PR #161 → `bc8f598`. Сигнал владельца 07.10: «начинай с корзины», «мержи и выкладывай, отдельную страницу пока не нужно».
+- Цель: убрать последнюю необратимую кнопку кабинета — карточка клиента удалялась сразу со всеми кейсами.
+- Сделано: (1) миграция `20261007010000`: `therapist_clients.trashed_at` + индекс; `MigratedSchemaTest`, `DATA_MAP_CURRENT`. (2) `TherapistClientService::trash/restore/purgeTrashed/purgeTrash` (+ `isActive`, `labelOf`, `countsForOwner`, `purgeAt`): карточка и её назначения получают одну отметку `trashed_at`, действующие ссылки отзываются в той же транзакции; `restore` возвращает карточку и только назначения с той же отметкой (убранные вручную раньше остаются в корзине, архивные возвращаются в архив); окончательное удаление (`purge`, прежний `delete()` стал приватным) только для карточки из корзины; `TestInviteService::restore` отказывает приглашению, чья карточка в корзине. Карточка из корзины не предлагается в select'ах приглашения, привязки и назначения, `updateClient`/`createClientInvite`/attach отказывают на сервере. События журнала `client_trashed/restored/purged`. (3) Cron `bin/cleanup-sessions.php` чистит корзину карточек старше `TRASH_RETENTION_DAYS` после корзины приглашений (`clients_purged`, `clients_purge_failed`); пороги 29/31 дней покрыты тестом. (4) Маршруты POST `/admin/clients/{id}/trash|restore|purge` (CSRF + FormOnce `owner_client_trash`, безопасный `return`, подтверждение без JS через `owner-client-confirm.twig`, purge требует `confirm_delete=delete`); `/delete` — синоним purge для карточки из корзины, для рабочей отказ «Удалить сразу нельзя: сначала отправьте карточку в корзину». (5) UI на готовых классах 04.D2: вкладки «Рабочие / Корзина» в `/admin/clients` (`?view=trash`), меню «⋯» (В корзину; в корзине — Восстановить / Удалить сейчас), диалог с последствиями, подпись «будет удалена DD.MM.YYYY», в карточке раздел «Корзина» вместо «Удаление клиента» и баннер для карточки из корзины; карточка в корзине только для чтения (один список назначений с «Открыть кейс»). Новые файлы: `core/OwnerClientTrashAction.php`, `public/js/owner-client-trash.js`, `templates/owner-client-confirm.twig`, `blocks/owner-client-{actions,dialog,trash-form}.twig`. (6) Ведущий: `.client-table .cab-table__actions` 12.5rem — «Открыть карточку» упиралась в дату. (7) Docs: CRON_CLEANUP, RETENTION_POLICY, DATA_MAP_CURRENT, ARCHITECTURE, UI_KIT.
+- Решения: отдельной страницы «Корзина» нет — вкладки в списках (владелец 07.10: «отдельную страницу пока не нужно»); событие `therapist_client_deleted` больше не пишется, вместо него `client_purged`.
+- Проверки и evidence: исполнитель — `tests/Integration/ClientTrashTest.php` (8), `tests/OwnerClientTrashContractTest.php` (9), четыре прежних интеграционных теста переведены на «сначала в корзину»; PHPUnit 720 tests / 51 816 assertions OK, analyse OK, lint OK, архитектура OK, baseline 141/141; браузер (puppeteer, 1440 и 390, 27 снимков в scratchpad `k11/` с открытыми меню и диалогами): вкладки и счётчики, диалог и отмена, корзина с датой, восстановление с проверкой ручной/архивной/отозванной строк, purge с галочкой, select приглашения без карточки из корзины, путь без JS, отказы на карточке из корзины. Ведущий: снимки просмотрены, `bin/local-gate.sh` на Docker MySQL 5.7.44 — **пройден**; CI PR #161 — 3/3 pass.
+- Не сделано / риски: Graphify freshness не запускался (граф не перестраивался с 04.D1; fallback — ARCHITECTURE.md и код актуальны); исполнитель оставил три локальных PHP-сервера (порты 8111–8113), владельцу предложено закрыть вручную.
+- Следующий шаг: приёмка владельцем на стенде; затем согласование этапа 3 дизайна (карточка кейса).
+
 ## 2026-10-06
 
 ### 08.B41 — staging-выкладка K10 (`85f2115`)
