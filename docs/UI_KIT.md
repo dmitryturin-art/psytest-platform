@@ -199,6 +199,8 @@
 - **Телефон (≤600 px)**: строки становятся карточками, подпись столбца — из `data-label`; флажок —
   в левом верхнем углу, меню «⋯» — в правом верхнем, внизу карточки только «Открыть кейс».
 - Включения: `blocks/owner-invite-status.twig` (точка статуса и подпись),
+  `blocks/owner-client-actions.twig`, `blocks/owner-client-dialog.twig`, `blocks/owner-client-trash-form.twig`
+  (корзина карточек клиентов, 07.K11: те же `.row-menu`, `.owner-dialog`, `.view-tabs`, баннер `.owner-trash-banner`),
   `blocks/owner-invite-actions.twig`, `blocks/owner-invite-dialog.twig`.
 
 ## Элементы форм кабинета
