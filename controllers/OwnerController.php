@@ -426,30 +426,6 @@ final class OwnerController extends BaseController
         $this->redirect($return);
     }
 
-    public function deleteInvitedCase(string $sessionId): void
-    {
-        if (!$this->requireOwner()) {
-            return;
-        }
-        if (!Security::isValidUuid($sessionId)) {
-            $this->notFound();
-
-            return;
-        }
-
-        $clientId = $_POST['client_id'] ?? '';
-        $confirmed = ($_POST['confirm_delete'] ?? null) === 'delete';
-        $deleted = $confirmed && $this->cases->deleteAssignedCase($sessionId);
-
-        $this->setFlash($deleted
-            ? ['type' => 'success', 'message' => 'Кейс, его заметка и известные связанные файлы удалены без возможности восстановления.']
-            : ['type' => 'error', 'message' => 'Удаление не выполнено. Подтвердите удаление галочкой и откройте кейс заново.']);
-
-        $this->redirect(is_string($clientId) && Security::isValidUuid($clientId)
-            ? '/admin/clients/' . $clientId
-            : '/admin');
-    }
-
     public function createInvite(): void
     {
         if (!$this->requireOwner()) {

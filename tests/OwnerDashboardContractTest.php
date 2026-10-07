@@ -27,7 +27,9 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("\$router->post('/admin/invites/create'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invites/revoke'", $routes);
         self::assertStringContainsString("\$router->get('/admin/invited-case/{sessionId}'", $routes);
-        self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/delete'", $routes);
+        // Мгновенное удаление кейса с карточки убрано (04.D3): кейс удаляется только через корзину (07.K8).
+        self::assertStringNotContainsString('/admin/invited-case/{sessionId}/delete', $routes);
+        self::assertStringNotContainsString('function deleteInvitedCase(', $controller);
         self::assertStringContainsString("\$router->get('/admin/clients'", $routes);
         self::assertStringContainsString("\$router->post('/admin/clients/create'", $routes);
         self::assertStringContainsString("\$router->get('/admin/clients/{clientId}'", $routes);
