@@ -24,6 +24,7 @@ use PsyTest\Core\ClientReportNotifier;
 use PsyTest\Core\FormOnce;
 use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\InviteFilter;
+use PsyTest\Core\OwnerCaseNoteUpdate;
 use PsyTest\Core\OwnerCaseReportOrder;
 use PsyTest\Core\OwnerClientSubmission;
 use PsyTest\Core\OwnerClientTrashAction;
@@ -425,30 +426,6 @@ final class OwnerController extends BaseController
         $this->redirect($return);
     }
 
-    public function deleteInvitedCase(string $sessionId): void
-    {
-        if (!$this->requireOwner()) {
-            return;
-        }
-        if (!Security::isValidUuid($sessionId)) {
-            $this->notFound();
-
-            return;
-        }
-
-        $clientId = $_POST['client_id'] ?? '';
-        $confirmed = ($_POST['confirm_delete'] ?? null) === 'delete';
-        $deleted = $confirmed && $this->cases->deleteAssignedCase($sessionId);
-
-        $this->setFlash($deleted
-            ? ['type' => 'success', 'message' => 'Кейс, его заметка и известные связанные файлы удалены без возможности восстановления.']
-            : ['type' => 'error', 'message' => 'Удаление не выполнено. Подтвердите удаление галочкой и откройте кейс заново.']);
-
-        $this->redirect(is_string($clientId) && Security::isValidUuid($clientId)
-            ? '/admin/clients/' . $clientId
-            : '/admin');
-    }
-
     public function createInvite(): void
     {
         if (!$this->requireOwner()) {
@@ -651,6 +628,8 @@ final class OwnerController extends BaseController
         $presenter = new InvitedCasePresenter();
         $case['answer_rows'] = $presenter->answers($module, $case['answers']);
         $case['result_sections'] = $presenter->resultSections($module, $case['calculated_results']);
+        // Раскладка рабочего места (04.D3): сводка сверху, подробности свёрнуты.
+        $case['workspace'] = $presenter->workspace($case['result_sections']);
         $case['pair'] = $this->pairSection($sessionId, $module, $presenter, $case);
 
         $ai = $this->aiSection($sessionId, (string) $case['test_slug']);
@@ -664,7 +643,11 @@ final class OwnerController extends BaseController
             'flash' => $this->takeFlash(),
             'case' => $case,
             'trashed' => $trashed,
-            'bulk_form_key' => $trashed ? $this->inviteBulk()->issueKey() : null,
+            // Меню «⋯» в шапке (04.D3): архив, корзина, восстановление — общая форма приглашений.
+            'bulk_form_key' => $this->inviteBulk()->issueKey(),
+            'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
+            'note_form_key' => $trashed ? null : $this->caseNote()->issueKey(),
+            'note_max' => OwnerInviteSubmission::NOTE_MAX_LENGTH,
             // Кейс в корзине — только чтение: привязка и смена клиента недоступны.
             'attach_form_key' => $trashed ? null : $this->inviteAttach()->issueKey(),
             'clients' => $trashed ? [] : $this->clients->listForOwner(),
@@ -673,6 +656,29 @@ final class OwnerController extends BaseController
             // У каждой формы заказа на странице свой одноразовый ключ (07.K6b).
             'order_keys' => $ai['available'] ? $this->caseReportOrder()->issueKeys() : null,
         ]);
+    }
+
+    private function caseNote(): OwnerCaseNoteUpdate
+    {
+        return new OwnerCaseNoteUpdate($this->invites, $this->formOnce());
+    }
+
+    /**
+     * Заметка специалиста к кейсу — правка на месте в шапке карточки (04.D3).
+     * POST /admin/invited-case/{sessionId}/note
+     *
+     * CSRF проверяет общий middleware, повтор — одноразовый ключ формы. Кейс
+     * в корзине только для чтения: `ownedCase(..., true)` возвращает к нему с
+     * сообщением, ничего не меняя.
+     */
+    public function updateCaseNote(string $sessionId): void
+    {
+        if ($this->ownedCase($sessionId, true) === null) {
+            return;
+        }
+
+        $this->setFlash($this->caseNote()->submit($sessionId, $this->postData()));
+        $this->redirect('/admin/invited-case/' . $sessionId);
     }
 
     /**
@@ -825,6 +831,10 @@ final class OwnerController extends BaseController
             $report = $reports->findFor($sessionId, $mode, $kind);
             $anyJob = $anyJob || $report !== null;
             $published = $report === null ? null : $revisions->published((string) $report['id']);
+            $ready = ($report['status'] ?? '') === AiReportRepository::STATUS_READY;
+            // Понятный разбор читается в карточке в последней версии (04.D3):
+            // это рабочий текст специалиста, клиент видит только опубликованную.
+            $latest = $kind === Prompt::KIND_CLEAR && $ready ? $revisions->latest((string) $report['id']) : null;
 
             $kinds[] = [
                 'kind' => $kind,
@@ -832,15 +842,18 @@ final class OwnerController extends BaseController
                 'report_id' => $report['id'] ?? null,
                 'status' => $report['status'] ?? 'none',
                 'failure_reason' => $report['failure_reason'] ?? null,
-                'html' => $kind === Prompt::KIND_PROFESSIONAL && ($report['status'] ?? '') === AiReportRepository::STATUS_READY
-                    ? ReportMarkdown::toHtml((string) $report['content'])
-                    : null,
+                'html' => match (true) {
+                    !$ready => null,
+                    $kind === Prompt::KIND_PROFESSIONAL => ReportMarkdown::toHtml((string) $report['content']),
+                    default => ReportMarkdown::toHtml((string) ($latest['content'] ?? $report['content'])),
+                },
+                'latest_no' => $latest === null ? null : (int) $latest['revision_no'],
+                'requested_at' => $report['created_at'] ?? null,
+                'ready_at' => $ready ? ($report['completed_at'] ?? $report['updated_at'] ?? null) : null,
                 'published' => $published,
-                // Версии профессионального заключения смотрят отдельной
-                // страницей, только когда есть что сравнивать (07.K7).
-                'versions_count' => $kind === Prompt::KIND_PROFESSIONAL && $report !== null
-                    ? $revisions->count((string) $report['id'])
-                    : 0,
+                // Версии смотрят отдельной страницей (профессиональное, 07.K7)
+                // или в редакторе (понятный), только когда есть что сравнивать.
+                'versions_count' => $report !== null ? $revisions->count((string) $report['id']) : 0,
             ];
         }
 
@@ -1145,7 +1158,10 @@ final class OwnerController extends BaseController
 
         (new AiReportRevisionService($this->db))->unpublish($reportId);
         $this->setFlash(['type' => 'success', 'message' => 'Разбор снят с публикации. Клиент снова видит ожидание.']);
-        $this->redirect('/admin/invited-case/' . $sessionId . '/reports/' . $reportId . '/edit');
+        // Из карточки кейса (04.D3) — обратно к разборам, из редактора — в редактор.
+        $this->redirect(($_POST['return'] ?? null) === 'case'
+            ? $this->caseAiAnchor($sessionId)
+            : '/admin/invited-case/' . $sessionId . '/reports/' . $reportId . '/edit');
     }
 
     /**

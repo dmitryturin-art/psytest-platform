@@ -27,7 +27,9 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("\$router->post('/admin/invites/create'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invites/revoke'", $routes);
         self::assertStringContainsString("\$router->get('/admin/invited-case/{sessionId}'", $routes);
-        self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/delete'", $routes);
+        // Мгновенное удаление кейса с карточки убрано (04.D3): кейс удаляется только через корзину (07.K8).
+        self::assertStringNotContainsString('/admin/invited-case/{sessionId}/delete', $routes);
+        self::assertStringNotContainsString('function deleteInvitedCase(', $controller);
         self::assertStringContainsString("\$router->get('/admin/clients'", $routes);
         self::assertStringContainsString("\$router->post('/admin/clients/create'", $routes);
         self::assertStringContainsString("\$router->get('/admin/clients/{clientId}'", $routes);
@@ -143,7 +145,12 @@ final class OwnerDashboardContractTest extends TestCase
 
         self::assertStringContainsString('name="confirm_delete" value="delete" required', (string) file_get_contents($this->projectRoot . '/templates/owner-client-confirm.twig'));
         self::assertStringContainsString('data-dialog-check-input', (string) file_get_contents($this->projectRoot . '/templates/blocks/owner-client-dialog.twig'));
-        self::assertStringContainsString('name="confirm_delete" value="delete" required', $invitedCase);
+        // С 04.D3 на карточке кейса нет мгновенного удаления внизу: кейс уходит
+        // в корзину из меню «⋯» через тот же диалог/страницу подтверждения (07.K8).
+        self::assertStringNotContainsString('/delete"', $invitedCase);
+        self::assertStringContainsString("{% include 'blocks/owner-invite-actions.twig'", $invitedCase);
+        self::assertStringContainsString("{% include 'blocks/owner-invite-dialog.twig'", $invitedCase);
+        self::assertStringContainsString('id="case-actions-form" data-bulk-form', $invitedCase);
         self::assertStringContainsString('name="label"', $clientsList);
         self::assertStringContainsString('name="client_id"', (string) file_get_contents($this->projectRoot . '/templates/owner-dashboard.twig'));
     }
@@ -679,7 +686,8 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString('name="form_key" value="{{ order_keys.all }}"', $case);
         self::assertStringContainsString('name="form_key" value="{{ order_keys[item.kind] }}"', $case);
         self::assertStringContainsString('name="form_key" value="{{ form_key }}"', $case, 'Макрос «Заказать заново».');
-        self::assertSame(2, substr_count($case, 'reorder_form(case, item, csrf_token, basePath, order_keys[item.kind])'));
+        // Одна карточка разбора на оба вида (04.D3): «Заказать заново» вызывается один раз.
+        self::assertSame(1, substr_count($case, 'reorder_form(case, item, csrf_token, basePath, order_keys[item.kind])'));
         self::assertStringContainsString("'order_keys' => \$ai['available'] ? \$this->caseReportOrder()->issueKeys() : null", $controller);
 
         // Каждая форма заказа на карточке кейса — с ключом и блокировкой.
@@ -859,13 +867,40 @@ final class OwnerDashboardContractTest extends TestCase
     {
         $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
         self::assertStringContainsString("if (\$writable && \$case['trashed_at'] !== null)", $controller);
-        // Заказ черновиков, уведомление и все правки отчёта идут через проверку записи.
-        self::assertSame(3, substr_count($controller, '$this->ownedCase($sessionId, true)'));
+        // Заказ черновиков, уведомление, заметка (04.D3) и все правки отчёта идут через проверку записи.
+        self::assertSame(4, substr_count($controller, '$this->ownedCase($sessionId, true)'));
         self::assertStringContainsString('private function editableReport(', $controller);
 
         $template = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
         self::assertStringContainsString('В корзине, будет удалён {{ case.purge_at|date("d.m.Y") }}', $template);
         self::assertStringContainsString('action="{{ basePath }}/admin/invites/restore"', $template);
+    }
+
+    /**
+     * Заметка в шапке карточки кейса (04.D3): свой маршрут под владельцем,
+     * проверкой записи (в корзине — только чтение), CSRF и одноразовым ключом.
+     */
+    public function testCaseNoteIsEditedInPlaceThroughAnOwnerOnlyOneTimeForm(): void
+    {
+        $routes = (string) file_get_contents($this->projectRoot . '/public/index.php');
+        self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/note', [OwnerController::class, 'updateCaseNote'])", $routes);
+
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        $start = (int) strpos($controller, 'public function updateCaseNote(');
+        $action = substr($controller, $start, 500);
+        self::assertStringContainsString('$this->ownedCase($sessionId, true) === null', $action);
+        self::assertStringContainsString('$this->caseNote()->submit($sessionId, $this->postData())', $action);
+        self::assertStringContainsString("'note_form_key' => \$trashed ? null : \$this->caseNote()->issueKey()", $controller);
+
+        $template = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');
+        preg_match('#<form method="post" action="\{\{ caseUrl \}\}/note"[^>]*>.*?</form>#s', $template, $form);
+        self::assertNotEmpty($form, 'Форма заметки на карточке кейса.');
+        self::assertStringContainsString('data-submit-once', $form[0]);
+        self::assertStringContainsString('name="csrf_token"', $form[0]);
+        self::assertStringContainsString('name="form_key" value="{{ note_form_key }}"', $form[0]);
+        self::assertStringContainsString('name="owner_note"', $form[0]);
+        // Правка недоступна в корзине.
+        self::assertStringContainsString("{% if not isTrashed and (note_form_key ?? null) %}", $template);
     }
 
     public function testCleanupCronPurgesTheTrash(): void

@@ -116,8 +116,9 @@ final class OwnerInviteAttachContractTest extends TestCase
         self::assertStringContainsString('Привязать к клиенту', $case);
         self::assertStringContainsString('Сменить', $case);
         // Кнопка и диалог выведены только когда кейс не в корзине.
-        self::assertStringContainsString('{% if not (trashed ?? false) %}' . "\n" . '            <form method="post" action="{{ basePath }}/admin/invites/attach-client"', $case);
-        self::assertStringContainsString("{% if not (trashed ?? false) %}\n    {% include 'blocks/owner-attach-dialog.twig' with {attach_return: '/admin/invited-case/' ~ case.id, attach_form_key: attach_form_key ?? '', clients: clients ?? []} %}", $case);
+        self::assertStringContainsString('{% if not isTrashed %}' . "\n" . '                <form method="post" action="{{ basePath }}/admin/invites/attach-client"', $case);
+        self::assertStringContainsString("{% set isTrashed = trashed ?? false %}", $case);
+        self::assertStringContainsString("{% if not isTrashed %}\n    {% include 'blocks/owner-attach-dialog.twig' with {attach_return: '/admin/invited-case/' ~ case.id, attach_form_key: attach_form_key ?? '', clients: clients ?? []} %}", $case);
 
         $controller = (string) file_get_contents($this->root . '/controllers/OwnerController.php');
         self::assertStringContainsString("'attach_form_key' => \$trashed ? null : \$this->inviteAttach()->issueKey()", $controller);
