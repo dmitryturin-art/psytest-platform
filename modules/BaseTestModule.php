@@ -100,6 +100,31 @@ abstract class BaseTestModule implements TestModuleInterface
     }
 
     /**
+     * Respondent instruction from metadata.json `instruction` (07.K13).
+     *
+     * Only non-empty string paragraphs are kept; the text is plain and is
+     * escaped by the template, never rendered as HTML.
+     *
+     * @return list<string>
+     */
+    public function getInstruction(): array
+    {
+        $raw = $this->metadata['instruction'] ?? [];
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $paragraphs = [];
+        foreach ($raw as $paragraph) {
+            if (is_string($paragraph) && trim($paragraph) !== '') {
+                $paragraphs[] = trim($paragraph);
+            }
+        }
+
+        return $paragraphs;
+    }
+
+    /**
      * Get questions (override in child classes)
      */
     public function getQuestions(): array

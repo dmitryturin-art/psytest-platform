@@ -133,6 +133,16 @@ interface TestModuleInterface
     public function aiReportContext(array $results, string $mode): ?array;
 
     /**
+     * Respondent instruction shown before the first question (07.K13).
+     *
+     * Plain-text paragraphs from metadata.json `instruction`; no HTML.
+     * A module without an instruction returns an empty list.
+     *
+     * @return list<string>
+     */
+    public function getInstruction(): array;
+
+    /**
      * Get custom test template (optional)
      *
      * @return string|null Template name or null for default
