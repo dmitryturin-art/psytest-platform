@@ -1,0 +1,37 @@
+{#
+    Инструкция методики (07.K13). Абзацы — простой текст из metadata.json `instruction`,
+    выводятся с экранированием, без HTML.
+
+    Параметры:
+      instruction — list<string>;
+      mode        — 'block' (открытый блок с заголовком, стартовая страница приглашения),
+                    'open' (раскрывающийся блок, открыт до начала теста),
+                    'collapsed' (тот же блок свёрнут: продолжение или тест уже начат);
+      summary     — подпись свёрнутого блока (по умолчанию «Инструкция»).
+
+    Вид — UI_KIT «Раскрывающийся блок», тихий вариант (.disclosure-stack); новых компонентов нет.
+#}
+{% if instruction is defined and instruction is not empty %}
+{% set mode = mode|default('open') %}
+{% if mode == 'block' %}
+<section class="test-instruction" data-test-instruction="block" aria-labelledby="testInstructionTitle">
+    <h2 class="test-instruction__title" id="testInstructionTitle">Инструкция</h2>
+    <div class="test-instruction__body">
+        {% for paragraph in instruction %}
+        <p>{{ paragraph }}</p>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<div class="disclosure-stack test-instruction" data-test-instruction="{{ mode }}">
+    <details class="ai-report__details" id="testInstruction"{% if mode != 'collapsed' %} open{% endif %}>
+        <summary class="ai-report__summary"><span class="ai-report__summary-title">{{ summary|default('Инструкция') }}</span></summary>
+        <div class="ai-report__body test-instruction__body">
+            {% for paragraph in instruction %}
+            <p>{{ paragraph }}</p>
+            {% endfor %}
+        </div>
+    </details>
+</div>
+{% endif %}
+{% endif %}

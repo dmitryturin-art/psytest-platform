@@ -95,7 +95,7 @@ final class TestInviteService
         }
 
         return $this->db->selectOne(
-            "SELECT tests.name AS test_name
+            "SELECT tests.name AS test_name, tests.slug AS test_slug
              FROM test_invites AS invites
              INNER JOIN tests ON tests.id = invites.test_id
              WHERE invites.token_hash = :token_hash
