@@ -179,7 +179,8 @@ final class TherapistCaseServiceTest extends TestCase
         $sessionId = $this->completedSession();
         self::assertTrue($this->cases->attachToClient($sessionId, $clientId, 'Заметка уходит вместе с карточкой'));
 
-        self::assertTrue($this->clients->delete($clientId));
+        $this->clients->trash($clientId);
+        self::assertSame(TherapistClientService::PURGE_DONE, $this->clients->purgeTrashed($clientId));
         self::assertNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$sessionId]));
         self::assertNull($this->db->selectOne('SELECT id FROM test_invites WHERE claimed_session_id = ?', [$sessionId]));
         self::assertNull($this->invites->claimedCaseForOwner($sessionId));

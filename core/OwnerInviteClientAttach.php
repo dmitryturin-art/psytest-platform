@@ -54,7 +54,7 @@ final class OwnerInviteClientAttach
         if ($isNew && !TherapistClientService::isValidInput($label, '')) {
             return self::error('Укажите имя нового клиента (до ' . TherapistClientService::LABEL_MAX_LENGTH . ' символов). Карточка не создана.');
         }
-        if (!$isNew && !$this->clients->exists($choice)) {
+        if (!$isNew && !$this->clients->isActive($choice)) {
             return self::error('Такой карточки клиента нет. Обновите страницу и выберите клиента заново.');
         }
 

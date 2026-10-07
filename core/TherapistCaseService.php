@@ -116,7 +116,7 @@ final class TherapistCaseService
             return false;
         }
 
-        if ($clientId !== null && !$this->clients->exists($clientId)) {
+        if ($clientId !== null && !$this->clients->isActive($clientId)) {
             return false;
         }
 

@@ -38,7 +38,7 @@ final class MigratedSchemaTest extends TestCase
         $this->assertColumns('test_invites', ['archived_at', 'trashed_at']);
         $this->assertIndex('test_invites', 'idx_test_invites_archived', false);
         $this->assertIndex('test_invites', 'idx_test_invites_trashed', false);
-        $this->assertColumns('therapist_clients', ['label', 'note', 'email', 'created_at', 'updated_at']);
+        $this->assertColumns('therapist_clients', ['label', 'note', 'email', 'created_at', 'updated_at', 'trashed_at']);
         $this->assertColumns('visitor_accounts', ['email', 'created_at', 'last_login_at']);
         $this->assertIndex('visitor_accounts', 'uq_visitor_accounts_email', true);
         $this->assertColumns('visitor_login_tokens', ['email', 'rate_key', 'token_hash', 'expires_at', 'used_at', 'created_at']);

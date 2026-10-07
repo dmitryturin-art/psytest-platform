@@ -26,6 +26,7 @@ use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\InviteFilter;
 use PsyTest\Core\OwnerCaseReportOrder;
 use PsyTest\Core\OwnerClientSubmission;
+use PsyTest\Core\OwnerClientTrashAction;
 use PsyTest\Core\OwnerDashboardAuthenticator;
 use PsyTest\Core\OwnerInviteBulkAction;
 use PsyTest\Core\OwnerInviteClientAttach;
@@ -167,10 +168,19 @@ final class OwnerController extends BaseController
         $test = is_string($test) && in_array($test, $slugs, true) ? $test : '';
         $search = $_GET['q'] ?? '';
         $search = is_string($search) ? trim(mb_substr($search, 0, InviteFilter::QUERY_MAX_LENGTH)) : '';
+        // Вкладки «Рабочие» и «Корзина» (07.K11); корзина открывается явным выбором.
+        $trashView = ($_GET['view'] ?? '') === 'trash';
+        $counts = $this->clients->countsForOwner();
 
         echo $this->view->render('owner-clients', [
             'flash' => $this->takeFlash(),
-            'clients' => $this->clients->listForOwner(100, $search, $test === '' ? null : $test),
+            'clients' => $this->clients->listForOwner(100, $search, $test === '' ? null : $test, $trashView),
+            'client_view' => $trashView ? 'trash' : 'active',
+            'active_count' => $counts['active'],
+            'trashed_count' => $counts['trash'],
+            'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
+            'return_url' => '/admin/clients' . ($trashView ? '?view=trash' : ''),
+            'trash_form_key' => $this->clientTrash()->issueKey(),
             'client_form_key' => $this->clientSubmission()->issueKey(),
             'invite_tests' => $tests,
             'filter_test' => $test,
@@ -238,6 +248,7 @@ final class OwnerController extends BaseController
             array_values($this->moduleLoader->getActiveModules()),
         );
         $filter = InviteFilter::fromQuery($_GET, $slugs);
+        $clientTrashed = $card['client']['trashed_at'] !== null;
         $archivedCount = count(array_filter($card['assignments'], static fn (array $a): bool => $a['trashed_at'] === null && $a['archived_at'] !== null));
         $trashedCount = count(array_filter($card['assignments'], static fn (array $a): bool => $a['trashed_at'] !== null));
         $activeCount = count($card['assignments']) - $archivedCount - $trashedCount;
@@ -245,7 +256,7 @@ final class OwnerController extends BaseController
         $view = in_array($filter->status, [InviteFilter::STATUS_ARCHIVED, InviteFilter::STATUS_TRASH], true)
             ? $filter->status
             : InviteFilter::STATUS_ACTIVE;
-        $assignments = array_values(array_filter($card['assignments'], static fn (array $a): bool => match ($view) {
+        $assignments = array_values(array_filter($card['assignments'], static fn (array $a): bool => $clientTrashed || match ($view) {
             InviteFilter::STATUS_TRASH => $a['trashed_at'] !== null,
             InviteFilter::STATUS_ARCHIVED => $a['trashed_at'] === null && $a['archived_at'] !== null,
             default => $a['trashed_at'] === null && $a['archived_at'] === null,
@@ -268,6 +279,9 @@ final class OwnerController extends BaseController
             'clients' => $this->clients->listForOwner(),
             'invite_tests' => array_values($this->moduleLoader->getActiveModules()),
             'invite_form_key' => $this->inviteSubmission()->issueKey(),
+            'client_trashed' => $clientTrashed,
+            'card_assignment_count' => $activeCount + $archivedCount,
+            'trash_form_key' => $this->clientTrash()->issueKey(),
         ]);
     }
 
@@ -281,6 +295,7 @@ final class OwnerController extends BaseController
 
             return;
         }
+        $this->requireActiveClient($clientId);
 
         $label = $_POST['label'] ?? '';
         $note = $_POST['note'] ?? '';
@@ -304,6 +319,7 @@ final class OwnerController extends BaseController
 
             return;
         }
+        $this->requireActiveClient($clientId);
 
         // Та же операция, что «Новое приглашение» на главной, с клиентом из
         // адреса страницы: повтор отправки отсекается тем же ключом (07.K6b).
@@ -311,7 +327,64 @@ final class OwnerController extends BaseController
         $this->redirect('/admin/clients/' . $clientId);
     }
 
+    /**
+     * Карточка в корзине доступна только для чтения (07.K11): правка и новые
+     * назначения отклоняются на сервере, а не только скрываются в шаблоне.
+     */
+    private function requireActiveClient(string $clientId): void
+    {
+        if ($this->clients->isActive($clientId)) {
+            return;
+        }
+        $this->setFlash(['type' => 'error', 'message' => 'Карточка в корзине: чтобы её менять, сначала восстановите её.']);
+        $this->redirect('/admin/clients/' . $clientId);
+    }
+
+    private function clientTrash(): OwnerClientTrashAction
+    {
+        return new OwnerClientTrashAction($this->clients, $this->formOnce());
+    }
+
+    public function trashClient(string $clientId): void
+    {
+        $this->clientTrashAction(OwnerClientTrashAction::TRASH, $clientId);
+    }
+
+    public function restoreClient(string $clientId): void
+    {
+        $this->clientTrashAction(OwnerClientTrashAction::RESTORE, $clientId);
+    }
+
+    public function purgeClient(string $clientId): void
+    {
+        $this->clientTrashAction(OwnerClientTrashAction::PURGE, $clientId);
+    }
+
+    /**
+     * Прежний адрес удаления: теперь это то же «Удалить сейчас», и только для
+     * карточки из корзины. Рабочую карточку он не удаляет.
+     */
     public function deleteClient(string $clientId): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (Security::isValidUuid($clientId) && $this->clients->isActive($clientId)) {
+            $this->setFlash(['type' => 'error', 'message' => 'Удалить сразу нельзя: сначала отправьте карточку в корзину.']);
+            $this->redirect('/admin/clients/' . $clientId);
+        }
+
+        $this->clientTrashAction(OwnerClientTrashAction::PURGE, $clientId);
+    }
+
+    /**
+     * В корзину, восстановление и окончательное удаление карточки (07.K11).
+     *
+     * «В корзину» и «Удалить сейчас» без подтверждения (`confirmed=1`, его
+     * ставит диалог или страница подтверждения) ничего не меняют: показывается
+     * страница подтверждения, так что клик без JavaScript ничего не удаляет.
+     */
+    private function clientTrashAction(string $action, string $clientId): void
     {
         if (!$this->requireOwner()) {
             return;
@@ -322,14 +395,34 @@ final class OwnerController extends BaseController
             return;
         }
 
-        $confirmed = ($_POST['confirm_delete'] ?? null) === 'delete';
-        if (!$confirmed || !$this->clients->delete($clientId)) {
-            $this->setFlash(['type' => 'error', 'message' => 'Удаление не выполнено. Подтвердите удаление галочкой и попробуйте ещё раз.']);
-            $this->redirect('/admin/clients/' . $clientId);
+        $post = $this->postData();
+        $trash = $this->clientTrash();
+        $return = OwnerInviteBulkAction::safeReturn($post['return'] ?? null);
+
+        if (
+            in_array($action, OwnerClientTrashAction::CONFIRMED_ACTIONS, true)
+            && ($post['confirmed'] ?? null) !== '1'
+        ) {
+            $card = $this->clients->findForOwner($clientId);
+            echo $this->view->render('owner-client-confirm', [
+                'action' => $action,
+                'client' => $card['client'] ?? [],
+                'assignments_total' => count($card['assignments'] ?? []),
+                'return_url' => $return,
+                'trash_form_key' => $trash->issueKey(),
+                'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
+            ]);
+
+            return;
         }
 
-        $this->setFlash(['type' => 'success', 'message' => 'Карточка клиента, её назначения, результаты и файлы удалены без возможности восстановления.']);
-        $this->redirect('/admin/clients');
+        $outcome = $trash->submit($action, $clientId, $post);
+        $this->setFlash($outcome);
+        // Удалённая окончательно карточка больше не открывается: возвращаемся к списку.
+        if ($action === OwnerClientTrashAction::PURGE && $outcome['type'] === 'success') {
+            $this->redirect(str_contains($return, '/admin/clients/') ? '/admin/clients?view=trash' : $return);
+        }
+        $this->redirect($return);
     }
 
     public function deleteInvitedCase(string $sessionId): void

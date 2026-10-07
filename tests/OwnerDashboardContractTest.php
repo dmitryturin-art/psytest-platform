@@ -141,7 +141,8 @@ final class OwnerDashboardContractTest extends TestCase
             self::assertStringNotContainsString('invite.token', $template);
         }
 
-        self::assertStringContainsString('name="confirm_delete" value="delete" required', $clientCard);
+        self::assertStringContainsString('name="confirm_delete" value="delete" required', (string) file_get_contents($this->projectRoot . '/templates/owner-client-confirm.twig'));
+        self::assertStringContainsString('data-dialog-check-input', (string) file_get_contents($this->projectRoot . '/templates/blocks/owner-client-dialog.twig'));
         self::assertStringContainsString('name="confirm_delete" value="delete" required', $invitedCase);
         self::assertStringContainsString('name="label"', $clientsList);
         self::assertStringContainsString('name="client_id"', (string) file_get_contents($this->projectRoot . '/templates/owner-dashboard.twig'));

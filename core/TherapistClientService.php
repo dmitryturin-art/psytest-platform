@@ -73,14 +73,15 @@ final class TherapistClientService
         $label = $this->normaliseLabel($label);
         $note = $this->normaliseNote($note);
         $email = $this->normaliseEmail($email);
-        if (!$this->exists($id)) {
+        // Карточка в корзине доступна только для чтения (07.K11).
+        if (!$this->isActive($id)) {
             return false;
         }
 
         $this->db->update(
             'therapist_clients',
             ['label' => $label, 'note' => $note, 'email' => $email],
-            'id = ?',
+            'id = ? AND trashed_at IS NULL',
             [$id],
         );
 
@@ -93,11 +94,12 @@ final class TherapistClientService
      *
      * @param string $search Часть подписи карточки (без учёта регистра).
      * @param string|null $testSlug Только клиенты, у которых есть назначение этой методики.
+     * @param bool $trashed true — список корзины; по умолчанию карточки из корзины скрыты (07.K11).
      * @return list<array<string, mixed>>
      */
-    public function listForOwner(int $limit = 100, string $search = '', ?string $testSlug = null): array
+    public function listForOwner(int $limit = 100, string $search = '', ?string $testSlug = null, bool $trashed = false): array
     {
-        $where = [];
+        $where = [$trashed ? 'clients.trashed_at IS NOT NULL' : 'clients.trashed_at IS NULL'];
         $params = [];
         $search = trim($search);
         if ($search !== '') {
@@ -107,25 +109,57 @@ final class TherapistClientService
         if ($testSlug !== null && $testSlug !== '') {
             $where[] = 'EXISTS (SELECT 1 FROM test_invites AS own
                                 INNER JOIN tests AS own_tests ON own_tests.id = own.test_id
-                                WHERE own.client_id = clients.id AND own.trashed_at IS NULL
+                                WHERE own.client_id = clients.id
+                                  AND (own.trashed_at IS NULL OR clients.trashed_at IS NOT NULL)
                                   AND own_tests.slug = :test_slug)';
             $params['test_slug'] = $testSlug;
         }
-        $whereSql = $where === [] ? '' : 'WHERE ' . implode(' AND ', $where);
+        $whereSql = 'WHERE ' . implode(' AND ', $where);
 
-        return $this->db->select(
-            "SELECT clients.id, clients.label, clients.note, clients.created_at, clients.updated_at,
+        $rows = $this->db->select(
+            "SELECT clients.id, clients.label, clients.note, clients.created_at, clients.updated_at, clients.trashed_at,
                     COUNT(invites.id) AS assignment_count,
                     SUM(CASE WHEN sessions.status = 'completed' THEN 1 ELSE 0 END) AS completed_count
              FROM therapist_clients AS clients
-             LEFT JOIN test_invites AS invites ON invites.client_id = clients.id AND invites.trashed_at IS NULL
+             LEFT JOIN test_invites AS invites ON invites.client_id = clients.id
+                 AND (invites.trashed_at IS NULL OR clients.trashed_at IS NOT NULL)
              LEFT JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
              {$whereSql}
-             GROUP BY clients.id, clients.label, clients.note, clients.created_at, clients.updated_at
-             ORDER BY clients.created_at DESC
+             GROUP BY clients.id, clients.label, clients.note, clients.created_at, clients.updated_at, clients.trashed_at
+             ORDER BY " . ($trashed ? 'clients.trashed_at DESC, ' : '') . "clients.created_at DESC
              LIMIT " . max(1, min($limit, 200)),
             $params,
         );
+
+        return array_map(static function (array $row): array {
+            $row['purge_at'] = self::purgeAt($row['trashed_at'] ?? null);
+
+            return $row;
+        }, $rows);
+    }
+
+    /**
+     * Сколько карточек в рабочем списке и в корзине (вкладки «Рабочие» и «Корзина»).
+     *
+     * @return array{active: int, trash: int}
+     */
+    public function countsForOwner(): array
+    {
+        $row = $this->db->selectOne(
+            'SELECT SUM(trashed_at IS NULL) AS active, SUM(trashed_at IS NOT NULL) AS trash FROM therapist_clients',
+        ) ?? [];
+
+        return ['active' => (int) ($row['active'] ?? 0), 'trash' => (int) ($row['trash'] ?? 0)];
+    }
+
+    /** Дата окончательного удаления карточки из корзины или NULL, если карточка не в корзине. */
+    public static function purgeAt(mixed $trashedAt): ?string
+    {
+        return $trashedAt === null || $trashedAt === ''
+            ? null
+            : (new \DateTimeImmutable((string) $trashedAt))
+                ->modify('+' . TestInviteService::TRASH_RETENTION_DAYS . ' days')
+                ->format('Y-m-d H:i:s');
     }
 
     /**
@@ -136,12 +170,13 @@ final class TherapistClientService
     public function findForOwner(string $id): ?array
     {
         $client = $this->db->selectOne(
-            'SELECT id, label, note, email, created_at, updated_at FROM therapist_clients WHERE id = :id',
+            'SELECT id, label, note, email, created_at, updated_at, trashed_at FROM therapist_clients WHERE id = :id',
             ['id' => $id],
         );
         if ($client === null) {
             return null;
         }
+        $client['purge_at'] = self::purgeAt($client['trashed_at']);
 
         $assignments = TestInviteService::withDisplayStatus(TestInviteService::withPurgeDate($this->db->select(
             'SELECT invites.id, invites.owner_note, invites.status, invites.created_at, invites.expires_at,
@@ -169,19 +204,190 @@ final class TherapistClientService
         return ['client' => $client, 'assignments' => $assignments, 'history' => $history];
     }
 
+    public const TRASH_DONE = 'trashed';
+    public const TRASH_UNCHANGED = 'unchanged';
+    public const TRASH_MISSING = 'missing';
+
+    public const RESTORE_DONE = 'restored';
+    public const RESTORE_UNCHANGED = 'unchanged';
+    public const RESTORE_MISSING = 'missing';
+
+    public const PURGE_DONE = 'purged';
+    public const PURGE_REFUSED = 'refused';
+    public const PURGE_MISSING = 'missing';
+
     /**
-     * Removes the card with every clinical artifact made under it.
+     * Отправляет карточку в корзину вместе с её назначениями (07.K11).
+     *
+     * Метка карточки и метка назначений — одна и та же секунда: по ней
+     * восстановление отличает назначения, которые ушли с карточкой, от тех,
+     * что владелец убрал в корзину раньше вручную (их метка другая, и они
+     * остаются в корзине). Ожидающая ссылка, которая ещё может открыться,
+     * сначала отзывается: из корзины клиент не должен начать тест. Отзыв
+     * восстановлением не отменяется, ссылку нужно будет выдать заново.
+     * Данные клиента не трогаются — ни ответы, ни разборы, ни файлы.
+     *
+     * @return self::TRASH_*
+     */
+    public function trash(string $id): string
+    {
+        $stamp = date('Y-m-d H:i:s');
+
+        $this->db->beginTransaction();
+        try {
+            $changed = $this->db->execute(
+                'UPDATE therapist_clients SET trashed_at = :stamp WHERE id = :id AND trashed_at IS NULL',
+                ['stamp' => $stamp, 'id' => $id],
+            )->rowCount();
+            if ($changed !== 1) {
+                $this->db->rollback();
+
+                return $this->exists($id) ? self::TRASH_UNCHANGED : self::TRASH_MISSING;
+            }
+
+            $this->db->execute(
+                "UPDATE test_invites SET status = 'revoked', revoked_at = :stamp
+                 WHERE client_id = :id AND status = 'pending' AND expires_at > NOW()",
+                ['stamp' => $stamp, 'id' => $id],
+            );
+            $this->db->execute(
+                'UPDATE test_invites SET trashed_at = :stamp WHERE client_id = :id AND trashed_at IS NULL',
+                ['stamp' => $stamp, 'id' => $id],
+            );
+            $this->writeOwnerAuditEvent('client_trashed');
+            $this->db->commit();
+        } catch (\Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+
+            throw $exception;
+        }
+
+        return self::TRASH_DONE;
+    }
+
+    /**
+     * Возвращает карточку из корзины и назначения, которые ушли вместе с ней (07.K11).
+     *
+     * Назначения, убранные в корзину вручную до этого, остаются в корзине.
+     *
+     * @return self::RESTORE_*
+     */
+    public function restore(string $id): string
+    {
+        $this->db->beginTransaction();
+        try {
+            $card = $this->db->selectOne(
+                'SELECT trashed_at FROM therapist_clients WHERE id = :id FOR UPDATE',
+                ['id' => $id],
+            );
+            if ($card === null) {
+                $this->db->rollback();
+
+                return self::RESTORE_MISSING;
+            }
+            if ($card['trashed_at'] === null) {
+                $this->db->rollback();
+
+                return self::RESTORE_UNCHANGED;
+            }
+
+            $this->db->execute(
+                'UPDATE test_invites SET trashed_at = NULL WHERE client_id = :id AND trashed_at = :stamp',
+                ['id' => $id, 'stamp' => $card['trashed_at']],
+            );
+            $this->db->execute('UPDATE therapist_clients SET trashed_at = NULL WHERE id = :id', ['id' => $id]);
+            $this->writeOwnerAuditEvent('client_restored');
+            $this->db->commit();
+        } catch (\Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+
+            throw $exception;
+        }
+
+        return self::RESTORE_DONE;
+    }
+
+    /**
+     * Сколько назначений ушло в корзину вместе с карточкой (для сообщений кабинета).
+     *
+     * Для карточки вне корзины — 0.
+     */
+    public function assignmentsWithCard(string $id): int
+    {
+        $row = $this->db->selectOne(
+            'SELECT COUNT(invites.id) AS total
+             FROM therapist_clients AS clients
+             INNER JOIN test_invites AS invites ON invites.client_id = clients.id AND invites.trashed_at = clients.trashed_at
+             WHERE clients.id = :id',
+            ['id' => $id],
+        );
+
+        return (int) ($row['total'] ?? 0);
+    }
+
+    /**
+     * Окончательно удаляет карточку из корзины — «Удалить сейчас» (07.K11).
+     *
+     * Только из корзины: рабочую карточку отказывается удалить сама строка
+     * `DELETE`, так что ни гонка, ни подделанная форма её не заденут.
+     *
+     * @return self::PURGE_*
+     */
+    public function purgeTrashed(string $id): string
+    {
+        $card = $this->db->selectOne('SELECT trashed_at FROM therapist_clients WHERE id = :id', ['id' => $id]);
+        if ($card === null) {
+            return self::PURGE_MISSING;
+        }
+        if ($card['trashed_at'] === null) {
+            return self::PURGE_REFUSED;
+        }
+
+        return $this->purge($id) ? self::PURGE_DONE : self::PURGE_MISSING;
+    }
+
+    /**
+     * Стирает карточки, пролежавшие в корзине дольше порога (ежедневная очистка).
+     *
+     * Сбой на одной карточке не останавливает остальные: она остаётся в
+     * корзине до следующего запуска.
+     *
+     * @return array{clients: int, failed: int}
+     */
+    public function purgeTrash(\DateTimeImmutable $olderThan): array
+    {
+        $rows = $this->db->select(
+            'SELECT id FROM therapist_clients WHERE trashed_at IS NOT NULL AND trashed_at < :older_than',
+            ['older_than' => $olderThan->format('Y-m-d H:i:s')],
+        );
+
+        $result = ['clients' => 0, 'failed' => 0];
+        foreach ($rows as $row) {
+            try {
+                if ($this->purge((string) $row['id'])) {
+                    ++$result['clients'];
+                }
+            } catch (\Throwable) {
+                ++$result['failed'];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Removes a trashed card with every clinical artifact made under it.
      *
      * One transaction covers the sessions and the card itself, so a partially
      * deleted client cannot survive a failure; the invitations (and their
      * owner notes) go away with the card through the foreign key.
      */
-    public function delete(string $id): bool
+    private function purge(string $id): bool
     {
-        if (!$this->exists($id)) {
-            return false;
-        }
-
         $sessions = $this->db->select(
             'SELECT claimed_session_id FROM test_invites WHERE client_id = :client_id AND claimed_session_id IS NOT NULL',
             ['client_id' => $id],
@@ -192,7 +398,7 @@ final class TherapistClientService
             foreach ($sessions as $session) {
                 $this->lifecycle->deleteSessionAndArtifacts((string) $session['claimed_session_id']);
             }
-            $deleted = $this->db->delete('therapist_clients', 'id = ?', [$id]);
+            $deleted = $this->db->delete('therapist_clients', 'id = ? AND trashed_at IS NOT NULL', [$id]);
             if ($deleted === 0) {
                 $this->db->rollback();
                 // The rows are back; their documents must be too.
@@ -203,7 +409,7 @@ final class TherapistClientService
 
             // Like the case audit event, this proves that an owner action
             // happened without keeping the label, the card ID or any answer.
-            $this->writeOwnerAuditEvent('therapist_client_deleted');
+            $this->writeOwnerAuditEvent('client_purged');
             $this->db->commit();
         } catch (\Throwable $exception) {
             if ($this->db->inTransaction()) {
@@ -236,6 +442,23 @@ final class TherapistClientService
 
         return $this->db->selectOne(
             'SELECT id FROM therapist_clients WHERE id = :id AND email IS NOT NULL',
+            ['id' => $id],
+        ) !== null;
+    }
+
+    /** Подпись карточки для сообщения кабинета; NULL, если карточки нет. */
+    public function labelOf(string $id): ?string
+    {
+        $row = $this->db->selectOne('SELECT label FROM therapist_clients WHERE id = :id', ['id' => $id]);
+
+        return $row === null ? null : (string) $row['label'];
+    }
+
+    /** Карточка есть и не в корзине: только с такой можно работать (07.K11). */
+    public function isActive(string $id): bool
+    {
+        return $this->db->selectOne(
+            'SELECT id FROM therapist_clients WHERE id = :id AND trashed_at IS NULL',
             ['id' => $id],
         ) !== null;
     }

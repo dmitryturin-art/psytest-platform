@@ -166,7 +166,8 @@ final class ClientReportNotifierTest extends TestCase
     public function testDeletingTheClientOrTheCaseLeavesNothingToNotifyAndDoesNotFail(): void
     {
         $case = $this->caseWithPublishedReport('gone@example.test', 'Одобренный текст.');
-        self::assertTrue($this->clients->delete($case['client_id']));
+        $this->clients->trash($case['client_id']);
+        self::assertSame(TherapistClientService::PURGE_DONE, $this->clients->purgeTrashed($case['client_id']));
 
         self::assertFalse($this->notifier->canNotify($case['session_id']));
         self::assertFalse($this->notifier->notify($case['session_id']));
