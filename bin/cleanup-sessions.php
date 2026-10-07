@@ -41,15 +41,14 @@ try {
     // Корзина приглашений (07.K8): кейсы, пролежавшие там дольше срока,
     // стираются окончательно — ответы, результат, разборы, выгрузки.
     $invites = new TestInviteService($db, new SessionManager($db));
-    $cases = new TherapistCaseService(
-        $db,
-        $lifecycle,
-        $invites,
-        new TherapistClientService($db, $lifecycle),
-    );
-    $trash = $cases->purgeTrash(
-        (new DateTimeImmutable())->modify('-' . TestInviteService::TRASH_RETENTION_DAYS . ' days'),
-    );
+    $clients = new TherapistClientService($db, $lifecycle);
+    $cases = new TherapistCaseService($db, $lifecycle, $invites, $clients);
+    $trashThreshold = (new DateTimeImmutable())->modify('-' . TestInviteService::TRASH_RETENTION_DAYS . ' days');
+    $trash = $cases->purgeTrash($trashThreshold);
+
+    // Корзина карточек клиентов (07.K11): после приглашений, чтобы уже
+    // стёртые кейсы не мешали, а вместе с карточкой ушло всё остальное.
+    $clientTrash = $clients->purgeTrash($trashThreshold);
 
     // Clean up old activity logs (older than 90 days)
     $logCutoff = date('Y-m-d H:i:s', strtotime('-90 days'));
@@ -62,11 +61,14 @@ try {
         'invites_purged' => $trash['invites'],
         'cases_purged' => $trash['cases'],
         'purge_failed' => $trash['failed'],
+        'clients_purged' => $clientTrash['clients'],
+        'clients_purge_failed' => $clientTrash['failed'],
         'trash_retention_days' => TestInviteService::TRASH_RETENTION_DAYS,
     ]);
     
     echo "✓ Cleanup completed: $deletedCount anonymous sessions removed, "
-        . "{$trash['invites']} trashed invites purged ({$trash['cases']} cases)\n";
+        . "{$trash['invites']} trashed invites purged ({$trash['cases']} cases), "
+        . "{$clientTrash['clients']} trashed clients purged\n";
     
 } catch (Exception $e) {
     $logger->error("Cleanup failed: " . $e->getMessage());

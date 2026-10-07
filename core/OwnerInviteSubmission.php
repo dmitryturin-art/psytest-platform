@@ -123,7 +123,7 @@ final class OwnerInviteSubmission
         $client = $post['client_id'] ?? '';
         $clientIsValid = $client === ''
             || $client === self::NEW_CLIENT
-            || (is_string($client) && Security::isValidUuid($client) && $this->clients->exists($client));
+            || (is_string($client) && Security::isValidUuid($client) && $this->clients->isActive($client));
 
         if (!is_int($testId) || !in_array($testId, $availableTestIds, true)
             || !$clientIsValid

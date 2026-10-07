@@ -35,7 +35,7 @@ final class TestInviteService
             throw new \InvalidArgumentException('Test is unavailable for invitations');
         }
         if ($clientId !== null) {
-            $client = $this->db->selectOne('SELECT id FROM therapist_clients WHERE id = :id', ['id' => $clientId]);
+            $client = $this->db->selectOne('SELECT id FROM therapist_clients WHERE id = :id AND trashed_at IS NULL', ['id' => $clientId]);
             if ($client === null) {
                 throw new \InvalidArgumentException('Client card does not exist');
             }
@@ -269,7 +269,7 @@ final class TestInviteService
             return self::ATTACH_MISSING;
         }
         if ($clientId !== null) {
-            if ($this->db->selectOne('SELECT id FROM therapist_clients WHERE id = :id', ['id' => $clientId]) === null) {
+            if ($this->db->selectOne('SELECT id FROM therapist_clients WHERE id = :id AND trashed_at IS NULL', ['id' => $clientId]) === null) {
                 return self::ATTACH_REFUSED;
             }
         } elseif (!TherapistClientService::isValidInput($newClientLabel, '')) {
@@ -423,7 +423,8 @@ final class TestInviteService
     /** @param list<string> $ids */
     public function restore(array $ids): int
     {
-        return $this->mark($ids, 'trashed_at = NULL', 'trashed_at IS NOT NULL');
+        // Назначение карточки из корзины возвращается только вместе с карточкой (07.K11).
+        return $this->mark($ids, 'trashed_at = NULL', 'trashed_at IS NOT NULL AND (client_id IS NULL OR client_id NOT IN (SELECT id FROM therapist_clients WHERE trashed_at IS NOT NULL))');
     }
 
     /** Ожидающее приглашение с живой ссылкой нельзя ни архивировать, ни убрать в корзину. */

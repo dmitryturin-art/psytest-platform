@@ -87,6 +87,7 @@ final class OwnerInviteBulkAction
         $uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
         $allowed = [
             '#\A/admin(\?[A-Za-z0-9_%=&.~+\-]{0,400})?\z#',
+            '#\A/admin/clients(\?[A-Za-z0-9_%=&.~+\-]{0,400})?\z#',
             '#\A/admin/(invited-case|clients)/' . $uuid . '(\?[A-Za-z0-9_%=&.~+\-]{0,400})?\z#',
         ];
         foreach ($allowed as $pattern) {
@@ -161,7 +162,7 @@ final class OwnerInviteBulkAction
             return ['type' => 'error', 'message' => match ($action) {
                 self::ARCHIVE, self::TRASH => 'Ничего не перемещено: ожидающее приглашение сначала отзовите, а уже перемещённые строки пропускаются.',
                 self::UNARCHIVE => 'Ничего не изменено: выбранных приглашений нет в архиве.',
-                default => 'Ничего не восстановлено: выбранных приглашений нет в корзине.',
+                default => 'Ничего не восстановлено: выбранных приглашений нет в корзине, либо их карточка клиента сама в корзине — сначала восстановите карточку.',
             }];
         }
 

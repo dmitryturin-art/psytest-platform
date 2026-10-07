@@ -123,8 +123,9 @@ final class TherapistClientServiceTest extends TestCase
         file_put_contents($pdf, 'result');
         $reportId = $this->insertAiReport($sessionId);
 
-        self::assertTrue($this->clients->delete($clientId));
-        self::assertFalse($this->clients->delete($clientId), 'Repeated deletion must be safe.');
+        $this->clients->trash($clientId);
+        self::assertSame(TherapistClientService::PURGE_DONE, $this->clients->purgeTrashed($clientId));
+        self::assertSame(TherapistClientService::PURGE_MISSING, $this->clients->purgeTrashed($clientId), 'Repeated deletion must be safe.');
 
         self::assertNull($this->db->selectOne('SELECT id FROM therapist_clients WHERE id = ?', [$clientId]));
         self::assertNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$sessionId]));
@@ -145,7 +146,7 @@ final class TherapistClientServiceTest extends TestCase
 
         $audit = $this->db->select(
             'SELECT session_id, test_id, details FROM activity_log WHERE action = ? ORDER BY id DESC LIMIT 1',
-            ['therapist_client_deleted'],
+            ['client_purged'],
         );
         self::assertNotEmpty($audit);
         self::assertNull($audit[0]['session_id']);
@@ -271,7 +272,8 @@ final class TherapistClientServiceTest extends TestCase
         $id = $this->createClient('Уходит вместе с адресом', '', 'erased@example.test');
         self::assertTrue($this->clients->hasEmail($id));
 
-        self::assertTrue($this->clients->delete($id));
+        $this->clients->trash($id);
+        self::assertSame(TherapistClientService::PURGE_DONE, $this->clients->purgeTrashed($id));
         self::assertSame(
             0,
             (int) $this->db->selectOne(
@@ -311,7 +313,8 @@ final class TherapistClientServiceTest extends TestCase
             $files[$sessionId] = $file;
         }
 
-        self::assertTrue($this->clients->delete($clientId));
+        $this->clients->trash($clientId);
+        self::assertSame(TherapistClientService::PURGE_DONE, $this->clients->purgeTrashed($clientId));
 
         foreach ($files as $sessionId => $file) {
             self::assertNull($this->db->selectOne('SELECT id FROM test_sessions WHERE id = ?', [$sessionId]));
