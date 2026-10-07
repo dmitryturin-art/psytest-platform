@@ -32,7 +32,7 @@ class TestController extends BaseController
 
                 return;
             }
-            $invite = ['test_name' => $resumable['test']['name']];
+            $invite = ['test_name' => $resumable['test']['name'], 'test_slug' => $resumable['test']['slug']];
             $resume = [
                 'answered' => TestInviteService::answeredCount($resumable['session']['answers']),
                 'total' => $this->totalQuestions((string) $resumable['test']['slug']),
@@ -43,6 +43,8 @@ class TestController extends BaseController
             'token' => $token,
             'test_name' => $invite['test_name'],
             'resume' => $resume,
+            // Инструкция методики перед началом (07.K13); при продолжении — свёрнута.
+            'instruction' => $this->instructionFor((string) ($invite['test_slug'] ?? '')),
         ]);
     }
 
@@ -76,7 +78,18 @@ class TestController extends BaseController
             'saved_answers' => $resumed ? $claimed['session']['answers'] : [],
             'saved_demographics' => $resumed ? $claimed['session']['demographics'] : [],
             'is_resume' => $resumed,
+            // Инструкцию уже показала стартовая страница приглашения: здесь она свёрнута (07.K13).
+            'instruction' => $module->getInstruction(),
+            'instruction_collapsed' => true,
         ]);
+    }
+
+    /** @return list<string> */
+    private function instructionFor(string $slug): array
+    {
+        $module = $slug === '' ? null : $this->moduleLoader->getModule($slug);
+
+        return $module === null ? [] : $module->getInstruction();
     }
 
     private function totalQuestions(string $slug): int
@@ -121,6 +134,7 @@ class TestController extends BaseController
             'session' => $session,
             'questions' => $questions,
             'module' => $module, // Pass module for custom JS/demographics
+            'instruction' => $module->getInstruction(),
         ]);
     }
 
@@ -358,6 +372,7 @@ class TestController extends BaseController
             'questions' => $questions,
             'is_pair' => true,
             'partner_token' => $partnerToken,
+            'instruction' => $module->getInstruction(),
         ]);
     }
 

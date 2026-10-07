@@ -214,6 +214,7 @@
         if (form) {
             form.addEventListener('change', function (e) {
                 if (e.target.name && e.target.name.startsWith('answers[')) {
+                    collapseInstruction();
                     saveAnswer(e.target);
                     scheduleAutoAdvance();
                 }
@@ -478,6 +479,17 @@
     }
 
     /**
+     * The instruction is open until the test starts; afterwards it stays one
+     * click away as the quiet «Инструкция» disclosure by the progress line (07.K13).
+     */
+    function collapseInstruction() {
+        const instruction = document.getElementById('testInstruction');
+        if (instruction && instruction.open) {
+            instruction.open = false;
+        }
+    }
+
+    /**
      * Start the test (hide demographics, show questions)
      */
     function startTest() {
@@ -488,6 +500,7 @@
         if (demographicsSection) {
             demographicsSection.style.display = 'none';
         }
+        collapseInstruction();
 
         // Update question texts based on gender (if gender variants available)
         if (demographics.gender) {
