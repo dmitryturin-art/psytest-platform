@@ -122,7 +122,7 @@
                     </div>
                 </div>
                 {% else %}
-                <div class="answer-options{% if test.answer_type|default('ternary') == 'ternary' %} has-ternary{% endif %}">
+                <div class="answer-options{% if test.answer_type|default('ternary') == 'ternary' %} has-ternary{% if question.options is not defined or question.options is empty %} answer-options--center{% endif %}{% endif %}">
                     {% if question.options is defined and question.options is not empty %}
                         {% for option in question.options %}
                         <label class="answer-option">
