@@ -217,6 +217,76 @@ final class InviteResumeTest extends TestCase
         self::assertArrayNotHasKey('4', $this->answersOf($sessionId));
     }
 
+    public function testCasePageForAnUnfinishedCaseShowsProgressAndTheReissueFormAndTheLinkOnlyOnce(): void
+    {
+        [, $sessionId] = $this->openedInvite();
+        $this->sessions->mergeAnswers($sessionId, ['1' => '1', '2' => '0', '3' => '2']);
+
+        $module = (new \PsyTest\Core\ModuleLoader(null, $this->db))->discover()->getModule('bdi');
+        self::assertNotNull($module);
+        $case = $this->invites->claimedCaseForOwner($sessionId);
+        self::assertNotNull($case);
+        $case = $this->sessions->withFreshResults($case, $module);
+        $presenter = new \PsyTest\Core\InvitedCasePresenter();
+        $case['answer_rows'] = $presenter->answers($module, $case['answers']);
+        $case['result_sections'] = $presenter->resultSections($module, $case['calculated_results']);
+        $case['workspace'] = $presenter->workspace($case['result_sections']);
+        $case['pair'] = null;
+        $case['progress'] = [
+            'answered' => TestInviteService::answeredCount($case['answers']),
+            'total' => (int) ($module->getMetadata()['question_count'] ?? 0),
+        ];
+
+        $render = function (?array $flash, ?string $key) use ($case): string {
+            $twig = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(dirname(__DIR__, 2) . '/templates'), [
+                'cache' => false,
+                'strict_variables' => true,
+            ]);
+            \PsyTest\Core\TemplateFunctions::register($twig);
+
+            return $twig->render('owner-invited-case.twig', [
+                'appName' => 'PsyTest',
+                'basePath' => '',
+                'csrf_token' => 'synthetic-csrf-token',
+                'flash' => $flash,
+                'case' => $case,
+                'trashed' => false,
+                'resume_form_key' => $key,
+                'ai' => ['available' => false, 'has_jobs' => false, 'kinds' => [], 'owner_context_max' => 4000],
+                'notify' => ['published' => false, 'has_email' => false, 'client_id' => null, 'last_at' => null],
+            ]);
+        };
+
+        $html = $render(null, str_repeat('a', 32));
+        self::assertStringContainsString('<dt>Отвечено</dt><dd data-case-progress>3 из 21</dd>', $html);
+        self::assertStringContainsString('action="/admin/invited-case/' . $sessionId . '/resume-link"', $html);
+        self::assertStringContainsString('name="form_key" value="' . str_repeat('a', 32) . '"', $html);
+        self::assertStringContainsString('Выдать ссылку для продолжения', $html);
+        self::assertStringNotContainsString('owner-invite-url-field', $html);
+
+        $withLink = $render(['type' => 'success', 'message' => 'Ссылка готова.', 'invite_url' => 'https://example.test/invite/' . str_repeat('b', 64)], str_repeat('c', 32));
+        self::assertStringContainsString('value="https://example.test/invite/' . str_repeat('b', 64) . '"', $withLink);
+        self::assertStringContainsString('data-copy-target="owner-invite-url-field"', $withLink);
+
+        // Без ключа (кейс в корзине или срок сессии вышел) действия нет, а прогресс остаётся.
+        $noKey = $render(null, null);
+        self::assertStringNotContainsString('/resume-link', $noKey);
+        self::assertStringContainsString('3 из 21', $noKey);
+    }
+
+    /** Автосохранение методики с обязательным полом не должно отвечать 422 на каждый ответ. */
+    public function testPartialSaveValidationDoesNotRequireGenderButStillRejectsBadAnswers(): void
+    {
+        $module = (new \PsyTest\Core\ModuleLoader(null, $this->db))->discover()->getModule('smil');
+        self::assertNotNull($module);
+
+        self::assertContains('invalid_gender', \PsyTest\Core\AnswerValidator::validate($module, ['1' => '1'], false));
+        self::assertSame([], \PsyTest\Core\AnswerValidator::validatePartial($module, ['1' => '1', '2' => '0']));
+        self::assertSame([], \PsyTest\Core\AnswerValidator::validatePartial($module, []));
+        self::assertNotSame([], \PsyTest\Core\AnswerValidator::validatePartial($module, ['1' => '7']));
+        self::assertNotSame([], \PsyTest\Core\AnswerValidator::validatePartial($module, ['99999' => '1']));
+    }
+
     public function testAnsweredCountCollapsesDualScaleKeys(): void
     {
         self::assertSame(0, TestInviteService::answeredCount([]));

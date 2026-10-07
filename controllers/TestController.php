@@ -172,7 +172,7 @@ class TestController extends BaseController
 
         // Save answers
         $answers = $input['answers'] ?? [];
-        if (!is_array($answers) || AnswerValidator::validate($this->getModuleOrFail($slug), $answers, false) !== []) {
+        if (!is_array($answers) || AnswerValidator::validatePartial($this->getModuleOrFail($slug), $answers) !== []) {
             http_response_code(422);
             echo json_encode(['success' => false, 'error' => 'Invalid answers']);
             return;
@@ -182,12 +182,35 @@ class TestController extends BaseController
         $this->sessionManager->mergeAnswers($session['id'], $answers);
 
         // Save demographics if provided
-        $demographics = $input['demographics'] ?? [];
-        if (!empty($demographics)) {
+        $demographics = $this->savableDemographics($input['demographics'] ?? []);
+        if ($demographics !== []) {
             $this->sessionManager->saveDemographics($session['id'], $demographics);
         }
 
         echo json_encode(['success' => true]);
+    }
+
+    /**
+     * Из анкеты при промежуточном сохранении принимаются только пол и возраст
+     * с допустимыми значениями; всё остальное отбрасывается.
+     *
+     * @return array<string, int|string>
+     */
+    private function savableDemographics(mixed $input): array
+    {
+        if (!is_array($input)) {
+            return [];
+        }
+        $clean = [];
+        if (in_array($input['gender'] ?? null, ['male', 'female'], true)) {
+            $clean['gender'] = $input['gender'];
+        }
+        $age = $input['age'] ?? null;
+        if ((is_int($age) || (is_string($age) && preg_match('/\A\d{1,3}\z/', $age) === 1)) && (int) $age >= 1 && (int) $age <= 120) {
+            $clean['age'] = (int) $age;
+        }
+
+        return $clean;
     }
 
     /**

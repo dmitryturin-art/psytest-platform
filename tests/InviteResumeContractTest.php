@@ -28,6 +28,8 @@ final class InviteResumeContractTest extends TestCase
         self::assertStringContainsString("'saved_answers' => \$resumed ? \$claimed['session']['answers'] : []", $controller);
         self::assertStringContainsString("'saved_demographics' => \$resumed ? \$claimed['session']['demographics'] : []", $controller);
         self::assertStringContainsString('mergeAnswers($session[\'id\'], $answers)', $controller);
+        self::assertStringContainsString('AnswerValidator::validatePartial(', $controller);
+        self::assertStringContainsString('$this->savableDemographics(', $controller);
         self::assertStringNotContainsString('CONTENT_TYPE', $controller, 'The save endpoint must accept any content type (keepalive/beacon).');
     }
 
@@ -53,6 +55,7 @@ final class InviteResumeContractTest extends TestCase
         self::assertStringContainsString('keepalive: keepalive === true', $script);
         self::assertStringContainsString("'X-CSRF-Token': TEST_CONFIG.csrfToken", $script);
         self::assertStringContainsString('currentQuestionIndex = restoreSavedAnswers();', $script);
+        self::assertStringContainsString("restoreDemographicsInputs();\n            startTest();", $script, 'Hidden required gate fields must hold the saved values or submit is blocked.');
         self::assertStringContainsString('if (demographicsSection && startTestBtn && hasSavedDemographics())', $script);
     }
 

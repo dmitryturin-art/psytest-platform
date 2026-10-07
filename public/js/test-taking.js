@@ -62,6 +62,7 @@
         if (demographicsSection && startTestBtn && hasSavedDemographics()) {
             // Resume: the questionnaire was already filled in the earlier visit.
             demographics = Object.assign({}, TEST_CONFIG.demographics);
+            restoreDemographicsInputs();
             startTest();
             return;
         }
@@ -91,6 +92,17 @@
             && typeof TEST_CONFIG.demographics === 'object'
             && !Array.isArray(TEST_CONFIG.demographics)
             && Object.keys(TEST_CONFIG.demographics).length > 0;
+    }
+
+    /** The hidden gate fields are `required`: they must hold the saved values or the form cannot submit. */
+    function restoreDemographicsInputs() {
+        document.querySelectorAll('input[name="demographics[gender]"]').forEach(function (radio) {
+            radio.checked = radio.value === demographics.gender;
+        });
+        const ageInput = document.getElementById('demographicsAge');
+        if (ageInput && demographics.age !== undefined && demographics.age !== null) {
+            ageInput.value = String(demographics.age);
+        }
     }
 
     function isCardAnswered(card) {
