@@ -128,6 +128,7 @@
         {% endif %}
         {% if flash and not aiSectionShown %}
             <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+            {% if flash.invite_url ?? null %}<p class="owner-invite-url"><input id="owner-invite-url-field" aria-label="Ссылка для продолжения" type="text" readonly value="{{ flash.invite_url }}"><button type="button" class="btn btn-outline btn-sm owner-copy" data-copy-target="owner-invite-url-field" hidden>{{ ui.icon('copy') }}<span data-copy-label>Скопировать</span></button></p>{% endif %}
         {% endif %}
 
         <dl class="owner-case-details">
@@ -145,6 +146,23 @@
                     <button type="submit" class="btn btn-sm {% if case.client_id ?? false %}btn-ghost{% else %}btn-outline{% endif %}" data-attach data-client-id="{{ case.client_id ?? '' }}" data-client-label="{{ case.client_label ?? '' }}" data-test-name="{{ case.test_name }}">{% if case.client_id ?? false %}Сменить{% else %}{{ ui.icon('client') }}Привязать к клиенту{% endif %}</button>
                 </form>
                 {% endif %}
+            </dd></div>
+            {% endif %}
+            {# Незавершённое прохождение (07.K12): прогресс и перевыпуск ссылки для продолжения.
+               Прежний токен не хранится, поэтому действие выдаёт новую ссылку, а старая перестаёт работать. #}
+            {% if case.progress ?? null %}
+            <div><dt>Отвечено</dt><dd data-case-progress>{{ case.progress.answered }} из {{ case.progress.total }}</dd></div>
+            {% endif %}
+            {% if (case.progress ?? null) and (resume_form_key ?? null) %}
+            <div class="owner-case-details__wide"><dt>Ссылка для продолжения</dt><dd>
+                <form method="post" action="{{ caseUrl }}/resume-link" class="owner-action-form case-note__form" data-submit-once>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="form_key" value="{{ resume_form_key }}">
+                    <p class="case-note__actions">
+                        <button type="submit" class="btn btn-outline btn-sm" data-busy-text="Выдаём…">Выдать ссылку для продолжения</button>
+                        <span class="owner-help">Если клиент закрыл страницу, дайте ему новую ссылку: его ответы сохранены. Прежняя ссылка перестанет работать, новая показывается один раз.</span>
+                    </p>
+                </form>
             </dd></div>
             {% endif %}
             <div><dt>Открыто</dt><dd><time datetime="{{ case.claimed_at|date('Y-m-d\\TH:i') }}">{{ case.claimed_at|date("d.m.Y H:i") }}</time></dd></div>
@@ -526,6 +544,7 @@
 {% block extra_js %}
 {# Подключается только на карточке кейса: опрос состояния черновиков нужен
    лишь здесь и не должен висеть на остальных страницах кабинета. #}
+<script src="{{ asset('js/owner-copy.js') }}"></script>
 <script src="{{ asset('js/owner-case.js') }}"></script>
 <script src="{{ asset('js/owner-case-workspace.js') }}"></script>
 <script src="{{ asset('js/owner-forms.js') }}"></script>

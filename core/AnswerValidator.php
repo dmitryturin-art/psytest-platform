@@ -67,6 +67,39 @@ final class AnswerValidator
     }
 
     /**
+     * Убирает из набора ответов служебные ключи схемы (пол, возраст).
+     *
+     * Валидатор значений для них не проверяет, поэтому из промежуточного
+     * сохранения они не принимаются вовсе: анкета идёт отдельным полем
+     * `demographics` и проходит собственную очистку.
+     *
+     * @param array<int|string, mixed> $answers
+     * @return array<int|string, mixed>
+     */
+    public static function withoutExtraKeys(TestModuleInterface $module, array $answers): array
+    {
+        $extra = $module->getAnswerSchema()['extra_keys'];
+
+        return array_diff_key($answers, array_flip($extra));
+    }
+
+    /**
+     * Проверка промежуточного сохранения (07.K12): только ключи и значения ответов.
+     *
+     * Пол и возраст приходят отдельным полем `demographics`, а не внутри набора
+     * ответов, поэтому требование «пол обязателен» к частичному сохранению не
+     * относится: оно проверяется при завершении. Без этого автосохранение
+     * методик с обязательным полом отвечало 422 на каждый ответ.
+     *
+     * @param array<int|string, mixed> $answers
+     * @return list<string>
+     */
+    public static function validatePartial(TestModuleInterface $module, array $answers): array
+    {
+        return array_values(array_diff(self::validate($module, $answers, false), ['invalid_gender', 'invalid_age']));
+    }
+
+    /**
      * Возраст приходит из формы строкой и до сих пор не проверялся вовсе:
      * он числился «лишним ключом» и пропускался. Для методик, где возраст
      * задан обязательным, это значило, что на сервер можно прислать что угодно.

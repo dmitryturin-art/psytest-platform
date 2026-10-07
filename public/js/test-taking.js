@@ -11,6 +11,13 @@
  *                         (Enter on the last answered question submits)
  * Dual (Lazarus) cards: a digit fills the first unanswered row (Я, then Партнёр).
  *
+ * Resume (07.K12): TEST_CONFIG.answers / .demographics carry what the server already
+ * saved. The page restores the checked options, skips the demographics gate when it
+ * was filled and starts from the first unanswered question.
+ * Saving: every answer is sent after a short coalescing window (SAVE_DELAY_MS); on
+ * visibilitychange/pagehide the pending answers go out with fetch(keepalive), which
+ * unlike sendBeacon can carry the CSRF header.
+ *
  * Time estimate: median of the respondent's own time-per-answer over the last
  * 20 first answers (>= 3 samples, each capped at 90 s); before that the test's
  * declared average (data-estimated-minutes / total questions); else hidden.
@@ -33,6 +40,8 @@
     const MAX_SAMPLE_MS = 90000;
     const SAMPLE_WINDOW = 20;
     const MIN_SAMPLES = 3;
+    const SAVE_DELAY_MS = 250;
+    let saveDirty = false;
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', function () {
@@ -49,6 +58,14 @@
         // Check if demographics section exists
         const demographicsSection = document.getElementById('demographicsSection');
         const startTestBtn = document.getElementById('startTestBtn');
+
+        if (demographicsSection && startTestBtn && hasSavedDemographics()) {
+            // Resume: the questionnaire was already filled in the earlier visit.
+            demographics = Object.assign({}, TEST_CONFIG.demographics);
+            restoreDemographicsInputs();
+            startTest();
+            return;
+        }
 
         if (demographicsSection && startTestBtn) {
             // Handle demographics submission
@@ -67,6 +84,73 @@
 
         // Initialize test questions (only if no demographics)
         initializeTestQuestions();
+    }
+
+    function hasSavedDemographics() {
+        return typeof TEST_CONFIG !== 'undefined'
+            && TEST_CONFIG.demographics
+            && typeof TEST_CONFIG.demographics === 'object'
+            && !Array.isArray(TEST_CONFIG.demographics)
+            && Object.keys(TEST_CONFIG.demographics).length > 0;
+    }
+
+    /** The hidden gate fields are `required`: they must hold the saved values or the form cannot submit. */
+    function restoreDemographicsInputs() {
+        document.querySelectorAll('input[name="demographics[gender]"]').forEach(function (radio) {
+            radio.checked = radio.value === demographics.gender;
+        });
+        const ageInput = document.getElementById('demographicsAge');
+        if (ageInput && demographics.age !== undefined && demographics.age !== null) {
+            ageInput.value = String(demographics.age);
+        }
+    }
+
+    function isCardAnswered(card) {
+        const names = new Set();
+        card.querySelectorAll('input[type="radio"]').forEach(function (r) { names.add(r.name); });
+        if (names.size === 0) return false;
+        let all = true;
+        names.forEach(function (name) {
+            if (!card.querySelector('input[type="radio"][name="' + name + '"]:checked')) all = false;
+        });
+        return all;
+    }
+
+    /**
+     * Put the server-saved answers back into the form and return the index of
+     * the first unanswered question (the last one when everything is answered).
+     */
+    function restoreSavedAnswers() {
+        if (typeof TEST_CONFIG === 'undefined' || !TEST_CONFIG.answers
+            || typeof TEST_CONFIG.answers !== 'object' || Array.isArray(TEST_CONFIG.answers)) {
+            return 0;
+        }
+        Object.keys(TEST_CONFIG.answers).forEach(function (key) {
+            const value = String(TEST_CONFIG.answers[key]);
+            const radios = document.querySelectorAll('input[type="radio"][name="answers[' + key + ']"]');
+            let matched = false;
+            radios.forEach(function (radio) {
+                if (radio.value === value) {
+                    radio.checked = true;
+                    matched = true;
+                }
+            });
+            if (matched) answers[key] = value;
+        });
+        let first = -1;
+        questions.forEach(function (card, i) {
+            if (isCardAnswered(card)) {
+                card.classList.add('answered');
+            } else if (first === -1) {
+                first = i;
+            }
+        });
+        if (first === -1) {
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) submitBtn.style.display = 'inline-flex';
+            return Math.max(0, questions.length - 1);
+        }
+        return first;
     }
 
     /**
@@ -118,6 +202,9 @@
         if (submitBtn) {
             submitBtn.style.display = 'none';
         }
+
+        // Resume: restore saved answers and open the first unanswered question
+        currentQuestionIndex = restoreSavedAnswers();
 
         // Show first question
         showQuestion(currentQuestionIndex);
@@ -584,8 +671,8 @@
             card.classList.add('answered');
         }
 
-        // Auto-save to server (debounced)
-        debounceSave();
+        // Auto-save to server (short coalescing window)
+        scheduleSave();
     }
 
     /**
@@ -634,27 +721,26 @@
     }
 
     /**
-     * Debounced auto-save
+     * Auto-save: answers go out right after the choice. Several clicks inside
+     * SAVE_DELAY_MS share one request; requests never overlap, so an older
+     * snapshot cannot overtake a newer one.
      */
     let saveTimeout = null;
-    function debounceSave() {
+    let saveChain = Promise.resolve();
+    function scheduleSave() {
+        saveDirty = true;
         if (saveTimeout) {
             clearTimeout(saveTimeout);
         }
 
         saveTimeout = setTimeout(function () {
+            saveTimeout = null;
             saveAnswersToServer();
-        }, 1000);
+        }, SAVE_DELAY_MS);
     }
 
-    /**
-     * Save answers to server
-     */
-    async function saveAnswersToServer() {
-        const answeredCount = Object.keys(answers).length;
-        if (answeredCount === 0) return;
-
-        if (typeof TEST_CONFIG === 'undefined') return;
+    function buildPayload() {
+        if (typeof TEST_CONFIG === 'undefined' || Object.keys(answers).length === 0) return null;
 
         const payload = {
             session_token: TEST_CONFIG.sessionToken,
@@ -666,25 +752,68 @@
             payload.demographics = demographics;
         }
 
-        try {
-            const response = await fetch(`${TEST_CONFIG.basePath}/test/${TEST_CONFIG.slug}/save`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': TEST_CONFIG.csrfToken,
-                },
-                body: JSON.stringify(payload),
-            });
+        return payload;
+    }
 
-            const result = await response.json();
+    function saveRequest(payload, keepalive) {
+        return fetch(`${TEST_CONFIG.basePath}/test/${TEST_CONFIG.slug}/save`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': TEST_CONFIG.csrfToken,
+            },
+            body: JSON.stringify(payload),
+            keepalive: keepalive === true,
+        });
+    }
 
-            if (!result.success) {
-                console.warn('Auto-save failed:', result.error);
+    /**
+     * Save answers to server
+     */
+    function saveAnswersToServer() {
+        const payload = buildPayload();
+        if (payload === null) return Promise.resolve();
+        saveDirty = false;
+
+        saveChain = saveChain.then(async function () {
+            try {
+                const response = await saveRequest(payload, false);
+                const result = await response.json();
+
+                if (!result.success) {
+                    saveDirty = true;
+                    console.warn('Auto-save failed:', result.error);
+                }
+            } catch (error) {
+                saveDirty = true;
+                console.warn('Auto-save error:', error);
             }
+        });
+
+        return saveChain;
+    }
+
+    /** Page is hiding: send whatever is not yet saved, surviving the unload. */
+    function flushPendingSave() {
+        if (!saveDirty && saveTimeout === null) return;
+        if (saveTimeout) {
+            clearTimeout(saveTimeout);
+            saveTimeout = null;
+        }
+        const payload = buildPayload();
+        if (payload === null) return;
+        saveDirty = false;
+        try {
+            saveRequest(payload, true).catch(function () { saveDirty = true; });
         } catch (error) {
-            console.warn('Auto-save error:', error);
+            saveDirty = true;
         }
     }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') flushPendingSave();
+    });
+    window.addEventListener('pagehide', flushPendingSave);
 
     /**
      * Handle form submission

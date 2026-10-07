@@ -56,8 +56,8 @@ HTTP request
 | GET | `/` | `HomeController::index` | публичный лендинг с каталогом доступных методик; пока `noindex` по общей policy |
 | GET | `/tests` | `HomeController::tests` | каталог |
 | GET | `/test/{slug}` | `TestController::start` | начало теста |
-| GET | `/invite/{token}` | `TestController::invite` | read-only preview персонального приглашения |
-| POST | `/invite/{token}/start` | `TestController::startInvite` | CSRF-защищённое одноразовое связывание invitation и session |
+| GET | `/invite/{token}` | `TestController::invite` | read-only preview персонального приглашения; для уже открытой и не завершённой ссылки — режим «Продолжить» (07.K12) |
+| POST | `/invite/{token}/start` | `TestController::startInvite` | CSRF-защищённое одноразовое связывание invitation и session; повтор по той же ссылке продолжает свою незавершённую сессию с сохранёнными ответами (07.K12) |
 | POST | `/test/{slug}/save` | `TestController::save` | autosave |
 | POST | `/test/{slug}/submit` | `TestController::submit` | validation и scoring |
 | GET | `/test/{slug}/pair` | `TestController::pairStart` | второй партнёр Lazarus |
@@ -97,6 +97,7 @@ HTTP request
 | POST | `/admin/invites/purge` | `OwnerController::purgeInvites` | окончательно удалить кейс из корзины (нужны `confirmed=1` и `confirm_delete=delete`) (07.K8) |
 | GET | `/admin/invited-case/{sessionId}` | `OwnerController::viewInvitedCase` | защищённо показать базовый результат и читаемую анкету invitation case |
 | POST | `/admin/invited-case/{sessionId}/note` | `OwnerController::updateCaseNote` | заметка специалиста к кейсу: правка на месте в шапке карточки (CSRF + одноразовый ключ, до 1000 символов; в корзине — только чтение) |
+| POST | `/admin/invited-case/{sessionId}/resume-link` | `OwnerController::issueResumeLink` | перевыпуск ссылки для продолжения незавершённого прохождения: новый токен, старая ссылка перестаёт работать, ответы остаются; ссылка показывается один раз (CSRF + одноразовый ключ, событие `invite_resume_link_issued`; в корзине — только чтение) |
 | GET | `/admin/invited-case/{sessionId}/export.pdf` | `OwnerController::exportCasePdf` | выгрузить кейс одним PDF (результат, заключение, разбор); файл собирается на лету и на сервере не остаётся |
 | GET | `/admin/invited-case/{sessionId}/export.docx` | `OwnerController::exportCaseDocx` | тот же документ редактируемым файлом Word (`core/CaseExportDocx.php` поверх `CaseExportPresenter`, HTML→Word — `core/DocxHtmlWriter.php`, библиотека `phpoffice/phpword`); файл собирается в памяти, `X-Robots-Tag: noindex`, `Cache-Control: no-store` |
 | GET | `/admin/invited-case/{sessionId}/print` | `OwnerController::exportCasePrint` | тот же документ HTML-страницей с print-CSS (`X-Robots-Tag: noindex`) для сохранения в PDF/Word средствами браузера |

@@ -867,8 +867,8 @@ final class OwnerDashboardContractTest extends TestCase
     {
         $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
         self::assertStringContainsString("if (\$writable && \$case['trashed_at'] !== null)", $controller);
-        // Заказ черновиков, уведомление, заметка (04.D3) и все правки отчёта идут через проверку записи.
-        self::assertSame(4, substr_count($controller, '$this->ownedCase($sessionId, true)'));
+        // Заказ черновиков, уведомление, заметка (04.D3), ссылка для продолжения (07.K12) и все правки отчёта идут через проверку записи.
+        self::assertSame(5, substr_count($controller, '$this->ownedCase($sessionId, true)'));
         self::assertStringContainsString('private function editableReport(', $controller);
 
         $template = (string) file_get_contents($this->projectRoot . '/templates/owner-invited-case.twig');

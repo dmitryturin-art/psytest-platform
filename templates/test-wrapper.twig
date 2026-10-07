@@ -199,6 +199,9 @@ const TEST_CONFIG = {
     sessionToken: '{{ session.session_token }}',
     csrfToken: '{{ csrf_token }}',
     basePath: '{{ basePath }}',
+    resume: {{ is_resume ? 'true' : 'false' }},
+    answers: {{ (saved_answers ?? {})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }},
+    demographics: {{ (saved_demographics ?? {})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }},
 };
 </script>
 <script src="{{ asset('js/test-taking.js') }}"></script>

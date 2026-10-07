@@ -21,23 +21,41 @@ class TestController extends BaseController
     /** Render a bearer-link preview without consuming the invitation. */
     public function invite(string $token): void
     {
-        $invite = (new TestInviteService($this->db, $this->sessionManager))->preview($token);
+        $service = new TestInviteService($this->db, $this->sessionManager);
+        $invite = $service->preview($token);
+        $resume = null;
         if ($invite === null) {
-            $this->notFoundTest('invite');
+            // Та же ссылка, уже открытая и не завершённая: предлагаем продолжить (07.K12).
+            $resumable = $service->resumable($token);
+            if ($resumable === null) {
+                $this->notFoundTest('invite');
 
-            return;
+                return;
+            }
+            $invite = ['test_name' => $resumable['test']['name']];
+            $resume = [
+                'answered' => TestInviteService::answeredCount($resumable['session']['answers']),
+                'total' => $this->totalQuestions((string) $resumable['test']['slug']),
+            ];
         }
 
         echo $this->view->render('test-invite-start', [
             'token' => $token,
             'test_name' => $invite['test_name'],
+            'resume' => $resume,
         ]);
     }
 
     /** Claim a one-time owner invitation, independently from pair links. */
     public function startInvite(string $token): void
     {
-        $claimed = (new TestInviteService($this->db, $this->sessionManager))->claim($token);
+        $service = new TestInviteService($this->db, $this->sessionManager);
+        $claimed = $service->claim($token);
+        $resumed = false;
+        if ($claimed === null) {
+            $claimed = $service->resumable($token);
+            $resumed = $claimed !== null;
+        }
         if ($claimed === null) {
             $this->notFoundTest('invite');
 
@@ -54,7 +72,18 @@ class TestController extends BaseController
             'questions' => $module->getQuestions(),
             'module' => $module,
             'is_test_invite' => true,
+            // Продолжение (07.K12): сохранённые ответы и анкета подставляются в TEST_CONFIG.
+            'saved_answers' => $resumed ? $claimed['session']['answers'] : [],
+            'saved_demographics' => $resumed ? $claimed['session']['demographics'] : [],
+            'is_resume' => $resumed,
         ]);
+    }
+
+    private function totalQuestions(string $slug): int
+    {
+        $module = $this->moduleLoader->getModule($slug);
+
+        return $module === null ? 0 : (int) ($module->getMetadata()['question_count'] ?? 0);
     }
 
     /**
@@ -143,20 +172,48 @@ class TestController extends BaseController
 
         // Save answers
         $answers = $input['answers'] ?? [];
-        if (!is_array($answers) || AnswerValidator::validate($this->getModuleOrFail($slug), $answers, false) !== []) {
+        if (is_array($answers)) {
+            $answers = AnswerValidator::withoutExtraKeys($this->getModuleOrFail($slug), $answers);
+        }
+        if (!is_array($answers) || AnswerValidator::validatePartial($this->getModuleOrFail($slug), $answers) !== []) {
             http_response_code(422);
             echo json_encode(['success' => false, 'error' => 'Invalid answers']);
             return;
         }
-        $this->sessionManager->saveAnswers($session['id'], $answers);
+        // Сохранение дополняет, а не заменяет (07.K12): пустой набор и устаревшая
+        // вкладка не стирают то, что уже записано.
+        $this->sessionManager->mergeAnswers($session['id'], $answers);
 
         // Save demographics if provided
-        $demographics = $input['demographics'] ?? [];
-        if (!empty($demographics)) {
+        $demographics = $this->savableDemographics($input['demographics'] ?? []);
+        if ($demographics !== []) {
             $this->sessionManager->saveDemographics($session['id'], $demographics);
         }
 
         echo json_encode(['success' => true]);
+    }
+
+    /**
+     * Из анкеты при промежуточном сохранении принимаются только пол и возраст
+     * с допустимыми значениями; всё остальное отбрасывается.
+     *
+     * @return array<string, int|string>
+     */
+    private function savableDemographics(mixed $input): array
+    {
+        if (!is_array($input)) {
+            return [];
+        }
+        $clean = [];
+        if (in_array($input['gender'] ?? null, ['male', 'female'], true)) {
+            $clean['gender'] = $input['gender'];
+        }
+        $age = $input['age'] ?? null;
+        if ((is_int($age) || (is_string($age) && preg_match('/\A\d{1,3}\z/', $age) === 1)) && (int) $age >= 1 && (int) $age <= 120) {
+            $clean['age'] = (int) $age;
+        }
+
+        return $clean;
     }
 
     /**
