@@ -4,6 +4,8 @@
 
 {% block body_class %}test-page test-{{ test.slug }}{% endblock %}
 
+{% block extra_css %}<link rel="stylesheet" href="{{ asset('css/test-taking.css') }}">{% endblock %}
+
 {% block content %}
 <div class="test-wrapper">
     <!-- Test Header -->
@@ -30,6 +32,8 @@
         </div>
         <span class="progress-text" id="progressText">0 / {{ test.question_count }}</span>
     </div>
+    <p class="test-estimate" id="progressEstimate" data-estimated-minutes="{{ test.estimated_time|default(0) }}" hidden></p>
+    <div class="test-key-hint" id="keyHint" aria-live="polite" hidden></div>
 
     {% if is_test_invite %}
     <p class="test-invite-notice">Это персональное приглашение от специалиста на {{ test.name }}. После прохождения специалист увидит ваши ответы и результат. Не пересылайте ссылку другим людям.</p>
