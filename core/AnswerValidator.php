@@ -67,6 +67,23 @@ final class AnswerValidator
     }
 
     /**
+     * Убирает из набора ответов служебные ключи схемы (пол, возраст).
+     *
+     * Валидатор значений для них не проверяет, поэтому из промежуточного
+     * сохранения они не принимаются вовсе: анкета идёт отдельным полем
+     * `demographics` и проходит собственную очистку.
+     *
+     * @param array<int|string, mixed> $answers
+     * @return array<int|string, mixed>
+     */
+    public static function withoutExtraKeys(TestModuleInterface $module, array $answers): array
+    {
+        $extra = $module->getAnswerSchema()['extra_keys'];
+
+        return array_diff_key($answers, array_flip($extra));
+    }
+
+    /**
      * Проверка промежуточного сохранения (07.K12): только ключи и значения ответов.
      *
      * Пол и возраст приходят отдельным полем `demographics`, а не внутри набора

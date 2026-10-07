@@ -172,6 +172,9 @@ class TestController extends BaseController
 
         // Save answers
         $answers = $input['answers'] ?? [];
+        if (is_array($answers)) {
+            $answers = AnswerValidator::withoutExtraKeys($this->getModuleOrFail($slug), $answers);
+        }
         if (!is_array($answers) || AnswerValidator::validatePartial($this->getModuleOrFail($slug), $answers) !== []) {
             http_response_code(422);
             echo json_encode(['success' => false, 'error' => 'Invalid answers']);

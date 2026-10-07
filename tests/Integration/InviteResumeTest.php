@@ -287,6 +287,23 @@ final class InviteResumeTest extends TestCase
         self::assertNotSame([], \PsyTest\Core\AnswerValidator::validatePartial($module, ['99999' => '1']));
     }
 
+    public function testPartialSaveNeverStoresGenderOrAgeInsideAnswers(): void
+    {
+        $module = (new \PsyTest\Core\ModuleLoader(null, $this->db))->discover()->getModule('smil');
+        self::assertNotNull($module);
+        [, $sessionId] = $this->openedInvite();
+
+        $incoming = ['1' => '1', '2' => '0', 'gender' => ['x'], 'age' => '<img src=x>'];
+        $clean = \PsyTest\Core\AnswerValidator::withoutExtraKeys($module, $incoming);
+        self::assertSame([], \PsyTest\Core\AnswerValidator::validatePartial($module, $clean));
+        self::assertTrue($this->sessions->mergeAnswers($sessionId, $clean));
+
+        $stored = $this->answersOf($sessionId);
+        self::assertSame(['1' => '1', '2' => '0'], $stored);
+        self::assertArrayNotHasKey('gender', $stored);
+        self::assertArrayNotHasKey('age', $stored);
+    }
+
     public function testAnsweredCountCollapsesDualScaleKeys(): void
     {
         self::assertSame(0, TestInviteService::answeredCount([]));

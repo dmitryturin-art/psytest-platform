@@ -86,6 +86,20 @@ final class InviteResumeContractTest extends TestCase
         self::assertStringContainsString("'action' => 'invite_resume_link_issued'", $service);
     }
 
+    public function testOwnerPagesShowingAnInviteLinkAreNotCached(): void
+    {
+        $controller = $this->read('controllers/OwnerController.php');
+
+        self::assertStringContainsString("header('Cache-Control: no-store, private');", $controller);
+        foreach (['public function dashboard(): void', 'public function viewClient(string $clientId): void', 'public function viewInvitedCase(string $sessionId): void'] as $method) {
+            $start = strpos($controller, $method);
+            self::assertNotFalse($start, $method);
+            self::assertStringContainsString('$this->requireOwner()', substr($controller, $start, 300), $method);
+        }
+        self::assertStringContainsString("INTERVAL \" . self::RESUME_DAYS . \" DAY", $this->read('core/TestInviteService.php'));
+        self::assertStringContainsString('AnswerValidator::withoutExtraKeys(', $this->read('controllers/TestController.php'));
+    }
+
     private function read(string $path): string
     {
         return (string) file_get_contents(dirname(__DIR__) . '/' . $path);

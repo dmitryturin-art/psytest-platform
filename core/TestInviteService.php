@@ -184,7 +184,7 @@ final class TestInviteService
                AND tests.is_active = 1
                AND sessions.status = 'partial'
                AND sessions.expires_at > NOW()
-               AND NOW() < GREATEST(DATE_ADD(invites.claimed_at, INTERVAL 14 DAY), invites.expires_at)";
+               AND NOW() < GREATEST(DATE_ADD(invites.claimed_at, INTERVAL " . self::RESUME_DAYS . " DAY), invites.expires_at)";
 
     /**
      * Продолжение прохождения по той же ссылке (07.K12).
