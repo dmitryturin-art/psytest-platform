@@ -18,6 +18,17 @@
         {% if flash.invite_url %}<p class="owner-invite-url"><input aria-label="Ссылка-приглашение" type="text" readonly value="{{ flash.invite_url }}"></p>{% endif %}
     {% endif %}
 
+    {% if client_trashed %}
+        {# Карточка в корзине (07.K11): только чтение до восстановления. #}
+        <div class="owner-notice owner-notice--error owner-trash-banner" role="status">
+            <p><strong>Карточка в корзине, будет удалена {{ client.purge_at|date("d.m.Y") }}.</strong> Правка, новые назначения и привязка кейсов недоступны. Данные и клиентские страницы результатов не изменены до окончательного удаления.</p>
+            <p class="owner-invite-actions">
+                <button type="submit" class="btn btn-primary" form="client-trash-form" formaction="{{ basePath }}/admin/clients/{{ client.id }}/restore">Восстановить</button>
+                <button type="submit" class="btn btn-danger" form="client-trash-form" formaction="{{ basePath }}/admin/clients/{{ client.id }}/purge" data-client-confirm="purge" data-client-label="{{ client.label }}" data-assignments="{{ assignments|length }}">Удалить сейчас</button>
+            </p>
+        </div>
+    {% endif %}
+
     <section class="owner-invites" aria-labelledby="owner-client-assignments-title">
         {% set client_url = basePath ~ '/admin/clients/' ~ client.id %}
         {% set test_suffix = assignment_test ? 'test=' ~ assignment_test|url_encode : '' %}
@@ -25,12 +36,15 @@
             <h2 id="owner-client-assignments-title">Назначения</h2>
             {# Переключатель рабочих, архива и корзины (07.K8). По умолчанию архив и
                корзина скрыты: открываются явным выбором. #}
+            {% if not client_trashed %}
             <nav class="view-tabs" aria-label="Вид списка">
                 <a class="view-tabs__tab" href="{{ client_url }}{% if test_suffix %}?{{ test_suffix }}{% endif %}"{% if assignment_view == 'active' %} aria-current="page"{% endif %}>Рабочие <span class="view-tabs__count">{{ active_count ?? 0 }}</span></a>
                 <a class="view-tabs__tab" href="{{ client_url }}?status=archived{% if test_suffix %}&amp;{{ test_suffix }}{% endif %}"{% if assignment_view == 'archived' %} aria-current="page"{% endif %}>Архив <span class="view-tabs__count">{{ archived_count }}</span></a>
                 <a class="view-tabs__tab" href="{{ client_url }}?status=trash{% if test_suffix %}&amp;{{ test_suffix }}{% endif %}"{% if assignment_view == 'trash' %} aria-current="page"{% endif %}>Корзина <span class="view-tabs__count">{{ trashed_count }}</span></a>
             </nav>
+            {% endif %}
         </div>
+        {% if not client_trashed %}
         <form method="get" action="{{ client_url }}" class="filter-bar" aria-label="Фильтр назначений" data-auto-submit>
             <div class="filter-bar__field">
                 <label for="assignment-filter-test" class="visually-hidden">Методика</label>
@@ -45,8 +59,9 @@
                 {% if assignment_test %}<a class="filter-bar__reset" href="{{ client_url }}{% if assignment_view != 'active' %}?status={{ assignment_view }}{% endif %}">{{ ui.icon('close') }}Сбросить</a>{% endif %}
             </div>
         </form>
+        {% endif %}
         <p class="filter-counts" aria-live="polite">Показано: {{ assignments|length }}</p>
-        {% if assignment_view == 'trash' %}
+        {% if assignment_view == 'trash' and not client_trashed %}
             <p class="owner-help">Через {{ trash_days }} дней кейсы из корзины удаляются окончательно. До этого их можно восстановить.</p>
         {% endif %}
         <form method="post" action="{{ basePath }}/admin/invites/archive" id="client-bulk-form" data-bulk-form>
@@ -74,10 +89,12 @@
                             <span class="cab-table__title">{{ assignment.test_name }}</span>
                             {% if assignment.owner_note %}<span class="cab-table__sub" title="{{ assignment.owner_note }}">{{ assignment.owner_note }}</span>{% endif %}
                         </td>
-                        <td data-label="Статус" class="cab-table__status">{% include 'blocks/owner-invite-status.twig' with {invite: assignment} %}{% if assignment.trashed_at %}<small class="cab-table__hint">будет удалён {{ assignment.purge_at|date("d.m.Y") }}</small>{% endif %}</td>
+                        <td data-label="Статус" class="cab-table__status">{% include 'blocks/owner-invite-status.twig' with {invite: assignment} %}{% if assignment.trashed_at and not client_trashed %}<small class="cab-table__hint">будет удалён {{ assignment.purge_at|date("d.m.Y") }}</small>{% endif %}</td>
                         <td data-label="Создано" class="cab-table__date"><time datetime="{{ assignment.created_at|date('Y-m-d') }}">{{ assignment.created_at|date("d.m.Y") }}</time></td>
                         <td data-label="Завершено" class="cab-table__date">{% if assignment.completed_at %}<time datetime="{{ assignment.completed_at|date('Y-m-d') }}">{{ assignment.completed_at|date("d.m.Y") }}</time>{% else %}<span class="cab-table__none">—</span>{% endif %}</td>
-                        <td class="cab-table__actions">{% include 'blocks/owner-invite-actions.twig' with {invite: assignment, bulk_form_id: 'client-bulk-form', attach_label: client.label} %}</td>
+                        <td class="cab-table__actions">{% if client_trashed %}
+                            <div class="row-actions">{% if assignment.claimed_session_id %}<a class="row-actions__open" href="{{ basePath }}/admin/invited-case/{{ assignment.claimed_session_id }}">Открыть кейс</a>{% endif %}</div>
+                        {% else %}{% include 'blocks/owner-invite-actions.twig' with {invite: assignment, bulk_form_id: 'client-bulk-form', attach_label: client.label} %}{% endif %}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -85,6 +102,7 @@
         {% else %}<p class="owner-help">{% if assignment_view == 'active' and not assignment_test %}Назначений пока нет.{% else %}Здесь ничего нет.{% endif %}</p>{% endif %}
     </section>
 
+    {% if not client_trashed %}
     <section class="owner-invites" aria-labelledby="owner-client-assign-title">
         <h2 id="owner-client-assign-title">Новое назначение</h2>
         <p class="owner-help">Ссылка действует 14 дней и открывается один раз. Отправьте её клиенту сами — платформа ничего не отправляет.</p>
@@ -117,19 +135,24 @@
             <button type="submit" class="btn btn-outline">Сохранить</button>
         </form>
     </section>
+    {% endif %}
 
-    {% include 'blocks/owner-invite-dialog.twig' %}
-    {% include 'blocks/owner-attach-dialog.twig' with {attach_return: return_url} %}
+    {% if not client_trashed %}
+        {% include 'blocks/owner-invite-dialog.twig' %}
+        {% include 'blocks/owner-attach-dialog.twig' with {attach_return: return_url} %}
+    {% endif %}
+    {% include 'blocks/owner-client-trash-form.twig' %}
+    {% include 'blocks/owner-client-dialog.twig' %}
 
-    <section class="owner-case" aria-labelledby="owner-client-delete-title">
-        <h2 id="owner-client-delete-title">Удаление клиента</h2>
-        <p class="owner-help">Удаляются карточка, все её назначения, заметки, результаты и сгенерированные файлы. Восстановить их нельзя.</p>
-        <form method="post" action="{{ basePath }}/admin/clients/{{ client.id }}/delete" class="owner-action-form owner-delete-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <label><input type="checkbox" name="confirm_delete" value="delete" required> Я понимаю, что удаление необратимо.</label>
-            <button type="submit" class="btn btn-danger">Удалить клиента полностью</button>
-        </form>
+    {% if not client_trashed %}
+    <section class="owner-case" aria-labelledby="owner-client-trash-title">
+        <h2 id="owner-client-trash-title">Корзина</h2>
+        <p class="owner-help">Карточка и все её назначения уйдут в корзину и через {{ trash_days }} дней будут удалены окончательно. До этого их можно восстановить.</p>
+        <p class="owner-invite-actions">
+            <button type="submit" class="btn btn-danger" form="client-trash-form" formaction="{{ basePath }}/admin/clients/{{ client.id }}/trash" data-client-confirm="trash" data-client-label="{{ client.label }}" data-assignments="{{ card_assignment_count }}">{{ ui.icon('trash') }}В корзину</button>
+        </p>
     </section>
+    {% endif %}
 </section>
 {% endblock %}
 
@@ -139,4 +162,5 @@
 <script src="{{ asset('js/owner-invites.js') }}"></script>
 <script src="{{ asset('js/owner-attach.js') }}"></script>
 <script src="{{ asset('js/owner-cabinet.js') }}"></script>
+<script src="{{ asset('js/owner-client-trash.js') }}"></script>
 {% endblock %}

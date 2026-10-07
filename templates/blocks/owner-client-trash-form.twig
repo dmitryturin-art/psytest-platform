@@ -1,0 +1,12 @@
+{# Общая скрытая форма корзины карточек клиентов (07.K11). Кнопки в строках и на
+   карточке — кнопки этой формы (`form="client-trash-form"`, свой `formaction`).
+   Без JS «В корзину» и «Удалить сейчас» ведут на страницу подтверждения, с JS их
+   перехватывает диалог и ставит `confirmed`/`confirm_delete`.
+   Переменные: trash_form_key, return_url. #}
+<form method="post" action="{{ basePath }}/admin/clients" id="client-trash-form" data-client-trash-form>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="form_key" value="{{ trash_form_key }}">
+    <input type="hidden" name="return" value="{{ return_url }}" data-return>
+    <input type="hidden" name="confirmed" value="" data-confirmed>
+    <input type="hidden" name="confirm_delete" value="" data-confirm-delete>
+</form>

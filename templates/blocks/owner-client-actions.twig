@@ -1,0 +1,20 @@
+{# Действия строки клиента (07.K11): ссылка «Открыть карточку» и меню «⋯».
+   Рабочая карточка — «В корзину»; карточка из корзины — «Восстановить» и
+   «Удалить сейчас». Кнопки — кнопки общей формы `client-trash-form`
+   (blocks/owner-client-trash-form.twig); меню — как у приглашений. #}
+{% import 'blocks/icons.twig' as ui %}
+<div class="row-actions">
+    <a class="row-actions__open" href="{{ basePath }}/admin/clients/{{ client.id }}" aria-label="Открыть карточку: {{ client.label }}">Открыть карточку</a>
+    <details class="row-menu" data-row-menu>
+        <summary class="row-menu__toggle" aria-label="Другие действия: {{ client.label }}" title="Другие действия">{{ ui.icon('more') }}</summary>
+        <div class="row-menu__list">
+            {% if client.trashed_at %}
+                <button type="submit" class="row-menu__item" form="client-trash-form" formaction="{{ basePath }}/admin/clients/{{ client.id }}/restore">{{ ui.icon('restore') }}<span>Восстановить</span></button>
+                <span class="row-menu__sep" aria-hidden="true"></span>
+                <button type="submit" class="row-menu__item row-menu__item--danger" form="client-trash-form" formaction="{{ basePath }}/admin/clients/{{ client.id }}/purge" data-client-confirm="purge" data-client-label="{{ client.label }}" data-assignments="{{ client.assignment_count }}">{{ ui.icon('delete') }}<span>Удалить сейчас</span></button>
+            {% else %}
+                <button type="submit" class="row-menu__item row-menu__item--danger" form="client-trash-form" formaction="{{ basePath }}/admin/clients/{{ client.id }}/trash" data-client-confirm="trash" data-client-label="{{ client.label }}" data-assignments="{{ client.assignment_count }}">{{ ui.icon('trash') }}<span>В корзину</span></button>
+            {% endif %}
+        </div>
+    </details>
+</div>

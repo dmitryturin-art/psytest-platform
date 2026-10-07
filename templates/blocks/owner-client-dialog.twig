@@ -1,0 +1,28 @@
+{# Один диалог подтверждения для корзины карточек клиентов (07.K11). Тексты берёт
+   owner-client-trash.js из шаблонов ниже по data-client-confirm кнопки; число
+   назначений подставляется из data-assignments. Без JS кнопки ведут на страницу
+   подтверждения, так что одиночный клик ничего не удаляет. #}
+<dialog class="owner-dialog" id="owner-client-dialog" aria-labelledby="owner-client-dialog-title">
+    <form method="dialog" class="owner-dialog__body">
+        <h2 id="owner-client-dialog-title" data-dialog-title></h2>
+        <p data-dialog-selected></p>
+        <p data-dialog-text></p>
+        <label class="owner-dialog__check" data-dialog-check hidden><input type="checkbox" data-dialog-check-input> Я понимаю, что удаление необратимо.</label>
+        <div class="owner-dialog__actions">
+            <button type="submit" value="cancel" class="btn btn-outline">Отмена</button>
+            <button type="submit" value="confirm" class="btn btn-danger" data-dialog-confirm></button>
+        </div>
+    </form>
+    <template data-dialog-template="trash">
+        <span data-title>Отправить карточку в корзину?</span>
+        <span data-text-with>Карточка и её {assignments} переместятся в корзину. Через {{ trash_days }} дней всё будет удалено окончательно: ответы, результаты, разборы, выгрузки. До этого карточку можно восстановить.</span>
+        <span data-text-without>Карточка переместится в корзину. Через {{ trash_days }} дней она будет удалена окончательно. До этого её можно восстановить.</span>
+        <span data-confirm-label>В корзину</span>
+    </template>
+    <template data-dialog-template="purge">
+        <span data-title>Удалить карточку окончательно?</span>
+        <span data-text-with>Карточка и её {assignments} будут стёрты сразу, без возможности восстановления: ответы, результаты, разборы, выгрузки, заметки.</span>
+        <span data-text-without>Карточка и её заметка будут стёрты сразу, без возможности восстановления.</span>
+        <span data-confirm-label>Удалить сейчас</span>
+    </template>
+</dialog>

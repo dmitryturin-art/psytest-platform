@@ -138,6 +138,9 @@ $router->post('/admin/clients/create', [OwnerController::class, 'createClient'])
 $router->get('/admin/clients/{clientId}', [OwnerController::class, 'viewClient']);
 $router->post('/admin/clients/{clientId}/update', [OwnerController::class, 'updateClient']);
 $router->post('/admin/clients/{clientId}/invites/create', [OwnerController::class, 'createClientInvite']);
+$router->post('/admin/clients/{clientId}/trash', [OwnerController::class, 'trashClient']);
+$router->post('/admin/clients/{clientId}/restore', [OwnerController::class, 'restoreClient']);
+$router->post('/admin/clients/{clientId}/purge', [OwnerController::class, 'purgeClient']);
 $router->post('/admin/clients/{clientId}/delete', [OwnerController::class, 'deleteClient']);
 
 // Pair comparison results

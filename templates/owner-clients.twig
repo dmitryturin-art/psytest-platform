@@ -17,6 +17,7 @@
         <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
     {% endif %}
 
+    {% if client_view == 'active' %}
     <section class="owner-invites" aria-labelledby="owner-client-create-title">
         <h2 id="owner-client-create-title">Новая карточка</h2>
         {# form_key — одноразовый ключ этой отрисовки: двойное нажатие не создаёт
@@ -31,12 +32,20 @@
             <button type="submit" class="btn btn-primary" data-busy-text="Создаём…">{{ ui.icon('plus') }}Создать карточку</button>
         </form>
     </section>
+    {% endif %}
 
     <section class="owner-invites" aria-labelledby="owner-client-list-title">
+        {% set tab_query = (filter_test ? '&amp;test=' ~ filter_test|url_encode : '') ~ (filter_query ? '&amp;q=' ~ filter_query|url_encode : '') %}
         <div class="list-head">
             <h2 id="owner-client-list-title">Список клиентов</h2>
+            {# Рабочие карточки и корзина (07.K11): корзина открывается явным выбором. #}
+            <nav class="view-tabs" aria-label="Вид списка">
+                <a class="view-tabs__tab" href="{{ basePath }}/admin/clients{% if tab_query %}?{{ tab_query|slice(5) }}{% endif %}"{% if client_view == 'active' %} aria-current="page"{% endif %}>Рабочие <span class="view-tabs__count">{{ active_count }}</span></a>
+                <a class="view-tabs__tab" href="{{ basePath }}/admin/clients?view=trash{{ tab_query }}"{% if client_view == 'trash' %} aria-current="page"{% endif %}>Корзина <span class="view-tabs__count">{{ trashed_count }}</span></a>
+            </nav>
         </div>
         <form method="get" action="{{ basePath }}/admin/clients" class="filter-bar" role="search" aria-label="Фильтры клиентов" data-auto-submit>
+            {% if client_view == 'trash' %}<input type="hidden" name="view" value="trash">{% endif %}
             <div class="filter-bar__field">
                 <label for="clients-test" class="visually-hidden">Методика назначена</label>
                 <select id="clients-test" name="test">
@@ -51,10 +60,14 @@
             </div>
             <div class="filter-bar__actions">
                 <button type="submit" class="btn btn-outline btn-sm filter-bar__apply">Применить</button>
-                {% if filter_query or filter_test %}<a class="filter-bar__reset" href="{{ basePath }}/admin/clients">{{ ui.icon('close') }}Сбросить</a>{% endif %}
+                {% if filter_query or filter_test %}<a class="filter-bar__reset" href="{{ basePath }}/admin/clients{% if client_view == 'trash' %}?view=trash{% endif %}">{{ ui.icon('close') }}Сбросить</a>{% endif %}
             </div>
         </form>
         <p class="filter-counts" aria-live="polite">Показано: {{ clients|length }}</p>
+        {% if client_view == 'trash' %}
+            <p class="owner-help">Через {{ trash_days }} дней карточки из корзины удаляются окончательно вместе с назначениями, ответами и разборами. До этого их можно восстановить.</p>
+        {% endif %}
+        {% include 'blocks/owner-client-trash-form.twig' %}
         {% if clients %}
             <table class="cab-table client-table">
                 <thead>
@@ -71,19 +84,22 @@
                     <tr>
                         <td data-label="Клиент" class="cab-table__main">
                             <a class="cab-table__title" href="{{ basePath }}/admin/clients/{{ client.id }}">{{ client.label }}</a>
-                            {% if client.note %}<span class="cab-table__sub" title="{{ client.note }}">{{ client.note }}</span>{% endif %}
+                            {% if client.trashed_at %}<small class="cab-table__hint">будет удалена {{ client.purge_at|date("d.m.Y") }}</small>
+                            {% elseif client.note %}<span class="cab-table__sub" title="{{ client.note }}">{{ client.note }}</span>{% endif %}
                         </td>
                         <td data-label="Назначений" class="cab-table__num">{{ client.assignment_count }}</td>
                         <td data-label="Завершено" class="cab-table__num">{{ client.completed_count ?: 0 }}</td>
                         <td data-label="Создан" class="cab-table__date"><time datetime="{{ client.created_at|date('Y-m-d') }}">{{ client.created_at|date("d.m.Y") }}</time></td>
-                        <td class="cab-table__actions"><div class="row-actions"><a class="row-actions__open" href="{{ basePath }}/admin/clients/{{ client.id }}" aria-label="Открыть карточку: {{ client.label }}">Открыть карточку</a></div></td>
+                        <td class="cab-table__actions">{% include 'blocks/owner-client-actions.twig' %}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
-        {% elseif filter_query or filter_test %}<p class="owner-help">По этим условиям ничего не найдено. <a href="{{ basePath }}/admin/clients">Сбросить фильтры</a></p>
+        {% elseif filter_query or filter_test %}<p class="owner-help">По этим условиям ничего не найдено. <a href="{{ basePath }}/admin/clients{% if client_view == 'trash' %}?view=trash{% endif %}">Сбросить фильтры</a></p>
+        {% elseif client_view == 'trash' %}<p class="owner-help">Корзина пуста.</p>
         {% else %}<p class="owner-help">Карточек пока нет. Создайте первую выше.</p>{% endif %}
     </section>
+    {% include 'blocks/owner-client-dialog.twig' %}
 </section>
 {% endblock %}
 
@@ -91,4 +107,5 @@
 {# Блокировка кнопки после отправки; без JS повтор отсекает сервер (07.K6b). #}
 <script src="{{ asset('js/owner-forms.js') }}"></script>
 <script src="{{ asset('js/owner-cabinet.js') }}"></script>
+<script src="{{ asset('js/owner-client-trash.js') }}"></script>
 {% endblock %}
