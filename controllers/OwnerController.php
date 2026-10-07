@@ -25,6 +25,7 @@ use PsyTest\Core\FormOnce;
 use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\InviteFilter;
 use PsyTest\Core\OwnerCaseNoteUpdate;
+use PsyTest\Core\OwnerCaseResumeLink;
 use PsyTest\Core\OwnerCaseReportOrder;
 use PsyTest\Core\OwnerClientSubmission;
 use PsyTest\Core\OwnerClientTrashAction;
@@ -631,6 +632,15 @@ final class OwnerController extends BaseController
         // Раскладка рабочего места (04.D3): сводка сверху, подробности свёрнуты.
         $case['workspace'] = $presenter->workspace($case['result_sections']);
         $case['pair'] = $this->pairSection($sessionId, $module, $presenter, $case);
+        // Незавершённое прохождение (07.K12): сколько отвечено и можно ли выдать ссылку для продолжения.
+        $inProgress = $case['status'] === 'partial';
+        $case['progress'] = $inProgress ? [
+            'answered' => TestInviteService::answeredCount($case['answers']),
+            'total' => (int) ($module->getMetadata()['question_count'] ?? 0),
+        ] : null;
+        $canResume = $inProgress
+            && $case['trashed_at'] === null
+            && strtotime((string) $case['session_expires_at']) > time();
 
         $ai = $this->aiSection($sessionId, (string) $case['test_slug']);
         $trashed = $case['trashed_at'] !== null;
@@ -648,6 +658,7 @@ final class OwnerController extends BaseController
             'trash_days' => TestInviteService::TRASH_RETENTION_DAYS,
             'note_form_key' => $trashed ? null : $this->caseNote()->issueKey(),
             'note_max' => OwnerInviteSubmission::NOTE_MAX_LENGTH,
+            'resume_form_key' => $canResume ? $this->resumeLink()->issueKey() : null,
             // Кейс в корзине — только чтение: привязка и смена клиента недоступны.
             'attach_form_key' => $trashed ? null : $this->inviteAttach()->issueKey(),
             'clients' => $trashed ? [] : $this->clients->listForOwner(),
@@ -656,6 +667,29 @@ final class OwnerController extends BaseController
             // У каждой формы заказа на странице свой одноразовый ключ (07.K6b).
             'order_keys' => $ai['available'] ? $this->caseReportOrder()->issueKeys() : null,
         ]);
+    }
+
+    private function resumeLink(): OwnerCaseResumeLink
+    {
+        return new OwnerCaseResumeLink($this->invites, $this->formOnce(), $this->appUrl);
+    }
+
+    /**
+     * Ссылка для продолжения прохождения — перевыпуск токена (07.K12).
+     * POST /admin/invited-case/{sessionId}/resume-link
+     *
+     * CSRF проверяет общий middleware, повтор — одноразовый ключ формы. Кейс в
+     * корзине только для чтения. Токен показывается один раз, в журнал и текст
+     * сообщения не попадает.
+     */
+    public function issueResumeLink(string $sessionId): void
+    {
+        if ($this->ownedCase($sessionId, true) === null) {
+            return;
+        }
+
+        $this->setFlash($this->resumeLink()->submit($sessionId, $this->postData()));
+        $this->redirect('/admin/invited-case/' . $sessionId);
     }
 
     private function caseNote(): OwnerCaseNoteUpdate

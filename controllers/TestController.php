@@ -21,23 +21,41 @@ class TestController extends BaseController
     /** Render a bearer-link preview without consuming the invitation. */
     public function invite(string $token): void
     {
-        $invite = (new TestInviteService($this->db, $this->sessionManager))->preview($token);
+        $service = new TestInviteService($this->db, $this->sessionManager);
+        $invite = $service->preview($token);
+        $resume = null;
         if ($invite === null) {
-            $this->notFoundTest('invite');
+            // Та же ссылка, уже открытая и не завершённая: предлагаем продолжить (07.K12).
+            $resumable = $service->resumable($token);
+            if ($resumable === null) {
+                $this->notFoundTest('invite');
 
-            return;
+                return;
+            }
+            $invite = ['test_name' => $resumable['test']['name']];
+            $resume = [
+                'answered' => TestInviteService::answeredCount($resumable['session']['answers']),
+                'total' => $this->totalQuestions((string) $resumable['test']['slug']),
+            ];
         }
 
         echo $this->view->render('test-invite-start', [
             'token' => $token,
             'test_name' => $invite['test_name'],
+            'resume' => $resume,
         ]);
     }
 
     /** Claim a one-time owner invitation, independently from pair links. */
     public function startInvite(string $token): void
     {
-        $claimed = (new TestInviteService($this->db, $this->sessionManager))->claim($token);
+        $service = new TestInviteService($this->db, $this->sessionManager);
+        $claimed = $service->claim($token);
+        $resumed = false;
+        if ($claimed === null) {
+            $claimed = $service->resumable($token);
+            $resumed = $claimed !== null;
+        }
         if ($claimed === null) {
             $this->notFoundTest('invite');
 
@@ -54,7 +72,18 @@ class TestController extends BaseController
             'questions' => $module->getQuestions(),
             'module' => $module,
             'is_test_invite' => true,
+            // Продолжение (07.K12): сохранённые ответы и анкета подставляются в TEST_CONFIG.
+            'saved_answers' => $resumed ? $claimed['session']['answers'] : [],
+            'saved_demographics' => $resumed ? $claimed['session']['demographics'] : [],
+            'is_resume' => $resumed,
         ]);
+    }
+
+    private function totalQuestions(string $slug): int
+    {
+        $module = $this->moduleLoader->getModule($slug);
+
+        return $module === null ? 0 : (int) ($module->getMetadata()['question_count'] ?? 0);
     }
 
     /**
@@ -148,7 +177,9 @@ class TestController extends BaseController
             echo json_encode(['success' => false, 'error' => 'Invalid answers']);
             return;
         }
-        $this->sessionManager->saveAnswers($session['id'], $answers);
+        // Сохранение дополняет, а не заменяет (07.K12): пустой набор и устаревшая
+        // вкладка не стирают то, что уже записано.
+        $this->sessionManager->mergeAnswers($session['id'], $answers);
 
         // Save demographics if provided
         $demographics = $input['demographics'] ?? [];

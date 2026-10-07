@@ -174,6 +174,125 @@ final class TestInviteService
         }
     }
 
+    /** Сколько дней после открытия (и после перевыпуска) ссылка продолжает работать (07.K12). */
+    public const RESUME_DAYS = 14;
+
+    /** Общее условие «ссылка ещё ведёт к своему незавершённому прохождению» (07.K12). */
+    private const RESUMABLE_WHERE = "invites.status = 'claimed'
+               AND invites.revoked_at IS NULL
+               AND invites.trashed_at IS NULL
+               AND tests.is_active = 1
+               AND sessions.status = 'partial'
+               AND sessions.expires_at > NOW()
+               AND NOW() < GREATEST(DATE_ADD(invites.claimed_at, INTERVAL 14 DAY), invites.expires_at)";
+
+    /**
+     * Продолжение прохождения по той же ссылке (07.K12).
+     *
+     * Ссылка открывает ровно свою сессию: поиск идёт по хэшу токена, а сессия
+     * берётся из привязки приглашения. Правило срока: `expires_at` управляет
+     * только первым открытием; уже открытое приглашение продолжается, пока не
+     * прошло 14 дней от `claimed_at` либо от перевыпуска ссылки (перевыпуск
+     * сдвигает `expires_at`), но не дольше срока самой сессии. Завершённая,
+     * удалённая и находящаяся в корзине сессия, а также отозванное приглашение
+     * ссылку не оживляют. Ничего в базе не меняется.
+     *
+     * @return array{session: array<string, mixed>, test: array<string, mixed>}|null
+     */
+    public function resumable(string $token): ?array
+    {
+        if (preg_match('/\A[a-f0-9]{64}\z/i', $token) !== 1) {
+            return null;
+        }
+
+        $row = $this->db->selectOne(
+            'SELECT invites.claimed_session_id, tests.id AS test_id, tests.slug, tests.name
+             FROM test_invites AS invites
+             INNER JOIN tests ON tests.id = invites.test_id
+             INNER JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
+             WHERE invites.token_hash = :token_hash AND ' . self::RESUMABLE_WHERE,
+            ['token_hash' => hash('sha256', $token)],
+        );
+        if ($row === null) {
+            return null;
+        }
+        $session = $this->sessions->getSessionById((string) $row['claimed_session_id']);
+        if ($session === null || $session['status'] !== 'partial') {
+            return null;
+        }
+
+        return ['session' => $session, 'test' => $row];
+    }
+
+    /**
+     * Сколько вопросов уже отвечено: ответы парных шкал `12_self`/`12_partner` считаются одним вопросом.
+     *
+     * @param array<int|string, mixed> $answers
+     */
+    public static function answeredCount(array $answers): int
+    {
+        $ids = [];
+        foreach (array_keys($answers) as $key) {
+            if (preg_match('/\A(\d+)/', (string) $key, $m) === 1) {
+                $ids[$m[1]] = true;
+            }
+        }
+
+        return count($ids);
+    }
+
+    /**
+     * Перевыпуск ссылки для продолжения (07.K12): новый токен вместо потерянного.
+     *
+     * Сырой токен нигде не хранится, поэтому показать прежнюю ссылку нельзя.
+     * Вместо этого токен приглашения заменяется: старая ссылка перестаёт
+     * работать, сессия и ответы остаются, окно продолжения отсчитывается
+     * заново. Только для незавершённого, не удалённого и не лежащего в корзине
+     * кейса. Токен возвращается один раз и в журнал не пишется.
+     */
+    public function reissueResumeLink(string $sessionId): ?string
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->db->beginTransaction();
+        try {
+            $changed = $this->db->execute(
+                'UPDATE test_invites AS invites
+                 INNER JOIN tests ON tests.id = invites.test_id
+                 INNER JOIN test_sessions AS sessions ON sessions.id = invites.claimed_session_id
+                 SET invites.token_hash = :token_hash,
+                     invites.expires_at = DATE_ADD(NOW(), INTERVAL ' . self::RESUME_DAYS . ' DAY)
+                 WHERE invites.claimed_session_id = :session_id
+                   AND invites.status = \'claimed\'
+                   AND invites.revoked_at IS NULL
+                   AND invites.trashed_at IS NULL
+                   AND tests.is_active = 1
+                   AND sessions.status = \'partial\'
+                   AND sessions.expires_at > NOW()',
+                ['token_hash' => hash('sha256', $token), 'session_id' => $sessionId],
+            )->rowCount();
+            if ($changed !== 1) {
+                $this->db->rollback();
+
+                return null;
+            }
+            $this->db->insert('activity_log', [
+                'session_id' => null,
+                'test_id' => null,
+                'action' => 'invite_resume_link_issued',
+                'details' => json_encode(['actor' => 'owner'], JSON_THROW_ON_ERROR),
+            ]);
+            $this->db->commit();
+        } catch (\Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+
+            throw $exception;
+        }
+
+        return $token;
+    }
+
     public function revoke(string $inviteId): bool
     {
         return $this->db->update(
@@ -517,7 +636,7 @@ final class TestInviteService
     {
         $case = $this->db->selectOne(
             "SELECT sessions.id, sessions.status, sessions.created_at, sessions.completed_at,
-                    sessions.answers, sessions.calculated_results, tests.name AS test_name, tests.slug AS test_slug,
+                    sessions.answers, sessions.calculated_results, sessions.expires_at AS session_expires_at, tests.name AS test_name, tests.slug AS test_slug,
                     invites.owner_note, invites.claimed_at, invites.client_id, clients.label AS client_label,
                     invites.id AS invite_id, invites.archived_at, invites.trashed_at
              FROM test_invites AS invites

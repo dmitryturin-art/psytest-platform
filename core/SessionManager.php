@@ -211,6 +211,48 @@ class SessionManager
     }
 
     /**
+     * Дополняет сохранённые ответы незавершённой сессии, ничего не стирая (07.K12).
+     *
+     * Автосохранение, сохранение при закрытии вкладки и устаревшая вкладка
+     * присылают наборы ответов в произвольном порядке. Пустой набор не пишется
+     * вовсе, новые значения перекрывают старые по ключу, остальные ответы
+     * остаются. Чтение и запись идут под блокировкой строки сессии.
+     *
+     * @param array<int|string, mixed> $answers
+     */
+    public function mergeAnswers(string $sessionId, array $answers): bool
+    {
+        if ($answers === []) {
+            return false;
+        }
+
+        $this->db->beginTransaction();
+        try {
+            $row = $this->db->selectOne(
+                'SELECT answers FROM test_sessions WHERE id = :id AND status = :status FOR UPDATE',
+                ['id' => $sessionId, 'status' => 'partial'],
+            );
+            if ($row === null) {
+                $this->db->rollback();
+
+                return false;
+            }
+            $saved = !empty($row['answers']) ? json_decode((string) $row['answers'], true) : [];
+            $saved = is_array($saved) ? $saved : [];
+            $saved = $this->saveAnswers($sessionId, AnswerMerger::overlay($saved, $answers));
+            $this->db->commit();
+
+            return $saved;
+        } catch (\Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
      * Save demographics data for a session.
      *
      * @param string                           $sessionId   Session ID.
