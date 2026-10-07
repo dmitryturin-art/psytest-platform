@@ -174,4 +174,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 52. Выкладка `bc8f598` (07.10): корзина для карточек клиентов (07.K11); миграция `20261007010000 AddClientTrash` после проверенного dump; одно SSH-подключение по рецепту. SHA-256 `619a1b001420be8511fac78808ceab0533555a8f056ec17c5c63cbd73a6ac792` совпал. Смоук: основные маршруты и `/js/owner-client-trash.js` `200`, `/test/smil` `404`. Rollback: `releases/85f2115`.
 
+53. Выкладка `c421a96` (07.10): карточка кейса как рабочее место (04.D3) и клавиши ответов на странице теста (04.T1) одним релизом; миграций нет; одно SSH-подключение по рецепту. SHA-256 `80f99933be885f66b4f84475d89e087f8cd9f6ee22cccc830b88d87dd305b8dc` совпал; dump проверен. Смоук: основные маршруты, `/test/beck-anxiety`, `/css/test-taking.css` `200`, `/test/smil` `404`. Rollback: `releases/bc8f598`.
+
 Rollback текущего релиза: атомарно направить `public_html` на `releases/e5a15b5/public` и `current` на `releases/e5a15b5`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
