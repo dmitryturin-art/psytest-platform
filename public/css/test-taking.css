@@ -1,0 +1,70 @@
+/* Страница прохождения теста: подсказки по клавишам и оценка времени.
+   Только существующие токены из main.css. Бейджи и подсказка — только там,
+   где есть наведение (десктоп); на сенсорных устройствах скрыты. */
+
+.test-estimate {
+    margin: var(--spacing-xs) 0 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    text-align: right;
+}
+
+.test-estimate[hidden],
+.test-key-hint[hidden] {
+    display: none;
+}
+
+.test-key-hint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.test-key-hint__close {
+    min-height: 32px;
+    padding: 0 var(--spacing-sm);
+    font: inherit;
+    color: var(--color-primary);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.test-key-hint__close:focus-visible {
+    box-shadow: var(--focus-ring);
+}
+
+.answer-option__key {
+    flex: none;
+    min-width: 1.5rem;
+    padding: 0 0.25rem;
+    font-size: var(--font-size-xs);
+    line-height: 1.5rem;
+    text-align: center;
+    color: var(--color-text-light);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-soft);
+}
+
+.answer-option:has(input:checked) .answer-option__key {
+    color: var(--color-primary-dark);
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+@media (hover: none) {
+    .answer-option__key,
+    .test-key-hint {
+        display: none !important;
+    }
+}

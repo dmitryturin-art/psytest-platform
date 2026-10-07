@@ -1,6 +1,19 @@
 /**
  * Test Taking Interface
  * Handles question navigation, progress tracking, and answer saving
+ *
+ * Keyboard map (ignored while focus is in text/number input, select, textarea,
+ * and with Ctrl/Meta/Alt):
+ *   1..9, Numpad1..9 -> N-th option of the current question (display order)
+ *   0, Numpad0       -> 10th option (Lazarus 1-10 scales)
+ *   Backspace / ArrowLeft / Escape -> previous question
+ *   ArrowRight / Enter -> next question, only if the current one is answered
+ *                         (Enter on the last answered question submits)
+ * Dual (Lazarus) cards: a digit fills the first unanswered row (Я, then Партнёр).
+ *
+ * Time estimate: median of the respondent's own time-per-answer over the last
+ * 20 first answers (>= 3 samples, each capped at 90 s); before that the test's
+ * declared average (data-estimated-minutes / total questions); else hidden.
  */
 
 (function () {
@@ -13,6 +26,13 @@
     let demographics = {};
     let testStarted = false;
     let formInitialized = false;
+    let advanceTimer = null;
+    let shownAt = 0;
+    let answerDurations = [];
+    const HINT_STORAGE_KEY = 'psytest.keyHintDismissed';
+    const MAX_SAMPLE_MS = 90000;
+    const SAMPLE_WINDOW = 20;
+    const MIN_SAMPLES = 3;
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', function () {
@@ -113,24 +133,224 @@
             });
         }
 
-        // Keyboard navigation: Escape = back, Enter on last = submit
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' || e.key === 'ArrowLeft') {
-                e.preventDefault();
-                goToPreviousQuestion();
-            }
-            // Enter only triggers submit on the last question
-            if (e.key === 'Enter' && currentQuestionIndex === questions.length - 1) {
-                const submitBtn = document.getElementById('submitBtn');
-                if (submitBtn && submitBtn.style.display !== 'none') {
-                    e.preventDefault();
-                    form?.requestSubmit();
-                }
-            }
-        });
+        decorateOptionKeys();
+        setupKeyHint();
+        updateEstimate();
+
+        // Keyboard navigation (see key map at the top of the file)
+        document.addEventListener('keydown', handleKeydown);
 
         // Form submission
         form?.addEventListener('submit', handleFormSubmit);
+    }
+
+
+    function clearAdvanceTimer() {
+        if (advanceTimer !== null) {
+            clearTimeout(advanceTimer);
+            advanceTimer = null;
+        }
+    }
+
+    function isTypingTarget(el) {
+        if (!el || !el.tagName) return false;
+        const tag = el.tagName.toLowerCase();
+        if (tag === 'select' || tag === 'textarea') return true;
+        if (tag === 'input') {
+            const type = (el.getAttribute('type') || 'text').toLowerCase();
+            return !['radio', 'checkbox', 'button', 'submit'].includes(type);
+        }
+        return el.isContentEditable === true;
+    }
+
+    function isCurrentQuestionAnswered() {
+        const card = questions[currentQuestionIndex];
+        if (!card) return false;
+        const names = new Set();
+        card.querySelectorAll('input[type="radio"]').forEach(function (r) { names.add(r.name); });
+        if (names.size === 0) return false;
+        let all = true;
+        names.forEach(function (name) {
+            if (!card.querySelector('input[type="radio"][name="' + name + '"]:checked')) all = false;
+        });
+        return all;
+    }
+
+    /** Radios of the group a digit should act on (first unanswered row, else first row). */
+    function keyTargetGroup(card) {
+        const names = [];
+        card.querySelectorAll('input[type="radio"]').forEach(function (r) {
+            if (names.indexOf(r.name) === -1) names.push(r.name);
+        });
+        const pick = names.find(function (name) {
+            return !card.querySelector('input[type="radio"][name="' + name + '"]:checked');
+        }) || names[0];
+        if (!pick) return [];
+        return Array.from(card.querySelectorAll('input[type="radio"]')).filter(function (r) {
+            return r.name === pick;
+        });
+    }
+
+    function digitFromEvent(e) {
+        if (/^[0-9]$/.test(e.key)) return parseInt(e.key, 10);
+        const m = /^Numpad([0-9])$/.exec(e.code || '');
+        return m ? parseInt(m[1], 10) : null;
+    }
+
+    function handleKeydown(e) {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (!questions.length || !formInitialized) return;
+        if (isTypingTarget(e.target)) return;
+
+        const form = document.getElementById('testForm');
+        const digit = digitFromEvent(e);
+
+        if (digit !== null) {
+            const card = questions[currentQuestionIndex];
+            if (!card) return;
+            const radios = keyTargetGroup(card);
+            const idx = digit === 0 ? 9 : digit - 1;
+            if (radios[idx]) {
+                e.preventDefault();
+                dismissKeyHint();
+                if (!radios[idx].checked) {
+                    radios[idx].checked = true;
+                    radios[idx].dispatchEvent(new Event('change', { bubbles: true }));
+                } else {
+                    // Same option pressed again: nothing new to save, just move on.
+                    scheduleAutoAdvance();
+                }
+            }
+            return;
+        }
+
+        if (e.key === 'Escape' || e.key === 'ArrowLeft' || e.key === 'Backspace') {
+            e.preventDefault();
+            goToPreviousQuestion();
+            return;
+        }
+
+        const onControl = e.target && e.target.closest && e.target.closest('button, a');
+        if (e.key === 'ArrowRight' && isCurrentQuestionAnswered()) {
+            e.preventDefault();
+            clearAdvanceTimer();
+            goToNextQuestion();
+            return;
+        }
+        if (e.key === 'Enter' && !onControl) {
+            if (currentQuestionIndex === questions.length - 1) {
+                const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn && submitBtn.style.display !== 'none' && isCurrentQuestionAnswered()) {
+                    e.preventDefault();
+                    form?.requestSubmit();
+                }
+            } else if (isCurrentQuestionAnswered()) {
+                e.preventDefault();
+                clearAdvanceTimer();
+                goToNextQuestion();
+            }
+        }
+    }
+
+    /** Quiet key badges «1», «2»… on single-choice options (aria-hidden, hidden on touch via CSS). */
+    function decorateOptionKeys() {
+        questions.forEach(function (card) {
+            if (card.classList.contains('question-card--dual')) return;
+            card.querySelectorAll('.answer-option').forEach(function (label, i) {
+                if (i > 9 || label.querySelector('.answer-option__key')) return;
+                const badge = document.createElement('span');
+                badge.className = 'answer-option__key';
+                badge.setAttribute('aria-hidden', 'true');
+                badge.textContent = String(i === 9 ? 0 : i + 1);
+                label.appendChild(badge);
+            });
+        });
+    }
+
+    function storageGet(key) {
+        try { return window.localStorage.getItem(key); } catch (err) { return null; }
+    }
+    function storageSet(key, value) {
+        try { window.localStorage.setItem(key, value); } catch (err) { /* storage unavailable */ }
+    }
+
+    function keyHintText() {
+        const card = questions[0];
+        const count = card ? (card.classList.contains('question-card--dual')
+            ? 10 : card.querySelectorAll('.answer-option').length) : 3;
+        let keys;
+        if (count <= 4) {
+            keys = Array.from({ length: count }, function (_, i) { return String(i + 1); }).join(', ');
+        } else {
+            keys = count > 9 ? '1–9, 0' : '1–' + count;
+        }
+        return 'Отвечать можно клавишами ' + keys + ' · назад — Esc';
+    }
+
+    let hintDismissedThisPage = false;
+    function setupKeyHint() {
+        const hint = document.getElementById('keyHint');
+        if (!hint || storageGet(HINT_STORAGE_KEY) === '1') return;
+        const text = document.createElement('span');
+        text.textContent = keyHintText();
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'test-key-hint__close';
+        close.textContent = 'Понятно';
+        close.addEventListener('click', dismissKeyHint);
+        hint.appendChild(text);
+        hint.appendChild(close);
+        updateKeyHintVisibility();
+    }
+
+    function updateKeyHintVisibility() {
+        const hint = document.getElementById('keyHint');
+        if (!hint || hint.childNodes.length === 0) return;
+        hint.hidden = hintDismissedThisPage || currentQuestionIndex !== 0;
+    }
+
+    function dismissKeyHint() {
+        const hint = document.getElementById('keyHint');
+        if (!hint || hintDismissedThisPage) return;
+        hintDismissedThisPage = true;
+        hint.hidden = true;
+        storageSet(HINT_STORAGE_KEY, '1');
+    }
+
+    function median(values) {
+        const sorted = values.slice().sort(function (a, b) { return a - b; });
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    /** «Осталось примерно N мин»: updates once per answer, never shows seconds. */
+    function updateEstimate() {
+        const el = document.getElementById('progressEstimate');
+        if (!el || typeof TEST_CONFIG === 'undefined') return;
+
+        const total = TEST_CONFIG.totalQuestions;
+        const answered = new Set(Object.keys(answers).map(function (k) { return k.replace(/_.*$/, ''); })).size;
+        const remaining = total - answered;
+        if (remaining <= 0 || total <= 0) {
+            el.hidden = true;
+            return;
+        }
+
+        let perQuestionMs = null;
+        if (answerDurations.length >= MIN_SAMPLES) {
+            perQuestionMs = median(answerDurations);
+        } else {
+            const declared = parseFloat(el.dataset.estimatedMinutes || '0');
+            if (declared > 0) perQuestionMs = (declared * 60000) / total;
+        }
+        if (perQuestionMs === null || !isFinite(perQuestionMs) || perQuestionMs <= 0) {
+            el.hidden = true;
+            return;
+        }
+
+        const minutes = Math.round((remaining * perQuestionMs) / 60000);
+        el.textContent = minutes < 1 ? 'Осталось меньше минуты' : 'Осталось примерно ' + minutes + ' мин';
+        el.hidden = false;
     }
 
     /**
@@ -241,6 +461,8 @@
 
         updateNavigation();
         updateProgress();
+        shownAt = Date.now();
+        updateKeyHintVisibility();
 
         // Keep the current reading position when moving between questions.
         // On mobile, jumping to the page header made each answer require a
@@ -251,6 +473,7 @@
      * Go to previous question
      */
     function goToPreviousQuestion() {
+        clearAdvanceTimer();
         if (currentQuestionIndex > 0 && questions.length > 0) {
             currentQuestionIndex--;
             showQuestion(currentQuestionIndex);
@@ -346,8 +569,14 @@
         if (!questionId) return;
 
         const value = input.value; // Keep as string (0,1,2,3)
+        const isFirstAnswer = !Object.prototype.hasOwnProperty.call(answers, questionId[1]);
         answers[questionId[1]] = value;
+        if (isFirstAnswer && shownAt > 0) {
+            answerDurations.push(Math.min(Date.now() - shownAt, MAX_SAMPLE_MS));
+            if (answerDurations.length > SAMPLE_WINDOW) answerDurations.shift();
+        }
         updateProgress();
+        updateEstimate();
 
         // Visual feedback
         const card = input.closest('.question-card');
@@ -394,7 +623,9 @@
             return;
         }
 
-        setTimeout(function () {
+        clearAdvanceTimer();
+        advanceTimer = setTimeout(function () {
+            advanceTimer = null;
             if (currentQuestionIndex < questions.length - 1) {
                 currentQuestionIndex++;
                 showQuestion(currentQuestionIndex);
