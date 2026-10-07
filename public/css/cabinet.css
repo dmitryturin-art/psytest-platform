@@ -374,6 +374,8 @@
 .cab-table__date { width: 7.25rem; white-space: nowrap; }
 .cab-table__num { width: 7.5rem; }
 .cab-table__actions { width: 10.5rem; }
+/* «Открыть карточку» длиннее «Открыть кейс»: колонке действий списка клиентов нужен запас, иначе ссылка упирается в дату. */
+.client-table .cab-table__actions { width: 12.5rem; }
 
 .cab-table th.cab-table__check,
 .cab-table td.cab-table__check {
