@@ -310,6 +310,40 @@ final class TestInviteService
         return $previous === null ? self::ATTACH_DONE : self::ATTACH_CHANGED;
     }
 
+    public const NOTE_SAVED = 'saved';
+    public const NOTE_UNCHANGED = 'unchanged';
+    public const NOTE_MISSING = 'missing';
+
+    /**
+     * Заметка специалиста к кейсу: правка на месте в карточке кейса (04.D3).
+     *
+     * Меняется только `owner_note` приглашения, через которое открыт кейс.
+     * Кейс в корзине только для чтения: для него, как и для несуществующего
+     * кейса, ответ — `NOTE_MISSING`. Пустая заметка хранится как NULL, как при
+     * создании приглашения. Длину проверяет вызывающий код.
+     *
+     * @return self::NOTE_*
+     */
+    public function updateNote(string $sessionId, string $note): string
+    {
+        $row = $this->db->selectOne(
+            'SELECT id, owner_note FROM test_invites WHERE claimed_session_id = :session_id AND trashed_at IS NULL',
+            ['session_id' => $sessionId],
+        );
+        if ($row === null) {
+            return self::NOTE_MISSING;
+        }
+
+        $value = trim($note) === '' ? null : trim($note);
+        if ($row['owner_note'] === $value) {
+            return self::NOTE_UNCHANGED;
+        }
+
+        $this->db->update('test_invites', ['owner_note' => $value], 'id = ?', [$row['id']]);
+
+        return self::NOTE_SAVED;
+    }
+
     /** Через сколько дней корзина стирается окончательно (07.K8). */
     public const TRASH_RETENTION_DAYS = 30;
 

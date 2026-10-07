@@ -96,7 +96,8 @@ HTTP request
 | POST | `/admin/invites/restore` | `OwnerController::restoreInvites` | восстановить приглашения из корзины (07.K8) |
 | POST | `/admin/invites/purge` | `OwnerController::purgeInvites` | окончательно удалить кейс из корзины (нужны `confirmed=1` и `confirm_delete=delete`) (07.K8) |
 | GET | `/admin/invited-case/{sessionId}` | `OwnerController::viewInvitedCase` | защищённо показать базовый результат и читаемую анкету invitation case |
-| POST | `/admin/invited-case/{sessionId}/delete` | `OwnerController::deleteInvitedCase` | удалить кейс приглашения с его карточки (с подтверждением) |
+| POST | `/admin/invited-case/{sessionId}/delete` | `OwnerController::deleteInvitedCase` | удалить кейс приглашения сразу (с подтверждением); с 04.D3 карточка кейса эту форму не показывает — удаление идёт через «В корзину» в меню «⋯» |
+| POST | `/admin/invited-case/{sessionId}/note` | `OwnerController::updateCaseNote` | заметка специалиста к кейсу: правка на месте в шапке карточки (CSRF + одноразовый ключ, до 1000 символов; в корзине — только чтение) |
 | GET | `/admin/invited-case/{sessionId}/export.pdf` | `OwnerController::exportCasePdf` | выгрузить кейс одним PDF (результат, заключение, разбор); файл собирается на лету и на сервере не остаётся |
 | GET | `/admin/invited-case/{sessionId}/export.docx` | `OwnerController::exportCaseDocx` | тот же документ редактируемым файлом Word (`core/CaseExportDocx.php` поверх `CaseExportPresenter`, HTML→Word — `core/DocxHtmlWriter.php`, библиотека `phpoffice/phpword`); файл собирается в памяти, `X-Robots-Tag: noindex`, `Cache-Control: no-store` |
 | GET | `/admin/invited-case/{sessionId}/print` | `OwnerController::exportCasePrint` | тот же документ HTML-страницей с print-CSS (`X-Robots-Tag: noindex`) для сохранения в PDF/Word средствами браузера |

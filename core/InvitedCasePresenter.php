@@ -91,6 +91,136 @@ final class InvitedCasePresenter
         ];
     }
 
+    /** Клинические шкалы профиля в порядке бланка: 1–9, 0. */
+    private const PROFILE_CLINICAL_CODES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+
+    /** Норма на бланке профиля — та же, что в легенде графика: 30–70T. */
+    private const PROFILE_NORM_MIN = 30;
+    private const PROFILE_NORM_MAX = 70;
+
+    /**
+     * Раскладка результата в карточке кейса (04.D3): что видно сразу, а что
+     * свёрнуто, и краткая сводка для результата с профилем.
+     *
+     * Ничего не считается заново: сводка только выбирает уже посчитанные
+     * модулем значения из данных секций — контрольные шкалы, T-баллы и
+     * уровни из таблицы основных шкал, тип и код профиля из интерпретации.
+     * Граница «вне нормы» — та же, что в легенде канонического графика.
+     *
+     * - Результат с графиком профиля: сразу виден график и сводка, всё
+     *   остальное — в раскрывающихся блоках; блок контрольных шкал открыт,
+     *   если протокол недостоверен.
+     * - Простой результат (уровень по шкале): виден целиком, свёрнуты только
+     *   таблицы по пунктам.
+     *
+     * @param list<ResultSection> $sections
+     * @return array{
+     *     summary: list<ResultSection>,
+     *     details: list<array{section: ResultSection, key: string, open: bool, remember: bool}>,
+     *     profile: array<string, mixed>|null
+     * }
+     */
+    public function workspace(array $sections): array
+    {
+        $hasProfile = false;
+        foreach ($sections as $section) {
+            if ($section->type === ResultSection::TYPE_PROFILE_CHART) {
+                $hasProfile = true;
+            }
+        }
+
+        $summary = [];
+        $details = [];
+        foreach ($sections as $index => $section) {
+            $folded = $hasProfile
+                ? $section->type !== ResultSection::TYPE_PROFILE_CHART
+                : $section->type === ResultSection::TYPE_SCALES_TABLE;
+            if (!$folded) {
+                $summary[] = $section;
+                continue;
+            }
+
+            $invalid = $section->type === ResultSection::TYPE_VALIDITY && empty($section->data['is_valid']);
+            $details[] = [
+                'section' => $section,
+                'key' => $section->type . '-' . $index,
+                // Недостоверный протокол не прячется и не запоминается свёрнутым.
+                'open' => $invalid,
+                'remember' => !$invalid,
+            ];
+        }
+
+        return [
+            'summary' => $summary,
+            'details' => $details,
+            'profile' => $hasProfile ? $this->profileSummary($sections) : null,
+        ];
+    }
+
+    /**
+     * @param list<ResultSection> $sections
+     * @return array<string, mixed>
+     */
+    private function profileSummary(array $sections): array
+    {
+        $validity = null;
+        $scales = [];
+        $profileType = null;
+        $codeType = null;
+        foreach ($sections as $section) {
+            if ($section->type === ResultSection::TYPE_VALIDITY && $validity === null) {
+                $validity = $section->data;
+            }
+            if ($section->type === ResultSection::TYPE_SCALES_TABLE && $scales === [] && is_array($section->data['scales'] ?? null)) {
+                $scales = $section->data['scales'];
+            }
+            if ($section->type === ResultSection::TYPE_INTERPRETATION) {
+                $profileType = is_string($section->data['profile_type_name'] ?? null) ? $section->data['profile_type_name'] : null;
+                $codeType = is_string($section->data['code_type'] ?? null) && $section->data['code_type'] !== '' ? $section->data['code_type'] : null;
+            }
+        }
+
+        $outside = [];
+        foreach ($scales as $scale) {
+            if (!is_array($scale) || !in_array((string) ($scale['code'] ?? ''), self::PROFILE_CLINICAL_CODES, true)) {
+                continue;
+            }
+            $t = (int) ($scale['t_score'] ?? 0);
+            if ($t > self::PROFILE_NORM_MAX || $t < self::PROFILE_NORM_MIN) {
+                $outside[] = [
+                    'code' => (string) $scale['code'],
+                    'name' => (string) ($scale['name'] ?? ''),
+                    't_score' => $t,
+                    'level_name' => (string) ($scale['level_name'] ?? ''),
+                    'above' => $t > self::PROFILE_NORM_MAX,
+                ];
+            }
+        }
+        // Сначала выше нормы по убыванию T, затем ниже нормы по возрастанию.
+        usort($outside, static function (array $a, array $b): int {
+            if ($a['above'] !== $b['above']) {
+                return $a['above'] ? -1 : 1;
+            }
+
+            return $a['above'] ? $b['t_score'] <=> $a['t_score'] : $a['t_score'] <=> $b['t_score'];
+        });
+
+        return [
+            'validity' => $validity === null ? null : [
+                'is_valid' => !empty($validity['is_valid']),
+                'L' => $validity['L_score'] ?? null,
+                'F' => $validity['F_score'] ?? null,
+                'K' => $validity['K_score'] ?? null,
+                'warnings' => is_array($validity['warnings'] ?? null) ? array_values($validity['warnings']) : [],
+            ],
+            'outside' => $outside,
+            'norm_min' => self::PROFILE_NORM_MIN,
+            'norm_max' => self::PROFILE_NORM_MAX,
+            'profile_type' => $profileType,
+            'code_type' => $codeType,
+        ];
+    }
+
     /**
      * @param array<string|int, mixed> $answers
      * @return list<array<string, string|int|null>>
