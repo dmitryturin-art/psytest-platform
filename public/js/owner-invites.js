@@ -118,6 +118,8 @@
             title.textContent = content.querySelector('[data-title]').textContent;
             text.textContent = content.querySelector('[data-text]').textContent;
             confirmButton.textContent = content.querySelector('[data-confirm-label]').textContent;
+            // На карточке кейса (04.D3) действие одно и про один кейс: счётчик не нужен.
+            selected.hidden = form.hasAttribute('data-bulk-single');
             selected.textContent = 'Выбрано: ' + plural(count) + '.';
             var needsCheck = kind === 'purge';
             check.hidden = !needsCheck;

@@ -3,6 +3,15 @@
 {% set ownerArea = true %}
 {% import 'blocks/icons.twig' as ui %}
 
+{#
+   Карточка кейса как рабочее место (04.D3).
+
+   Порядок: шапка (название, реквизиты, заметка и действия) → полоса разделов,
+   которая остаётся на экране → результат (сводка сверху, подробности свёрнуты)
+   → анкета (свёрнута) → разборы (две карточки) → выгрузка. Удаления внизу нет:
+   «В корзину» живёт в меню «⋯» шапки (07.K8).
+#}
+
 {% macro reorder_form(case, item, csrf_token, basePath, form_key) %}
     {# Готовый черновик можно заказать заново: новый ответ модели ляжет следующей
        версией, правки специалиста и публикация не затрагиваются. form_key —
@@ -13,7 +22,7 @@
         <input type="hidden" name="form_key" value="{{ form_key }}">
         <input type="hidden" name="ai_consent" value="1">
         <input type="hidden" name="kind" value="{{ item.kind }}">
-        <button type="submit" class="btn btn-outline" data-busy-text="Заказываем…">Заказать заново</button>
+        <button type="submit" class="btn btn-ghost btn-sm" data-busy-text="Заказываем…">Заказать заново</button>
         <span class="owner-help">Новый текст модели добавится новой версией; ваши правки и публикация сохранятся.</span>
     </form>
 {% endmacro %}
@@ -36,100 +45,243 @@
     </ol>
 {% endmacro %}
 
+{% macro answers_count(n) %}{% set m100 = n % 100 %}{% set m10 = n % 10 %}{{ n }} {{ (m100 >= 11 and m100 <= 14) ? 'ответов' : (m10 == 1 ? 'ответ' : ((m10 >= 2 and m10 <= 4) ? 'ответа' : 'ответов')) }}{% endmacro %}
+
+{% macro scales_count(n) %}{% set m100 = n % 100 %}{% set m10 = n % 10 %}{{ n }} {{ (m100 >= 11 and m100 <= 14) ? 'шкал' : (m10 == 1 ? 'шкала' : ((m10 >= 2 and m10 <= 4) ? 'шкалы' : 'шкал')) }}{% endmacro %}
+
+{% macro section(section) %}
+    <section class="results-section results-section--{{ section.type }}">
+        {% if section.title %}<h3 class="section-title">{{ section.title }}</h3>{% endif %}
+        <div class="section-body">
+            {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
+        </div>
+    </section>
+{% endmacro %}
+
 {% block title %}Кейс по приглашению — {{ appName }}{% endblock %}
 {% block body_class %}owner-dashboard-page{% endblock %}
 {% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a><a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a><a class="nav-link" href="{{ basePath }}/admin/prompts">Промпты</a></nav>{% endblock %}
 
 {% block content %}
-<section class="owner-panel" aria-labelledby="owner-case-title">
-    <p class="owner-panel-eyebrow">Кейс по приглашению{% if case.pair %} · Парное прохождение{% endif %}</p>
-    <h1 id="owner-case-title">{{ case.test_name }}</h1>
-    {% if case.pair %}
-        <p class="owner-case-pair-badge">Парное прохождение · этот кейс — {{ case.pair.label }}</p>
-    {% endif %}
-    {% if trashed ?? false %}
-        {# Кейс в корзине (07.K8): только чтение до восстановления. #}
-        <div class="owner-notice owner-notice--error owner-trash-banner" role="status">
-            <p><strong>В корзине, будет удалён {{ case.purge_at|date("d.m.Y") }}.</strong> Заказ и правка разборов недоступны. Клиентская страница результата продолжает работать до окончательного удаления.</p>
-            <form method="post" action="{{ basePath }}/admin/invites/restore" class="owner-action-form" data-submit-once>
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <input type="hidden" name="form_key" value="{{ bulk_form_key }}">
-                <input type="hidden" name="return" value="/admin/invited-case/{{ case.id }}">
-                <input type="hidden" name="invite_ids[]" value="{{ case.invite_id }}">
-                <button type="submit" class="btn btn-primary" data-busy-text="Восстанавливаем…">Восстановить</button>
-            </form>
+{% set isTrashed = trashed ?? false %}
+{% set caseUrl = basePath ~ '/admin/invited-case/' ~ case.id %}
+{% set workspace = case.workspace ?? null %}
+{# Заказ черновиков отвечает якорем на раздел «Разбор»: флеш показывается
+   там же, рядом с карточками. Наверху он остаётся только когда раздела нет. #}
+{% set aiSectionShown = case.completed_at and ai.available %}
+{% set canOrder = aiSectionShown and not ai.has_jobs and not (ai.ai_disabled ?? false) %}
+{% set inviteId = case.invite_id ?? null %}
+<section class="owner-panel case-workspace" aria-labelledby="owner-case-title">
+    <header class="case-head">
+        <div class="case-head__top">
+            <div class="case-head__title">
+                <p class="owner-panel-eyebrow">Кейс по приглашению{% if case.pair %} · Парное прохождение{% endif %}</p>
+                <h1 id="owner-case-title">{{ case.test_name }}</h1>
+                {% if case.pair %}
+                    <p class="owner-case-pair-badge">Парное прохождение · этот кейс — {{ case.pair.label }}</p>
+                {% endif %}
+            </div>
+            {# Действия с кейсом (04.D3). Выгрузка отправляет форму раздела «Выгрузка»
+               (атрибут form): отмеченный там состав действует и для этих кнопок. #}
+            <div class="case-head__actions">
+                {% if case.completed_at %}
+                    <button type="submit" form="case-export-form" class="btn btn-outline btn-sm" formaction="{{ caseUrl }}/export.docx">Word</button>
+                    <button type="submit" form="case-export-form" class="btn btn-outline btn-sm">PDF</button>
+                    <button type="submit" form="case-export-form" class="btn btn-outline btn-sm" formaction="{{ caseUrl }}/print" formtarget="_blank">Печать</button>
+                {% endif %}
+                {% if canOrder %}
+                    <a class="btn btn-primary btn-sm" href="#owner-case-ai">Заказать разбор</a>
+                {% endif %}
+                {% if inviteId %}
+                    {% include 'blocks/owner-invite-actions.twig' with {
+                        invite: {
+                            id: inviteId,
+                            claimed_session_id: null,
+                            test_name: case.test_name,
+                            client_id: case.client_id,
+                            client_label: case.client_label,
+                            status: 'claimed',
+                            display_status: 'completed',
+                            archived_at: case.archived_at ?? null,
+                            trashed_at: case.trashed_at ?? null,
+                        },
+                        bulk_form_id: 'case-actions-form',
+                    } %}
+                {% endif %}
+            </div>
         </div>
-    {% elseif case.archived_at ?? false %}
-        <p class="owner-help">Кейс в архиве. Это только пометка в списке: для клиента ничего не изменилось.</p>
-    {% endif %}
-    {# Заказ черновиков отвечает якорем на раздел «ИИ-разбор»: флеш показывается
-       там же, рядом с кнопкой. Наверх он попадает только когда раздела нет. #}
-    {% set aiSectionShown = case.completed_at and ai.available %}
-    {% if flash and not aiSectionShown %}
-        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
-    {% endif %}
-    <dl class="owner-case-details">
-        <div><dt>Статус</dt><dd><span class="status status--{{ case.status|status_tone }}">{{ case.status|status_label }}</span></dd></div>
-        <div><dt>Открыто</dt><dd>{{ case.claimed_at|date("d.m.Y H:i") }}</dd></div>
-        <div><dt>Завершено</dt><dd>{% if case.completed_at %}{{ case.completed_at|date("d.m.Y H:i") }}{% else %}ещё нет{% endif %}</dd></div>
-        {# Клиент кейса (07.K9): привязка и смена — тихие кнопки, диалог один на страницу.
-           В корзине кейс только для чтения, поэтому кнопок нет. #}
-        {% if case.client_label or not (trashed ?? false) %}
-        <div><dt>Клиент</dt><dd class="owner-case-client">
-            {% if case.client_label %}<a href="{{ basePath }}/admin/clients/{{ case.client_id }}">{{ case.client_label }}</a>{% else %}<span class="cab-table__none">не привязан</span>{% endif %}
-            {% if not (trashed ?? false) %}
-            <form method="post" action="{{ basePath }}/admin/invites/attach-client" class="owner-case-client__form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <input type="hidden" name="return" value="/admin/invited-case/{{ case.id }}">
-                <input type="hidden" name="invite_id" value="{{ case.invite_id ?? '' }}">
-                <button type="submit" class="btn btn-sm {% if case.client_id ?? false %}btn-ghost{% else %}btn-outline{% endif %}" data-attach data-client-id="{{ case.client_id ?? '' }}" data-client-label="{{ case.client_label ?? '' }}" data-test-name="{{ case.test_name }}">{% if case.client_id ?? false %}Сменить{% else %}{{ ui.icon('client') }}Привязать к клиенту{% endif %}</button>
-            </form>
-            {% endif %}
-        </dd></div>
+
+        {% if isTrashed %}
+            {# Кейс в корзине (07.K8): только чтение до восстановления. #}
+            <div class="owner-notice owner-notice--error owner-trash-banner" role="status">
+                <p><strong>В корзине, будет удалён {{ case.purge_at|date("d.m.Y") }}.</strong> Заказ и правка разборов недоступны. Клиентская страница результата продолжает работать до окончательного удаления.</p>
+                <form method="post" action="{{ basePath }}/admin/invites/restore" class="owner-action-form" data-submit-once>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="form_key" value="{{ bulk_form_key }}">
+                    <input type="hidden" name="return" value="/admin/invited-case/{{ case.id }}">
+                    <input type="hidden" name="invite_ids[]" value="{{ case.invite_id }}">
+                    <button type="submit" class="btn btn-primary" data-busy-text="Восстанавливаем…">Восстановить</button>
+                </form>
+            </div>
+        {% elseif case.archived_at ?? false %}
+            <p class="owner-help case-head__state">Кейс в архиве. Это только пометка в списке: для клиента ничего не изменилось.</p>
         {% endif %}
-        {% if case.owner_note %}<div class="owner-case-details__wide"><dt>Заметка специалиста</dt><dd>{{ case.owner_note }}</dd></div>{% endif %}
-    </dl>
+        {% if flash and not aiSectionShown %}
+            <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+        {% endif %}
+
+        <dl class="owner-case-details">
+            <div><dt>Статус</dt><dd><span class="status status--{{ case.status|status_tone }}">{{ case.status|status_label }}</span></dd></div>
+            {# Клиент кейса (07.K9): привязка и смена — тихие кнопки, диалог один на страницу.
+               В корзине кейс только для чтения, поэтому кнопок нет. #}
+            {% if case.client_label or not isTrashed %}
+            <div><dt>Клиент</dt><dd class="owner-case-client">
+                {% if case.client_label %}<a href="{{ basePath }}/admin/clients/{{ case.client_id }}">{{ case.client_label }}</a>{% else %}<span class="cab-table__none">не привязан</span>{% endif %}
+                {% if not isTrashed %}
+                <form method="post" action="{{ basePath }}/admin/invites/attach-client" class="owner-case-client__form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="return" value="/admin/invited-case/{{ case.id }}">
+                    <input type="hidden" name="invite_id" value="{{ case.invite_id ?? '' }}">
+                    <button type="submit" class="btn btn-sm {% if case.client_id ?? false %}btn-ghost{% else %}btn-outline{% endif %}" data-attach data-client-id="{{ case.client_id ?? '' }}" data-client-label="{{ case.client_label ?? '' }}" data-test-name="{{ case.test_name }}">{% if case.client_id ?? false %}Сменить{% else %}{{ ui.icon('client') }}Привязать к клиенту{% endif %}</button>
+                </form>
+                {% endif %}
+            </dd></div>
+            {% endif %}
+            <div><dt>Открыто</dt><dd><time datetime="{{ case.claimed_at|date('Y-m-d\\TH:i') }}">{{ case.claimed_at|date("d.m.Y H:i") }}</time></dd></div>
+            <div><dt>Завершено</dt><dd>{% if case.completed_at %}<time datetime="{{ case.completed_at|date('Y-m-d\\TH:i') }}">{{ case.completed_at|date("d.m.Y H:i") }}</time>{% else %}ещё нет{% endif %}</dd></div>
+            {# Заметка специалиста правится на месте (04.D3): нативный <details> —
+               без JS это маленькая форма под текстом, со скриптом «Отмена»
+               возвращает прежний текст. Клиенту и во внешний разбор заметка не уходит. #}
+            {% if case.owner_note or not isTrashed %}
+            <div class="owner-case-details__wide case-note" data-case-note>
+                <dt id="case-note-label">Заметка специалиста</dt>
+                <dd>
+                    <p class="case-note__text{% if not case.owner_note %} case-note__text--empty{% endif %}" data-case-note-text>{{ case.owner_note ?: 'Заметки нет.' }}</p>
+                    {% if not isTrashed and (note_form_key ?? null) %}
+                    <details class="case-note__edit" data-case-note-edit>
+                        <summary class="btn btn-ghost btn-sm">{{ case.owner_note ? 'Изменить' : 'Добавить заметку' }}</summary>
+                        <form method="post" action="{{ caseUrl }}/note" class="owner-form case-note__form" data-submit-once>
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="form_key" value="{{ note_form_key }}">
+                            <textarea name="owner_note" rows="3" maxlength="{{ note_max ?? 1000 }}" aria-labelledby="case-note-label" data-case-note-input>{{ case.owner_note }}</textarea>
+                            <p class="case-note__actions">
+                                <button type="submit" class="btn btn-outline btn-sm" data-busy-text="Сохраняем…">Сохранить</button>
+                                <button type="button" class="btn btn-ghost btn-sm" data-case-note-cancel hidden>Отмена</button>
+                                <span class="owner-help">До {{ note_max ?? 1000 }} символов. Видна только вам: клиенту и во внешний разбор не передаётся.</span>
+                            </p>
+                        </form>
+                    </details>
+                    {% endif %}
+                </dd>
+            </div>
+            {% endif %}
+        </dl>
+    </header>
+
+    {# Полоса разделов: остаётся на экране при прокрутке и отмечает текущий
+       раздел (owner-case-workspace.js); без JS — обычные ссылки на якоря. #}
+    {% set tabs = [] %}
+    {% if case.completed_at %}{% set tabs = tabs|merge([{href: 'case-result', label: 'Результат'}]) %}{% endif %}
+    {% set tabs = tabs|merge([{href: 'case-answers', label: 'Анкета'}]) %}
+    {% if aiSectionShown %}{% set tabs = tabs|merge([{href: 'owner-case-ai', label: 'Разбор'}]) %}{% endif %}
+    {% if case.completed_at %}{% set tabs = tabs|merge([{href: 'case-export', label: 'Выгрузка'}]) %}{% endif %}
+    {% if tabs|length > 1 %}
+    <nav class="case-nav" aria-label="Разделы кейса" data-case-nav>
+        <span class="case-nav__label" aria-hidden="true">{{ case.test_name }}{% if case.client_label %} · {{ case.client_label }}{% endif %}</span>
+        <div class="view-tabs case-nav__tabs">
+            {% for tab in tabs %}<a class="view-tabs__tab" href="#{{ tab.href }}" data-case-nav-link>{{ tab.label }}</a>{% endfor %}
+        </div>
+    </nav>
+    {% endif %}
+
     {% if case.completed_at %}
-        {# Парный кейс читается как пара: сравнение — основной результат,
-           индивидуальный профиль партнёра остаётся рядом, но свёрнутым. #}
-        {% if case.pair %}
-        <section class="owner-case-result owner-case-result--pair" aria-labelledby="owner-case-pair-title">
-            <h2 id="owner-case-pair-title">Парный результат</h2>
-            <p class="owner-help">Тот же расчёт и те же блоки, что видит клиент на своей странице результата. Приглашение второму партнёру отправляет сам клиент — из кабинета ссылка не выдаётся.</p>
-            {% for section in case.pair.sections %}
-                <section class="results-section results-section--{{ section.type }}">
-                    {% if section.title %}<h3 class="section-title">{{ section.title }}</h3>{% endif %}
-                    <div class="section-body">
-                        {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
-                    </div>
-                </section>
-            {% endfor %}
-        </section>
-        {% endif %}
-
-        <section class="owner-case-result" aria-labelledby="owner-case-result-title">
+        <section id="case-result" class="case-section owner-case-result" aria-labelledby="owner-case-result-title" data-case-section>
+            <h2 id="owner-case-result-title">Результат</h2>
+            {# Парный кейс читается как пара: сравнение — основной результат,
+               индивидуальный профиль партнёра остаётся рядом, но свёрнутым. #}
             {% if case.pair %}
-            <details class="owner-case-individual">
-                <summary id="owner-case-result-title">Индивидуальный результат: {{ case.pair.label }}</summary>
-            {% else %}
-                <h2 id="owner-case-result-title">Базовый результат</h2>
-            {% endif %}
-            {% for section in case.result_sections %}
-                <section class="results-section results-section--{{ section.type }}">
-                    {% if section.title %}<h3 class="section-title">{{ section.title }}</h3>{% endif %}
-                    <div class="section-body">
-                        {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
+                <p class="owner-help">Тот же расчёт и те же блоки, что видит клиент на своей странице результата. Приглашение второму партнёру отправляет сам клиент — из кабинета ссылка не выдаётся.</p>
+                {% for section in case.pair.sections %}{{ _self.section(section) }}{% endfor %}
+                <details class="ai-report__details case-fold" data-remember="pair-individual">
+                    <summary class="ai-report__summary"><span class="ai-report__summary-title">Индивидуальный результат: {{ case.pair.label }}</span></summary>
+                    <div class="case-fold__body">
+                        {% for section in case.result_sections %}{{ _self.section(section) }}{% endfor %}
                     </div>
-                </section>
+                </details>
+            {% elseif workspace %}
+                {% set profile = workspace.profile %}
+                {% if profile %}
+                    {# Результат с профилем: канонический график без изменений и сводка рядом. #}
+                    <div class="case-profile">
+                        <div class="case-profile__chart">
+                            {% for section in workspace.summary %}{{ _self.section(section) }}{% endfor %}
+                        </div>
+                        <aside class="profile-brief" aria-label="Сводка профиля">
+                            {% if profile.validity %}
+                            <section class="profile-brief__group">
+                                <h3>Достоверность</h3>
+                                <p><span class="status status--{{ profile.validity.is_valid ? 'done' : 'failed' }}">{{ profile.validity.is_valid ? 'протокол достоверен' : 'протокол недостоверен' }}</span></p>
+                                <p class="profile-brief__lfk">
+                                    <span>L <b>{{ profile.validity.L }}</b></span>
+                                    <span>F <b>{{ profile.validity.F }}</b></span>
+                                    <span>K <b>{{ profile.validity.K }}</b></span>
+                                </p>
+                                {% for warning in profile.validity.warnings %}<p class="profile-brief__note">{{ warning }}</p>{% endfor %}
+                            </section>
+                            {% endif %}
+                            <section class="profile-brief__group">
+                                <h3>Вне нормы {{ profile.norm_min }}–{{ profile.norm_max }}T</h3>
+                                {% if profile.outside %}
+                                <ul class="profile-brief__scales">
+                                    {% for scale in profile.outside %}
+                                    <li>
+                                        <span class="profile-brief__code">{{ scale.code }}</span>
+                                        <span class="profile-brief__name">{{ scale.name }}<small>{{ scale.level_name }}</small></span>
+                                        <span class="profile-brief__t">{{ scale.t_score }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <p class="profile-brief__note">Все клинические шкалы в пределах нормы.</p>
+                                {% endif %}
+                            </section>
+                            {% if profile.profile_type %}
+                            <section class="profile-brief__group">
+                                <h3>Тип профиля</h3>
+                                <p>{{ profile.profile_type }}{% if profile.code_type %} <span class="profile-brief__note">код {{ profile.code_type }}</span>{% endif %}</p>
+                            </section>
+                            {% endif %}
+                        </aside>
+                    </div>
+                {% else %}
+                    {% for section in workspace.summary %}{{ _self.section(section) }}{% endfor %}
+                {% endif %}
+                {% if workspace.details %}
+                <div class="case-folds" id="case-result-details">
+                    {% for fold in workspace.details %}
+                    <details class="ai-report__details case-fold"{% if fold.open %} open{% endif %}{% if fold.remember %} data-remember="{{ fold.key }}"{% endif %}>
+                        <summary class="ai-report__summary"><span class="ai-report__summary-title">{{ fold.section.title }}</span>{% if fold.section.data.scales is defined and fold.section.data.scales is iterable and fold.section.data.scales|length > 0 %}<span class="ai-report__summary-hint">{{ _self.scales_count(fold.section.data.scales|length) }}</span>{% endif %}</summary>
+                        <div class="case-fold__body results-section results-section--{{ fold.section.type }}">
+                            <div class="section-body">
+                                {{ include(fold.section.block, fold.section.data|merge({'_section_type': fold.section.type}), ignore_missing = true) }}
+                            </div>
+                        </div>
+                    </details>
+                    {% endfor %}
+                </div>
+                {% endif %}
             {% else %}
-                <p class="owner-help">Для этой методики пока нет отдельного отображения базового результата.</p>
-            {% endfor %}
-            {% if case.pair %}</details>{% endif %}
+                {% for section in case.result_sections %}{{ _self.section(section) }}{% else %}
+                    <p class="owner-help">Для этой методики пока нет отдельного отображения базового результата.</p>
+                {% endfor %}
+            {% endif %}
         </section>
     {% endif %}
 
-    <section class="owner-case-answers" aria-labelledby="owner-case-answers-title">
+    <section id="case-answers" class="case-section owner-case-answers" aria-labelledby="owner-case-answers-title" data-case-section>
         <h2 id="owner-case-answers-title">{% if case.pair %}Анкеты обоих партнёров{% else %}Анкета{% endif %}</h2>
+        {# Свёрнуто по умолчанию: у СМИЛ 566 строк, и без этого до разбора не домотать.
+           Печать и PDF собирают анкету своими шаблонами — это сворачивание их не касается. #}
         {% if case.pair %}
             {% for sheet in case.pair.questionnaires %}
                 <section class="owner-case-questionnaire{{ sheet.is_case ? ' owner-case-questionnaire--this' : '' }}">
@@ -137,10 +289,9 @@
                         <h3>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</h3>
                         <p class="owner-help">Ответы не сохранены.</p>
                     {% else %}
-                        {# Свёрнуто по умолчанию: у СМИЛ 566 строк, и без этого до разбора не домотать. #}
-                        <details class="owner-case-individual owner-case-answers-details">
-                            <summary>{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %} — {{ sheet.rows|length }} ответов</summary>
-                            {{ _self.answer_list(sheet.rows) }}
+                        <details class="ai-report__details case-fold owner-case-answers-details">
+                            <summary class="ai-report__summary"><span class="ai-report__summary-title">{{ sheet.label }}{% if sheet.is_case %} · этот кейс{% endif %}</span><span class="ai-report__summary-hint">{{ _self.answers_count(sheet.rows|length) }}</span></summary>
+                            <div class="case-fold__body">{{ _self.answer_list(sheet.rows) }}</div>
                         </details>
                     {% endif %}
                 </section>
@@ -148,120 +299,178 @@
         {% elseif case.answer_rows is empty %}
             <p class="owner-help">Клиент ещё не сохранил ответы.</p>
         {% else %}
-            {# Свёрнуто по умолчанию: у СМИЛ 566 строк, и без этого до разбора не домотать. #}
-            <details class="owner-case-individual owner-case-answers-details">
-                <summary>Показать ответы по пунктам — {{ case.answer_rows|length }}</summary>
-                {{ _self.answer_list(case.answer_rows) }}
+            <details class="ai-report__details case-fold owner-case-answers-details">
+                <summary class="ai-report__summary"><span class="ai-report__summary-title">Ответы по пунктам</span><span class="ai-report__summary-hint">{{ _self.answers_count(case.answer_rows|length) }}</span></summary>
+                <div class="case-fold__body">{{ _self.answer_list(case.answer_rows) }}</div>
             </details>
         {% endif %}
     </section>
 
-    {% if case.completed_at and not ai.available and not (trashed ?? false) %}
-    <section class="owner-case-ai" aria-labelledby="owner-case-ai-title">
-        <h2 id="owner-case-ai-title">ИИ-разбор</h2>
+    {% if case.completed_at and not ai.available and not isTrashed %}
+    <section class="case-section owner-case-ai" aria-labelledby="owner-case-ai-title">
+        <h2 id="owner-case-ai-title">Разбор</h2>
         <p class="owner-help">Для этой методики расширенный разбор пока не настроен: опубликованных промптов нет. Сейчас разбор доступен для Лазаруса и СМИЛ.</p>
     </section>
     {% endif %}
 
-    {% if case.completed_at and ai.available %}
-    <section id="owner-case-ai" class="owner-case-ai" aria-labelledby="owner-case-ai-title"
-             data-case-reports
+    {% if aiSectionShown %}
+    <section id="owner-case-ai" class="case-section owner-case-ai" aria-labelledby="owner-case-ai-title"
+             data-case-reports data-case-section
              data-status-url="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/status">
-        <h2 id="owner-case-ai-title">ИИ-разбор</h2>
+        <h2 id="owner-case-ai-title">Разбор</h2>
 
         {% if flash %}
             <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
         {% endif %}
+        {% if ai.ai_disabled ?? false %}
+            <p class="owner-help case-ai-off">ИИ-разборы выключены в <a href="{{ basePath }}/admin/prompts">настройках промптов</a>: новый заказ сейчас не выполнится. Готовые тексты, правка и публикация работают.</p>
+        {% endif %}
 
-        {% if not ai.has_jobs %}
-            <p class="owner-help">Черновики заказываются один раз на оба вида: понятный разбор для клиента и профессиональное заключение для вас.</p>
-            {# У каждой формы заказа на странице свой одноразовый ключ (07.K6b). #}
-            <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-form owner-action-form" data-submit-once>
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <input type="hidden" name="form_key" value="{{ order_keys.all }}">
-                <label class="owner-field">
-                    <span>Клинический контекст для модели (необязательно, до {{ ai.owner_context_max }} символов)</span>
-                    <textarea name="owner_context" rows="5" maxlength="{{ ai.owner_context_max }}" placeholder="Запрос клиента, данные интервью, особенности — то, что вы обычно дописываете к промпту."></textarea>
-                </label>
-                <p class="owner-help">Этот блок уходит только в профессиональное заключение и заполняется вручную: подпись и заметка карточки клиента в него не подставляются.</p>
-                <label><input type="checkbox" name="ai_consent" value="1" required> Передать обезличенные структурированные результаты внешнему AI-сервису; имя, email, подпись клиента и ссылка не передаются.</label>
-                <button type="submit" class="btn btn-primary" data-busy-text="Заказываем…">Заказать черновики</button>
-            </form>
-        {% else %}
-            {% set aiWaiting = ai.kinds|filter(item => item.status == 'pending' or item.status == 'running')|length > 0 %}
-
-            {% if aiWaiting %}
-                {# Спиннер на CSS: внешних библиотек в кабинете нет. #}
+        {% set aiWaiting = ai.kinds|filter(item => item.status == 'pending' or item.status == 'running')|length > 0 %}
+        {% if aiWaiting %}
+            {# Спиннер на CSS: внешних библиотек в кабинете нет. #}
+            <div class="case-waiting">
                 <p class="owner-case-ai-waiting" role="status" data-case-reports-waiting>
                     <span class="owner-spinner" aria-hidden="true"></span>
                     Черновики готовятся, обычно 2–5 минут. Страница обновится сама.
                 </p>
-            {% else %}
-                <p class="owner-help">Состояние черновиков ниже.</p>
-            {% endif %}
-            {# Ссылка на тот же адрес с якорем страницу не перезагружает: браузер
-               просто прокручивает к разделу. Поэтому обновление — кнопка. #}
-            <p><button type="button" class="btn btn-outline" data-reload>Обновить</button></p>
-            <noscript>
-                {# Без JS тот же смысл даёт GET с меняющимся параметром: адрес
-                   отличается от текущего, и браузер идёт на сервер. #}
-                <form method="get" action="{{ basePath }}/admin/invited-case/{{ case.id }}" class="owner-action-form">
-                    <input type="hidden" name="_" value="{{ "now"|date("U") }}">
-                    <button type="submit" class="btn btn-outline">Обновить</button>
-                </form>
-            </noscript>
+                {# Ссылка на тот же адрес с якорем страницу не перезагружает: браузер
+                   просто прокручивает к разделу. Поэтому обновление — кнопка. #}
+                <button type="button" class="btn btn-outline" data-reload>Обновить</button>
+                <noscript>
+                    {# Без JS тот же смысл даёт GET с меняющимся параметром: адрес
+                       отличается от текущего, и браузер идёт на сервер. #}
+                    <form method="get" action="{{ basePath }}/admin/invited-case/{{ case.id }}" class="owner-action-form">
+                        <input type="hidden" name="_" value="{{ "now"|date("U") }}">
+                        <button type="submit" class="btn btn-outline">Обновить</button>
+                    </form>
+                </noscript>
+            </div>
+        {% endif %}
 
-            {% for item in ai.kinds %}
-            <article class="owner-case-ai-item" data-kind="{{ item.kind }}" data-status="{{ item.status }}">
-                <h3>{{ item.title }}</h3>
-                {% if item.status == 'pending' or item.status == 'running' %}
-                    <p class="owner-help" role="status">Задание в работе.</p>
-                {% elseif item.status == 'failed' %}
+        {# Две карточки: профессиональное заключение (для вас) и понятный разбор
+           (для клиента, после публикации). Статус — точка и подпись, как в списках. #}
+        {% set ordered = ai.kinds|filter(item => item.kind == 'professional')|merge(ai.kinds|filter(item => item.kind != 'professional')) %}
+        <div class="report-cards">
+            {% for item in ordered %}
+            {% set ready = item.status == 'ready' %}
+            {% set state = item.status == 'pending' or item.status == 'running' ? 'working'
+                : (item.status == 'failed' ? 'failed'
+                : (item.status == 'none' ? 'none'
+                : (item.kind == 'clear' and not item.published ? 'draft' : (item.kind == 'clear' ? 'published' : 'ready')))) %}
+            <article class="owner-case-ai-item report-card" data-kind="{{ item.kind }}" data-status="{{ item.status }}" aria-labelledby="report-card-{{ item.kind }}">
+                <header class="report-card__head">
+                    <h3 id="report-card-{{ item.kind }}">{{ item.title }}</h3>
+                    {% if state == 'working' %}<span class="status status--open">готовится</span>
+                    {% elseif state == 'failed' %}<span class="status status--failed">не получилось</span>
+                    {% elseif state == 'none' %}<span class="status status--muted">не заказан</span>
+                    {% elseif state == 'draft' %}<span class="status status--pending">готов, не опубликован</span>
+                    {% elseif state == 'published' %}<span class="status status--done">опубликован</span>
+                    {% else %}<span class="status status--done">готов</span>{% endif %}
+                </header>
+                <p class="report-card__for">{{ item.kind == 'clear' ? 'Для клиента — после вашей правки и публикации.' : 'Для вас: клиенту не публикуется и не правится.' }}</p>
+
+                {% if state == 'working' %}
+                    <p class="report-card__meta" role="status">Задание в работе{% if item.requested_at ?? null %} с {{ item.requested_at|date("d.m.Y H:i") }}{% endif %}.</p>
+                {% elseif state == 'failed' %}
                     <p class="owner-notice owner-notice--error" role="alert">Не получилось подготовить черновик{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}.</p>
                     <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form" data-submit-once>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="form_key" value="{{ order_keys[item.kind] }}">
                         <input type="hidden" name="ai_consent" value="1">
                         <input type="hidden" name="kind" value="{{ item.kind }}">
-                        <button type="submit" class="btn btn-primary" data-busy-text="Заказываем…">Заказать заново</button>
+                        <button type="submit" class="btn btn-outline btn-sm" data-busy-text="Заказываем…">Заказать заново</button>
                     </form>
-                {% elseif item.status == 'none' %}
-                    <p class="owner-help">Задание не создавалось.</p>
-                {% elseif item.kind == 'clear' %}
-                    {% if item.published %}
-                        <p class="owner-notice owner-notice--success">Опубликована версия №{{ item.published.revision_no }} от {{ item.published.published_at|date("d.m.Y H:i") }}.</p>
+                {% elseif state == 'none' %}
+                    <p class="report-card__meta">{{ ai.has_jobs ? 'Задание не создавалось.' : 'Ещё не заказан.' }}</p>
+                {% else %}
+                    <p class="report-card__meta">
+                        {%- if item.ready_at ?? null %}Готов {{ item.ready_at|date("d.m.Y H:i") }}{% endif %}
+                        {%- if item.versions_count > 1 %}
+                            {%- if item.kind == 'clear' %} · <a class="quiet-link" href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/edit#owner-editor-history-title">Версии ({{ item.versions_count }})</a>
+                            {%- else %} · <a class="quiet-link" href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/versions">Версии ({{ item.versions_count }})</a>{% endif %}
+                        {%- endif -%}
+                    </p>
+                    {% if item.kind == 'clear' %}
+                        {% if item.published %}
+                            <p class="report-card__meta">Опубликована версия №{{ item.published.revision_no }} от {{ item.published.published_at|date("d.m.Y H:i") }}{% if (item.latest_no ?? null) and item.latest_no != item.published.revision_no %}; есть более новая версия №{{ item.latest_no }}, клиент её не видит{% endif %}.</p>
+                        {% else %}
+                            <p class="report-card__meta">Клиенту пока ничего не опубликовано.</p>
+                        {% endif %}
+                    {% endif %}
+
+                    <div class="report-card__actions">
+                        {% if item.html %}
+                            <a class="btn btn-outline btn-sm" href="#case-report-{{ item.kind }}" data-report-open="{{ item.kind }}">Открыть</a>
+                        {% endif %}
+                        {% if item.kind == 'clear' %}
+                            <a class="btn btn-outline btn-sm" href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/edit">Редактировать</a>
+                            {% if item.published %}
+                                <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/unpublish" class="report-card__inline-form" data-submit-once>
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <input type="hidden" name="return" value="case">
+                                    <button type="submit" class="btn btn-ghost btn-sm" data-busy-text="Снимаем…">Снять с публикации</button>
+                                </form>
+                            {% else %}
+                                {# Публикация — в редакторе: там выбирается версия и ставится подтверждение. #}
+                                <a class="btn btn-ghost btn-sm" href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/edit#owner-editor-history-title">Опубликовать…</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    {% if item.kind == 'clear' and item.published %}
                         {# Письмо предлагается только после публикации и только по нажатию: автоматической отправки нет (D-054). #}
+                        <div class="report-card__notify">
                         {% if notify.has_email %}
                             {# Второе письмо двойное нажатие не отправит и без ключа формы:
                                уведомление по разбору — не чаще раза в 10 минут (07.K6b). #}
                             <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/notify" class="owner-action-form" data-submit-once>
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                <button type="submit" class="btn btn-primary" data-busy-text="Отправляем…">Уведомить клиента на email</button>
+                                <button type="submit" class="btn btn-outline btn-sm" data-busy-text="Отправляем…">Уведомить клиента на email</button>
                             </form>
                             <p class="owner-help">В письме нет текста разбора и ссылки: клиент открывает ту же страницу результата, которую получил после прохождения.{% if notify.last_at %} Последнее уведомление: {{ notify.last_at|date("d.m.Y H:i") }}.{% endif %}</p>
                         {% else %}
-                            <button type="button" class="btn btn-outline" disabled>Уведомить клиента на email</button>
+                            <button type="button" class="btn btn-outline btn-sm" disabled>Уведомить клиента на email</button>
                             <p class="owner-help">Уведомить некуда: {% if notify.client_id %}<a href="{{ basePath }}/admin/clients/{{ notify.client_id }}">добавьте email в карточке клиента</a>{% else %}добавьте email в карточке клиента{% endif %}.</p>
                         {% endif %}
-                    {% else %}
-                        <p class="owner-help">Клиенту пока ничего не опубликовано.</p>
+                        </div>
                     {% endif %}
-                    <p><a class="btn btn-primary" href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/edit">Редактировать и публиковать</a></p>
-                    {{ _self.reorder_form(case, item, csrf_token, basePath, order_keys[item.kind]) }}
-                {% else %}
-                    {# Только чтение: профессиональное заключение не правится под клиента. #}
-                    <details class="owner-case-ai-details">
-                        <summary>Показать заключение</summary>
-                        <div class="ai-report__body">{{ item.html|raw }}</div>
-                    </details>
-                    {% if item.versions_count > 1 %}
-                        <p><a href="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/{{ item.report_id }}/versions">Версии ({{ item.versions_count }})</a></p>
-                    {% endif %}
-                    {{ _self.reorder_form(case, item, csrf_token, basePath, order_keys[item.kind]) }}
+
+                    <div class="report-card__foot">
+                        {{ _self.reorder_form(case, item, csrf_token, basePath, order_keys[item.kind]) }}
+                    </div>
                 {% endif %}
             </article>
             {% endfor %}
+        </div>
+
+        {% if not ai.has_jobs %}
+            {# Один заказ на оба вида. У каждой формы заказа на странице свой одноразовый ключ (07.K6b). #}
+            <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-form owner-action-form report-order" data-submit-once>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="form_key" value="{{ order_keys.all }}">
+                <p class="owner-help">Черновики заказываются один раз на оба вида: понятный разбор для клиента и профессиональное заключение для вас.</p>
+                <label class="owner-field">
+                    <span>Клинический контекст для модели (необязательно, до {{ ai.owner_context_max }} символов)</span>
+                    <textarea name="owner_context" rows="5" maxlength="{{ ai.owner_context_max }}" placeholder="Запрос клиента, данные интервью, особенности — то, что вы обычно дописываете к промпту."></textarea>
+                </label>
+                <p class="owner-help">Этот блок уходит только в профессиональное заключение и заполняется вручную: подпись и заметка карточки клиента в него не подставляются.</p>
+                <label class="owner-check"><input type="checkbox" name="ai_consent" value="1" required> Передать обезличенные структурированные результаты внешнему AI-сервису; имя, email, подпись клиента и ссылка не передаются.</label>
+                <button type="submit" class="btn btn-primary" data-busy-text="Заказываем…"{% if ai.ai_disabled ?? false %} disabled{% endif %}>Заказать черновики</button>
+            </form>
         {% endif %}
+
+        {# Текст разбора — в колонке чтения под карточками; «Открыть» в карточке
+           раскрывает его и прокручивает сюда. Разметка — тот же белый список. #}
+        {% for item in ordered|filter(item => item.html) %}
+            <details class="ai-report__details case-reader" id="case-report-{{ item.kind }}">
+                <summary class="ai-report__summary">
+                    <span class="ai-report__summary-title">{{ item.title }}</span>
+                    <span class="ai-report__summary-hint">{% if item.kind == 'clear' %}{% if item.latest_no ?? null %}последняя версия №{{ item.latest_no }}{% endif %}{% if item.published and (item.latest_no ?? null) == item.published.revision_no %} · опубликована{% else %} · клиент её не видит{% endif %}{% else %}только чтение{% endif %}</span>
+                </summary>
+                <div class="ai-report__body">{{ item.html|raw }}</div>
+            </details>
+        {% endfor %}
     </section>
     {% endif %}
 
@@ -269,11 +478,11 @@
     {# Выгрузка (07.K5j): результат и интерпретации одним документом — сохранить
        или распечатать. Оба выхода собирает один сборщик, поэтому состав у PDF и
        версии для печати совпадает. Форма GET: она ничего не меняет, а документ
-       не сохраняется на сервере и не несёт токен. #}
-    <section class="owner-case-export" aria-labelledby="owner-case-export-title">
+       не сохраняется на сервере и не несёт токен. Кнопки шапки отправляют эту же форму. #}
+    <section id="case-export" class="case-section owner-case-export" aria-labelledby="owner-case-export-title" data-case-section>
         <h2 id="owner-case-export-title">Выгрузка</h2>
-        <p class="owner-help">Результат теста вместе с интерпретациями одним документом. Файл не хранится на сервере: он собирается в момент запроса.</p>
-        <form method="get" action="{{ basePath }}/admin/invited-case/{{ case.id }}/export.pdf" class="owner-form owner-export-form">
+        <p class="owner-help">Результат теста вместе с интерпретациями одним документом. Файл не хранится на сервере: он собирается в момент запроса. Кнопки Word, PDF и «Печать» в шапке берут состав, отмеченный здесь.</p>
+        <form method="get" action="{{ caseUrl }}/export.pdf" class="owner-form owner-export-form" id="case-export-form">
             <input type="hidden" name="export_options" value="1">
             <fieldset class="owner-export-options">
                 <legend>Что включить</legend>
@@ -283,7 +492,7 @@
                 <label><input type="checkbox" name="include_note" value="1"> Заметка к назначению</label>
             </fieldset>
             <p class="owner-export-actions">
-                <button type="submit" class="btn btn-primary">Скачать PDF</button>
+                <button type="submit" class="btn btn-outline">Скачать PDF</button>
                 <button type="submit" class="btn btn-outline"
                         formaction="{{ basePath }}/admin/invited-case/{{ case.id }}/export.docx">Word</button>
                 <button type="submit" class="btn btn-outline"
@@ -294,19 +503,21 @@
         </form>
     </section>
     {% endif %}
-
-    <section class="owner-case" aria-labelledby="owner-case-delete-title">
-        <h2 id="owner-case-delete-title">Удаление кейса</h2>
-        <p class="owner-help">Удаляются ответы, результат, заметка к назначению и сгенерированные файлы этого прохождения. Карточка клиента остаётся.</p>
-        <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/delete" class="owner-action-form owner-delete-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            {% if case.client_id %}<input type="hidden" name="client_id" value="{{ case.client_id }}">{% endif %}
-            <label><input type="checkbox" name="confirm_delete" value="delete" required> Я понимаю, что удаление необратимо.</label>
-            <button type="submit" class="btn btn-danger">Удалить кейс полностью</button>
-        </form>
-    </section>
 </section>
-{% if not (trashed ?? false) %}
+{# Общая форма меню «⋯» (07.K8): архив, корзина, восстановление и привязка
+   клиента. «В корзину» и «Удалить сейчас» без JS ведут на страницу
+   подтверждения, со скриптом — в диалог. #}
+{% if inviteId %}
+<form method="post" action="{{ basePath }}/admin/invites/archive" id="case-actions-form" data-bulk-form data-bulk-single>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="form_key" value="{{ bulk_form_key ?? '' }}">
+    <input type="hidden" name="return" value="/admin/invited-case/{{ case.id }}">
+    <input type="hidden" name="confirmed" value="" data-confirmed>
+    <input type="hidden" name="confirm_delete" value="" data-confirm-delete>
+</form>
+{% include 'blocks/owner-invite-dialog.twig' with {trash_days: trash_days ?? 30} %}
+{% endif %}
+{% if not isTrashed %}
     {% include 'blocks/owner-attach-dialog.twig' with {attach_return: '/admin/invited-case/' ~ case.id, attach_form_key: attach_form_key ?? '', clients: clients ?? []} %}
 {% endif %}
 {% endblock %}
@@ -315,6 +526,9 @@
 {# Подключается только на карточке кейса: опрос состояния черновиков нужен
    лишь здесь и не должен висеть на остальных страницах кабинета. #}
 <script src="{{ asset('js/owner-case.js') }}"></script>
+<script src="{{ asset('js/owner-case-workspace.js') }}"></script>
 <script src="{{ asset('js/owner-forms.js') }}"></script>
 <script src="{{ asset('js/owner-attach.js') }}"></script>
+<script src="{{ asset('js/owner-invites.js') }}"></script>
+<script src="{{ asset('js/owner-cabinet.js') }}"></script>
 {% endblock %}
