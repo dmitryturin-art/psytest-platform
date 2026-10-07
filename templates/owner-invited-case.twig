@@ -257,7 +257,8 @@
                     {% for section in workspace.summary %}{{ _self.section(section) }}{% endfor %}
                 {% endif %}
                 {% if workspace.details %}
-                <div class="case-folds" id="case-result-details">
+                {# Стопка блоков результата с профилем — тихий вариант (04.D3): мятная только полоса слева. #}
+                <div class="case-folds{% if profile %} disclosure-stack{% endif %}" id="case-result-details">
                     {% for fold in workspace.details %}
                     <details class="ai-report__details case-fold"{% if fold.open %} open{% endif %}{% if fold.remember %} data-remember="{{ fold.key }}"{% endif %}>
                         <summary class="ai-report__summary"><span class="ai-report__summary-title">{{ fold.section.title }}</span>{% if fold.section.data.scales is defined and fold.section.data.scales is iterable and fold.section.data.scales|length > 0 %}<span class="ai-report__summary-hint">{{ _self.scales_count(fold.section.data.scales|length) }}</span>{% endif %}</summary>
@@ -278,7 +279,7 @@
         </section>
     {% endif %}
 
-    <section id="case-answers" class="case-section owner-case-answers" aria-labelledby="owner-case-answers-title" data-case-section>
+    <section id="case-answers" class="case-section owner-case-answers disclosure-stack" aria-labelledby="owner-case-answers-title" data-case-section>
         <h2 id="owner-case-answers-title">{% if case.pair %}Анкеты обоих партнёров{% else %}Анкета{% endif %}</h2>
         {# Свёрнуто по умолчанию: у СМИЛ 566 строк, и без этого до разбора не домотать.
            Печать и PDF собирают анкету своими шаблонами — это сворачивание их не касается. #}
