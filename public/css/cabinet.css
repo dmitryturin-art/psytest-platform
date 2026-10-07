@@ -1311,6 +1311,39 @@ a.cab-table__title:hover {
     font-weight: 600;
 }
 
+/* Ширина внутри раскрывающихся блоков карточки кейса (04.D3a).
+   Карточки пунктов анкеты и таблицы занимают всю ширину блока; проза остаётся
+   в колонке чтения, но шире общей: ~80 знаков вместо 68. */
+.owner-dashboard-page .case-fold__body .owner-answer-list {
+    max-width: none;
+}
+
+.owner-dashboard-page .case-fold__body .profile-type-description,
+.owner-dashboard-page .case-fold__body .interpretation-item__text,
+.owner-dashboard-page .case-fold__body .recommendations-list,
+.owner-dashboard-page .case-fold__body .interpretation-text,
+.owner-dashboard-page .case-fold__body .results-disclaimer,
+.owner-dashboard-page .case-fold__body .validity-warnings,
+.owner-dashboard-page .case-section > .owner-help,
+.owner-dashboard-page .case-section > .owner-panel-intro {
+    max-width: var(--measure-wide);
+}
+
+.case-fold__body table {
+    max-width: 100%;
+}
+
+/* Открытый разбор: блок сам не шире текста с полями, слева, как вся стопка;
+   пустого поля справа от колонки чтения нет. Таблицы внутри прокручиваются. */
+.owner-dashboard-page .case-reader {
+    max-width: calc(var(--measure-wide) + 2 * var(--spacing-xl) + 2px);
+}
+
+.owner-dashboard-page .case-reader > .ai-report__body {
+    max-width: none;
+    overflow-x: auto;
+}
+
 /* Разборы: две карточки рядом, на телефоне — друг под другом. */
 .case-waiting {
     display: flex;
@@ -1504,4 +1537,22 @@ a.cab-table__title:hover {
     .owner-dashboard-page .report-order {
         padding: 1rem;
     }
+}
+
+/* ---------- Ссылка-приглашение с кнопкой «Скопировать» (04.D3a) ---------- */
+.owner-invite-url {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.owner-invite-url input {
+    flex: 1 1 16rem;
+    width: auto;
+    min-width: 0;
+}
+
+.owner-copy[hidden] {
+    display: none;
 }

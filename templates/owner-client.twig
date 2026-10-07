@@ -15,7 +15,7 @@
 
     {% if flash %}
         <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
-        {% if flash.invite_url %}<p class="owner-invite-url"><input aria-label="Ссылка-приглашение" type="text" readonly value="{{ flash.invite_url }}"></p>{% endif %}
+        {% if flash.invite_url %}<p class="owner-invite-url"><input id="owner-invite-url-field" aria-label="Ссылка-приглашение" type="text" readonly value="{{ flash.invite_url }}"><button type="button" class="btn btn-outline btn-sm owner-copy" data-copy-target="owner-invite-url-field" hidden>{{ ui.icon('copy') }}<span data-copy-label>Скопировать</span></button></p>{% endif %}
     {% endif %}
 
     {% if client_trashed %}
@@ -160,6 +160,7 @@
 {# Блокировка кнопки после отправки; без JS повтор отсекает сервер (07.K6b). #}
 <script src="{{ asset('js/owner-forms.js') }}"></script>
 <script src="{{ asset('js/owner-invites.js') }}"></script>
+<script src="{{ asset('js/owner-copy.js') }}"></script>
 <script src="{{ asset('js/owner-attach.js') }}"></script>
 <script src="{{ asset('js/owner-cabinet.js') }}"></script>
 <script src="{{ asset('js/owner-client-trash.js') }}"></script>
