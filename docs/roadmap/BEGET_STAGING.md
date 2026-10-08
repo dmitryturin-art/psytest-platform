@@ -182,4 +182,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 56. Выкладка `5dc97be` (07.10): инструкции респонденту для всех методик (07.K13); миграций нет; одно SSH-подключение по рецепту. SHA-256 `cc35dea0f57b4f211e659215e413af042683d65a74451d6f1c1ce3e01e1e07ac` совпал; dump проверен. Смоук: основные маршруты и `/test/lazarus` `200`, `/test/smil` `404`, страница BAI содержит «Инструкция». Rollback: `releases/fc12b10`.
 
+57. Выкладка `76b1175` (08.10): редактор промптов с живым предпросмотром (07.WP9b) и три правки страницы результата (04.D5) одним релизом; миграций нет; gate на объединённом main; одно SSH-подключение по рецепту. SHA-256 `6748a9733819461b3bc6be5aadf97c11f3622aa9062fc6249527dacdcec444e8` совпал; dump проверен. Смоук: основные маршруты, `/test/hads`, `/test/lazarus`, `/js/owner-prompt-editor.js` `200`, `/test/smil` `404`. Rollback: `releases/5dc97be`.
+
 Rollback текущего релиза: атомарно направить `public_html` на `releases/e5a15b5/public` и `current` на `releases/e5a15b5`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
