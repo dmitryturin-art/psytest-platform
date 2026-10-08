@@ -217,6 +217,16 @@ final class UniversalAiReportContractTest extends TestCase
         }
     }
 
+    /** Владелец 08.10: таблица ответов по пунктам путает клиента — только в профессиональном. */
+    public function testClearStubForbidsItemTablesAndProfessionalAllowsThem(): void
+    {
+        $clear = (string) file_get_contents($this->root . '/prompts/_universal/individual.clear.v1.md');
+        self::assertStringContainsString('Не перечисляй их и не строй из них', $clear);
+        self::assertStringContainsString('Таблица по пунктам допустима только в профессиональном заключении', $clear);
+        self::assertStringNotContainsString('попунктных ответов.', $clear);
+        self::assertFileExists($this->root . '/bin/prompt-reseed-stub.php');
+    }
+
     public function testCaseOrderFormWordingFollowsOfferedKinds(): void
     {
         $case = (string) file_get_contents($this->root . '/templates/owner-invited-case.twig');
