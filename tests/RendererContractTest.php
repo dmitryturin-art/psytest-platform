@@ -10,6 +10,7 @@ use PsyTest\Core\TemplateFunctions;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
+use PsyTest\Modules\IpipNeo120\IpipNeo120Module;
 use PsyTest\Modules\Lazarus\LazarusModule;
 use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\Smil\SmilModule;
@@ -42,6 +43,7 @@ final class RendererContractTest extends TestCase
             'beck-anxiety' => [BeckAnxietyModule::class],
             'beck-depression' => [BeckDepressionModule::class],
             'hads' => [HadsModule::class],
+            'ipip-neo-120' => [IpipNeo120Module::class],
             'lazarus' => [LazarusModule::class],
             'smil' => [SmilModule::class],
         ];
@@ -140,6 +142,7 @@ final class RendererContractTest extends TestCase
             'beck-anxiety' => [BeckAnxietyModule::class],
             'beck-depression' => [BeckDepressionModule::class],
             'hads' => [HadsModule::class],
+            'ipip-neo-120' => [IpipNeo120Module::class],
             'smil' => [SmilModule::class],
         ];
     }
@@ -292,6 +295,11 @@ final class RendererContractTest extends TestCase
             }
             $answers['gender'] = 'male';
             $results = $module->calculateResults($answers);
+        } elseif ($module instanceof IpipNeo120Module) {
+            $case = json_decode((string) file_get_contents(__DIR__ . '/fixtures/ipip/random-seed-20261008.json'), true, 512, JSON_THROW_ON_ERROR);
+            $results = $module->calculateResults($case['answers'] + ['gender' => $case['gender'], 'age' => $case['age']]);
+            // Карточка кейса показывает ещё и таблицу сырых баллов — она тоже обязана рендериться.
+            $results['is_specialist_view'] = true;
         } elseif ($module instanceof LazarusModule) {
             $results = $this->loadGolden('lazarus-results')['results'];
             if (!$isPdf) {

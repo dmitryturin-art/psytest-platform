@@ -10,6 +10,7 @@ use PsyTest\Core\AnswerValidator;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
+use PsyTest\Modules\IpipNeo120\IpipNeo120Module;
 use PsyTest\Modules\Lazarus\LazarusModule;
 use PsyTest\Modules\Smil\SmilModule;
 use PsyTest\Modules\TestModuleInterface;
@@ -27,6 +28,7 @@ final class AnswerSchemaContractTest extends TestCase
             'beck-anxiety' => [BeckAnxietyModule::class],
             'beck-depression' => [BeckDepressionModule::class],
             'hads' => [HadsModule::class],
+            'ipip-neo-120' => [IpipNeo120Module::class],
         ];
     }
 
@@ -53,9 +55,16 @@ final class AnswerSchemaContractTest extends TestCase
             $schema['key_template'] === 'dual',
             'Only scale10 (Lazarus) uses dual keys.'
         );
+        // Обязательный пол (СМИЛ — форма опросника, IPIP — нормы) должен
+        // спрашиваться формой: иначе завершение всегда падало бы на invalid_gender.
+        $demographics = $module->getDemographicsRequirements();
         self::assertFalse(
-            $schema['requires_gender'] && $schema['answer_type'] !== 'ternary',
-            'Gender requirement is a ternary (SMIL) concern.'
+            $schema['requires_gender'] && empty($demographics['gender']),
+            'A required gender must be asked by the demographics gate.'
+        );
+        self::assertFalse(
+            ($schema['requires_age'] ?? false) && empty($demographics['age']),
+            'A required age must be asked by the demographics gate.'
         );
     }
 
@@ -118,7 +127,9 @@ final class AnswerSchemaContractTest extends TestCase
             } elseif ($schema['answer_type'] === 'ternary') {
                 $answers[$id] = (string) ($i % 3);
             } else {
-                $answers[$id] = (string) ($i % 4);
+                // Значения берутся из самих вариантов ответа (BAI/BDI/HADS 0–3, IPIP 1–5).
+                $values = array_column($q['options'] ?? [], 'value');
+                $answers[$id] = (string) ($values === [] ? $i % 4 : $values[$i % count($values)]);
             }
         }
         if (($schema['requires_gender'] ?? false) || $schema['answer_type'] === 'scale10') {

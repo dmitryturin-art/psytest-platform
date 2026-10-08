@@ -43,15 +43,22 @@ final class AgeCollectionContractTest extends TestCase
     {
         // D-040: возраст не влияет ни на подсчёт, ни на выбор формы методики,
         // поэтому лишний вопрос респонденту не задаётся.
+        //
+        // Исключение — методика, у которой возраст выбирает таблицу норм
+        // (IPIP-NEO-120, решение владельца 08.10.2026: нормы по полу и возрасту).
+        // Она объявляет это в metadata `age_specific_norms`, и тогда возраст
+        // обязателен и спрашивается формой.
         $loader = (new ModuleLoader(null, null))->discover();
 
         foreach (array_keys($loader->getAllModules()) as $slug) {
             $module = $loader->getModule($slug);
+            $ageNorms = ($module->getMetadata()['age_specific_norms'] ?? false) === true;
 
-            self::assertFalse($module->getAnswerSchema()['requires_age'] ?? false, "Методика {$slug} требует возраст.");
-            self::assertFalse(
+            self::assertSame($ageNorms, $module->getAnswerSchema()['requires_age'] ?? false, "Методика {$slug}: возраст обязателен только при нормах по возрасту.");
+            self::assertSame(
+                $ageNorms,
                 $module->getMetadata()['requires_demographics']['age'] ?? false,
-                "Форма прохождения {$slug} показывает поле возраста.",
+                "Форма прохождения {$slug} показывает поле возраста только при нормах по возрасту.",
             );
         }
     }

@@ -95,6 +95,44 @@
       }
     },
     {
+      "slug": "ipip-neo-120",
+      "display_name": "Опросник «Большая пятёрка» IPIP-NEO-120",
+      "implementation": {
+        "metadata": "modules/ipip-neo-120/metadata.json",
+        "questions": "modules/ipip-neo-120/questions.json",
+        "question_count": 120
+      },
+      "provenance": {
+        "status": "partial",
+        "evidence": [
+          "English items and +/- keys verbatim from https://ipip.ori.org/30FacetNEO-PI-RItems.htm (opened 2026-10-08); item numbers and order from Johnson (2014), Journal of Research in Personality 51:78-89, Table 1 (https://doi.org/10.1016/j.jrp.2014.05.003)",
+          "scoring rule from https://ipip.ori.org/newScoringInstructions.htm: responses 1-5, reverse-keyed 6 - x, scale = sum; pinned by tests/fixtures/ipip/* (expected sums computed independently from Table 1)",
+          "norms: modules/ipip-neo-120/norms.json built by bin/ipip-build-norms.php from Johnson's OSF data https://osf.io/wxvth/ (IPIP120.dat, SHA-256 526daf7e...1df53b), 339,977 complete adult protocols, sex x age cells; key direction verified against codebook DAT120.doc and item-rest correlations (docs/ipip-norms-review.md)",
+          "Russian wording: own PsyTest translation with back-translation, docs/ipip-translation-review.md"
+        ],
+        "missing": [
+          "owner review of the translation item by item; independent second translator and independent back-translation",
+          "psychometric check of the Russian form (alphas, structure) and Russian norms; current percentiles use the international English-language sample",
+          "confirmation from J. A. Johnson that derived norms may be published (not required by the owner on 2026-10-08; Twomey & Johnson 2022 state the repository norms may be modified without permission)"
+        ]
+      },
+      "rights": {
+        "status": "verified",
+        "required_evidence": [
+          "public-domain grant for IPIP items and inventories",
+          "own translation (no third-party Russian wording used)"
+        ],
+        "review_evidence": [
+          "https://ipip.ori.org/newPermission.htm: 'permission has already been automatically granted for any person to use IPIP items, scales, and inventories for any purpose, commercial or non-commercial' (opened 2026-10-08)",
+          "Russian items written by PsyTest in package 09.O1 (2026-10-08); psytests.org and other existing Russian versions were not used as text sources"
+        ]
+      },
+      "release_gate": {
+        "paid_interpretation": "blocked",
+        "public_new_content": "allowed"
+      }
+    },
+    {
       "slug": "lazarus",
       "display_name": "Опросник супружеской удовлетворённости (Лазарус)",
       "implementation": {

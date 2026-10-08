@@ -1,4 +1,5 @@
-{# 04.U1: собственный контейнер прокрутки — на телефоне страница не уезжает вбок.
+{# score_label — подпись столбца балла (по умолчанию «T-балл»; IPIP — «Перцентиль»).
+   04.U1: собственный контейнер прокрутки — на телефоне страница не уезжает вбок.
    В PDF (_pdf из ResultSectionRenderer) обёртки нет: вёрстка DomPDF прежняя. #}
 {% if not _pdf|default(false) %}<div class="table-scroll table-scroll--scores" role="region" aria-label="Таблица шкал" tabindex="0">{% endif %}
 <table class="scores-table {{ class|default('') }}">
@@ -7,7 +8,7 @@
             <th>Шкала</th>
             <th>Название</th>
             <th>Сырой балл</th>
-            <th>T-балл</th>
+            <th>{{ score_label|default('T-балл') }}</th>
             <th>Уровень</th>
             {% if show_viz|default(false) %}<th>Визуализация</th>{% endif %}
         </tr>

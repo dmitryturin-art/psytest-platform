@@ -1,0 +1,113 @@
+{#
+    Профиль черт по перцентилям (09.O1, IPIP-NEO-120).
+
+    Данные — IpipNeo120Module::buildSections(): domains[] {code, name, raw, min, max,
+    percentile, level (low|average|high|none), level_name, description, facets[]},
+    norms_label, cell_label, cell_n, band_low_max, band_high_min, facet_note.
+
+    Цвета нейтральные: черты личности не симптомы, красного и зелёного «плохо/хорошо»
+    нет. Полоса — перцентиль 0–100, светлая зона — «как у большинства» (31–69).
+    Грани — тихий раскрывающийся блок (UI_KIT «Раскрывающийся блок», .disclosure-stack).
+    В PDF (_pdf) раскрывающихся блоков и полос нет: DomPDF их не раскладывает —
+    печатаются те же значения таблицами.
+#}
+{% set low_max = band_low_max|default(30) %}
+{% set high_min = band_high_min|default(70) %}
+{% if _pdf|default(false) %}
+<p style="font-size:9pt;color:#555;">{{ norms_label }}{% if cell_label %} Группа сравнения: {{ cell_label }}, N = {{ cell_n|number_format(0, ',', ' ') }}.{% endif %} {{ facet_note }}</p>
+<table class="trait-profile-pdf">
+    <thead>
+        <tr><th>Черта</th><th>Балл</th><th>Перцентиль</th><th>Уровень</th></tr>
+    </thead>
+    <tbody>
+        {% for d in domains %}
+        <tr>
+            <td><strong>{{ d.name }}</strong></td>
+            <td>{{ d.raw }} из {{ d.max }}</td>
+            <td>{{ d.percentile ?? '—' }}</td>
+            <td>{{ d.level_name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% for d in domains %}
+<div style="page-break-inside: avoid;">
+<h3>{{ d.name }}: {{ d.level_name|lower }}</h3>
+{% if d.description %}<p>{{ d.description }}</p>{% endif %}
+<table>
+    <thead>
+        <tr><th>Грань</th><th>Балл (4–20)</th><th>Перцентиль</th><th>Уровень</th></tr>
+    </thead>
+    <tbody>
+        {% for f in d.facets %}
+        <tr>
+            <td>{{ f.code }} {{ f.name }}</td>
+            <td>{{ f.raw }}</td>
+            <td>{{ f.percentile ?? '—' }}</td>
+            <td>{{ f.level_name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endfor %}
+{% else %}
+<div class="trait-profile">
+    <p class="trait-profile__norms">
+        {{ norms_label }}
+        {% if cell_label %}<span class="trait-profile__group">Группа сравнения: {{ cell_label }}, N = {{ cell_n|number_format(0, ',', ' ') }}.</span>{% endif %}
+    </p>
+
+    <ol class="trait-profile__list">
+        {% for d in domains %}
+        <li class="trait-row trait-row--{{ d.level }}">
+            <div class="trait-row__head">
+                <h3 class="trait-row__name">{{ d.name }}</h3>
+                <span class="trait-row__band">{{ d.level_name }}</span>
+            </div>
+            {% if d.percentile is not null %}
+            <div class="trait-bar" role="img" aria-label="{{ d.name }}: {{ d.percentile }}-й перцентиль, {{ d.level_name|lower }}">
+                <span class="trait-bar__zone" style="left: {{ low_max }}%; width: {{ high_min - low_max }}%;"></span>
+                <span class="trait-bar__marker" style="left: {{ d.percentile }}%;"></span>
+            </div>
+            <div class="trait-bar__axis" aria-hidden="true">
+                <span>ниже</span><span>как у большинства</span><span>выше</span>
+            </div>
+            {% endif %}
+            <p class="trait-row__meta">{{ d.percentile ?? '—' }}-й перцентиль · {{ d.raw }} из {{ d.max }} баллов</p>
+            {% if d.description %}<p class="trait-row__text">{{ d.description }}</p>{% endif %}
+
+            {% if d.facets %}
+            <div class="disclosure-stack trait-row__facets">
+                <details class="ai-report__details">
+                    <summary class="ai-report__summary">
+                        <span class="ai-report__summary-title">{{ d.facets|length }} граней</span>
+                        <span class="ai-report__summary-hint">{{ d.facets|map(f => f.name)|join(', ') }}</span>
+                    </summary>
+                    <div class="ai-report__body">
+                        <div class="table-scroll table-scroll--scores" role="region" aria-label="Грани: {{ d.name }}" tabindex="0">
+                        <table class="scores-table trait-facets">
+                            <thead>
+                                <tr><th>Грань</th><th>Балл из 20</th><th>Перцентиль и уровень</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for f in d.facets %}
+                                <tr>
+                                    <td>{{ f.name }}</td>
+                                    <td>{{ f.raw }}</td>
+                                    <td><span class="trait-facets__pct">{{ f.percentile ?? '—' }}</span> <span class="trait-facets__band">{{ f.level_name|lower }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                        {% if facet_note %}<p class="trait-profile__hint">{{ facet_note }}</p>{% endif %}
+                    </div>
+                </details>
+            </div>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+</div>
+{% endif %}

@@ -10,6 +10,7 @@ use PsyTest\Modules\BaseTestModule;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
+use PsyTest\Modules\IpipNeo120\IpipNeo120Module;
 use PsyTest\Modules\Lazarus\LazarusModule;
 use PsyTest\Modules\Smil\SmilModule;
 use PsyTest\Modules\TestModuleInterface;
@@ -36,6 +37,7 @@ final class TestInstructionContractTest extends TestCase
             'beck-anxiety' => [BeckAnxietyModule::class],
             'beck-depression' => [BeckDepressionModule::class],
             'hads' => [HadsModule::class],
+            'ipip-neo-120' => [IpipNeo120Module::class],
             'lazarus' => [LazarusModule::class],
             'smil' => [SmilModule::class],
         ];

@@ -32,6 +32,7 @@
       "PsyTest\\Modules\\BeckAnxiety\\": "modules/beck-anxiety/",
       "PsyTest\\Modules\\BeckDepression\\": "modules/beck-depression/",
       "PsyTest\\Modules\\Hads\\": "modules/hads/",
+      "PsyTest\\Modules\\IpipNeo120\\": "modules/ipip-neo-120/",
       "PsyTest\\Modules\\Lazarus\\": "modules/lazarus/"
     }
   },
