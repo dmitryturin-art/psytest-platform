@@ -1,13 +1,12 @@
 # WIP 07.K14 — раздел «Методики» (временный файл, удалить перед PR)
 
 - Ветка: `codex/07-k14-methodology-section` от `origin/main` 048414a.
-- Сделано: чтение контекста; БД `psytest_wt_k14` создана и смигрирована, `ai_settings.ai_enabled=0`.
-- В работе: маршруты `/admin/tests`, `/admin/tests/settings`, `/admin/tests/{test}`, `POST /admin/tests/{test}/ai`,
-  `/admin/tests/{test}/prompts/{mode}/{kind}` (+ preview/versions/publish/reset/trial); 301 со старых `/admin/prompts…`.
-- Следующие шаги: контроллер → шаблоны `owner-tests.twig`, `owner-test.twig`, `owner-ai-settings.twig`, переделка
-  `owner-prompt-key.twig` → JS `owner-test-ai.js` (автосохранение) → CSS → навигация во всех owner-шаблонах →
-  тесты → ARCHITECTURE.md → снимки → design-critique → gate.
-- Локальный сервер: `php -S 127.0.0.1:8114 -t public <scratchpad>/k14/router.php` (роутер отдаёт статику, иначе
-  `public/index.php`); `.env` скопирован из основного checkout, `DB_NAME=psytest_wt_k14`, `AI_BASE_URL` на 127.0.0.1:9.
-- Пароль владельца для теста — в `<scratchpad>/k14/.owner-pass` (не печатать). Снимки — puppeteer-core по образцу
-  `<scratchpad>/d5/shots.js`.
+- Сделано (код закоммичен): маршруты `/admin/tests`, `/admin/tests/settings`, `/admin/tests/{test}`,
+  `POST /admin/tests/{test}/ai` (автосохранение JSON), `/admin/tests/{test}/prompts/{mode}/{kind}` (+ действия);
+  301/308 со старых `/admin/prompts…`; шаблоны `owner-tests`, `owner-test`, `owner-ai-settings`, новый
+  `owner-prompt-key`, блоки `owner-nav`, `owner-crumbs`, `owner-prompt-state`, `owner-publish-pop`; `owner-tests.js`;
+  CSS-блок 07.K14 в `cabinet.css`; навигация; ARCHITECTURE/UI_KIT; тесты (контракт + `Integration/MethodologySectionTest`).
+- Осталось: снимки AFTER (план `plan-after.js`), design-critique и правки по нему, полный gate, отчёт.
+- Локальный сервер: `php -S 127.0.0.1:8114 -t public <scratchpad>/k14/router.php`; `.env` из основного checkout,
+  `DB_NAME=psytest_wt_k14`, `AI_BASE_URL` на 127.0.0.1:9 (провайдер недоступен намеренно).
+- Пароль владельца — `<scratchpad>/k14/.owner-pass` (не печатать). Снимки: `node <scratchpad>/k14/shots.js <plan>`.
