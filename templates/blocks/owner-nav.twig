@@ -1,0 +1,7 @@
+{# Навигация кабинета (07.K14): три раздела — Приглашения, Клиенты, Методики.
+   Параметр current — 'invites' | 'clients' | 'tests'; текущий раздел помечен aria-current. #}
+<nav class="owner-nav" aria-label="Разделы кабинета">
+    <a class="nav-link" href="{{ basePath }}/admin"{% if current|default('') == 'invites' %} aria-current="page"{% endif %}>Приглашения</a>
+    <a class="nav-link" href="{{ basePath }}/admin/clients"{% if current|default('') == 'clients' %} aria-current="page"{% endif %}>Клиенты</a>
+    <a class="nav-link" href="{{ basePath }}/admin/tests"{% if current|default('') == 'tests' %} aria-current="page"{% endif %}>Методики</a>
+</nav>

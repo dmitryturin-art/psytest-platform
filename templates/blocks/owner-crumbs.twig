@@ -1,0 +1,15 @@
+{# Путь по разделу «Методики» (07.K14). Параметр items — list<{label, href?}>: последний
+   пункт без ссылки (текущая страница). back — необязательная ссылка {label, href} справа. #}
+{% import 'blocks/icons.twig' as ui %}
+<div class="crumbs">
+    <nav class="crumbs__path" aria-label="Путь">
+        <ol>
+            {% for item in items %}
+            <li>{% if item.href is defined and item.href and not loop.last %}<a href="{{ item.href }}">{{ item.label }}</a>{% else %}<span aria-current="page">{{ item.label }}</span>{% endif %}</li>
+            {% endfor %}
+        </ol>
+    </nav>
+    {% if back is defined and back %}
+    <a class="crumbs__back" href="{{ back.href }}">{{ ui.icon('back') }}{{ back.label }}</a>
+    {% endif %}
+</div>

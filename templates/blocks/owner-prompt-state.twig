@@ -1,0 +1,5 @@
+{# Состояние одного промпта словами (07.K14): точка статуса и подпись.
+   Параметр p — строка из OwnerController::promptState(). #}
+{% if not p.exists %}<span class="status status--muted">нет</span>
+{% elseif p.published_version is not null %}<span class="status status--done">опубликована версия {{ p.published_version }}</span>{% if p.draft_version %}<span class="prompt-state__more">есть черновик версии {{ p.draft_version }}</span>{% endif %}
+{% else %}<span class="status status--pending">черновик версии {{ p.draft_version }}</span><span class="prompt-state__more">не опубликован</span>{% endif %}
