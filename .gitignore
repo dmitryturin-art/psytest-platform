@@ -81,3 +81,8 @@ package-lock.json
 
 # Ad-hoc local output artifacts (PDF smoke etc.)
 /output/
+
+# IPIP-NEO-120: raw Johnson dataset (OSF wxvth) is downloaded only to build norms, never committed
+/storage/ipip-raw/
+IPIP120.dat
+IPIP300.dat
