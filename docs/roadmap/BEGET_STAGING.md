@@ -196,4 +196,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 63. Выкладка `2723913` (08.10): правило 8 в универсальной заготовке понятного разбора и `bin/prompt-reseed-stub.php` (07.WP10b); миграций нет; одно SSH-подключение по рецепту, в том же сеансе пересоздана заготовка HADS (v1001, черновик). SHA-256 `01547a4160873061bc43abbafece72f6a5491be5d1fa9c31c6ab2fbb5b0c2c5b` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`. Rollback: `releases/6c23b5c`.
 
+64. Выкладка `c295ee5` (09.10): опросник IPIP-NEO-120 (09.O1); миграция `20261008030000 AddIpipNeo120Test` после проверенного dump; одно SSH-подключение по рецепту, в том же сеансе включён ИИ-разбор IPIP и созданы заготовки (clear, professional; черновики). SHA-256 `4db0961275f0b325c17f2c656cf70b25eb9cdbdc16f9559c32e3ff9650d5b76b` совпал. Смоук: основные маршруты `200`, `/test/ipip-neo-120` `200`, `/test/smil` `404`. Rollback: `releases/2723913`.
+
 Rollback текущего релиза: атомарно направить `public_html` на `releases/e5a15b5/public` и `current` на `releases/e5a15b5`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
