@@ -188,4 +188,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 59. Выкладка `a169ed6` (08.10): вёрстка блока предпросмотра и пробного разбора на странице промпта (07.WP9b); миграций нет; одно SSH-подключение по рецепту. SHA-256 `b1cf9ce6f5c3e295b3aee5288de50d9c48cef24f0ce0f4768c97e9564bb3bbf1` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`. Rollback: `releases/22cd323`.
 
+60. Выкладка `03394e0` (08.10): универсальный ИИ-разбор для любой методики (07.WP10); миграция `20261008010000 AddAiTestSettings` после проверенного dump; одно SSH-подключение по рецепту. SHA-256 `fedaa603eaea7b737abcb55fcb9b7061ee1edbb29820c648c83cc6f9d8fcfdc5` совпал. Смоук: основные маршруты `200`, `/test/smil` `404`. Rollback: `releases/a169ed6`.
+
 Rollback текущего релиза: атомарно направить `public_html` на `releases/e5a15b5/public` и `current` на `releases/e5a15b5`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
