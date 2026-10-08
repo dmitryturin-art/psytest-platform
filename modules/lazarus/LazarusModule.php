@@ -355,6 +355,15 @@ final class LazarusModule extends BaseTestModule
     }
 
     /**
+     * Оценки по пунктам — основа утверждённого разбора Лазаруса (07.WP10):
+     * они уходят всегда, галочка владельца на них не влияет.
+     */
+    public function aiReportSendsItemsAlways(): bool
+    {
+        return true;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * Форма полезной нагрузки зафиксирована в docs/lazarus-ai-report-prompts.md §2.

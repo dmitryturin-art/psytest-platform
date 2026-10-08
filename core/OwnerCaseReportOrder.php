@@ -6,6 +6,7 @@ namespace PsyTest\Core;
 
 use PsyTest\Core\Ai\AiClient;
 use PsyTest\Core\Ai\AiProviderException;
+use PsyTest\Core\Ai\AiReportAvailability;
 use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiSettings;
@@ -36,6 +37,7 @@ final class OwnerCaseReportOrder
         private readonly AiSettings $settings,
         private readonly AiReportContextBuilder $contextBuilder,
         private readonly FormOnce $once,
+        private readonly AiReportAvailability $availability,
     ) {
     }
 
@@ -98,12 +100,6 @@ final class OwnerCaseReportOrder
             return self::error('Черновики не заказаны: ' . AiClient::DISABLED_REASON . '.');
         }
 
-        try {
-            $context = $this->contextBuilder->build($sessionId, $slug, $mode);
-        } catch (AiProviderException $e) {
-            return self::error('Черновики не заказаны: ' . $e->getMessage());
-        }
-
         // Из карточки можно перезаказать один вид («Заказать заново» у готового
         // или неудавшегося черновика) либо оба сразу.
         $onlyKind = $post['kind'] ?? null;
@@ -111,8 +107,27 @@ final class OwnerCaseReportOrder
             ? [$onlyKind]
             : [Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL];
 
+        // Единое правило (07.WP10): заказ закрыт, если разбор методики выключен
+        // или промпт не опубликован. Проверяется до сборки контекста — иначе
+        // данные собирались бы для заказа, которого не будет.
+        $offered = array_values(array_filter(
+            $kinds,
+            fn (string $kind): bool => $this->availability->canOffer($slug, $mode, $kind),
+        ));
+        if ($offered === []) {
+            $reason = $this->availability->refusal($slug, $mode, $kinds[0]) ?? AiReportAvailability::REASON_NO_PROMPT;
+
+            return self::error('Черновики не заказаны: ' . $reason . '.');
+        }
+
+        try {
+            $context = $this->contextBuilder->build($sessionId, $slug, $mode);
+        } catch (AiProviderException $e) {
+            return self::error('Черновики не заказаны: ' . $e->getMessage());
+        }
+
         $queued = 0;
-        foreach ($kinds as $kind) {
+        foreach ($offered as $kind) {
             $prompt = $this->registry->published($slug, $mode, $kind);
             if ($prompt === null) {
                 continue;

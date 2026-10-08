@@ -115,7 +115,9 @@ interface TestModuleInterface
 
     /**
      * Structured payload for an external AI report, or null when the module
-     * has no AI report.
+     * has no AI report in this mode. BaseTestModule gives every methodology a
+     * universal individual context (07.WP10); whether it is sent at all is the
+     * owner's switch per methodology (AiReportAvailability).
      *
      * The module — not the shared layer — decides what leaves the platform.
      * PRODUCT_RULES §6: the AI receives the computed result, never HTML, PDF
@@ -131,6 +133,28 @@ interface TestModuleInterface
      * @return array<string, mixed>|null
      */
     public function aiReportContext(array $results, string $mode): ?array;
+
+    /**
+     * Respondent's answers to every item for the AI context (07.WP10).
+     *
+     * Called by the context builder only when the owner allowed item answers
+     * for this methodology and the module context has no `items` of its own.
+     * Each row: item number, the question text the respondent saw, the
+     * answer label and its value. Nothing identifying.
+     *
+     * @param array<int|string, mixed> $answers Raw session answers.
+     *
+     * @return list<array{number: int, text: string, answer_label: string, value: int|string|null}>
+     */
+    public function aiReportItems(array $answers): array;
+
+    /**
+     * Whether answers to every item are part of this module's own approved AI
+     * context (07.WP10). Such a module sends them regardless of the owner's
+     * «Передавать модели ответы по пунктам» checkbox, and the cabinet shows
+     * that checkbox locked on instead of pretending it has an effect.
+     */
+    public function aiReportSendsItemsAlways(): bool;
 
     /**
      * Respondent instruction shown before the first question (07.K13).

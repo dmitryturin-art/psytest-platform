@@ -7,16 +7,19 @@ namespace PsyTest\Controllers;
 use PsyTest\Core\Ai\AiClient;
 use PsyTest\Core\Ai\AiProviderException;
 use PsyTest\Core\Ai\AiProviderSettings;
+use PsyTest\Core\Ai\AiReportAvailability;
 use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiReportRevisionService;
 use PsyTest\Core\Ai\AiSettings;
+use PsyTest\Core\Ai\AiTestSettings;
 use PsyTest\Core\Ai\BackgroundWorkerLauncher;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptFixtureContext;
 use PsyTest\Core\Ai\PromptRegistry;
+use PsyTest\Core\Ai\PromptStubSeeder;
 use PsyTest\Core\Ai\PromptVariableLabels;
 use PsyTest\Core\Ai\SmilGlossaryCompactor;
 use PsyTest\Core\CaseExportDocx;
@@ -45,6 +48,7 @@ use PsyTest\Core\SessionLifecycleService;
 use PsyTest\Core\TestInviteService;
 use PsyTest\Core\TherapistCaseService;
 use PsyTest\Core\TherapistClientService;
+use PsyTest\Modules\ModuleCapability;
 use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\TestModuleInterface;
 
@@ -854,16 +858,23 @@ final class OwnerController extends BaseController
 
         $reports = new AiReportRepository($this->db);
         $revisions = new AiReportRevisionService($this->db);
-        $registry = PromptRegistry::default($this->db);
+        // Единое правило (07.WP10): новый заказ — только когда включены общий
+        // выключатель и разбор методики и опубликован промпт. Карточка вида с
+        // уже заказанным разбором остаётся и после выключения: выключение
+        // останавливает только новые заказы.
+        $availability = AiReportAvailability::forDatabase($this->db);
 
         $kinds = [];
         $anyJob = false;
+        $anyOrderable = false;
         foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
-            if ($registry->published($testSlug, $mode, $kind) === null) {
+            $canOrder = $availability->canOffer($testSlug, $mode, $kind);
+            $report = $reports->findFor($sessionId, $mode, $kind);
+            if (!$canOrder && $report === null) {
                 continue;
             }
+            $anyOrderable = $anyOrderable || $canOrder;
 
-            $report = $reports->findFor($sessionId, $mode, $kind);
             $anyJob = $anyJob || $report !== null;
             $published = $report === null ? null : $revisions->published((string) $report['id']);
             $ready = ($report['status'] ?? '') === AiReportRepository::STATUS_READY;
@@ -889,6 +900,7 @@ final class OwnerController extends BaseController
                 // Версии смотрят отдельной страницей (профессиональное, 07.K7)
                 // или в редакторе (понятный), только когда есть что сравнивать.
                 'versions_count' => $report !== null ? $revisions->count((string) $report['id']) : 0,
+                'can_order' => $canOrder,
             ];
         }
 
@@ -896,6 +908,10 @@ final class OwnerController extends BaseController
             'available' => $kinds !== [],
             'mode' => $mode,
             'has_jobs' => $anyJob,
+            // Кнопка «Заказать разбор» в шапке и форма заказа (04.D3).
+            'can_order' => $anyOrderable,
+            // Какие виды сейчас заказываются: подпись формы заказа (07.WP10).
+            'offered_kinds' => $availability->offeredKinds($testSlug, $mode),
             'kinds' => $kinds,
             'owner_context_max' => self::OWNER_CONTEXT_MAX_LENGTH,
             // Выключатель владельца (07.WP9): заказывать черновики, которые
@@ -978,8 +994,9 @@ final class OwnerController extends BaseController
             new AiReportRepository($this->db),
             PromptRegistry::default($this->db),
             $settings,
-            new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, $settings),
+            new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, $settings, new AiTestSettings($this->db)),
             $this->formOnce(),
+            AiReportAvailability::forDatabase($this->db),
         );
     }
 
@@ -990,9 +1007,10 @@ final class OwnerController extends BaseController
 
         return new AiReportGenerator(
             new AiReportRepository($this->db),
-            new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, $aiSettings),
+            new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, $aiSettings, new AiTestSettings($this->db)),
             PromptRegistry::default($this->db),
             new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings),
+            AiReportAvailability::forDatabase($this->db),
         );
     }
 
@@ -1658,12 +1676,15 @@ final class OwnerController extends BaseController
                 'source' => $entry['source'] ?? PromptRegistry::SOURCE_FILE,
                 'created_at' => $entry['created_at'] ?? null,
                 'from_manifest' => $override === null,
+                'has_factory_text' => $registry->hasFactoryText($test, $mode, $kind),
             ];
         }
 
         echo $this->view->render('owner-prompts', [
             'flash' => $this->takeFlash(),
             'groups' => array_values($groups),
+            'methodologies' => $this->promptMethodologies(),
+            'tests_form_key' => $this->formOnce()->issue(self::PROMPT_TESTS_FORM),
             'ai_enabled' => $settings->isAiEnabled(),
             'ai_model' => $settings->modelOverride(),
             'smil_glossary_mode' => $settings->smilGlossaryMode(),
@@ -1693,6 +1714,111 @@ final class OwnerController extends BaseController
 
         $this->setFlash(['type' => 'success', 'message' => 'Настройки ИИ сохранены.']);
         $this->redirect('/admin/prompts');
+    }
+
+    public const PROMPT_TESTS_FORM = 'owner_prompt_tests';
+
+    /**
+     * Галочки ИИ-разбора по методикам (07.WP10, D-056).
+     * POST /admin/prompts/tests
+     *
+     * Включение разбора методики без промптов создаёт две заготовки из
+     * универсального шаблона — черновиками: заказ по ним откроется только после
+     * публикации. Выключение останавливает новые заказы; готовые разборы
+     * остаются.
+     */
+    public function savePromptTests(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $outcome = $this->formOnce()->run(
+            self::PROMPT_TESTS_FORM,
+            $_POST['form_key'] ?? null,
+            fn (): array => $this->applyPromptTests($_POST),
+            'Форма устарела или уже была обработана. Обновите страницу и сохраните ещё раз.',
+            'Эти настройки уже сохранены.',
+        );
+        $result = $outcome['result'];
+
+        $this->setFlash([
+            'type' => (string) ($result['type'] ?? 'error'),
+            'message' => (string) ($result['message'] ?? ''),
+        ]);
+        $this->redirect('/admin/prompts#owner-ai-tests-title');
+    }
+
+    /**
+     * @param array<string, mixed> $post
+     * @return array{type: string, message: string}
+     */
+    private function applyPromptTests(array $post): array
+    {
+        $settings = new AiTestSettings($this->db);
+        $registry = PromptRegistry::default($this->db);
+        $seeder = PromptStubSeeder::default($registry);
+        $enabled = is_array($post['report_enabled'] ?? null) ? $post['report_enabled'] : [];
+        $items = is_array($post['send_item_answers'] ?? null) ? $post['send_item_answers'] : [];
+        $stubs = [];
+
+        foreach (array_keys($this->moduleLoader->getAllModules()) as $slug) {
+            $slug = (string) $slug;
+            $on = ($enabled[$slug] ?? null) === '1';
+            $settings->save($slug, $on, $on && ($items[$slug] ?? null) === '1');
+
+            if ($on) {
+                $stubs = array_merge($stubs, $seeder->ensureFor($slug, $this->testTitle($slug)));
+            }
+        }
+
+        $message = 'Настройки методик сохранены.';
+        if ($stubs !== []) {
+            $message .= ' Добавлены заготовки промптов (' . count($stubs) . '): они не опубликованы — '
+                . 'проверьте текст и опубликуйте, тогда разбор появится у клиентов.';
+        }
+
+        return ['type' => 'success', 'message' => $message];
+    }
+
+    /**
+     * Строки методик для галочек ИИ-разбора.
+     *
+     * @return list<array{test: string, title: string, report_enabled: bool, send_item_answers: bool, published: bool, items_always: bool, clinical_signal: bool}>
+     */
+    private function promptMethodologies(): array
+    {
+        $settings = new AiTestSettings($this->db);
+        $registry = PromptRegistry::default($this->db);
+        $rows = [];
+
+        foreach (array_keys($this->moduleLoader->getAllModules()) as $slug) {
+            $slug = (string) $slug;
+            $published = false;
+            foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
+                $published = $published || $registry->published($slug, 'individual', $kind) !== null;
+            }
+
+            $module = $this->moduleLoader->getModule($slug);
+
+            $rows[] = [
+                'test' => $slug,
+                'title' => $this->testTitle($slug),
+                'report_enabled' => $settings->isReportEnabled($slug),
+                'send_item_answers' => $settings->sendsItemAnswers($slug),
+                'published' => $published,
+                // Лазарус отдаёт оценки по пунктам в своём утверждённом
+                // контексте всегда: галочка показывается запертой, а не
+                // делает вид, что на что-то влияет.
+                'items_always' => $module !== null && $module->aiReportSendsItemsAlways(),
+                // Методика с клиническим сигналом (BDI, пункт 9): владелец
+                // должен знать, что модель увидит этот ответ.
+                'clinical_signal' => $module !== null
+                    && in_array(ModuleCapability::CLINICAL_SIGNAL, $module->getCapabilities(), true),
+            ];
+        }
+
+        return $rows;
     }
 
     /**
@@ -1868,7 +1994,11 @@ final class OwnerController extends BaseController
             return;
         }
 
-        PromptRegistry::default($this->db)->resetToManifest($test, $mode, $kind);
+        try {
+            PromptRegistry::default($this->db)->resetToManifest($test, $mode, $kind);
+        } catch (\RuntimeException $e) {
+            $this->promptFlashBack($test, $mode, $kind, false, 'Нельзя вернуть заводской текст: ' . $e->getMessage());
+        }
         $this->promptFlashBack($test, $mode, $kind, true, 'Возвращён заводской текст промпта. Правки из кабинета сохранены в истории версий.');
     }
 
@@ -1965,14 +2095,18 @@ final class OwnerController extends BaseController
         $override = $registry->publishedOverride($test, $mode, $kind);
         $publishedVersion = $override ?? $registry->manifestVersion($test, $mode, $kind);
 
+        // Заготовка (07.WP10) ещё не опубликована: открывается последняя версия.
+        $versions = $registry->availableVersions($test, $mode, $kind);
+        $fallbackVersion = $publishedVersion ?? ($versions === [] ? 0 : max($versions));
+
         $requested = $_GET['version'] ?? null;
         $selectedVersion = is_string($requested) && preg_match('/\A\d{1,6}\z/', $requested) === 1
             ? (int) $requested
-            : (int) $publishedVersion;
+            : (int) $fallbackVersion;
 
         $selected = $registry->version($test, $mode, $kind, $selectedVersion);
         if ($selected === null) {
-            $selectedVersion = (int) $publishedVersion;
+            $selectedVersion = (int) $fallbackVersion;
             $selected = $registry->version($test, $mode, $kind, $selectedVersion);
         }
 
@@ -1994,6 +2128,8 @@ final class OwnerController extends BaseController
             'published_version' => $publishedVersion,
             'from_manifest' => $override === null,
             'manifest_version' => $registry->manifestVersion($test, $mode, $kind),
+            'has_factory_text' => $registry->hasFactoryText($test, $mode, $kind),
+            'test_report_enabled' => (new AiTestSettings($this->db))->isReportEnabled($test),
             'selected' => $selected,
             'selected_version' => $selectedVersion,
             'note_max' => self::PROMPT_NOTE_MAX_LENGTH,
@@ -2021,7 +2157,7 @@ final class OwnerController extends BaseController
         try {
             // Настройки кабинета передаются и сюда: предпросмотр обязан
             // показывать нагрузку того же режима, что уйдёт боевым запросом.
-            $context = PromptFixtureContext::build($module, $mode, new AiSettings($this->db));
+            $context = PromptFixtureContext::build($module, $mode, new AiSettings($this->db), (new AiTestSettings($this->db))->sendsItemAnswers($test));
         } catch (\Throwable $e) {
             return $empty + ['error' => $e->getMessage()];
         }
@@ -2055,7 +2191,7 @@ final class OwnerController extends BaseController
         }
 
         try {
-            $context = PromptFixtureContext::build($module, $mode, new AiSettings($this->db));
+            $context = PromptFixtureContext::build($module, $mode, new AiSettings($this->db), (new AiTestSettings($this->db))->sendsItemAnswers($test));
         } catch (\Throwable) {
             return [];
         }

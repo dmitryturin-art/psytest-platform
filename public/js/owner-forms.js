@@ -77,4 +77,23 @@
             input.required = select.value === '__new__';
         }
     });
+
+    // Зависимая галочка (07.WP10): «Передавать ответы по пунктам» доступна,
+    // только пока включён разбор методики. Без скрипта сервер сам сбрасывает
+    // вторую галочку, если первая снята.
+    var masters = document.querySelectorAll('input[type="checkbox"][data-enables]');
+    Array.prototype.forEach.call(masters, function (master) {
+        var dependent = document.getElementById(master.getAttribute('data-enables'));
+        if (!dependent) {
+            return;
+        }
+        var sync = function () {
+            dependent.disabled = !master.checked;
+            if (!master.checked) {
+                dependent.checked = false;
+            }
+        };
+        master.addEventListener('change', sync);
+        sync();
+    });
 }());

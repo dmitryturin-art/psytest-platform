@@ -35,6 +35,17 @@ final class PromptRegistry
     public const SOURCE_FILE = 'file';
     public const SOURCE_OWNER = 'owner';
 
+    /**
+     * Номер первой версии заготовки (07.WP10).
+     *
+     * Версия из кабинета перекрывает файловую с тем же номером. Если бы
+     * заготовка начиналась с 1, а позже в Git появился бы `v1.md` для того же
+     * ключа, файловый текст был бы молча заслонён правкой кабинета. Файловые
+     * версии нумеруются с 1 и до тысячи не дойдут, поэтому заготовки и всё,
+     * что владелец сохранит поверх них, живут с 1000 — коллизии нет.
+     */
+    public const STUB_FIRST_VERSION = 1000;
+
     /** @var array<string, mixed>|null */
     private ?array $manifest = null;
 
@@ -80,13 +91,33 @@ final class PromptRegistry
     }
 
     /**
-     * Все объявленные ключи реестра.
+     * Все ключи реестра: объявленные в manifest.json и те, что существуют
+     * только как версии из кабинета (заготовки 07.WP10).
      *
      * @return list<string>
      */
     public function keys(): array
     {
-        return array_keys($this->entries());
+        $keys = array_keys($this->entries());
+        $ownerOnly = array_values(array_diff($this->ownerKeys(), $keys));
+        sort($ownerOnly);
+
+        return array_merge($keys, $ownerOnly);
+    }
+
+    public function hasKey(string $test, string $mode, string $kind): bool
+    {
+        return in_array(Prompt::keyFor($test, $mode, $kind), $this->keys(), true);
+    }
+
+    /**
+     * Есть ли у ключа заводской текст (запись в manifest.json).
+     *
+     * У заготовки из универсального шаблона его нет: возвращаться не к чему.
+     */
+    public function hasFactoryText(string $test, string $mode, string $kind): bool
+    {
+        return isset($this->entries()[Prompt::keyFor($test, $mode, $kind)]);
     }
 
     /**
@@ -149,11 +180,12 @@ final class PromptRegistry
     public function version(string $test, string $mode, string $kind, int $version, ?string $status = null): ?Prompt
     {
         $entry = $this->entries()[Prompt::keyFor($test, $mode, $kind)] ?? null;
-        if ($entry === null) {
+        // Ключ без записи в манифесте живёт только версиями из кабинета
+        // (заготовки 07.WP10): файловой версии у него нет.
+        $row = $this->ownerRow($test, $mode, $kind, $version);
+        if ($entry === null && $row === null) {
             return null;
         }
-
-        $row = $this->ownerRow($test, $mode, $kind, $version);
 
         if ($row !== null) {
             return new Prompt(
@@ -171,6 +203,8 @@ final class PromptRegistry
             );
         }
 
+        // Сюда доходит только ключ из манифеста: без него и без строки из
+        // кабинета метод вернул null выше.
         $text = @file_get_contents($this->filePath($test, $mode, $kind, $version));
         if ($text === false) {
             return null;
@@ -238,7 +272,7 @@ final class PromptRegistry
     ): int {
         $db = $this->requireDb();
 
-        if (!isset($this->entries()[Prompt::keyFor($test, $mode, $kind)])) {
+        if (!$this->hasKey($test, $mode, $kind)) {
             throw new \RuntimeException('Такого ключа в реестре промптов нет.');
         }
 
@@ -280,9 +314,66 @@ final class PromptRegistry
         $this->savePublication($db, $test, $mode, $kind, $version);
     }
 
+    /**
+     * Заготовка нового ключа из универсального шаблона (07.WP10).
+     *
+     * Создаёт первую версию ключа, которого ещё нет ни в манифесте, ни в
+     * кабинете. Версия не публикуется: заготовка остаётся черновиком, пока
+     * владелец её не проверит и не опубликует (PRODUCT_RULES §6). Повторный
+     * вызов для уже существующего ключа ничего не делает.
+     *
+     * @return int|null номер созданной версии ({@see STUB_FIRST_VERSION}) или
+     *                  null, если ключ уже есть
+     */
+    public function seedOwnerDraft(
+        string $test,
+        string $mode,
+        string $kind,
+        string $text,
+        string $note,
+        bool $allowsOwnerContext,
+    ): ?int {
+        $db = $this->requireDb();
+
+        if ($this->hasKey($test, $mode, $kind)) {
+            return null;
+        }
+        if (trim($text) === '') {
+            throw new \RuntimeException('Текст заготовки пуст.');
+        }
+
+        try {
+            $db->insert('prompt_versions', [
+                'id' => Uuid::uuid4()->toString(),
+                'test' => $test,
+                'mode' => $mode,
+                'kind' => $kind,
+                'version' => self::STUB_FIRST_VERSION,
+                'text' => trim($text),
+                'note' => mb_substr($note, 0, 255),
+                'allows_owner_context' => $allowsOwnerContext ? 1 : 0,
+            ]);
+        } catch (\PDOException $e) {
+            // Параллельный запрос успел создать ту же заготовку: уникальный
+            // индекс (ключ, версия) не даёт второй строке появиться. Любая
+            // другая ошибка БД — не «уже есть», её глотать нельзя.
+            if ((string) $e->getCode() === '23000') {
+                return null;
+            }
+
+            throw $e;
+        }
+
+        return self::STUB_FIRST_VERSION;
+    }
+
     /** Вернуться к версии из manifest.json (откат правок кабинета). */
     public function resetToManifest(string $test, string $mode, string $kind): void
     {
+        if (!$this->hasFactoryText($test, $mode, $kind)) {
+            throw new \RuntimeException('заводского текста нет, это заготовка.');
+        }
+
         $this->savePublication($this->requireDb(), $test, $mode, $kind, null);
     }
 
@@ -385,6 +476,25 @@ final class PromptRegistry
         }
 
         return $versions;
+    }
+
+    /**
+     * Ключи, у которых есть версии из кабинета.
+     *
+     * @return list<string>
+     */
+    private function ownerKeys(): array
+    {
+        if ($this->db === null) {
+            return [];
+        }
+
+        $keys = [];
+        foreach ($this->db->select('SELECT DISTINCT test, mode, kind FROM prompt_versions') as $row) {
+            $keys[] = Prompt::keyFor((string) $row['test'], (string) $row['mode'], (string) $row['kind']);
+        }
+
+        return $keys;
     }
 
     /** @return list<array<string, mixed>> */

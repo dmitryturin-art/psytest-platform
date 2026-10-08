@@ -57,6 +57,11 @@ final class PromptRegistryContractTest extends TestCase
         }
 
         foreach (glob(self::PROMPTS_PATH . '/*/*.md') ?: [] as $file) {
+            // Универсальный шаблон (07.WP10) — не ключ реестра, а исходник
+            // заготовок: из него создаются версии в кабинете.
+            if (str_contains($file, '/_universal/')) {
+                continue;
+            }
             $relative = implode('/', array_slice(explode('/', $file), -2));
 
             self::assertSame(

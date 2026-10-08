@@ -128,6 +128,7 @@ $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/publish', [Own
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/unpublish', [OwnerController::class, 'unpublishCaseReport']);
 $router->get('/admin/prompts', [OwnerController::class, 'prompts']);
 $router->post('/admin/prompts/settings', [OwnerController::class, 'savePromptSettings']);
+$router->post('/admin/prompts/tests', [OwnerController::class, 'savePromptTests']);
 $router->get('/admin/prompts/{test}/{mode}/{kind}', [OwnerController::class, 'promptKey']);
 $router->get('/admin/prompts/{test}/{mode}/{kind}/preview', [OwnerController::class, 'promptPreview']);
 $router->post('/admin/prompts/{test}/{mode}/{kind}/preview', [OwnerController::class, 'promptDraftPreview']);

@@ -53,6 +53,8 @@ final class MigratedSchemaTest extends TestCase
         $this->assertIndex('prompt_versions', 'uq_prompt_versions_key_version', true);
         $this->assertColumns('prompt_publications', ['test', 'mode', 'kind', 'published_version', 'updated_at']);
         $this->assertColumns('ai_settings', ['setting_key', 'setting_value', 'updated_at']);
+        // Галочки ИИ-разбора по методикам (07.WP10): только флаги, без данных людей.
+        $this->assertColumns('ai_test_settings', ['test_slug', 'report_enabled', 'send_item_answers', 'updated_at']);
         $this->assertColumns('test_sessions', ['account_id']);
         $this->assertIndex('test_sessions', 'idx_test_sessions_account', false);
 

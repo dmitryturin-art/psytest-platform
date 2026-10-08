@@ -69,7 +69,8 @@
 {# Заказ черновиков отвечает якорем на раздел «Разбор»: флеш показывается
    там же, рядом с карточками. Наверху он остаётся только когда раздела нет. #}
 {% set aiSectionShown = case.completed_at and ai.available %}
-{% set canOrder = aiSectionShown and not ai.has_jobs and not (ai.ai_disabled ?? false) %}
+{# Единое правило (07.WP10): кнопка заказа — только когда заказ открыт. #}
+{% set canOrder = aiSectionShown and not ai.has_jobs and (ai.can_order ?? false) %}
 {% set inviteId = case.invite_id ?? null %}
 <section class="owner-panel case-workspace" aria-labelledby="owner-case-title">
     <header class="case-head">
@@ -328,7 +329,7 @@
     {% if case.completed_at and not ai.available and not isTrashed %}
     <section class="case-section owner-case-ai" aria-labelledby="owner-case-ai-title">
         <h2 id="owner-case-ai-title">Разбор</h2>
-        <p class="owner-help">Для этой методики расширенный разбор пока не настроен: опубликованных промптов нет. Сейчас разбор доступен для Лазаруса и СМИЛ.</p>
+        <p class="owner-help">Разбор для этой методики сейчас не заказывается: он выключен или его промпт не опубликован. Включить разбор можно в разделе <a href="{{ basePath }}/admin/prompts">«Промпты»</a>.</p>
     </section>
     {% endif %}
 
@@ -393,6 +394,7 @@
                     <p class="report-card__meta" role="status">Задание в работе{% if item.requested_at ?? null %} с {{ item.requested_at|date("d.m.Y H:i") }}{% endif %}.</p>
                 {% elseif state == 'failed' %}
                     <p class="owner-notice owner-notice--error" role="alert">Не получилось подготовить черновик{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}.</p>
+                    {% if item.can_order ?? true %}
                     <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form" data-submit-once>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="form_key" value="{{ order_keys[item.kind] }}">
@@ -400,6 +402,7 @@
                         <input type="hidden" name="kind" value="{{ item.kind }}">
                         <button type="submit" class="btn btn-outline btn-sm" data-busy-text="Заказываем…">Заказать заново</button>
                     </form>
+                    {% endif %}
                 {% elseif state == 'none' %}
                     <p class="report-card__meta">{{ ai.has_jobs ? 'Задание не создавалось.' : 'Ещё не заказан.' }}</p>
                 {% else %}
@@ -455,20 +458,29 @@
                         </div>
                     {% endif %}
 
+                    {% if item.can_order ?? true %}
                     <div class="report-card__foot">
                         {{ _self.reorder_form(case, item, csrf_token, basePath, order_keys[item.kind]) }}
                     </div>
+                    {% endif %}
                 {% endif %}
             </article>
             {% endfor %}
         </div>
 
-        {% if not ai.has_jobs %}
+        {% if not ai.has_jobs and (ai.can_order ?? false) %}
             {# Один заказ на оба вида. У каждой формы заказа на странице свой одноразовый ключ (07.K6b). #}
             <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-form owner-action-form report-order" data-submit-once>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="form_key" value="{{ order_keys.all }}">
+                {% set offered = ai.offered_kinds ?? ['clear', 'professional'] %}
+                {% if offered|length > 1 %}
                 <p class="owner-help">Черновики заказываются один раз на оба вида: понятный разбор для клиента и профессиональное заключение для вас.</p>
+                {% elseif 'clear' in offered %}
+                <p class="owner-help">Сейчас заказывается один вид — понятный разбор для клиента: профессиональное заключение для этой методики не опубликовано.</p>
+                {% else %}
+                <p class="owner-help">Сейчас заказывается один вид — профессиональное заключение для вас: понятный разбор для этой методики не опубликован.</p>
+                {% endif %}
                 <label class="owner-field">
                     <span>Клинический контекст для модели (необязательно, до {{ ai.owner_context_max }} символов)</span>
                     <textarea name="owner_context" rows="5" maxlength="{{ ai.owner_context_max }}" placeholder="Запрос клиента, данные интервью, особенности — то, что вы обычно дописываете к промпту."></textarea>

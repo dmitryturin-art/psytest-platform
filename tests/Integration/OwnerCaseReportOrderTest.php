@@ -6,9 +6,11 @@ namespace PsyTest\Tests\Integration;
 
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
+use PsyTest\Core\Ai\AiReportAvailability;
 use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiSettings;
+use PsyTest\Core\Ai\AiTestSettings;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\Database;
@@ -191,6 +193,7 @@ final class OwnerCaseReportOrderTest extends TestCase
             $settings,
             new AiReportContextBuilder($this->sessions, (new ModuleLoader(null, $this->db))->discover(), $settings),
             new FormOnce($this->session),
+            new AiReportAvailability($settings, new AiTestSettings($this->db), PromptRegistry::default($this->db)),
         );
     }
 

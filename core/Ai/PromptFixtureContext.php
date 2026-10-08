@@ -29,10 +29,18 @@ final class PromptFixtureContext
      *                                        глоссария, что уйдёт боевым
      *                                        запросом (07.G6).
      *
+     * @param bool $includeItems Галочка «Передавать модели ответы по пунктам»
+     *                           (07.WP10): предпросмотр показывает ровно то,
+     *                           что уйдёт боевым запросом.
+     *
      * @throws AiProviderException если методика не отдаёт данные в этом режиме
      */
-    public static function build(TestModuleInterface $module, string $mode, ?AiSettings $ownerSettings = null): array
-    {
+    public static function build(
+        TestModuleInterface $module,
+        string $mode,
+        ?AiSettings $ownerSettings = null,
+        bool $includeItems = false,
+    ): array {
         // Тот же путь, что и в AiReportContextBuilder: для пары модуль сначала
         // сводит результаты двух участников, и уже это сведение проходит через
         // aiReportContext(). Иначе предпросмотр показывал бы другую нагрузку.
@@ -51,7 +59,11 @@ final class PromptFixtureContext
 
         // Тот же компактор, что и в AiReportContextBuilder: иначе предпросмотр
         // расходится с боевой нагрузкой ровно там, где владелец сравнивает разборы.
-        return SmilGlossaryCompactor::fromSettings($ownerSettings)->apply($context);
+        $context = SmilGlossaryCompactor::fromSettings($ownerSettings)->apply($context);
+
+        return $includeItems
+            ? AiReportContextBuilder::withItems($module, $context, $mode, self::answers($module, 0))
+            : $context;
     }
 
     /**
