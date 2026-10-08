@@ -1876,7 +1876,8 @@ input[type="radio"] {
 
 .footer-links {
     display: flex;
-    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-md);
 }
 
 .footer-link {
@@ -2043,6 +2044,10 @@ input[type="radio"] {
     .footer-content {
         flex-direction: column;
         text-align: center;
+    }
+
+    .footer-links {
+        justify-content: center;
     }
 
     .scores-table {
