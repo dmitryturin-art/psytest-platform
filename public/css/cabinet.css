@@ -2247,3 +2247,14 @@ a.cab-table__title:hover {
 .prompt-nav.is-stuck .case-nav__label {
     display: none;
 }
+
+@media (max-width: 760px) {
+    /* Состояние — своей строкой, кнопки под ним переносятся и не выходят за край. */
+    .prompt-nav .case-nav__actions {
+        flex-wrap: wrap;
+    }
+
+    .prompt-nav .case-nav__actions > .status {
+        flex: 1 0 100%;
+    }
+}

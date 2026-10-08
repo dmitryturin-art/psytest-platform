@@ -43,11 +43,12 @@
                 </td>
                 <td data-label="ИИ-разбор" class="cab-table__status"><span class="status status--{{ item.status }}">{{ item.status_label }}</span></td>
                 {% for kind in ['clear', 'professional'] %}
-                <td data-label="{{ kind == 'clear' ? 'Понятный разбор' : 'Профессиональное заключение' }}" class="tests-table__prompt">
+                {# На телефоне ячейка — сетка «подпись | значение»: состояния режимов — в одной обёртке. #}
+                <td data-label="{{ kind == 'clear' ? 'Понятный разбор' : 'Заключение' }}" class="tests-table__prompt"><div class="prompt-states">
                     {% for mode in item.modes %}
                     <span class="prompt-state">{% if item.modes|length > 1 %}<span class="prompt-state__mode">{{ mode_names[mode] ?? mode }}:</span> {% endif %}{% include 'blocks/owner-prompt-state.twig' with {p: item.prompts[mode][kind]} %}</span>
                     {% endfor %}
-                </td>
+                </div></td>
                 {% endfor %}
                 <td data-label="Ответы по пунктам" class="tests-table__items">{{ item.items_label }}</td>
                 <td class="tests-table__open"><a class="btn btn-outline btn-sm" href="{{ basePath }}{{ item.path }}" aria-label="Открыть: {{ item.title }}">Открыть</a></td>

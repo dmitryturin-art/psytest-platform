@@ -43,6 +43,8 @@
             previewStyle: 'tab',
             language: 'ru-RU',
             usageStatistics: false,
+            // Без автофокуса: иначе страница при открытии прыгает к редактору (07.K14).
+            autofocus: false,
             height: '60vh',
             hideModeSwitch: false,
             toolbarItems: [
