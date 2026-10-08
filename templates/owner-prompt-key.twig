@@ -109,7 +109,7 @@
         </dl>
         <pre class="owner-prompt-text">{{ selected.text }}</pre>
         <div class="prompt-tools__row prompt-section__tools">
-            <a class="btn btn-ghost btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}#prompt-preview">Показать запрос на тестовых данных</a>
+            <a class="btn btn-outline btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}#prompt-preview">Показать запрос на тестовых данных</a>
             <p class="prompt-tools__hint">Тестовые данные — выдуманный набор ответов на опросник. По ним видно, что именно уйдёт модели; реальные клиенты не затрагиваются.</p>
         </div>
 
@@ -207,8 +207,10 @@
                 </div>
             </div>
 
-            <label for="prompt-note">Заметка о правке</label>
-            <input type="text" id="prompt-note" name="note" maxlength="{{ note_max }}" placeholder="Например: убрал повтор во вступлении">
+            <div class="owner-field">
+                <label for="prompt-note">Заметка о правке</label>
+                <input type="text" id="prompt-note" name="note" maxlength="{{ note_max }}" placeholder="Например: убрал повтор во вступлении">
+            </div>
 
             <label class="owner-toggle">
                 <input type="checkbox" name="allows_owner_context" value="1"{% if selected.allowsOwnerContext %} checked{% endif %}>

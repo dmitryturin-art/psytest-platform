@@ -175,6 +175,7 @@
     --width-result: 1160px;
     --measure: 68ch;                  /* колонка длинного текста */
     --measure-wide: 80ch;             /* колонка текста внутри раскрывающихся блоков кабинета */
+    --spacing-section: 2.5rem;        /* раздел → раздел в кабинете (07.K14b), 40 px */
     --header-height: 64px;
 }
 
@@ -315,9 +316,10 @@ input[type="radio"] {
     padding: var(--spacing-xl) 0;
 }
 
-/* Длинный текст — колонка ~68 знаков; таблицы и графики занимают всю ширину. */
-.owner-help,
-.owner-panel-intro,
+/* Длинный текст — колонка ~68 знаков; таблицы и графики занимают всю ширину.
+   Подсказки и вводный текст кабинета (.owner-help, .owner-panel-intro) здесь не
+   ограничиваются: в кабинете колонка чтения ставится только абзацам (cabinet.css,
+   07.K14b), а не контейнерам. */
 .profile-type-description,
 .interpretation-item__text,
 .recommendations-list,
@@ -872,7 +874,8 @@ input[type="radio"] {
  * экране блок прокручивается сам, чтобы не растягивать страницу.
  */
 .owner-prompt-text {
-    max-height: 26rem;
+    width: 100%;
+    max-height: 40rem;
     overflow: auto;
     margin: var(--spacing-sm) 0 0;
     padding: var(--spacing-md);
@@ -881,7 +884,7 @@ input[type="radio"] {
     background: var(--color-bg);
     font-family: var(--font-mono);
     font-size: var(--font-size-sm);
-    line-height: 1.5;
+    line-height: 1.6;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
