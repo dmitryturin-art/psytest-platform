@@ -126,16 +126,27 @@ $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/revisions', [O
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/restore', [OwnerController::class, 'restoreCaseReportRevision']);
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/publish', [OwnerController::class, 'publishCaseReport']);
 $router->post('/admin/invited-case/{sessionId}/reports/{reportId}/unpublish', [OwnerController::class, 'unpublishCaseReport']);
-$router->get('/admin/prompts', [OwnerController::class, 'prompts']);
-$router->post('/admin/prompts/settings', [OwnerController::class, 'savePromptSettings']);
+// Методики (07.K14): ИИ-разбор, промпты и общие настройки ИИ в одном разделе.
+// /admin/tests/settings объявлен раньше /admin/tests/{test}: маршруты сверяются по порядку.
+$router->get('/admin/tests', [OwnerController::class, 'tests']);
+$router->get('/admin/tests/settings', [OwnerController::class, 'aiSettings']);
+$router->post('/admin/tests/settings', [OwnerController::class, 'savePromptSettings']);
+$router->get('/admin/tests/{test}', [OwnerController::class, 'methodology']);
+$router->post('/admin/tests/{test}/ai', [OwnerController::class, 'saveMethodologyAi']);
+$router->get('/admin/tests/{test}/prompts/{mode}/{kind}', [OwnerController::class, 'promptKey']);
+$router->get('/admin/tests/{test}/prompts/{mode}/{kind}/preview', [OwnerController::class, 'promptPreview']);
+$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/preview', [OwnerController::class, 'promptDraftPreview']);
+$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/versions', [OwnerController::class, 'createPromptVersion']);
+$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/publish', [OwnerController::class, 'publishPromptVersion']);
+$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/reset', [OwnerController::class, 'resetPromptVersion']);
+$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/trial', [OwnerController::class, 'promptTrial']);
+// Старые адреса «Промптов»: GET — 301, POST — 308 на те же действия в «Методиках».
+$router->get('/admin/prompts', [OwnerController::class, 'legacyPrompts']);
+$router->post('/admin/prompts/settings', [OwnerController::class, 'legacyPromptSettings']);
 $router->post('/admin/prompts/tests', [OwnerController::class, 'savePromptTests']);
-$router->get('/admin/prompts/{test}/{mode}/{kind}', [OwnerController::class, 'promptKey']);
-$router->get('/admin/prompts/{test}/{mode}/{kind}/preview', [OwnerController::class, 'promptPreview']);
-$router->post('/admin/prompts/{test}/{mode}/{kind}/preview', [OwnerController::class, 'promptDraftPreview']);
-$router->post('/admin/prompts/{test}/{mode}/{kind}/versions', [OwnerController::class, 'createPromptVersion']);
-$router->post('/admin/prompts/{test}/{mode}/{kind}/publish', [OwnerController::class, 'publishPromptVersion']);
-$router->post('/admin/prompts/{test}/{mode}/{kind}/reset', [OwnerController::class, 'resetPromptVersion']);
-$router->post('/admin/prompts/{test}/{mode}/{kind}/trial', [OwnerController::class, 'promptTrial']);
+$router->get('/admin/prompts/{test}/{mode}/{kind}', [OwnerController::class, 'legacyPromptKey']);
+$router->get('/admin/prompts/{test}/{mode}/{kind}/{action}', [OwnerController::class, 'legacyPromptAction']);
+$router->post('/admin/prompts/{test}/{mode}/{kind}/{action}', [OwnerController::class, 'legacyPromptAction']);
 $router->get('/admin/clients', [OwnerController::class, 'clients']);
 $router->post('/admin/clients/create', [OwnerController::class, 'createClient']);
 $router->get('/admin/clients/{clientId}', [OwnerController::class, 'viewClient']);

@@ -1597,7 +1597,7 @@ final class OwnerController extends BaseController
         exit;
     }
 
-    /** @return array{type: string, message: string, invite_url?: string}|null */
+    /** @return array{type: string, message: string, invite_url?: string, section?: string}|null */
     private function takeFlash(): ?array
     {
         $flash = $_SESSION['psytest_owner_dashboard_flash'] ?? null;
@@ -1611,7 +1611,7 @@ final class OwnerController extends BaseController
             : null;
     }
 
-    /** @param array{type: string, message: string, invite_url?: string} $flash */
+    /** @param array{type: string, message: string, invite_url?: string, section?: string} $flash */
     private function setFlash(array $flash): void
     {
         $_SESSION['psytest_owner_dashboard_flash'] = $flash;
@@ -1642,49 +1642,55 @@ final class OwnerController extends BaseController
     public const PROMPT_NOTE_MAX_LENGTH = 255;
     public const PROMPT_DRAFT_MAX_LENGTH = 60000;
 
+    // ======================================================== методики (07.K14)
+
+    /** Раздел кабинета: методики, их ИИ-разбор и промпты в одном месте. */
+    public const TESTS_PATH = '/admin/tests';
+
+    /** Виды промптов в порядке показа. */
+    private const PROMPT_KINDS = [Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL];
+
+    /** Действия страницы промпта, на которые ведут старые адреса `/admin/prompts/…/{action}`. */
+    private const LEGACY_PROMPT_ACTIONS = ['preview', 'versions', 'publish', 'reset', 'trial'];
+
     /**
-     * Список методик с разбором и общие настройки ИИ.
-     * GET /admin/prompts
+     * Список методик: статус разбора, состояние промптов, ответы по пунктам.
+     * GET /admin/tests
      */
-    public function prompts(): void
+    public function tests(): void
     {
         if (!$this->requireOwner()) {
             return;
         }
 
         $registry = PromptRegistry::default($this->db);
-        $settings = new AiSettings($this->db);
-        $groups = [];
-
-        foreach ($registry->keys() as $key) {
-            [$test, $mode, $kind] = array_map('trim', explode('|', $key));
-            $override = $registry->publishedOverride($test, $mode, $kind);
-            $version = $override ?? $registry->manifestVersion($test, $mode, $kind);
-            $entry = $version === null
-                ? null
-                : self::findCatalogEntry($registry->versionCatalog($test, $mode, $kind), $version);
-
-            $groups[$test]['test'] = $test;
-            $groups[$test]['title'] = $this->testTitle($test);
-            $groups[$test]['keys'][] = [
-                'test' => $test,
-                'mode' => $mode,
-                'kind' => $kind,
-                'mode_title' => self::modeTitle($mode),
-                'kind_title' => self::kindTitle($kind),
-                'version' => $version,
-                'source' => $entry['source'] ?? PromptRegistry::SOURCE_FILE,
-                'created_at' => $entry['created_at'] ?? null,
-                'from_manifest' => $override === null,
-                'has_factory_text' => $registry->hasFactoryText($test, $mode, $kind),
-            ];
+        $active = $this->activeTestSlugs();
+        $rows = [];
+        foreach (array_keys($this->moduleLoader->getAllModules()) as $slug) {
+            $rows[] = $this->methodologyRow((string) $slug, $registry, $active);
         }
 
-        echo $this->view->render('owner-prompts', [
+        echo $this->view->render('owner-tests', [
             'flash' => $this->takeFlash(),
-            'groups' => array_values($groups),
-            'methodologies' => $this->promptMethodologies(),
-            'tests_form_key' => $this->formOnce()->issue(self::PROMPT_TESTS_FORM),
+            'methodologies' => $rows,
+            'ai' => $this->globalAiSummary(),
+        ]);
+    }
+
+    /**
+     * Общие настройки ИИ: выключатель, модель, режим глоссария СМИЛ.
+     * GET /admin/tests/settings
+     */
+    public function aiSettings(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $settings = new AiSettings($this->db);
+
+        echo $this->view->render('owner-ai-settings', [
+            'flash' => $this->takeFlash(),
             'ai_enabled' => $settings->isAiEnabled(),
             'ai_model' => $settings->modelOverride(),
             'smil_glossary_mode' => $settings->smilGlossaryMode(),
@@ -1694,8 +1700,344 @@ final class OwnerController extends BaseController
     }
 
     /**
+     * Страница методики: ИИ-разбор, промпты, что получает модель, инструкция.
+     * GET /admin/tests/{test}
+     */
+    public function methodology(string $test): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        $module = $this->moduleLoader->getModule($test);
+        if ($module === null) {
+            $this->notFound();
+
+            return;
+        }
+
+        $registry = PromptRegistry::default($this->db);
+        $row = $this->methodologyRow($test, $registry, $this->activeTestSlugs());
+        $requestedMode = $_GET['mode'] ?? null;
+        $mode = is_string($requestedMode) && in_array($requestedMode, $row['modes'], true)
+            ? $requestedMode
+            : $row['modes'][0];
+        $metadata = $module->getMetadata();
+        $instruction = $module->getInstruction();
+
+        echo $this->view->render('owner-test', [
+            'flash' => $this->takeFlash(),
+            'item' => $row,
+            'mode' => $mode,
+            'description' => (string) ($metadata['description'] ?? ''),
+            'question_label' => self::questionsLabel((int) ($metadata['question_count'] ?? count($module->getQuestions()))),
+            'instruction' => array_values(array_filter(array_map('strval', $instruction), static fn (string $p): bool => trim($p) !== '')),
+            'variables' => array_values(array_filter(
+                $this->promptVariables($test, $mode),
+                static fn (array $variable): bool => $variable['key'] !== 'items',
+            )),
+            'ai_form_key' => $this->formOnce()->issue(self::PROMPT_TESTS_FORM),
+            'ai' => $this->globalAiSummary(),
+        ]);
+    }
+
+    /**
+     * Две галочки ИИ-разбора одной методики (07.WP10 → 07.K14).
+     * POST /admin/tests/{test}/ai
+     *
+     * Со страницы методики уходит сразу при щелчке (fetch, ответ JSON с новым
+     * одноразовым ключом формы); без JS — обычная форма с кнопкой «Сохранить».
+     * Включение разбора методики без промптов создаёт две заготовки-черновика,
+     * как и прежде; выключение останавливает только новые заказы.
+     */
+    public function saveMethodologyAi(string $test): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if ($this->moduleLoader->getModule($test) === null) {
+            $this->notFound();
+
+            return;
+        }
+
+        $outcome = $this->formOnce()->run(
+            self::PROMPT_TESTS_FORM,
+            $_POST['form_key'] ?? null,
+            fn (): array => $this->applyMethodologyAi($test, $_POST),
+            'Настройка не сохранена: страница устарела. Обновите её и повторите.',
+            'Эта настройка уже сохранена.',
+        );
+        $result = $outcome['result'];
+        $stubs = (int) ($result['stubs'] ?? 0);
+        $path = self::TESTS_PATH . '/' . rawurlencode($test);
+
+        if ($stubs > 0) {
+            // Новые карточки промптов видны только после перерисовки страницы.
+            $this->setFlash([
+                'type' => 'success',
+                'message' => 'Созданы две заготовки промптов — прочитайте и опубликуйте. Пока они не опубликованы, разбор клиентам не предлагается.',
+                'section' => 'prompts',
+            ]);
+        }
+
+        if ($this->wantsJson()) {
+            header('Content-Type: application/json; charset=utf-8');
+            if (($result['type'] ?? 'error') === 'error') {
+                http_response_code(409);
+            }
+            echo json_encode([
+                'type' => (string) ($result['type'] ?? 'error'),
+                'message' => (string) ($result['message'] ?? ''),
+                'form_key' => $this->formOnce()->issue(self::PROMPT_TESTS_FORM),
+                'reload' => $stubs > 0 ? $path . '#prompts' : null,
+            ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+
+            return;
+        }
+
+        if ($stubs === 0) {
+            $this->setFlash([
+                'type' => (string) ($result['type'] ?? 'error'),
+                'message' => (string) ($result['message'] ?? ''),
+                'section' => 'ai',
+            ]);
+        }
+        $this->redirect($path . ($stubs > 0 ? '#prompts' : '#ai'));
+    }
+
+    /**
+     * @param array<string, mixed> $post
+     * @return array{type: string, message: string, stubs: string}
+     */
+    private function applyMethodologyAi(string $test, array $post): array
+    {
+        $on = ($post['report_enabled'] ?? null) === '1';
+        (new AiTestSettings($this->db))->save($test, $on, $on && ($post['send_item_answers'] ?? null) === '1');
+
+        $stubs = $on
+            ? PromptStubSeeder::default(PromptRegistry::default($this->db))->ensureFor($test, $this->testTitle($test))
+            : [];
+
+        return ['type' => 'success', 'message' => 'Сохранено.', 'stubs' => (string) count($stubs)];
+    }
+
+    private function wantsJson(): bool
+    {
+        return str_contains((string) ($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json');
+    }
+
+    /** @return array<string, true> */
+    private function activeTestSlugs(): array
+    {
+        return array_fill_keys(array_map('strval', array_keys($this->moduleLoader->getActiveModules())), true);
+    }
+
+    /** @return array{enabled: bool, model: string} */
+    private function globalAiSummary(): array
+    {
+        $settings = new AiSettings($this->db);
+        $model = $settings->modelOverride();
+
+        return [
+            'enabled' => $settings->isAiEnabled(),
+            'model' => $model !== '' ? $model : AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php')->model,
+        ];
+    }
+
+    /**
+     * Строка методики: всё, что про неё нужно знать в списке и на её странице.
+     *
+     * @param array<string, true> $active
+     * @return array{test: string, title: string, active: bool, report_enabled: bool, send_item_answers: bool, items_always: bool, clinical_signal: bool, offered: bool, status: string, status_label: string, items_label: string, modes: non-empty-list<string>, prompts: array<string, array<string, array<string, mixed>>>, path: string}
+     */
+    private function methodologyRow(string $slug, PromptRegistry $registry, array $active): array
+    {
+        $settings = new AiTestSettings($this->db);
+        $module = $this->moduleLoader->getModule($slug);
+        $modes = $this->methodologyModes($slug, $registry);
+        $prompts = [];
+        $offered = false;
+        foreach ($modes as $mode) {
+            foreach (self::PROMPT_KINDS as $kind) {
+                $state = $this->promptState($registry, $slug, $mode, $kind);
+                $prompts[$mode][$kind] = $state;
+                $offered = $offered || $state['published_version'] !== null;
+            }
+        }
+
+        $isActive = isset($active[$slug]);
+        $enabled = $settings->isReportEnabled($slug);
+        $itemsAlways = $module !== null && $module->aiReportSendsItemsAlways();
+        [$status, $label] = match (true) {
+            !$isActive => ['muted', 'методика выключена'],
+            !$enabled => ['muted', 'разбор выключен'],
+            !$offered => ['pending', 'промпт не опубликован'],
+            default => ['done', 'разбор предлагается'],
+        };
+
+        return [
+            'test' => $slug,
+            'title' => $this->testTitle($slug),
+            'active' => $isActive,
+            'report_enabled' => $enabled,
+            'send_item_answers' => $settings->sendsItemAnswers($slug),
+            // Лазарус отдаёт оценки по пунктам в своём утверждённом контексте
+            // всегда: галочка показывается запертой, а не делает вид, что на
+            // что-то влияет.
+            'items_always' => $itemsAlways,
+            // Методика с клиническим сигналом (BDI, пункт 9): владелец должен
+            // знать, что модель увидит этот ответ.
+            'clinical_signal' => $module !== null
+                && in_array(ModuleCapability::CLINICAL_SIGNAL, $module->getCapabilities(), true),
+            'offered' => $offered,
+            'status' => $status,
+            'status_label' => $label,
+            'items_label' => $itemsAlways ? 'всегда' : ($settings->sendsItemAnswers($slug) ? 'да' : 'нет'),
+            'modes' => $modes,
+            'prompts' => $prompts,
+            'path' => self::TESTS_PATH . '/' . rawurlencode($slug),
+        ];
+    }
+
+    /**
+     * Режимы, для которых у методики есть промпты; индивидуальный — всегда первым.
+     *
+     * @return non-empty-list<string>
+     */
+    private function methodologyModes(string $slug, PromptRegistry $registry): array
+    {
+        $modes = ['individual'];
+        foreach ($registry->keys() as $key) {
+            [$test, $mode] = array_map('trim', explode('|', $key));
+            if ($test === $slug && !in_array($mode, $modes, true)) {
+                $modes[] = $mode;
+            }
+        }
+
+        return $modes;
+    }
+
+    /**
+     * Состояние одного промпта: опубликованная версия, черновик новее неё, даты.
+     *
+     * @return array{exists: bool, state: string, published_version: int|null, published_at: string|null, published_source: string|null, draft_version: int|null, draft_at: string|null, draft_is_stub: bool, versions: int, path: string, kind_title: string, mode_title: string}
+     */
+    private function promptState(PromptRegistry $registry, string $test, string $mode, string $kind): array
+    {
+        $state = [
+            'exists' => false,
+            'state' => 'none',
+            'published_version' => null,
+            'published_at' => null,
+            'published_source' => null,
+            'draft_version' => null,
+            'draft_at' => null,
+            'draft_is_stub' => false,
+            'versions' => 0,
+            'path' => $this->promptKeyPath($test, $mode, $kind),
+            'kind_title' => self::kindTitle($kind),
+            'mode_title' => self::modeTitle($mode),
+        ];
+        if (!$registry->hasKey($test, $mode, $kind)) {
+            return $state;
+        }
+
+        $catalog = $registry->versionCatalog($test, $mode, $kind);
+        $published = $registry->published($test, $mode, $kind)?->version;
+        // Подсказка о черновике — только для правок из кабинета (и заготовок) новее
+        // опубликованной версии. Файловые черновики из поставки (СМИЛ v3, 07.G1)
+        // остаются в «Истории версий» страницы промпта и в списке не всплывают.
+        $ownerNewer = array_column(array_filter(
+            $catalog,
+            static fn (array $entry): bool => $entry['source'] === PromptRegistry::SOURCE_OWNER
+                && ($published === null || $entry['version'] > $published),
+        ), 'version');
+        $draft = $ownerNewer !== [] ? max($ownerNewer) : null;
+        if ($draft === null && $published === null && $catalog !== []) {
+            $draft = max(array_column($catalog, 'version'));
+        }
+        $stub = $this->stubVersion($registry, $test, $mode, $kind);
+        $publishedEntry = $published === null ? null : self::findCatalogEntry($catalog, $published);
+        $draftEntry = $draft === null ? null : self::findCatalogEntry($catalog, $draft);
+
+        return [
+            'exists' => true,
+            'state' => $published !== null ? 'published' : 'draft',
+            'published_version' => $published,
+            'published_at' => $publishedEntry['created_at'] ?? null,
+            'published_source' => $publishedEntry['source'] ?? null,
+            'draft_version' => $draft,
+            'draft_at' => $draftEntry['created_at'] ?? null,
+            'draft_is_stub' => $draft !== null && $draft === $stub,
+            'versions' => count($catalog),
+        ] + $state;
+    }
+
+    /**
+     * Номер заготовки ключа (07.WP10), если ключ живёт только версиями из кабинета;
+     * на экране такая версия называется «Черновик (заготовка)», хранимый номер не меняется.
+     */
+    private function stubVersion(PromptRegistry $registry, string $test, string $mode, string $kind): ?int
+    {
+        if ($registry->hasFactoryText($test, $mode, $kind)) {
+            return null;
+        }
+
+        return in_array(PromptRegistry::STUB_FIRST_VERSION, $registry->availableVersions($test, $mode, $kind), true)
+            ? PromptRegistry::STUB_FIRST_VERSION
+            : null;
+    }
+
+    // ------------------------------------------------- старые адреса «Промптов»
+
+    /** GET /admin/prompts — раздел переехал в «Методики». */
+    public function legacyPrompts(): void
+    {
+        $this->movedPermanently(self::TESTS_PATH, 301);
+    }
+
+    /** GET /admin/prompts/{test}/{mode}/{kind} → страница промпта в разделе методики. */
+    public function legacyPromptKey(string $test, string $mode, string $kind): void
+    {
+        $query = isset($_GET['version']) && is_string($_GET['version']) && preg_match('/\A\d{1,6}\z/', $_GET['version']) === 1
+            ? '?version=' . $_GET['version']
+            : '';
+        $this->movedPermanently($this->promptKeyPath($test, $mode, $kind) . $query, 301);
+    }
+
+    /**
+     * Старые адреса действий: GET (предпросмотр) — 301, POST — 308, чтобы
+     * открытая до обновления вкладка отправила ту же форму по новому адресу.
+     */
+    public function legacyPromptAction(string $test, string $mode, string $kind, string $action): void
+    {
+        if (!in_array($action, self::LEGACY_PROMPT_ACTIONS, true)) {
+            $this->notFound();
+
+            return;
+        }
+        $isGet = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET';
+        $query = $isGet && isset($_GET['version']) && is_string($_GET['version']) && preg_match('/\A\d{1,6}\z/', $_GET['version']) === 1
+            ? '?version=' . $_GET['version']
+            : '';
+        $this->movedPermanently($this->promptKeyPath($test, $mode, $kind) . '/' . $action . $query, $isGet ? 301 : 308);
+    }
+
+    /** POST /admin/prompts/settings → POST /admin/tests/settings (308 сохраняет метод и тело). */
+    public function legacyPromptSettings(): void
+    {
+        $this->movedPermanently(self::TESTS_PATH . '/settings', 308);
+    }
+
+    private function movedPermanently(string $path, int $status): never
+    {
+        header('Location: ' . $path, true, $status);
+        exit;
+    }
+
+    /**
      * Выключатель разборов и модель.
-     * POST /admin/prompts/settings
+     * POST /admin/tests/settings
      */
     public function savePromptSettings(): void
     {
@@ -1713,19 +2055,18 @@ final class OwnerController extends BaseController
         $settings->setSmilGlossaryMode(is_string($glossaryMode) ? $glossaryMode : SmilGlossaryCompactor::MODE_FULL);
 
         $this->setFlash(['type' => 'success', 'message' => 'Настройки ИИ сохранены.']);
-        $this->redirect('/admin/prompts');
+        $this->redirect(self::TESTS_PATH . '/settings');
     }
 
     public const PROMPT_TESTS_FORM = 'owner_prompt_tests';
 
     /**
-     * Галочки ИИ-разбора по методикам (07.WP10, D-056).
+     * Галочки ИИ-разбора всех методик одной формой (07.WP10, D-056).
      * POST /admin/prompts/tests
      *
-     * Включение разбора методики без промптов создаёт две заготовки из
-     * универсального шаблона — черновиками: заказ по ним откроется только после
-     * публикации. Выключение останавливает новые заказы; готовые разборы
-     * остаются.
+     * Прежняя форма страницы «Промпты»; новые страницы сохраняют по одной
+     * методике ({@see saveMethodologyAi()}). Адрес оставлен, чтобы открытая
+     * до обновления вкладка не потеряла сохранение.
      */
     public function savePromptTests(): void
     {
@@ -1746,7 +2087,7 @@ final class OwnerController extends BaseController
             'type' => (string) ($result['type'] ?? 'error'),
             'message' => (string) ($result['message'] ?? ''),
         ]);
-        $this->redirect('/admin/prompts#owner-ai-tests-title');
+        $this->redirect(self::TESTS_PATH);
     }
 
     /**
@@ -1782,48 +2123,8 @@ final class OwnerController extends BaseController
     }
 
     /**
-     * Строки методик для галочек ИИ-разбора.
-     *
-     * @return list<array{test: string, title: string, report_enabled: bool, send_item_answers: bool, published: bool, items_always: bool, clinical_signal: bool}>
-     */
-    private function promptMethodologies(): array
-    {
-        $settings = new AiTestSettings($this->db);
-        $registry = PromptRegistry::default($this->db);
-        $rows = [];
-
-        foreach (array_keys($this->moduleLoader->getAllModules()) as $slug) {
-            $slug = (string) $slug;
-            $published = false;
-            foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
-                $published = $published || $registry->published($slug, 'individual', $kind) !== null;
-            }
-
-            $module = $this->moduleLoader->getModule($slug);
-
-            $rows[] = [
-                'test' => $slug,
-                'title' => $this->testTitle($slug),
-                'report_enabled' => $settings->isReportEnabled($slug),
-                'send_item_answers' => $settings->sendsItemAnswers($slug),
-                'published' => $published,
-                // Лазарус отдаёт оценки по пунктам в своём утверждённом
-                // контексте всегда: галочка показывается запертой, а не
-                // делает вид, что на что-то влияет.
-                'items_always' => $module !== null && $module->aiReportSendsItemsAlways(),
-                // Методика с клиническим сигналом (BDI, пункт 9): владелец
-                // должен знать, что модель увидит этот ответ.
-                'clinical_signal' => $module !== null
-                    && in_array(ModuleCapability::CLINICAL_SIGNAL, $module->getCapabilities(), true),
-            ];
-        }
-
-        return $rows;
-    }
-
-    /**
      * Карточка одного ключа реестра.
-     * GET /admin/prompts/{test}/{mode}/{kind}
+     * GET /admin/tests/{test}/prompts/{mode}/{kind}
      */
     public function promptKey(string $test, string $mode, string $kind): void
     {
@@ -1837,7 +2138,7 @@ final class OwnerController extends BaseController
 
     /**
      * Предпросмотр запроса на синтетическом контексте — без вызова провайдера.
-     * GET /admin/prompts/{test}/{mode}/{kind}/preview
+     * GET /admin/tests/{test}/prompts/{mode}/{kind}/preview
      */
     public function promptPreview(string $test, string $mode, string $kind): void
     {
@@ -1854,7 +2155,7 @@ final class OwnerController extends BaseController
     /**
      * Предпросмотр черновика: тот же запрос, что и в promptPreview, но по тексту,
      * который владелец сейчас правит. Ничего не сохраняет и провайдера не вызывает.
-     * POST /admin/prompts/{test}/{mode}/{kind}/preview
+     * POST /admin/tests/{test}/prompts/{mode}/{kind}/preview
      */
     public function promptDraftPreview(string $test, string $mode, string $kind): void
     {
@@ -1905,7 +2206,7 @@ final class OwnerController extends BaseController
 
     /**
      * Новая версия промпта из кабинета.
-     * POST /admin/prompts/{test}/{mode}/{kind}/versions
+     * POST /admin/tests/{test}/prompts/{mode}/{kind}/versions
      */
     public function createPromptVersion(string $test, string $mode, string $kind): void
     {
@@ -1951,7 +2252,7 @@ final class OwnerController extends BaseController
 
     /**
      * Опубликовать версию для новых заказов.
-     * POST /admin/prompts/{test}/{mode}/{kind}/publish
+     * POST /admin/tests/{test}/prompts/{mode}/{kind}/publish
      */
     public function publishPromptVersion(string $test, string $mode, string $kind): void
     {
@@ -1976,12 +2277,13 @@ final class OwnerController extends BaseController
             $this->promptFlashBack($test, $mode, $kind, false, 'Версия не опубликована: ' . $e->getMessage());
         }
 
-        $this->promptFlashBack($test, $mode, $kind, true, "Версия {$version} опубликована. Уже поставленные задания не изменились — у них свой снимок промпта.");
+        $label = $version === $this->stubVersion(PromptRegistry::default($this->db), $test, $mode, $kind) ? 'Заготовка' : "Версия {$version}";
+        $this->promptFlashBack($test, $mode, $kind, true, "{$label} опубликована. Уже поставленные задания не изменились — у них свой снимок промпта.");
     }
 
     /**
      * Вернуться к версии из manifest.json.
-     * POST /admin/prompts/{test}/{mode}/{kind}/reset
+     * POST /admin/tests/{test}/prompts/{mode}/{kind}/reset
      */
     public function resetPromptVersion(string $test, string $mode, string $kind): void
     {
@@ -2004,7 +2306,7 @@ final class OwnerController extends BaseController
 
     /**
      * Пробный вызов провайдера на синтетическом контексте.
-     * POST /admin/prompts/{test}/{mode}/{kind}/trial
+     * POST /admin/tests/{test}/prompts/{mode}/{kind}/trial
      *
      * Результат показывается на странице и нигде не сохраняется: это проверка
      * формулировки, а не разбор чьего-то результата.
@@ -2116,11 +2418,31 @@ final class OwnerController extends BaseController
             return null;
         }
 
+        // Соседние промпты методики — вкладки вида и режима (07.K14).
+        $kindTabs = [];
+        foreach (self::PROMPT_KINDS as $tabKind) {
+            if ($registry->hasKey($test, $mode, $tabKind)) {
+                $kindTabs[] = ['kind' => $tabKind, 'title' => self::kindTitle($tabKind), 'path' => $this->promptKeyPath($test, $mode, $tabKind)];
+            }
+        }
+        $modeTabs = [];
+        foreach ($this->methodologyModes($test, $registry) as $tabMode) {
+            $target = $registry->hasKey($test, $tabMode, $kind) ? $kind : Prompt::KIND_CLEAR;
+            $modeTabs[] = ['mode' => $tabMode, 'title' => self::modeTabTitle($tabMode), 'path' => $this->promptKeyPath($test, $tabMode, $target)];
+        }
+
         return [
             'flash' => $this->takeFlash(),
             'test' => $test,
             'mode' => $mode,
             'kind' => $kind,
+            'methodology_path' => self::TESTS_PATH . '/' . rawurlencode($test),
+            'state' => $this->promptState($registry, $test, $mode, $kind),
+            // Заготовка на экране — «Черновик (заготовка)», номер виден только в истории.
+            'stub_version' => $this->stubVersion($registry, $test, $mode, $kind),
+            'kind_tabs' => $kindTabs,
+            'mode_tabs' => count($modeTabs) > 1 ? $modeTabs : [],
+            'versions_desc' => array_reverse($catalog),
             'test_title' => $this->testTitle($test),
             'mode_title' => self::modeTitle($mode),
             'kind_title' => self::kindTitle($kind),
@@ -2209,7 +2531,7 @@ final class OwnerController extends BaseController
 
     private function promptKeyPath(string $test, string $mode, string $kind): string
     {
-        return '/admin/prompts/' . rawurlencode($test) . '/' . rawurlencode($mode) . '/' . rawurlencode($kind);
+        return self::TESTS_PATH . '/' . rawurlencode($test) . '/prompts/' . rawurlencode($mode) . '/' . rawurlencode($kind);
     }
 
     private function promptFlashBack(string $test, string $mode, string $kind, bool $ok, string $message): never
@@ -2246,6 +2568,31 @@ final class OwnerController extends BaseController
         return match ($mode) {
             'individual' => 'индивидуальный',
             'pair' => 'парный',
+            default => $mode,
+        };
+    }
+
+    /** «21 вопрос», «566 вопросов»: число со словом в нужной форме. */
+    private static function questionsLabel(int $count): string
+    {
+        $mod100 = $count % 100;
+        $mod10 = $count % 10;
+        $word = match (true) {
+            $mod100 >= 11 && $mod100 <= 14 => 'вопросов',
+            $mod10 === 1 => 'вопрос',
+            $mod10 >= 2 && $mod10 <= 4 => 'вопроса',
+            default => 'вопросов',
+        };
+
+        return $count . ' ' . $word;
+    }
+
+    /** Подпись вкладки режима: «Один» / «Пара». */
+    private static function modeTabTitle(string $mode): string
+    {
+        return match ($mode) {
+            'individual' => 'Один',
+            'pair' => 'Пара',
             default => $mode,
         };
     }

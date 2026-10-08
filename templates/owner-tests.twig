@@ -1,0 +1,64 @@
+{% extends "layout.twig" %}
+{# Раздел «Методики» (07.K14): ИИ-разбор и промпты каждой методики в одном месте. #}
+{% set ownerArea = true %}
+
+{% block title %}Методики — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}{% include 'blocks/owner-nav.twig' with {current: 'tests'} %}{% endblock %}
+
+{% block content %}
+{% import 'blocks/icons.twig' as ui %}
+{% set mode_names = {individual: 'один', pair: 'пара'} %}
+<section class="owner-panel" aria-labelledby="owner-tests-title">
+    <p class="owner-panel-eyebrow">Кабинет специалиста</p>
+    <h1 id="owner-tests-title">Методики</h1>
+    <p class="owner-panel-intro">Откройте методику, чтобы включить для неё ИИ-разбор, прочитать и опубликовать промпты и увидеть, какие данные получает модель.</p>
+
+    <p class="ai-state" data-ai-state="{{ ai.enabled ? 'on' : 'off' }}">
+        {% if ai.enabled %}<span class="status status--done">ИИ-разборы включены</span><span class="ai-state__model">модель {{ ai.model }}</span>
+        {% else %}<span class="status status--muted">ИИ-разборы выключены для всех методик</span>{% endif %}
+        <a class="quiet-link" href="{{ basePath }}/admin/tests/settings">Настройки ИИ</a>
+    </p>
+
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
+
+    <table class="cab-table tests-table" data-row-links>
+        <thead>
+            <tr>
+                <th scope="col">Методика</th>
+                <th scope="col" class="cab-table__status">ИИ-разбор</th>
+                <th scope="col" class="tests-table__prompt">Понятный разбор</th>
+                <th scope="col" class="tests-table__prompt">Профессиональное заключение</th>
+                <th scope="col" class="tests-table__items">Ответы по пунктам</th>
+                <th scope="col" class="tests-table__open"><span class="visually-hidden">Действия</span></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in methodologies %}
+            <tr data-href="{{ basePath }}{{ item.path }}" data-test="{{ item.test }}">
+                <td data-label="Методика" class="cab-table__main">
+                    <a class="cab-table__title" href="{{ basePath }}{{ item.path }}">{{ item.title }}</a>
+                </td>
+                <td data-label="ИИ-разбор" class="cab-table__status"><span class="status status--{{ item.status }}">{{ item.status_label }}</span></td>
+                {% for kind in ['clear', 'professional'] %}
+                {# На телефоне ячейка — сетка «подпись | значение»: состояния режимов — в одной обёртке. #}
+                <td data-label="{{ kind == 'clear' ? 'Понятный разбор' : 'Заключение' }}" class="tests-table__prompt"><div class="prompt-states">
+                    {% for mode in item.modes %}
+                    <span class="prompt-state">{% if item.modes|length > 1 %}<span class="prompt-state__mode">{{ mode_names[mode] ?? mode }}:</span> {% endif %}{% include 'blocks/owner-prompt-state.twig' with {p: item.prompts[mode][kind]} %}</span>
+                    {% endfor %}
+                </div></td>
+                {% endfor %}
+                <td data-label="Ответы по пунктам" class="tests-table__items">{{ item.items_label }}</td>
+                <td class="tests-table__open"><a class="btn btn-outline btn-sm" href="{{ basePath }}{{ item.path }}" aria-label="Открыть: {{ item.title }}">Открыть</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ asset('js/owner-tests.js') }}"></script>
+{% endblock %}

@@ -45,14 +45,23 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/publish'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/{reportId}/unpublish'", $routes);
         self::assertStringContainsString("\$router->post('/admin/invited-case/{sessionId}/reports/notify'", $routes);
-        self::assertStringContainsString("\$router->get('/admin/prompts'", $routes);
-        self::assertStringContainsString("\$router->post('/admin/prompts/settings'", $routes);
-        self::assertStringContainsString("\$router->get('/admin/prompts/{test}/{mode}/{kind}'", $routes);
-        self::assertStringContainsString("\$router->get('/admin/prompts/{test}/{mode}/{kind}/preview'", $routes);
-        self::assertStringContainsString("\$router->post('/admin/prompts/{test}/{mode}/{kind}/versions'", $routes);
-        self::assertStringContainsString("\$router->post('/admin/prompts/{test}/{mode}/{kind}/publish'", $routes);
-        self::assertStringContainsString("\$router->post('/admin/prompts/{test}/{mode}/{kind}/reset'", $routes);
-        self::assertStringContainsString("\$router->post('/admin/prompts/{test}/{mode}/{kind}/trial'", $routes);
+        // Раздел «Методики» (07.K14): ИИ-разбор, промпты и настройки ИИ в одном месте.
+        self::assertStringContainsString("\$router->get('/admin/tests'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/tests/settings'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/tests/settings'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/tests/{test}'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/tests/{test}/ai'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/tests/{test}/prompts/{mode}/{kind}'", $routes);
+        self::assertStringContainsString("\$router->get('/admin/tests/{test}/prompts/{mode}/{kind}/preview'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/versions'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/publish'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/reset'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/trial'", $routes);
+        // Настройки ИИ объявлены раньше страницы методики: маршруты сверяются по порядку.
+        self::assertLessThan(
+            strpos($routes, "\$router->get('/admin/tests/{test}'"),
+            strpos($routes, "\$router->get('/admin/tests/settings'"),
+        );
         self::assertStringContainsString("\$router->post('/invite/{token}/start'", $routes);
         self::assertStringContainsString('CsrfMiddleware', $routes);
         self::assertStringContainsString('ownerDashboardPasswordHash()', (string) file_get_contents($this->projectRoot . '/config.php'));
@@ -335,7 +344,10 @@ final class OwnerDashboardContractTest extends TestCase
         $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
 
         foreach ([
-            'public function prompts(): void',
+            'public function tests(): void',
+            'public function aiSettings(): void',
+            'public function methodology(string $test): void',
+            'public function saveMethodologyAi(string $test): void',
             'public function savePromptSettings(): void',
             'public function createPromptVersion(string $test, string $mode, string $kind): void',
             'public function publishPromptVersion(string $test, string $mode, string $kind): void',
@@ -359,10 +371,13 @@ final class OwnerDashboardContractTest extends TestCase
 
     public function testPromptTemplatesCarryCsrfAndNoClientData(): void
     {
-        $list = (string) file_get_contents($this->projectRoot . '/templates/owner-prompts.twig');
-        $card = (string) file_get_contents($this->projectRoot . '/templates/owner-prompt-key.twig');
+        $list = (string) file_get_contents($this->projectRoot . '/templates/owner-ai-settings.twig');
+        $methodology = (string) file_get_contents($this->projectRoot . '/templates/owner-test.twig');
+        // Подтверждение публикации вынесено в общий блок панели (07.K14).
+        $card = (string) file_get_contents($this->projectRoot . '/templates/owner-prompt-key.twig')
+            . (string) file_get_contents($this->projectRoot . '/templates/blocks/owner-publish-pop.twig');
 
-        foreach ([$list, $card] as $template) {
+        foreach ([$list, $methodology, $card] as $template) {
             self::assertStringContainsString('csrf_field()', $template);
 
             // Ни сессий, ни клиентов, ни токенов результата на этих страницах нет.
@@ -386,13 +401,13 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString('name="allows_owner_context"', $card);
     }
 
-    public function testOwnerNavigationLinksThePromptEditor(): void
+    public function testOwnerNavigationLinksTheMethodologySection(): void
     {
-        foreach (['owner-dashboard', 'owner-clients', 'owner-client', 'owner-invited-case'] as $template) {
+        foreach (['owner-dashboard', 'owner-clients', 'owner-client', 'owner-invited-case', 'blocks/owner-nav'] as $template) {
             self::assertStringContainsString(
-                '/admin/prompts',
+                '/admin/tests',
                 (string) file_get_contents($this->projectRoot . '/templates/' . $template . '.twig'),
-                "В навигации кабинета ({$template}) нет ссылки на промпты.",
+                "В навигации кабинета ({$template}) нет ссылки на «Методики».",
             );
         }
     }

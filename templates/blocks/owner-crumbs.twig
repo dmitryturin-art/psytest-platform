@@ -1,0 +1,10 @@
+{# Путь по разделу «Методики» (07.K14). Параметр items — list<{label, href?}>: последний
+   пункт без ссылки (текущая страница). Отдельной ссылки «Назад» нет: путь её заменяет
+   (решение владельца 08.10). #}
+<nav class="crumbs" aria-label="Путь">
+    <ol>
+        {% for item in items %}
+        <li>{% if item.href is defined and item.href and not loop.last %}<a href="{{ item.href }}">{{ item.label }}</a>{% else %}<span aria-current="page">{{ item.label }}</span>{% endif %}</li>
+        {% endfor %}
+    </ol>
+</nav>

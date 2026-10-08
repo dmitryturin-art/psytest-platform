@@ -1,0 +1,22 @@
+{# Подтверждение публикации версии промпта (07.K14): всплывающая панель на <details>,
+   работает и без JS. Параметры: key_path, version, pop_id, label, primary (bool), stub (bool —
+   версия-заготовка: на экране «заготовка» без номера). #}
+{% set by = stub|default(false) ? 'заготовке' : 'версии ' ~ version %}
+{% set what = stub|default(false) ? 'заготовку' : 'версию ' ~ version %}
+<details class="action-pop" id="{{ pop_id }}" data-action-pop>
+    <summary class="btn {{ primary|default(false) ? 'btn-primary' : 'btn-ghost' }} btn-sm">{{ label }}</summary>
+    <div class="action-pop__panel">
+        <form method="post" action="{{ key_path }}/publish" class="action-pop__form">
+            {{ csrf_field() }}
+            <input type="hidden" name="version" value="{{ version }}">
+            <p class="action-pop__text">Новые заказы пойдут по {{ by }}. Уже поставленные задания не изменятся — у каждого свой снимок текста.</p>
+            <label class="owner-check">
+                <input type="checkbox" name="confirm_publish" value="1" required>
+                <span>Понимаю, публикую {{ what }}</span>
+            </label>
+            <div class="action-pop__actions">
+                <button type="submit" class="btn btn-primary btn-sm">Опубликовать</button>
+            </div>
+        </form>
+    </div>
+</details>

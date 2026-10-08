@@ -1685,3 +1685,597 @@ a.cab-table__title:hover {
         padding-inline: var(--spacing-xs);
     }
 }
+
+/* ---------- Раздел «Методики» (07.K14) ----------
+   Список методик — та же таблица .cab-table; страница методики и страница промпта —
+   та же полоса разделов .case-nav и карточки .report-cards, что в карточке кейса.
+   Новое здесь только то, чего в описи UI_KIT не было: путь (.crumbs), строка
+   состояния ИИ (.ai-state), панель действия на <details> (.action-pop),
+   статус автосохранения (.autosave-status) и список полей модели (.model-input). */
+
+.owner-nav .nav-link[aria-current="page"] {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+.crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-xs) var(--spacing-lg);
+    margin: 0 0 var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+.crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-text-light);
+}
+
+.crumbs li + li::before {
+    content: "›";
+    padding: 0 0.5rem;
+    color: var(--color-border-strong);
+}
+
+.crumbs a {
+    color: var(--color-text-light);
+    text-decoration: none;
+}
+
+.crumbs a:hover {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.crumbs [aria-current="page"] {
+    color: var(--color-text);
+}
+
+.ai-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-xs) var(--spacing-md);
+    margin: var(--spacing-md) 0 var(--spacing-lg);
+    font-size: var(--font-size-sm);
+}
+
+.ai-state__model {
+    color: var(--color-text-light);
+}
+
+/* Список методик. */
+.tests-table .cab-table__status { width: 12rem; }
+.tests-table__prompt { width: 13.5rem; }
+.tests-table__items { width: 7rem; }
+.tests-table__open { width: 6.5rem; text-align: right; }
+
+.tests-table tbody tr.is-linked {
+    cursor: pointer;
+}
+
+.prompt-state {
+    display: block;
+    font-size: var(--font-size-sm);
+    line-height: 1.45;
+}
+
+.prompt-state + .prompt-state {
+    margin-top: 0.375rem;
+}
+
+.prompt-state__mode {
+    color: var(--color-text-light);
+}
+
+.prompt-state__more {
+    display: block;
+    padding-left: 1rem;
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+}
+
+/* Шапка методики. */
+.test-head__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-lg);
+    margin: 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+.test-head__description {
+    max-width: var(--measure);
+    margin: var(--spacing-md) 0 0;
+    color: var(--color-text-light);
+    line-height: 1.6;
+}
+
+/* Разделы страниц методики и промпта: черта сверху, как у разделов кейса. */
+.test-section,
+.prompt-section {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.owner-dashboard-page .test-section > h2,
+.owner-dashboard-page .prompt-section > h2 {
+    margin: 0 0 var(--spacing-sm);
+}
+
+.test-section .list-head {
+    margin-bottom: var(--spacing-sm);
+}
+
+.test-section__note,
+.test-section__empty,
+.prompt-section__lead {
+    max-width: var(--measure);
+    margin: var(--spacing-sm) 0 0;
+    font-size: var(--font-size-md);
+}
+
+.prompt-section__lead {
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+.test-section__warn {
+    color: var(--color-text);
+}
+
+.test-section__action {
+    margin: var(--spacing-md) 0 0 -0.75rem;
+}
+
+/* Галочки ИИ-разбора. */
+.owner-dashboard-page .test-ai-form {
+    max-width: var(--measure);
+    margin-top: var(--spacing-md);
+    gap: var(--spacing-md);
+}
+
+.test-ai-form__option .owner-help {
+    margin: 0.125rem 0 0 1.625rem;
+    font-size: var(--font-size-sm);
+}
+
+.test-ai-form__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-height: 1.5rem;
+}
+
+.test-ai-form--auto .test-ai-form__foot {
+    margin-top: calc(-1 * var(--spacing-sm));
+    padding-left: 1.625rem;
+}
+
+.autosave-status {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+}
+
+.autosave-status--done {
+    color: var(--color-primary-dark);
+}
+
+.autosave-status--done::before {
+    content: "";
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    background: var(--status-dot-done);
+}
+
+.autosave-status--error {
+    color: var(--color-danger-dark);
+}
+
+/* Карточки промптов — .report-card кейса; кнопки внизу карточки. */
+.prompt-card .report-card__actions {
+    margin-top: auto;
+    padding-top: 0.25rem;
+}
+
+/* Что получает модель: название поля и что в нём. */
+.model-input {
+    display: grid;
+    max-width: var(--measure-wide);
+    margin: var(--spacing-md) 0 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.model-input__row {
+    display: grid;
+    grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+    gap: var(--spacing-md);
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.model-input__row dt {
+    font-weight: 600;
+}
+
+.model-input__row dd {
+    margin: 0;
+    color: var(--color-text-light);
+}
+
+.model-input__row--items dd {
+    color: var(--color-text);
+}
+
+/* Страница промпта: вкладки вида и режима под заголовком. */
+.prompt-head__switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm) var(--spacing-xl);
+    margin-top: var(--spacing-sm);
+}
+
+.prompt-head__switch .view-tabs + .view-tabs {
+    padding-left: var(--spacing-xl);
+    border-left: 1px solid var(--color-border);
+}
+
+/* Полоса разделов промпта: справа состояние и действия. */
+.case-nav__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-left: auto;
+    padding: 0.375rem 0;
+}
+
+.case-nav__actions > .status {
+    margin-right: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+}
+
+/* Панель действия на <details>: «Опубликовать…», «Пробный разбор». */
+.action-pop {
+    position: relative;
+}
+
+.action-pop > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.action-pop > summary::-webkit-details-marker {
+    display: none;
+}
+
+.action-pop__panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 40;
+    width: min(22rem, calc(100vw - 2rem));
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-white);
+    box-shadow: var(--shadow-pop);
+    text-align: left;
+    white-space: normal;
+}
+
+.action-pop--wide .action-pop__panel {
+    width: min(28rem, calc(100vw - 2rem));
+}
+
+.action-pop__form {
+    display: grid;
+    gap: var(--spacing-sm);
+    margin: 0;
+}
+
+.action-pop__form.prompt-trial {
+    padding: 0;
+    border: 0;
+}
+
+.action-pop__text {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.action-pop__form .owner-check {
+    font-size: var(--font-size-sm);
+}
+
+.action-pop__actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+/* Сведения о версии. */
+.prompt-facts {
+    display: grid;
+    gap: 0.25rem;
+    max-width: var(--measure);
+    margin: var(--spacing-md) 0 0;
+    font-size: var(--font-size-sm);
+}
+
+.prompt-facts > div {
+    display: grid;
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: var(--spacing-md);
+}
+
+.prompt-facts dt {
+    color: var(--color-text-light);
+}
+
+.prompt-facts dd {
+    margin: 0;
+}
+
+.prompt-section .owner-prompt-text {
+    max-width: var(--measure-wide);
+    margin-top: var(--spacing-md);
+}
+
+.prompt-section__tools {
+    margin-top: var(--spacing-sm);
+}
+
+.prompt-section__tools .btn-ghost {
+    margin-left: -0.75rem;
+}
+
+.prompt-output {
+    max-width: var(--measure-wide);
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-soft);
+    scroll-margin-top: calc(var(--case-nav-top, var(--header-height)) + 4rem);
+}
+
+.owner-dashboard-page .prompt-output h3 {
+    margin: 0 0 var(--spacing-sm);
+    font-size: var(--font-size-base);
+}
+
+.prompt-output h4 {
+    margin: var(--spacing-md) 0 0;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.prompt-vars-more > summary {
+    cursor: pointer;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+/* История версий. */
+.prompt-history {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.prompt-history__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.125rem var(--spacing-md);
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.prompt-history__item.is-selected {
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary-tint);
+}
+
+.prompt-history__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-xs) var(--spacing-md);
+}
+
+.prompt-history__open {
+    color: var(--color-primary-dark);
+    font-size: var(--font-size-sm);
+}
+
+.prompt-history__meta {
+    grid-column: 1;
+    margin: 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+.prompt-history__actions {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.prompt-history__reset {
+    margin-top: var(--spacing-md);
+}
+
+.owner-dashboard-page .prompt-history__reset .btn-ghost {
+    margin-left: -0.75rem;
+}
+
+.prompt-history__reset .owner-help {
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+/* Общие настройки ИИ. */
+.owner-dashboard-page .ai-settings-form {
+    max-width: var(--measure);
+    gap: var(--spacing-lg);
+}
+
+.ai-settings-form__group {
+    display: grid;
+    gap: var(--spacing-xs);
+}
+
+.ai-settings-form__group .owner-help {
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 760px) {
+    .case-nav.prompt-nav {
+        flex-wrap: wrap;
+        gap: 0 var(--spacing-md);
+    }
+
+    .prompt-nav .case-nav__actions {
+        order: -1;
+        width: 100%;
+        margin-left: 0;
+        padding: 0.5rem 0 0;
+    }
+
+    .prompt-nav .case-nav__actions > .status {
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .tests-table td.tests-table__open {
+        margin-top: 0.375rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--color-border);
+        text-align: left;
+    }
+
+    .cab-table.tests-table td[data-label] {
+        grid-template-columns: 7.5rem minmax(0, 1fr);
+    }
+
+    .model-input__row,
+    .prompt-facts > div {
+        grid-template-columns: 1fr;
+        gap: 0.125rem;
+    }
+
+    .prompt-head__switch .view-tabs + .view-tabs {
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .prompt-history__item {
+        grid-template-columns: 1fr;
+    }
+
+    .prompt-history__actions {
+        grid-column: 1;
+        grid-row: auto;
+        margin-top: 0.375rem;
+    }
+
+    .action-pop__panel {
+        position: fixed;
+        top: auto;
+        right: 1rem;
+        bottom: 1rem;
+        left: 1rem;
+        width: auto;
+    }
+
+    .action-pop--wide .action-pop__panel {
+        width: auto;
+    }
+}
+
+/* Со скриптом «Сохранить» прячется атрибутом hidden: .btn задаёт display, поэтому явно. */
+.test-ai-form [data-autosave-submit][hidden] {
+    display: none;
+}
+
+@media (pointer: fine) {
+    .test-ai-form__option .owner-toggle {
+        min-height: 2rem;
+    }
+}
+
+/* На странице промпта в прилипшей полосе справа уже действия: название не нужно. */
+.prompt-nav.is-stuck .case-nav__label {
+    display: none;
+}
+
+@media (max-width: 760px) {
+    /* Состояние — своей строкой, кнопки под ним переносятся и не выходят за край. */
+    .prompt-nav .case-nav__actions {
+        flex-wrap: wrap;
+    }
+
+    .prompt-nav .case-nav__actions > .status {
+        flex: 1 0 100%;
+    }
+}
+
+/* Общий выключатель ИИ — состояние, а не ошибка: тихой строкой под вкладками. */
+.prompt-head__note {
+    max-width: var(--measure);
+    margin: var(--spacing-md) 0 0;
+    font-size: var(--font-size-sm);
+}
+
+/* Номер заготовки — только тихой пометкой в истории версий. */
+.prompt-history__num {
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+}
+
+/* «Что уходит модели» — свёрнутые пояснения под галочками ИИ-разбора. */
+.test-ai-more {
+    max-width: var(--measure-wide);
+    margin-top: var(--spacing-md);
+}
+
+/* После сворачивания пояснений строка статуса автосохранения не должна оставлять дыру. */
+.test-ai-form--auto .test-ai-form__foot {
+    min-height: 1.25rem;
+    margin-top: calc(-1 * var(--spacing-md));
+}
+
+.test-ai-form + .test-ai-more {
+    margin-top: var(--spacing-sm);
+}
+
+.owner-help.prompt-history__reset {
+    max-width: var(--measure);
+    font-size: var(--font-size-sm);
+}

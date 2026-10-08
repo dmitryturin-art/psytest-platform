@@ -1,0 +1,58 @@
+{% extends "layout.twig" %}
+{# Общие настройки ИИ (07.K14): перенесены со страницы «Промпты» без изменения смысла полей. #}
+{% set ownerArea = true %}
+
+{% block title %}Настройки ИИ — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}{% include 'blocks/owner-nav.twig' with {current: 'tests'} %}{% endblock %}
+
+{% block content %}
+<section class="owner-panel" aria-labelledby="owner-ai-settings-title">
+    {% include 'blocks/owner-crumbs.twig' with {items: [{label: 'Методики', href: basePath ~ '/admin/tests'}, {label: 'Настройки ИИ'}]} %}
+    <h1 id="owner-ai-settings-title">Настройки ИИ</h1>
+    <p class="owner-panel-intro">Эти настройки действуют для всех методик. Включить разбор отдельной методики можно на её странице.</p>
+
+    {% if flash %}
+        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ basePath }}/admin/tests/settings" class="owner-form ai-settings-form">
+        {{ csrf_field() }}
+        <div class="ai-settings-form__group">
+            <label class="owner-toggle" for="ai-enabled-toggle">
+                <input type="checkbox" id="ai-enabled-toggle" name="ai_enabled" value="1"{% if ai_enabled %} checked{% endif %}>
+                ИИ-разборы включены
+            </label>
+            <p class="owner-help">Когда выключено, новые разборы не заказываются ни по одной методике, а уже поставленные задания завершаются отказом с этой причиной. Готовые разборы остаются.</p>
+        </div>
+
+        <div class="ai-settings-form__group">
+            <label for="ai-model">Модель</label>
+            <input type="text" id="ai-model" name="ai_model" list="ai-model-list" maxlength="255" value="{{ ai_model }}" placeholder="{{ env_model }}">
+            <p class="owner-help">Оставьте пустым, чтобы использовать модель из настроек сервера (сейчас {{ env_model }}). Ключ доступа к модели хранится только на сервере, не здесь.</p>
+            {% if models %}
+            <datalist id="ai-model-list">
+                {% for model in models %}<option value="{{ model.id }}">{{ model.name }}{% if model.free %} — бесплатная{% endif %}</option>{% endfor %}
+            </datalist>
+            {% else %}
+            <p class="owner-help">Список моделей сейчас недоступен — название модели можно вписать вручную.</p>
+            {% endif %}
+        </div>
+
+        <fieldset class="owner-fieldset ai-settings-form__group">
+            <legend>Глоссарий СМИЛ</legend>
+            <label class="owner-toggle" for="smil-glossary-full">
+                <input type="radio" id="smil-glossary-full" name="smil_glossary_mode" value="full"{% if smil_glossary_mode != 'compact' %} checked{% endif %}>
+                Полный
+            </label>
+            <label class="owner-toggle" for="smil-glossary-compact">
+                <input type="radio" id="smil-glossary-compact" name="smil_glossary_mode" value="compact"{% if smil_glossary_mode == 'compact' %} checked{% endif %}>
+                Компактный (краткое значение по шкалам 40–65T)
+            </label>
+            <p class="owner-help">В компактном режиме шкалы со средним T-баллом уходят одной строкой смысла, а полные пояснения остаются по шкалам вне 40–65T. Режим виден в запросе на тестовых данных.</p>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+    </form>
+</section>
+{% endblock %}
