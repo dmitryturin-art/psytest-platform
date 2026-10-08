@@ -59,18 +59,27 @@
         <p class="owner-help">Источник: {{ selected.source ?: 'не указан' }}. Клинический контекст специалиста {{ selected.allowsOwnerContext ? 'принимается' : 'не принимается' }}.</p>
         <pre class="owner-prompt-text">{{ selected.text }}</pre>
 
-        <p><a class="btn btn-outline btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}">Показать запрос на тестовых данных</a></p>
-        <p class="owner-help">Тестовые данные — выдуманный набор ответов на опросник. По нему видно, что именно уйдёт модели; реальные клиенты не затрагиваются.</p>
+        <div class="prompt-tools">
+            <div class="prompt-tools__row">
+                <a class="btn btn-outline btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}">Показать запрос на тестовых данных</a>
+                <p class="prompt-tools__hint">Тестовые данные — выдуманный набор ответов на опросник. По нему видно, что именно уйдёт модели; реальные клиенты не затрагиваются.</p>
+            </div>
 
-        <form method="post" action="{{ key_path }}/trial" class="owner-form">
-            {{ csrf_field() }}
-            <input type="hidden" name="version" value="{{ selected_version }}">
-            <label class="owner-toggle">
-                <input type="checkbox" name="confirm_trial" value="1" required>
-                Подтверждаю: отправить промпт модели на тестовых (выдуманных) данных, чтобы увидеть, какой разбор получится. Запрос платный, как обычный разбор; результат нигде не сохраняется.
-            </label>
-            <button type="submit" class="btn btn-outline btn-sm"{% if not ai_enabled %} disabled{% endif %}>Пробный разбор на тестовых данных</button>
-        </form>
+            <form method="post" action="{{ key_path }}/trial" class="prompt-trial">
+                {{ csrf_field() }}
+                <input type="hidden" name="version" value="{{ selected_version }}">
+                <h3 class="prompt-trial__title">Пробный разбор на тестовых данных</h3>
+                <p class="prompt-tools__hint">Промпт отправится модели на выдуманных данных, и вы увидите, какой разбор получится. Запрос платный, как обычный разбор; результат нигде не сохраняется, клиенты не затрагиваются.</p>
+                <label class="prompt-trial__confirm">
+                    <input type="checkbox" name="confirm_trial" value="1" required>
+                    <span>Подтверждаю платный пробный запрос к модели</span>
+                </label>
+                <div class="prompt-trial__actions">
+                    <button type="submit" class="btn btn-outline btn-sm"{% if not ai_enabled %} disabled{% endif %}>Запустить пробный разбор</button>
+                    {% if not ai_enabled %}<span class="prompt-tools__hint">ИИ-разборы выключены в настройках.</span>{% endif %}
+                </div>
+            </form>
+        </div>
     </section>
 
     {% if preview %}
