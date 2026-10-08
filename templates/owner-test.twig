@@ -155,8 +155,7 @@
             <div class="model-input__row model-input__row--items" data-items="{{ item.items_always ? 'always' : (item.send_item_answers ? 'on' : 'off') }}">
                 <dt>Ответы по пунктам</dt>
                 <dd>{% if item.items_always %}Уходят всегда: так устроен утверждённый разбор этой методики.
-                    {% elseif item.send_item_answers %}Уходят: ответ человека на каждый вопрос, без имени и контактов.
-                    {% else %}Не уходят. Включаются галочкой «Передавать модели ответы по пунктам» в разделе «ИИ-разбор».{% endif %}</dd>
+                    {% else %}{# owner-tests.js переключает подпись после сохранения галочки. #}<span data-items-text="on"{% if not item.send_item_answers %} hidden{% endif %}>Уходят: ответ человека на каждый вопрос, без имени и контактов.</span><span data-items-text="off"{% if item.send_item_answers %} hidden{% endif %}>Не уходят. Включаются галочкой «Передавать модели ответы по пунктам» в разделе «ИИ-разбор».</span>{% endif %}</dd>
             </div>
         </dl>
         {% if previewKind %}

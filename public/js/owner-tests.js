@@ -55,6 +55,18 @@
             }
         };
 
+        // Строка «Ответы по пунктам» в разделе «Что получает модель» следует за галочкой.
+        var syncItemsText = function () {
+            var items = form.querySelector('input[name="send_item_answers"]');
+            if (!items) {
+                return;
+            }
+            var on = items.checked && !items.disabled;
+            all('[data-items-text]').forEach(function (text) {
+                text.hidden = (text.getAttribute('data-items-text') === 'on') !== on;
+            });
+        };
+
         // Запросы идут по одному: второй щелчок ждёт ответа на первый и уходит
         // с новым одноразовым ключом.
         var send = function () {
@@ -84,6 +96,7 @@
                     say(data.message || 'Не сохранено. Обновите страницу и повторите.', 'error', true);
                 } else {
                     say(data.message || 'Сохранено.', 'done', false);
+                    syncItemsText();
                 }
             }).catch(function () {
                 say('Не сохранено: нет связи с сервером. Повторите щелчок или нажмите «Сохранить».', 'error', true);
