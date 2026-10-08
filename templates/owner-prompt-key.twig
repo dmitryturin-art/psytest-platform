@@ -12,7 +12,7 @@
     <p class="owner-panel-eyebrow">{{ test_title }}</p>
     <h1 id="owner-prompt-title">{{ kind_title|capitalize }}, {{ mode_title }}</h1>
     <p class="owner-panel-intro">
-        Сейчас новые заказы идут по версии {{ published_version }}{% if from_manifest %} — как задано в manifest.json{% endif %}.
+        Сейчас новые заказы идут по версии {{ published_version }}{% if from_manifest %} — это заводской текст, который поставляется вместе с программой{% endif %}.
         Уже поставленные задания не меняются: у каждого свой снимок промпта.
     </p>
 
@@ -20,7 +20,7 @@
         <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
     {% endif %}
     {% if not ai_enabled %}
-        <p class="owner-notice owner-notice--error" role="status">ИИ-разборы выключены в настройках. Редактировать промпты можно, пробный вызов провайдера — нет.</p>
+        <p class="owner-notice owner-notice--error" role="status">ИИ-разборы выключены в настройках. Редактировать промпты можно, а пробный разбор запустить нельзя.</p>
     {% endif %}
 
     <section class="owner-invites" aria-labelledby="owner-prompt-versions-title">
@@ -50,7 +50,7 @@
 
         <form method="post" action="{{ key_path }}/reset" class="owner-action-form">
             {{ csrf_field() }}
-            <button type="submit" class="btn btn-outline btn-sm">Вернуть к manifest (версия {{ manifest_version }})</button>
+            <button type="submit" class="btn btn-outline btn-sm" title="Отменить правки из кабинета и снова использовать текст, который поставляется вместе с программой">Вернуть заводской текст (версия {{ manifest_version }})</button>
         </form>
     </section>
 
@@ -59,16 +59,17 @@
         <p class="owner-help">Источник: {{ selected.source ?: 'не указан' }}. Клинический контекст специалиста {{ selected.allowsOwnerContext ? 'принимается' : 'не принимается' }}.</p>
         <pre class="owner-prompt-text">{{ selected.text }}</pre>
 
-        <p><a class="btn btn-outline btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}">Предпросмотр запроса на фикстуре</a></p>
+        <p><a class="btn btn-outline btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}">Показать запрос на тестовых данных</a></p>
+        <p class="owner-help">Тестовые данные — выдуманный набор ответов на опросник. По нему видно, что именно уйдёт модели; реальные клиенты не затрагиваются.</p>
 
         <form method="post" action="{{ key_path }}/trial" class="owner-form">
             {{ csrf_field() }}
             <input type="hidden" name="version" value="{{ selected_version }}">
             <label class="owner-toggle">
                 <input type="checkbox" name="confirm_trial" value="1" required>
-                Подтверждаю обращение к внешнему провайдеру с синтетическим набором ответов. Результат нигде не сохраняется.
+                Подтверждаю: отправить промпт модели на тестовых (выдуманных) данных, чтобы увидеть, какой разбор получится. Запрос платный, как обычный разбор; результат нигде не сохраняется.
             </label>
-            <button type="submit" class="btn btn-outline btn-sm"{% if not ai_enabled %} disabled{% endif %}>Пробный вызов на fixture</button>
+            <button type="submit" class="btn btn-outline btn-sm"{% if not ai_enabled %} disabled{% endif %}>Пробный разбор на тестовых данных</button>
         </form>
     </section>
 
@@ -98,7 +99,7 @@
 
     {% if trial %}
     <section class="owner-invites" aria-labelledby="owner-prompt-trial-title">
-        <h2 id="owner-prompt-trial-title">Пробный вызов</h2>
+        <h2 id="owner-prompt-trial-title">Пробный разбор на тестовых данных</h2>
         {% if trial.error %}
             <p class="owner-notice owner-notice--error" role="alert">{{ trial.error }}</p>
         {% else %}
@@ -126,10 +127,15 @@
                 <select id="prompt-var-select" data-prompt-var-select>
                     <option value="">Поле входных данных…</option>
                     {% for variable in variables %}
-                    <option value="{{ variable }}">{{ variable }}</option>
+                    <option value="{{ variable.key }}" title="{{ variable.hint }}">{{ variable.label }} ({{ variable.key }})</option>
                     {% endfor %}
                 </select>
-                <p class="owner-help">Поля, которые модель получает во входных данных этой методики. Подстановки в тексте нет: промпт просто называет поле по имени.</p>
+                <p class="owner-help" data-prompt-var-hint>Поля, которые модель получает во входных данных этой методики. Подстановки в тексте нет: промпт просто называет поле по имени.</p>
+                <dl class="owner-prompt-vars__list">
+                    {% for variable in variables %}
+                    <div><dt>{{ variable.label }} <code>{{ variable.key }}</code></dt><dd>{{ variable.hint }}</dd></div>
+                    {% endfor %}
+                </dl>
             </div>
             {% endif %}
 

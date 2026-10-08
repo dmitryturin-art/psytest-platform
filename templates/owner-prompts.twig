@@ -13,7 +13,7 @@
     <p class="owner-panel-intro">
         Здесь редактируются формулировки, по которым модель готовит расширенный разбор.
         Исходные тексты живут в репозитории, правки из кабинета ложатся поверх них и откатываются одной кнопкой.
-        Данных клиентов на этих страницах нет: предпросмотр работает на синтетическом наборе ответов.
+        Данных клиентов на этих страницах нет: предпросмотр и пробный разбор работают на выдуманном наборе ответов.
     </p>
 
     {% if flash %}
@@ -65,7 +65,7 @@
             {% for key in group.keys %}
             <li>
                 <p><strong><a href="{{ basePath }}/admin/prompts/{{ key.test }}/{{ key.mode }}/{{ key.kind }}">{{ key.kind_title|capitalize }}, {{ key.mode_title }}</a></strong></p>
-                <p>Опубликована версия {{ key.version }} — {{ key.source == 'owner' ? 'правка из кабинета' : 'файл в репозитории' }}{% if key.from_manifest %}, как задано в manifest.json{% endif %}.</p>
+                <p>Опубликована версия {{ key.version }} — {{ key.source == 'owner' ? 'правка из кабинета' : 'файл в репозитории' }}{% if key.from_manifest %} — заводской текст{% endif %}.</p>
                 {% if key.created_at %}<small>Сохранена {{ key.created_at|date("d.m.Y H:i") }}</small>{% endif %}
             </li>
             {% endfor %}

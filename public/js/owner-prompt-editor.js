@@ -37,12 +37,14 @@
         editor = new window.toastui.Editor({
             el: host,
             initialValue: textarea.value,
-            initialEditType: 'markdown',
+            // Как в редакторе разбора: визуальный режим по умолчанию и
+            // переключатель «Markdown / WYSIWYG» (решение владельца 08.10).
+            initialEditType: 'wysiwyg',
             previewStyle: 'tab',
             language: 'ru-RU',
             usageStatistics: false,
             height: '60vh',
-            hideModeSwitch: true,
+            hideModeSwitch: false,
             toolbarItems: [
                 ['heading', 'bold', 'italic'],
                 ['hr', 'quote'],

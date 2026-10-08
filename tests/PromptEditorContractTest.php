@@ -68,9 +68,10 @@ final class PromptEditorContractTest extends TestCase
 
         $script = $this->read('public/js/owner-prompt-editor.js');
         self::assertDoesNotMatchRegularExpression('#https?://#', $script);
-        // Только markdown-режим: визуальный переписал бы текст промпта.
-        self::assertStringContainsString("initialEditType: 'markdown'", $script);
-        self::assertStringContainsString('hideModeSwitch: true', $script);
+        // Как в редакторе разбора: визуальный режим по умолчанию и переключатель
+        // режимов на месте (решение владельца 08.10).
+        self::assertStringContainsString("initialEditType: 'wysiwyg'", $script);
+        self::assertStringContainsString('hideModeSwitch: false', $script);
         self::assertStringContainsString("X-CSRF-Token", $script);
     }
 
