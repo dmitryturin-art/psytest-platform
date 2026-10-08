@@ -1,0 +1,186 @@
+{% extends "layout.twig" %}
+{# Страница методики (07.K14): ИИ-разбор, промпты, что получает модель, инструкция.
+   Полоса разделов — та же .case-nav, что в карточке кейса (04.D3, owner-case-workspace.js). #}
+{% set ownerArea = true %}
+
+{% block title %}{{ item.title }} — Методики — {{ appName }}{% endblock %}
+{% block body_class %}owner-dashboard-page{% endblock %}
+{% block header_nav %}{% include 'blocks/owner-nav.twig' with {current: 'tests'} %}{% endblock %}
+
+{% block content %}
+{% set testUrl = basePath ~ item.path %}
+{% set prompts = item.prompts[mode] %}
+{% set anyPrompt = prompts.clear.exists or prompts.professional.exists %}
+{% set previewKind = prompts.clear.exists ? 'clear' : (prompts.professional.exists ? 'professional' : null) %}
+{% set mode_names = {individual: 'один человек', pair: 'пара'} %}
+<section class="owner-panel case-workspace" aria-labelledby="owner-test-title">
+    {% include 'blocks/owner-crumbs.twig' with {items: [{label: 'Методики', href: basePath ~ '/admin/tests'}, {label: item.title}], back: {label: 'К методикам', href: basePath ~ '/admin/tests'}} %}
+
+    <header class="case-head test-head">
+        <div class="case-head__top">
+            <div class="case-head__title">
+                <h1 id="owner-test-title">{{ item.title }}</h1>
+                <p class="test-head__facts"><span class="status status--{{ item.status }}">{{ item.status_label }}</span><span>{{ question_label }}</span></p>
+            </div>
+        </div>
+        {% if description %}<p class="test-head__description">{{ description }}</p>{% endif %}
+        {% if flash and (flash.section ?? '') == '' %}
+            <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+        {% endif %}
+    </header>
+
+    <nav class="case-nav" aria-label="Разделы методики" data-case-nav>
+        <span class="case-nav__label" aria-hidden="true">{{ item.title }}</span>
+        <div class="view-tabs case-nav__tabs">
+            <a class="view-tabs__tab" href="#ai" data-case-nav-link>ИИ-разбор</a>
+            <a class="view-tabs__tab" href="#prompts" data-case-nav-link>Промпты</a>
+            <a class="view-tabs__tab" href="#model-input" data-case-nav-link>Что получает модель</a>
+            {% if instruction %}<a class="view-tabs__tab" href="#instruction" data-case-nav-link>Инструкция</a>{% endif %}
+        </div>
+    </nav>
+
+    {# ---------- ИИ-разбор: две галочки, сохраняются сразу ---------- #}
+    <section id="ai" class="case-section test-section" aria-labelledby="test-ai-title" data-case-section>
+        <h2 id="test-ai-title">ИИ-разбор</h2>
+        {% if not ai.enabled %}
+            <p class="owner-help test-section__note">ИИ-разборы сейчас выключены для всех методик, поэтому и здесь разбор не заказывается. Включить их можно в <a href="{{ basePath }}/admin/tests/settings">настройках ИИ</a>.</p>
+        {% endif %}
+        {% if not item.active %}
+            <p class="owner-help test-section__note">Методика выключена в каталоге: разбор по ней не заказывается, пока её снова не включат.</p>
+        {% endif %}
+
+        {# Со скриптом owner-tests.js форма сохраняется при щелчке по галочке (fetch,
+           CSRF и одноразовый ключ формы); без скрипта работает кнопка «Сохранить». #}
+        <form method="post" action="{{ testUrl }}/ai" class="owner-form test-ai-form" data-autosave>
+            {{ csrf_field() }}
+            <input type="hidden" name="form_key" value="{{ ai_form_key }}" data-autosave-key>
+
+            <div class="test-ai-form__option">
+                <label class="owner-toggle" for="ai-test-{{ item.test }}">
+                    <input type="checkbox" id="ai-test-{{ item.test }}" name="report_enabled" value="1"{% if not item.items_always %} data-enables="ai-test-items-{{ item.test }}"{% endif %}{% if item.report_enabled %} checked{% endif %}>
+                    ИИ-разбор для этой методики
+                </label>
+                <p class="owner-help">Разбор предлагается клиентам, гостям по ссылке и в кабинете посетителя, когда эта галочка стоит и промпт опубликован. Модели уходят обезличенные результаты: баллы, уровни и подшкалы. Имя, контакты и ваши заметки не уходят никогда.</p>
+            </div>
+
+            <div class="test-ai-form__option">
+                {% if item.items_always %}
+                {# Оценки по пунктам — часть утверждённого разбора методики (Лазарус):
+                   галочка заперта включённой и в форму не отправляется. #}
+                <label class="owner-toggle" for="ai-test-items-{{ item.test }}">
+                    <input type="checkbox" id="ai-test-items-{{ item.test }}" checked disabled>
+                    Передавать модели ответы по пунктам
+                </label>
+                <p class="owner-help">Эта методика всегда передаёт оценки по пунктам: так устроен её утверждённый разбор.</p>
+                {% else %}
+                <label class="owner-toggle" for="ai-test-items-{{ item.test }}">
+                    <input type="checkbox" id="ai-test-items-{{ item.test }}" name="send_item_answers" value="1"{% if item.send_item_answers %} checked{% endif %}{% if not item.report_enabled %} disabled{% endif %}>
+                    Передавать модели ответы по пунктам
+                </label>
+                <p class="owner-help">Тогда модель получит ещё и ответ человека на каждый вопрос опросника — без имени и контактов. Без этой галочки уходят только итоговые баллы, уровни и подшкалы.</p>
+                {% if item.clinical_signal %}
+                <p class="owner-help test-section__warn">У этой методики есть пункт о мыслях о смерти; при передаче ответов модель увидит его.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="test-ai-form__foot">
+                <button type="submit" class="btn btn-outline btn-sm" data-autosave-submit>Сохранить</button>
+                <span class="autosave-status" role="status" aria-live="polite" data-autosave-status>{% if flash and (flash.section ?? '') == 'ai' %}{{ flash.message }}{% endif %}</span>
+            </div>
+        </form>
+        <p class="owner-help test-section__note">Если у методики ещё нет промптов, при включении появятся две заготовки — понятный разбор и профессиональное заключение. Они не опубликованы: клиенты увидят разбор только после того, как вы прочитаете текст и опубликуете его. Выключение останавливает только новые заказы — готовые разборы остаются.</p>
+    </section>
+
+    {# ---------- Промпты ---------- #}
+    <section id="prompts" class="case-section test-section" aria-labelledby="test-prompts-title" data-case-section>
+        <div class="list-head">
+            <h2 id="test-prompts-title">Промпты</h2>
+            {% if item.modes|length > 1 %}
+            <nav class="view-tabs" aria-label="Режим прохождения">
+                {% for tabMode in item.modes %}
+                <a class="view-tabs__tab" href="{{ testUrl }}{% if not loop.first %}?mode={{ tabMode }}{% endif %}#prompts"{% if tabMode == mode %} aria-current="page"{% endif %}>{{ tabMode == 'individual' ? 'Один' : (tabMode == 'pair' ? 'Пара' : tabMode) }}</a>
+                {% endfor %}
+            </nav>
+            {% endif %}
+        </div>
+        {% if flash and (flash.section ?? '') == 'prompts' %}
+            <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+        {% endif %}
+
+        {% if anyPrompt %}
+        <div class="report-cards">
+            {% for kind in ['clear', 'professional'] %}
+            {% set p = prompts[kind] %}
+            <article class="owner-case-ai-item report-card prompt-card" data-kind="{{ kind }}" data-state="{{ p.state }}" aria-labelledby="prompt-card-{{ kind }}">
+                <header class="report-card__head">
+                    <h3 id="prompt-card-{{ kind }}">{{ kind == 'clear' ? 'Понятный разбор' : 'Профессиональное заключение' }}</h3>
+                    {% if not p.exists %}<span class="status status--muted">нет</span>
+                    {% elseif p.published_version is not null %}<span class="status status--done">опубликован</span>
+                    {% else %}<span class="status status--pending">не опубликован</span>{% endif %}
+                </header>
+                <p class="report-card__for">{{ kind == 'clear' ? 'Простыми словами — для клиента.' : 'Профессиональным языком — для специалиста.' }}</p>
+                {% if not p.exists %}
+                    <p class="report-card__meta">Промпта этого вида нет — разбор этого вида не заказывается.</p>
+                {% else %}
+                    {% if p.published_version is not null %}
+                    <p class="report-card__meta">Опубликована версия {{ p.published_version }}{% if p.published_at %} от {{ p.published_at|date("d.m.Y") }}{% endif %}.</p>
+                    {% if p.draft_version %}<p class="report-card__meta">Есть черновик версии {{ p.draft_version }}{% if p.draft_at %} от {{ p.draft_at|date("d.m.Y") }}{% endif %} — клиенты его не видят.</p>{% endif %}
+                    {% else %}
+                    <p class="report-card__meta">Черновик версии {{ p.draft_version }}{% if p.draft_at %} от {{ p.draft_at|date("d.m.Y") }}{% endif %}. Пока он не опубликован, разбор этого вида не предлагается.</p>
+                    {% endif %}
+                    <div class="report-card__actions">
+                        <a class="btn btn-outline btn-sm" href="{{ basePath }}{{ p.path }}">Открыть</a>
+                        {% if p.draft_version and p.published_version is null %}
+                        <a class="btn btn-ghost btn-sm" href="{{ basePath }}{{ p.path }}#prompt-publish">Опубликовать…</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p class="owner-help test-section__empty">Промптов пока нет. Включите ИИ-разбор выше — появятся две заготовки, понятный разбор и профессиональное заключение, которые можно прочитать, поправить и опубликовать.</p>
+        {% endif %}
+    </section>
+
+    {# ---------- Что получает модель ---------- #}
+    <section id="model-input" class="case-section test-section" aria-labelledby="test-input-title" data-case-section>
+        <h2 id="test-input-title">Что получает модель</h2>
+        <p class="owner-help test-section__note">Поля обезличенного результата, которые уходят модели{% if item.modes|length > 1 %} в режиме «{{ mode_names[mode] ?? mode }}»{% endif %}. Имя, контакты и ваши заметки не передаются никогда.</p>
+        <dl class="model-input">
+            {% for variable in variables %}
+            <div class="model-input__row"><dt>{{ variable.label }}</dt><dd>{{ variable.hint ?: '—' }}</dd></div>
+            {% endfor %}
+            <div class="model-input__row model-input__row--items" data-items="{{ item.items_always ? 'always' : (item.send_item_answers ? 'on' : 'off') }}">
+                <dt>Ответы по пунктам</dt>
+                <dd>{% if item.items_always %}Уходят всегда: так устроен утверждённый разбор этой методики.
+                    {% elseif item.send_item_answers %}Уходят: ответ человека на каждый вопрос, без имени и контактов.
+                    {% else %}Не уходят. Включаются галочкой «Передавать модели ответы по пунктам» в разделе «ИИ-разбор».{% endif %}</dd>
+            </div>
+        </dl>
+        {% if previewKind %}
+        <p class="test-section__action"><a class="btn btn-ghost btn-sm" href="{{ basePath }}{{ prompts[previewKind].path }}/preview#prompt-preview">Показать запрос на тестовых данных</a></p>
+        {% endif %}
+    </section>
+
+    {# ---------- Инструкция респонденту ---------- #}
+    {% if instruction %}
+    <section id="instruction" class="case-section test-section disclosure-stack" aria-labelledby="test-instruction-title" data-case-section>
+        <h2 id="test-instruction-title">Инструкция</h2>
+        <details class="ai-report__details case-fold">
+            <summary class="ai-report__summary"><span class="ai-report__summary-title">Что видит человек перед началом</span><span class="ai-report__summary-hint">{{ instruction|length }} {{ instruction|length == 1 ? 'абзац' : (instruction|length < 5 ? 'абзаца' : 'абзацев') }}</span></summary>
+            <div class="case-fold__body ai-report__body">
+                {% for paragraph in instruction %}<p>{{ paragraph }}</p>{% endfor %}
+            </div>
+        </details>
+    </section>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ asset('js/owner-forms.js') }}"></script>
+<script src="{{ asset('js/owner-case-workspace.js') }}"></script>
+<script src="{{ asset('js/owner-tests.js') }}"></script>
+{% endblock %}

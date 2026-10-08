@@ -1729,7 +1729,7 @@ final class OwnerController extends BaseController
             'item' => $row,
             'mode' => $mode,
             'description' => (string) ($metadata['description'] ?? ''),
-            'question_count' => (int) ($metadata['question_count'] ?? count($module->getQuestions())),
+            'question_label' => self::questionsLabel((int) ($metadata['question_count'] ?? count($module->getQuestions()))),
             'instruction' => array_values(array_filter(array_map('strval', $instruction), static fn (string $p): bool => trim($p) !== '')),
             'variables' => array_values(array_filter(
                 $this->promptVariables($test, $mode),
@@ -2539,6 +2539,21 @@ final class OwnerController extends BaseController
             'pair' => 'парный',
             default => $mode,
         };
+    }
+
+    /** «21 вопрос», «566 вопросов»: число со словом в нужной форме. */
+    private static function questionsLabel(int $count): string
+    {
+        $mod100 = $count % 100;
+        $mod10 = $count % 10;
+        $word = match (true) {
+            $mod100 >= 11 && $mod100 <= 14 => 'вопросов',
+            $mod10 === 1 => 'вопрос',
+            $mod10 >= 2 && $mod10 <= 4 => 'вопроса',
+            default => 'вопросов',
+        };
+
+        return $count . ' ' . $word;
     }
 
     /** Подпись вкладки режима: «Один» / «Пара». */
