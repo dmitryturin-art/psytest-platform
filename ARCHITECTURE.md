@@ -113,6 +113,7 @@ HTTP request
 | POST | `/admin/prompts/settings` | `OwnerController::savePromptSettings` | выключатель ИИ-разборов и переопределение модели |
 | GET | `/admin/prompts/{test}/{mode}/{kind}` | `OwnerController::promptKey` | карточка ключа: версии и текст выбранной |
 | GET | `/admin/prompts/{test}/{mode}/{kind}/preview` | `OwnerController::promptPreview` | предпросмотр запроса на синтетическом контексте, без вызова провайдера |
+| POST | `/admin/prompts/{test}/{mode}/{kind}/preview` | `OwnerController::promptDraftPreview` | JSON-предпросмотр несохранённого черновика (редактор промпта, WP9b): ничего не сохраняет, провайдера не вызывает |
 | POST | `/admin/prompts/{test}/{mode}/{kind}/versions` | `OwnerController::createPromptVersion` | сохранить новую версию промпта из кабинета |
 | POST | `/admin/prompts/{test}/{mode}/{kind}/publish` | `OwnerController::publishPromptVersion` | опубликовать версию для новых заказов |
 | POST | `/admin/prompts/{test}/{mode}/{kind}/reset` | `OwnerController::resetPromptVersion` | вернуть ключ к версии из `manifest.json` |

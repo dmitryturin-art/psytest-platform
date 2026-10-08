@@ -111,10 +111,40 @@
     <section class="owner-invites" aria-labelledby="owner-prompt-new-title">
         <h2 id="owner-prompt-new-title">Новая версия</h2>
         <p class="owner-help">Основа — текст версии {{ selected_version }}. Сохранение не публикует: опубликовать нужно отдельной кнопкой.</p>
-        <form method="post" action="{{ key_path }}/versions" class="owner-form">
+        <form method="post" action="{{ key_path }}/versions" class="owner-form" data-prompt-editor-form data-preview-url="{{ key_path }}/preview">
             {{ csrf_field() }}
-            <label for="prompt-text">Текст промпта</label>
-            <textarea id="prompt-text" name="text" rows="18" required>{{ selected.text }}</textarea>
+            <div class="owner-field">
+                <label for="prompt-text">Текст промпта</label>
+                {# Поле остаётся источником правды: редактор правит его содержимое,
+                   а без JS страница работает как прежде. #}
+                <textarea id="prompt-text" name="text" rows="18" required data-prompt-editor>{{ selected.text }}</textarea>
+            </div>
+
+            {% if variables %}
+            <div class="owner-prompt-vars" data-prompt-vars hidden>
+                <label for="prompt-var-select">Вставить переменную</label>
+                <select id="prompt-var-select" data-prompt-var-select>
+                    <option value="">Поле входных данных…</option>
+                    {% for variable in variables %}
+                    <option value="{{ variable }}">{{ variable }}</option>
+                    {% endfor %}
+                </select>
+                <p class="owner-help">Поля, которые модель получает во входных данных этой методики. Подстановки в тексте нет: промпт просто называет поле по имени.</p>
+            </div>
+            {% endif %}
+
+            <div class="owner-prompt-preview" data-prompt-preview-box hidden>
+                <button type="button" class="btn btn-outline btn-sm" data-prompt-preview-toggle aria-expanded="false">Предпросмотр</button>
+                <p class="owner-help" data-prompt-stats></p>
+                <div data-prompt-preview-panel hidden>
+                    <p class="owner-notice owner-notice--error" role="alert" data-prompt-preview-error hidden></p>
+                    <p class="owner-help" data-prompt-preview-meta></p>
+                    <h3>system</h3>
+                    <pre class="owner-prompt-text" data-prompt-preview-system></pre>
+                    <h3>user</h3>
+                    <pre class="owner-prompt-text" data-prompt-preview-user></pre>
+                </div>
+            </div>
 
             <label for="prompt-note">Заметка о правке</label>
             <input type="text" id="prompt-note" name="note" maxlength="{{ note_max }}">
@@ -128,4 +158,15 @@
         </form>
     </section>
 </section>
+{% endblock %}
+
+{# Редактор лежит локально: внешних CDN в кабинете нет. #}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ asset('vendor/toastui-editor/toastui-editor.min.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ asset('vendor/toastui-editor/toastui-editor-all.min.js') }}"></script>
+<script src="{{ asset('vendor/toastui-editor/i18n/ru-ru.min.js') }}"></script>
+<script src="{{ asset('js/owner-prompt-editor.js') }}"></script>
 {% endblock %}

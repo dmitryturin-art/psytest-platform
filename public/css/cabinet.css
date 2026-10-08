@@ -1479,6 +1479,29 @@ a.cab-table__title:hover {
         font-size: var(--font-size-md);
     }
 
+    /* Клиент кейса (04.D3): ячейка во всю ширину сетки, длинное имя переносится,
+       «Привязать к клиенту» / «Сменить» не выходят за край карточки. */
+    .owner-dashboard-page .case-head .owner-case-details > div:has(.owner-case-client) {
+        grid-column: 1 / -1;
+        min-width: 0;
+    }
+
+    .case-head .owner-case-client {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .case-head .owner-case-client__form {
+        display: block;
+        max-width: 100%;
+    }
+
+    .case-head .owner-case-client__form .btn {
+        max-width: 100%;
+        white-space: normal;
+        text-align: left;
+    }
+
     .owner-dashboard-page .case-head h1 {
         font-size: var(--font-size-xl);
     }
@@ -1522,4 +1545,53 @@ a.cab-table__title:hover {
 
 .owner-copy[hidden] {
     display: none;
+}
+
+/* ---------- Редактор промпта (07.WP9b) ---------- */
+
+.owner-prompt-editor .toastui-editor-tabs,
+.owner-prompt-editor .toastui-editor-md-tab-container,
+.owner-prompt-editor .toastui-editor-mode-switch {
+    display: none;
+}
+
+.owner-prompt-editor .toastui-editor-md-container .toastui-editor-contents,
+.owner-prompt-editor .ProseMirror {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+.owner-prompt-vars {
+    display: grid;
+    gap: var(--spacing-xs);
+    max-width: 28rem;
+}
+
+.owner-prompt-vars[hidden],
+.owner-prompt-preview[hidden],
+.owner-prompt-preview [hidden] {
+    display: none;
+}
+
+.owner-prompt-preview {
+    display: grid;
+    gap: var(--spacing-sm);
+    justify-items: start;
+}
+
+.owner-prompt-preview .owner-prompt-text,
+.owner-prompt-preview [data-prompt-preview-panel] {
+    width: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .owner-prompt-editor {
+        margin-inline: 0;
+    }
+
+    .owner-prompt-editor .toastui-editor-defaultUI-toolbar {
+        padding-inline: var(--spacing-xs);
+    }
 }
