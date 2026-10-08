@@ -120,7 +120,9 @@ HTTP request
 | POST | `/admin/tests/{test}/prompts/{mode}/{kind}/versions` | `OwnerController::createPromptVersion` | сохранить новую версию промпта из кабинета |
 | POST | `/admin/tests/{test}/prompts/{mode}/{kind}/publish` | `OwnerController::publishPromptVersion` | опубликовать версию для новых заказов (с подтверждением) |
 | POST | `/admin/tests/{test}/prompts/{mode}/{kind}/reset` | `OwnerController::resetPromptVersion` | вернуть ключ к версии из `manifest.json` |
-| POST | `/admin/tests/{test}/prompts/{mode}/{kind}/trial` | `OwnerController::promptTrial` | пробный вызов провайдера на том же синтетическом контексте |
+| POST | `/admin/tests/{test}/prompts/{mode}/{kind}/trial` | `OwnerController::promptTrial` | пробный разбор на синтетическом контексте: защищён `FormOnce` (`owner_prompt_trial`), провайдера в запросе не вызывает — ставит строку `ai_trial_runs`, запускает фоновый обработчик (`BackgroundWorkerLauncher`; без `AI_WORKER_PHP_BIN` — после ответа браузеру, `ResponseFinisher`) и редиректит на `#trial-result` (07.K14a) |
+| GET | `/admin/tests/{test}/prompts/{mode}/{kind}/trial/status` | `OwnerController::promptTrialStatus` | JSON `{status}` для опроса страницей раз в 5 секунд; только владелец |
+| POST | `/admin/tests/{test}/prompts/{mode}/{kind}/trial/dismiss` | `OwnerController::promptTrialDismiss` | кнопка «Закрыть»: удаляет готовый или неудавшийся пробный разбор |
 | GET | `/admin/prompts` | `OwnerController::legacyPrompts` | старый адрес раздела «Промпты»: 301 на `/admin/tests` |
 | POST | `/admin/prompts/settings` | `OwnerController::legacyPromptSettings` | старый адрес настроек ИИ: 308 на `/admin/tests/settings` (метод и тело сохраняются) |
 | POST | `/admin/prompts/tests` | `OwnerController::savePromptTests` | прежняя форма галочек всех методик (07.WP10); шаблонов, которые её отправляют, больше нет, адрес оставлен для открытых до обновления вкладок; после сохранения — 303 на `/admin/tests` |

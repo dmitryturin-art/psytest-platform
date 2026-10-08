@@ -21,7 +21,7 @@
 {% set selected_name = selected_is_stub ? 'заготовка' : 'версия ' ~ selected_version %}
 {% set selected_gen = selected_is_stub ? 'заготовки' : 'версии ' ~ selected_version %}
 {% set published_is_stub = stub is not null and published_version == stub %}
-<section class="owner-panel case-workspace prompt-page" aria-labelledby="owner-prompt-title"{% if trial %} data-scroll-to="prompt-trial-result"{% elseif preview %} data-scroll-to="prompt-preview"{% endif %}>
+<section class="owner-panel case-workspace prompt-page" aria-labelledby="owner-prompt-title"{% if preview %} data-scroll-to="prompt-preview"{% endif %}>
     {% include 'blocks/owner-crumbs.twig' with {items: [
         {label: 'Методики', href: basePath ~ '/admin/tests'},
         {label: test_title, href: basePath ~ methodology_path ~ (mode != 'individual' ? '?mode=' ~ mode : '') ~ '#prompts'},
@@ -70,9 +70,10 @@
             <details class="action-pop action-pop--wide" id="prompt-trial" data-action-pop>
                 <summary class="btn btn-outline btn-sm">Пробный разбор</summary>
                 <div class="action-pop__panel">
-                    <form method="post" action="{{ key_path }}/trial" class="action-pop__form prompt-trial">
+                    <form method="post" action="{{ key_path }}/trial" class="action-pop__form prompt-trial" data-submit-once>
                         {{ csrf_field() }}
                         <input type="hidden" name="version" value="{{ selected_version }}">
+                        <input type="hidden" name="form_key" value="{{ trial_form_key }}">
                         <h3 class="prompt-trial__title">Пробный разбор {{ selected_gen }} на тестовых данных</h3>
                         <p class="prompt-tools__hint">Промпт отправится модели на выдуманных ответах, и вы увидите, какой разбор получится. Запрос платный, как обычный разбор; результат нигде не сохраняется, клиенты не затрагиваются.</p>
                         <label class="prompt-trial__confirm">
@@ -80,8 +81,8 @@
                             <span>Подтверждаю платный пробный запрос к модели</span>
                         </label>
                         <div class="prompt-trial__actions">
-                            <button type="submit" class="btn btn-outline btn-sm"{% if not ai_enabled %} disabled{% endif %}>Запустить пробный разбор</button>
-                            {% if not ai_enabled %}<span class="prompt-tools__hint">ИИ-разборы выключены в настройках.</span>{% endif %}
+                            <button type="submit" class="btn btn-outline btn-sm" data-busy-text="Запускаем разбор…"{% if not ai_enabled %} disabled{% endif %}>Запустить пробный разбор</button>
+                            {% if not ai_enabled %}<span class="prompt-tools__hint">ИИ-разборы выключены в настройках.</span>{% else %}<span class="prompt-tools__hint">Разбор готовится в фоне, обычно 30–90 секунд: страницу можно не закрывать.</span>{% endif %}
                         </div>
                     </form>
                 </div>
@@ -137,12 +138,22 @@
         {% endif %}
 
         {% if trial %}
-        <div id="prompt-trial-result" class="prompt-output" aria-labelledby="owner-prompt-trial-title">
-            <h3 id="owner-prompt-trial-title">Пробный разбор на тестовых данных</h3>
-            {% if trial.error %}
-                <p class="owner-notice owner-notice--error" role="alert">{{ trial.error }}</p>
+        <div id="trial-result" class="prompt-output prompt-trial-result prompt-trial-result--{{ trial.state }}" aria-labelledby="owner-prompt-trial-title"{% if trial.state == 'pending' %} data-trial-poll="{{ trial_status_path }}"{% endif %}>
+            <div class="prompt-trial-result__head">
+                <h3 id="owner-prompt-trial-title">Пробный разбор на тестовых данных{% if trial.at %}, {{ trial.at|date('H:i') }}{% endif %}</h3>
+                {% if trial.state != 'pending' %}
+                <form method="post" action="{{ key_path }}/trial/dismiss">
+                    {{ csrf_field() }}
+                    <button type="submit" class="btn btn-ghost btn-sm">Закрыть</button>
+                </form>
+                {% endif %}
+            </div>
+            {% if trial.state == 'pending' %}
+                <p class="owner-help" role="status" data-trial-waiting>Разбор готовится, обычно 30–90 секунд. Результат появится здесь сам; если этого не произошло, обновите страницу.</p>
+            {% elseif trial.state == 'failed' %}
+                <p class="owner-notice owner-notice--error" role="alert">Не получилось: {{ trial.error ?: 'причина не записана' }}</p>
             {% else %}
-                <p class="owner-help">Ответ модели{% if trial.model %} ({{ trial.model }}){% endif %}. Он не сохранён и исчезнет при перезагрузке страницы.</p>
+                <p class="owner-help">Ответ модели{% if trial.model %} ({{ trial.model }}){% endif %}. Результат хранится час и нигде больше не сохраняется.</p>
                 <div class="ai-report__body">{{ trial.text|raw }}</div>
             {% endif %}
         </div>
@@ -257,6 +268,7 @@
 <script src="{{ asset('vendor/toastui-editor/toastui-editor-all.min.js') }}"></script>
 <script src="{{ asset('vendor/toastui-editor/i18n/ru-ru.min.js') }}"></script>
 <script src="{{ asset('js/owner-prompt-editor.js') }}"></script>
+<script src="{{ asset('js/owner-forms.js') }}"></script>
 <script src="{{ asset('js/owner-case-workspace.js') }}"></script>
 <script src="{{ asset('js/owner-tests.js') }}"></script>
 {% endblock %}

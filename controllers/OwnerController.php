@@ -14,6 +14,8 @@ use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiReportRevisionService;
 use PsyTest\Core\Ai\AiSettings;
 use PsyTest\Core\Ai\AiTestSettings;
+use PsyTest\Core\Ai\AiTrialRepository;
+use PsyTest\Core\Ai\AiTrialRunner;
 use PsyTest\Core\Ai\BackgroundWorkerLauncher;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
@@ -2059,6 +2061,7 @@ final class OwnerController extends BaseController
     }
 
     public const PROMPT_TESTS_FORM = 'owner_prompt_tests';
+    public const PROMPT_TRIAL_FORM = 'owner_prompt_trial';
 
     /**
      * Галочки ИИ-разбора всех методик одной формой (07.WP10, D-056).
@@ -2305,11 +2308,13 @@ final class OwnerController extends BaseController
     }
 
     /**
-     * Пробный вызов провайдера на синтетическом контексте.
+     * Поставить пробный разбор на синтетическом контексте.
      * POST /admin/tests/{test}/prompts/{mode}/{kind}/trial
      *
-     * Результат показывается на странице и нигде не сохраняется: это проверка
-     * формулировки, а не разбор чьего-то результата.
+     * Провайдер здесь не вызывается: ответ модели идёт минуты, а прокси хостинга
+     * обрывает запрос раньше (504). Запрос только ставит задание, его делает
+     * фоновый обработчик, а страница показывает «готовится», затем результат.
+     * Результат живёт час и нигде больше не сохраняется.
      */
     public function promptTrial(string $test, string $mode, string $kind): void
     {
@@ -2318,33 +2323,49 @@ final class OwnerController extends BaseController
             return;
         }
 
+        $back = fn (bool $ok, string $message): never => $this->promptTrialBack($test, $mode, $kind, $ok, $message);
+
         if (($_POST['confirm_trial'] ?? null) !== '1') {
-            $this->promptFlashBack($test, $mode, $kind, false, 'Пробный вызов не сделан: нужно подтвердить обращение к провайдеру.');
+            $back(false, 'Пробный разбор не запущен: нужно подтвердить обращение к провайдеру.');
         }
 
         $aiSettings = new AiSettings($this->db);
         if (!$aiSettings->isAiEnabled()) {
-            $this->promptFlashBack($test, $mode, $kind, false, AiClient::DISABLED_REASON . '.');
+            $back(false, AiClient::DISABLED_REASON . '.');
         }
 
         /** @var Prompt $prompt */
         $prompt = $view['selected'];
         $preview = $this->buildPreview($prompt, $test, $mode);
         if ($preview['error'] !== null) {
-            $this->promptFlashBack($test, $mode, $kind, false, 'Пробный вызов не сделан: ' . $preview['error']);
+            $back(false, 'Пробный разбор не запущен: ' . $preview['error']);
         }
 
-        $trial = ['text' => null, 'error' => null, 'model' => null];
+        $trials = new AiTrialRepository($this->db);
+        if ($trials->hasActive($test, $mode, $kind)) {
+            $back(true, 'Пробный разбор уже идёт — дождитесь результата ниже.');
+        }
+
+        $claim = $this->formOnce()->claim(self::PROMPT_TRIAL_FORM, $_POST['form_key'] ?? null);
+        if ($claim === FormOnce::REPLAY) {
+            $back(true, 'Пробный разбор уже запрошен.');
+        }
+        if ($claim === FormOnce::UNKNOWN) {
+            $back(false, 'Пробный разбор не запущен: страница устарела. Обновите её и повторите.');
+        }
 
         try {
-            $completion = $this->trialClient($aiSettings)->complete(
+            $trials->request(
+                $test,
+                $mode,
+                $kind,
+                // Пробный разбор делается и по неопубликованной версии: в этом
+                // он и нужен — проверить текст до публикации.
                 new Prompt(
                     test: $prompt->test,
                     mode: $prompt->mode,
                     kind: $prompt->kind,
                     version: $prompt->version,
-                    // Пробный вызов делается и по неопубликованной версии: в
-                    // этом он и нужен — проверить текст до публикации.
                     status: Prompt::STATUS_PUBLISHED,
                     text: $prompt->text,
                     allowsOwnerContext: $prompt->allowsOwnerContext,
@@ -2352,28 +2373,133 @@ final class OwnerController extends BaseController
                 ),
                 $preview['context'],
             );
-            $trial['text'] = ReportMarkdown::toHtml($completion->text);
-            $trial['model'] = $completion->servedModel;
-        } catch (AiProviderException $e) {
-            $trial['error'] = $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->formOnce()->release(self::PROMPT_TRIAL_FORM, (string) $_POST['form_key']);
+            throw $e;
         }
 
-        $view['preview'] = $preview;
-        $view['trial'] = $trial;
+        $message = 'Пробный разбор запущен — обычно 30–90 секунд. Результат появится ниже без перезагрузки.';
+        $this->formOnce()->complete(self::PROMPT_TRIAL_FORM, (string) $_POST['form_key'], ['type' => 'success', 'message' => $message]);
+        $this->setFlash(['type' => 'success', 'message' => $message]);
+        $location = $this->promptKeyPath($test, $mode, $kind) . '?version=' . $prompt->version . '#trial-result';
 
-        echo $this->view->render('owner-prompt-key', $view);
+        // Очередь двигает сам запрос: отдельный процесс переживает 504, иначе
+        // ответ отдаётся сразу, а работа доделывается в этом же процессе.
+        if (BackgroundWorkerLauncher::fromConfig(require dirname(__DIR__) . '/config.php')->launch(1)) {
+            $this->redirect($location);
+        }
+
+        header('Location: ' . $location, true, 303);
+        header('Content-Length: 0');
+        ResponseFinisher::finish();
+
+        $runner = new AiTrialRunner($trials, $this->trialClient($aiSettings));
+        $job = $trials->claimNext();
+        if ($job !== null) {
+            $runner->process($job);
+        }
+
+        exit;
+    }
+
+    /**
+     * Состояние пробного разбора для опроса со страницы.
+     * GET /admin/tests/{test}/prompts/{mode}/{kind}/trial/status
+     */
+    public function promptTrialStatus(string $test, string $mode, string $kind): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!$this->promptKeyExists($test, $mode, $kind)) {
+            $this->notFound();
+
+            return;
+        }
+
+        $trial = (new AiTrialRepository($this->db))->latestFor($test, $mode, $kind);
+        $status = $trial === null ? 'none' : (string) $trial['status'];
+        if ($status === AiTrialRepository::STATUS_RUNNING) {
+            $status = AiTrialRepository::STATUS_PENDING;
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['status' => $status], JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Убрать результат пробного разбора.
+     * POST /admin/tests/{test}/prompts/{mode}/{kind}/trial/dismiss
+     */
+    public function promptTrialDismiss(string $test, string $mode, string $kind): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if (!$this->promptKeyExists($test, $mode, $kind)) {
+            $this->notFound();
+
+            return;
+        }
+
+        $trials = new AiTrialRepository($this->db);
+        $trial = $trials->latestFor($test, $mode, $kind);
+        // Идущий разбор не удаляется: обработчик ещё запишет в него итог.
+        if ($trial !== null && !in_array($trial['status'], [AiTrialRepository::STATUS_PENDING, AiTrialRepository::STATUS_RUNNING], true)) {
+            $trials->delete((string) $trial['id']);
+        }
+
+        $this->redirect($this->promptKeyPath($test, $mode, $kind));
+    }
+
+    private function promptTrialBack(string $test, string $mode, string $kind, bool $ok, string $message): never
+    {
+        $this->setFlash(['type' => $ok ? 'success' : 'error', 'message' => $message]);
+        $this->redirect($this->promptKeyPath($test, $mode, $kind) . '#trial-result');
     }
 
     private function trialClient(AiSettings $aiSettings): AiClient
     {
-        // Пробный вызов ждёт ответ синхронно в HTTP-запросе кабинета, поэтому
-        // ему нельзя давать боевой таймаут очереди: 90 секунд, иначе страница
-        // обрывается веб-сервером на середине.
         return new AiClient(
-            AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php', $aiSettings)->withTimeout(90),
+            AiProviderSettings::fromConfig(require dirname(__DIR__) . '/config.php', $aiSettings),
             new CurlTransport(),
             ownerSettings: $aiSettings,
         );
+    }
+
+    /**
+     * Пробный разбор для страницы ключа: готовится, готов или не получился.
+     *
+     * @return array{state: string, text: string|null, model: string|null, error: string|null, at: string|null}|null
+     */
+    private function trialView(string $test, string $mode, string $kind): ?array
+    {
+        $row = (new AiTrialRepository($this->db))->latestFor($test, $mode, $kind);
+        if ($row === null) {
+            return null;
+        }
+
+        $status = (string) $row['status'];
+        if ($status === AiTrialRepository::STATUS_READY) {
+            return [
+                'state' => 'ready',
+                'text' => ReportMarkdown::toHtml((string) $row['content']),
+                'model' => ($row['served_model'] ?? '') !== '' ? (string) $row['served_model'] : null,
+                'error' => null,
+                'at' => (string) ($row['completed_at'] ?? $row['updated_at']),
+            ];
+        }
+        if ($status === AiTrialRepository::STATUS_FAILED) {
+            return [
+                'state' => 'failed',
+                'text' => null,
+                'model' => null,
+                'error' => (string) ($row['failure_reason'] ?? ''),
+                'at' => (string) ($row['completed_at'] ?? $row['updated_at']),
+            ];
+        }
+
+        return ['state' => 'pending', 'text' => null, 'model' => null, 'error' => null, 'at' => (string) $row['created_at']];
     }
 
     /**
@@ -2458,7 +2584,9 @@ final class OwnerController extends BaseController
             'variables' => $this->promptVariables($test, $mode),
             'ai_enabled' => (new AiSettings($this->db))->isAiEnabled(),
             'preview' => null,
-            'trial' => null,
+            'trial' => $this->trialView($test, $mode, $kind),
+            'trial_form_key' => $this->formOnce()->issue(self::PROMPT_TRIAL_FORM),
+            'trial_status_path' => $this->promptKeyPath($test, $mode, $kind) . '/trial/status',
         ];
     }
 

@@ -50,6 +50,9 @@ try {
     // стёртые кейсы не мешали, а вместе с карточкой ушло всё остальное.
     $clientTrash = $clients->purgeTrash($trashThreshold);
 
+    // Пробные разборы владельца (07.K14a) живут час; истёкшие стираются.
+    $trialsPurged = (new \PsyTest\Core\Ai\AiTrialRepository($db))->purgeExpired();
+
     // Clean up old activity logs (older than 90 days)
     $logCutoff = date('Y-m-d H:i:s', strtotime('-90 days'));
     $sql = "DELETE FROM activity_log WHERE created_at < :cutoff";
@@ -63,6 +66,7 @@ try {
         'purge_failed' => $trash['failed'],
         'clients_purged' => $clientTrash['clients'],
         'clients_purge_failed' => $clientTrash['failed'],
+        'trial_runs_purged' => $trialsPurged,
         'trash_retention_days' => TestInviteService::TRASH_RETENTION_DAYS,
     ]);
     

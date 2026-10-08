@@ -29,6 +29,8 @@ use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiSettings;
 use PsyTest\Core\Ai\AiTestSettings;
+use PsyTest\Core\Ai\AiTrialRepository;
+use PsyTest\Core\Ai\AiTrialRunner;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\Database;
@@ -160,4 +162,33 @@ for ($i = 0; $i < $limit; $i++) {
     }
 }
 
-$log($processed === 0 ? 'Заданий в очереди нет.' : sprintf('Обработано заданий: %d', $processed));
+// Пробные разборы владельца (07.K14a): отдельная очередь, во входе только
+// синтетический кейс методики. Берутся после обычных заданий.
+$trials = new AiTrialRepository($db);
+$releasedTrials = $trials->releaseStuck();
+if ($releasedTrials > 0) {
+    $log(sprintf('Закрыто зависших пробных разборов: %d', $releasedTrials));
+}
+$trialRunner = new AiTrialRunner($trials, new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings));
+$trialsDone = 0;
+for ($i = 0; $i < $limit; $i++) {
+    $trial = $trials->claimNext();
+    if ($trial === null) {
+        break;
+    }
+
+    $startedAt = microtime(true);
+    $trialRunner->process($trial);
+    $trialsDone++;
+    $finishedTrial = $trials->find((string) $trial['id']);
+    $log(sprintf(
+        'Пробный разбор %s: %s, за %s c',
+        $trial['id'],
+        ($finishedTrial['status'] ?? '') === AiTrialRepository::STATUS_READY ? 'готов' : 'не получился',
+        round(microtime(true) - $startedAt, 1),
+    ));
+}
+
+$log($processed === 0 && $trialsDone === 0
+    ? 'Заданий в очереди нет.'
+    : sprintf('Обработано заданий: %d, пробных разборов: %d', $processed, $trialsDone));
