@@ -41,7 +41,7 @@
 | 06 | Не начат, после 07 (D-037) | заказы, 100%-ные купоны, YooKassa и чеки как переключатель доступа | [Открыть](phases/06-orders-coupons-yookassa.md) |
 | 07 | В работе (K, D-048; K8–K14b, WP9b, WP10/10b выполнены 06–08.10) | AI reports, редакции и кабинет терапевта; сначала бесплатно | [Открыть](phases/07-ai-reports-therapist-office.md) |
 | 08 | В работе (staging) | Beget survey, staging, затем backup/monitoring/production | [Открыть](phases/08-production-deployment.md) |
-| 09 | В работе (O1 — IPIP, 08.10) | новые модули и контролируемый рост | [Открыть](phases/09-growth-new-modules.md) |
+| 09 | В работе (O1 — IPIP выложен 09.10; дальше PHQ-9/GAD-7/CSI) | новые модули и контролируемый рост | [Открыть](phases/09-growth-new-modules.md) |
 
 `ROADMAP.md` — управленческий индекс верхнего уровня; эта таблица — файловый индекс реализации. Фактический активный статус всегда сверяется с `STATUS.md`.
 
