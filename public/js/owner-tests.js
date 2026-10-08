@@ -206,4 +206,45 @@
             output.scrollIntoView({ block: 'start' });
         }
     }
+
+    // ---------- Пробный разбор: опрос состояния, пока он готовится ----------
+    // Без скрипта страница просит обновить её вручную (текст в самом блоке).
+    var trialBlock = document.querySelector('[data-trial-poll]');
+    if (trialBlock && window.fetch) {
+        var statusUrl = trialBlock.getAttribute('data-trial-poll');
+        var attempts = 0;
+        var maxAttempts = 60; // 5 минут по 5 секунд
+        var timer = window.setInterval(function () {
+            attempts += 1;
+            if (attempts > maxAttempts) {
+                window.clearInterval(timer);
+                var waiting = trialBlock.querySelector('[data-trial-waiting]');
+                if (waiting) {
+                    waiting.textContent = 'Разбор готовится дольше обычного. Обновите страницу через минуту.';
+                }
+                return;
+            }
+            fetch(statusUrl, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                .then(function (response) { return response.ok ? response.json() : null; })
+                .then(function (data) {
+                    if (!data || data.status === 'pending') {
+                        return null;
+                    }
+                    window.clearInterval(timer);
+                    return fetch(window.location.pathname + window.location.search, { credentials: 'same-origin' })
+                        .then(function (response) { return response.text(); })
+                        .then(function (html) {
+                            var doc = new DOMParser().parseFromString(html, 'text/html');
+                            var fresh = doc.getElementById('trial-result');
+                            if (fresh) {
+                                trialBlock.replaceWith(fresh);
+                                fresh.scrollIntoView({ block: 'start' });
+                            } else {
+                                window.location.reload();
+                            }
+                        });
+                })
+                .catch(function () { /* следующая попытка через 5 секунд */ });
+        }, 5000);
+    }
 }());

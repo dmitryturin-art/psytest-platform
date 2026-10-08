@@ -112,4 +112,45 @@ final class MethodologySectionContractTest extends TestCase
         self::assertStringContainsString('$this->formOnce()->run(', $body);
         self::assertStringContainsString("'form_key' => \$this->formOnce()->issue(self::PROMPT_TESTS_FORM)", $body);
     }
+
+    /**
+     * 07.K14b: одна колонка. Контейнеры кабинета не ограничены по ширине — колонку
+     * чтения держат только абзацы; подсказка всегда мелкая.
+     */
+    public function testCabinetContainersSpanTheColumnAndOnlyParagraphsKeepTheMeasure(): void
+    {
+        $cabinet = $this->read('public/css/cabinet.css');
+        $main = $this->read('public/css/main.css');
+
+        foreach ([
+            '.prompt-tools', '.owner-prompt-vars', '.owner-dashboard-page .test-ai-form', '.model-input',
+            '.prompt-facts', '.prompt-output', '.owner-dashboard-page .ai-settings-form', '.test-ai-more',
+            '.owner-dashboard-page .case-note__form',
+        ] as $selector) {
+            $pattern = '/(?:^|\n)' . preg_quote($selector, '/') . ' \{([^}]*)\}/';
+            self::assertSame(1, preg_match($pattern, $cabinet, $m), $selector);
+            self::assertStringNotContainsString('max-width', $m[1], $selector);
+        }
+
+        self::assertStringNotContainsString('.owner-dashboard-page .case-reader {', $cabinet);
+        self::assertMatchesRegularExpression(
+            '/\.owner-dashboard-page p\.owner-help,\s*\.owner-dashboard-page p\.owner-panel-intro \{\s*max-width: var\(--measure-wide\);/',
+            $cabinet,
+        );
+        self::assertMatchesRegularExpression('/\.owner-dashboard-page \.owner-help \{\s*font-size: var\(--font-size-sm\);/', $cabinet);
+        self::assertStringContainsString('--spacing-section: 2.5rem', $main);
+
+        // Общий список колонки ~68 знаков больше не захватывает подсказки и вводный текст кабинета.
+        $list = substr($main, (int) strpos($main, '/* Длинный текст'), 600);
+        self::assertStringNotContainsString(".owner-help,\n", $list);
+        self::assertStringNotContainsString(".owner-panel-intro,\n", $list);
+
+        self::assertStringContainsString(
+            '<a class="btn btn-outline btn-sm" href="{{ key_path }}/preview?version=',
+            $this->read('templates/owner-prompt-key.twig'),
+        );
+        $kit = $this->read('docs/UI_KIT.md');
+        self::assertStringContainsString('## Принципы вёрстки', $kit);
+        self::assertStringContainsString('## Сетка и ритм страниц кабинета', $kit);
+    }
 }

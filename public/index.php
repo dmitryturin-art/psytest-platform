@@ -140,6 +140,8 @@ $router->post('/admin/tests/{test}/prompts/{mode}/{kind}/versions', [OwnerContro
 $router->post('/admin/tests/{test}/prompts/{mode}/{kind}/publish', [OwnerController::class, 'publishPromptVersion']);
 $router->post('/admin/tests/{test}/prompts/{mode}/{kind}/reset', [OwnerController::class, 'resetPromptVersion']);
 $router->post('/admin/tests/{test}/prompts/{mode}/{kind}/trial', [OwnerController::class, 'promptTrial']);
+$router->get('/admin/tests/{test}/prompts/{mode}/{kind}/trial/status', [OwnerController::class, 'promptTrialStatus']);
+$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/trial/dismiss', [OwnerController::class, 'promptTrialDismiss']);
 // Старые адреса «Промптов»: GET — 301, POST — 308 на те же действия в «Методиках».
 $router->get('/admin/prompts', [OwnerController::class, 'legacyPrompts']);
 $router->post('/admin/prompts/settings', [OwnerController::class, 'legacyPromptSettings']);
