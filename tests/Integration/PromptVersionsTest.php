@@ -259,9 +259,10 @@ final class PromptVersionsTest extends TestCase
 
         (new AiSettings($this->db))->setAiEnabled(false);
 
+        // Единое правило (07.WP10): незаказанный разбор при выключенном ИИ не
+        // показывается вовсе — ни кнопки, ни обещания.
         $disabled = (new ResultPresenter($this->db, $sessions))->reportViewData(self::TEST, $session);
-        self::assertIsArray($disabled);
-        self::assertTrue($disabled['ai_disabled'], 'С выключенным ИИ страница не предлагает заказ.');
+        self::assertNull($disabled, 'С выключенным ИИ страница не предлагает заказ.');
     }
 
     // ------------------------------------------------------------------ fixtures

@@ -23,10 +23,12 @@ require __DIR__ . '/../vendor/autoload.php';
 use PsyTest\Core\Ai\AiClient;
 use PsyTest\Core\Ai\AiProviderException;
 use PsyTest\Core\Ai\AiProviderSettings;
+use PsyTest\Core\Ai\AiReportAvailability;
 use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiSettings;
+use PsyTest\Core\Ai\AiTestSettings;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Core\Database;
@@ -69,6 +71,8 @@ if ($released !== []) {
 $contextBuilder = new AiReportContextBuilder(
     new SessionManager($db),
     (new ModuleLoader(null, $db))->discover(),
+    $aiSettings,
+    new AiTestSettings($db),
 );
 
 $generator = new AiReportGenerator(
@@ -95,9 +99,11 @@ if (isset($options['request'])) {
     $test = $db->selectOne('SELECT slug FROM tests WHERE id = ?', [$session['test_id']]);
     $slug = (string) ($test['slug'] ?? '');
 
-    $prompt = PromptRegistry::default($db)->published($slug, $mode, $kind);
+    // То же правило, что и на странице результата (07.WP10).
+    $availability = AiReportAvailability::forDatabase($db);
+    $prompt = $availability->promptFor($slug, $mode, $kind);
     if ($prompt === null) {
-        $log("Промпт «{$slug} | {$mode} | {$kind}» не опубликован — задание не ставится.");
+        $log("Задание не поставлено: " . $availability->refusal($slug, $mode, $kind) . ".");
         exit(1);
     }
 

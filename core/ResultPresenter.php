@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace PsyTest\Core;
 
+use PsyTest\Core\Ai\AiReportAvailability;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiReportRevisionService;
 use PsyTest\Core\Ai\AiSettings;
 use PsyTest\Core\Ai\Prompt;
-use PsyTest\Core\Ai\PromptRegistry;
 use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\TestModuleInterface;
 
@@ -22,6 +22,17 @@ use PsyTest\Modules\TestModuleInterface;
  */
 final class ResultPresenter
 {
+    /**
+     * Статусы уже заказанного разбора, которые остаются видны, даже когда
+     * новый заказ закрыт (07.WP10): готовый текст и задание в работе. Неудачный
+     * заказ без возможности повторить не показывается — повторить нечем.
+     */
+    private const VISIBLE_WITHOUT_ORDERING = [
+        AiReportRepository::STATUS_READY,
+        AiReportRepository::STATUS_PENDING,
+        AiReportRepository::STATUS_RUNNING,
+    ];
+
     public function __construct(
         private readonly Database $db,
         private readonly SessionManager $sessions,
@@ -202,28 +213,32 @@ final class ResultPresenter
             ];
         }
 
-        $registry = PromptRegistry::default($this->db);
         $reports = new AiReportRepository($this->db);
-        // Выключатель владельца (07.WP9): кнопку заказа показывать нечестно —
-        // задание всё равно ушло бы в отказ. Готовые разборы остаются видны.
-        $aiDisabled = !(new AiSettings($this->db))->isAiEnabled();
+        // Единое правило показа (07.WP10): заказ предлагается, только когда
+        // включены общий выключатель и разбор методики и опубликован промпт.
+        // Иначе вида нет вовсе — ни кнопки, ни обещания. Уже заказанный
+        // разбор остаётся виден: выключение останавливает только новые заказы.
+        $availability = AiReportAvailability::forDatabase($this->db);
 
         $kinds = [];
         foreach ([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL] as $kind) {
-            if ($registry->published($slug, $mode, $kind) === null) {
+            $canOrder = $availability->canOffer($slug, $mode, $kind);
+            $report = $reports->findFor((string) $session['id'], $mode, $kind);
+            $status = (string) ($report['status'] ?? 'none');
+
+            if (!$canOrder && !in_array($status, self::VISIBLE_WITHOUT_ORDERING, true)) {
                 continue;
             }
-
-            $report = $reports->findFor((string) $session['id'], $mode, $kind);
 
             $kinds[] = [
                 'kind' => $kind,
                 'title' => $kind === Prompt::KIND_CLEAR ? 'Понятный разбор' : 'Профессиональное заключение',
-                'status' => $report['status'] ?? 'none',
-                'html' => ($report['status'] ?? '') === AiReportRepository::STATUS_READY
+                'status' => $status,
+                'html' => $status === AiReportRepository::STATUS_READY
                     ? ReportMarkdown::toHtml((string) $report['content'])
                     : null,
                 'failure_reason' => $report['failure_reason'] ?? null,
+                'can_order' => $canOrder,
             ];
         }
 
@@ -231,7 +246,9 @@ final class ResultPresenter
             'mode' => $mode,
             'kinds' => $kinds,
             'readonly' => $readonly,
-            'ai_disabled' => $aiDisabled,
+            // Сохранено для шаблона: виды без возможности заказа сюда не
+            // попадают, кроме уже заказанных — для них новый заказ закрыт.
+            'ai_disabled' => !(new AiSettings($this->db))->isAiEnabled(),
         ];
     }
 

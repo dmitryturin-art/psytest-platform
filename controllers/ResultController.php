@@ -13,10 +13,12 @@ namespace PsyTest\Controllers;
 use PsyTest\Core\Ai\AiClient;
 use PsyTest\Core\Ai\AiProviderException;
 use PsyTest\Core\Ai\AiProviderSettings;
+use PsyTest\Core\Ai\AiReportAvailability;
 use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiSettings;
+use PsyTest\Core\Ai\AiTestSettings;
 use PsyTest\Core\Ai\BackgroundWorkerLauncher;
 use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
@@ -145,7 +147,12 @@ class ResultController extends BaseController
 
     private function contextBuilder(): AiReportContextBuilder
     {
-        return new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, new AiSettings($this->db));
+        return new AiReportContextBuilder(
+            $this->sessionManager,
+            $this->moduleLoader,
+            new AiSettings($this->db),
+            new AiTestSettings($this->db),
+        );
     }
 
     /**
@@ -190,19 +197,13 @@ class ResultController extends BaseController
             $this->redirect('/result/' . $slug . '/' . $token);
         }
 
-        // Общий выключатель владельца (07.WP9): задание не ставится вовсе,
-        // иначе посетитель ждал бы отчёт, который заведомо уйдёт в отказ.
-        if (!(new AiSettings($this->db))->isAiEnabled()) {
-            $this->redirect('/result/' . $slug . '/' . $token);
-        }
-
         $mode = $this->presenter->reportMode($session);
 
-        // Промпт спрашивается здесь, а не в обработчике: если разбор для этой
-        // методики не открыт, посетитель узнаёт об этом сразу, а не через
-        // несколько минут ожидания. Наличие опубликованного промпта и означает,
-        // что разбор для этого сочетания методики, режима и вида разрешён.
-        $prompt = PromptRegistry::default($this->db)->published($slug, $mode, $kind);
+        // Единое правило (07.WP10): общий выключатель, галочка методики и
+        // опубликованный промпт. Проверяется здесь, а не в обработчике: если
+        // разбор не открыт, задание не ставится вовсе, и посетитель не ждёт
+        // отчёт, который заведомо уйдёт в отказ. Отказ в журнал не пишется.
+        $prompt = AiReportAvailability::forDatabase($this->db)->promptFor($slug, $mode, $kind);
         if ($prompt === null) {
             $this->redirect('/result/' . $slug . '/' . $token);
         }

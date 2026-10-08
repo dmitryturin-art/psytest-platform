@@ -32,13 +32,13 @@
 
             <label for="ai-model">Модель</label>
             <input type="text" id="ai-model" name="ai_model" list="ai-model-list" maxlength="255" value="{{ ai_model }}" placeholder="{{ env_model }}">
-            <p class="owner-help">Пусто = из настроек сервера (сейчас {{ env_model }}). Ключ провайдера задаётся только в окружении и здесь не хранится.</p>
+            <p class="owner-help">Пусто = из настроек сервера (сейчас {{ env_model }}). Ключ доступа к модели хранится только в настройках сервера, не здесь.</p>
             {% if models %}
             <datalist id="ai-model-list">
                 {% for model in models %}<option value="{{ model.id }}">{{ model.name }}{% if model.free %} — бесплатная{% endif %}</option>{% endfor %}
             </datalist>
             {% else %}
-            <p class="owner-help">Список моделей провайдера сейчас недоступен — идентификатор можно вписать вручную.</p>
+            <p class="owner-help">Список моделей сейчас недоступен — название модели можно вписать вручную.</p>
             {% endif %}
 
             <fieldset class="owner-fieldset">
@@ -58,6 +58,41 @@
         </form>
     </section>
 
+    <section class="owner-invites" aria-labelledby="owner-ai-tests-title">
+        <h2 id="owner-ai-tests-title">ИИ-разбор по методикам</h2>
+        <p class="owner-help">
+            Разбор предлагается клиентам, гостям по ссылке и в кабинете посетителя, только когда для методики стоит галочка и её промпт опубликован.
+            Модели уходят обезличенные результаты: баллы, уровни и подшкалы. Имя, контакты и ваши заметки не уходят никогда.
+        </p>
+        <form method="post" action="{{ basePath }}/admin/prompts/tests" class="owner-form" data-submit-once>
+            {{ csrf_field() }}
+            <input type="hidden" name="form_key" value="{{ tests_form_key }}">
+            <ul class="owner-invite-list">
+                {% for item in methodologies %}
+                <li data-ai-test="{{ item.test }}">
+                    <p>
+                        <strong>{{ item.title }}</strong>
+                        {% if item.report_enabled and item.published %}<span class="status status--done">разбор предлагается</span>
+                        {% elseif item.report_enabled %}<span class="status status--pending">промпт не опубликован</span>
+                        {% else %}<span class="status status--muted">разбор выключен</span>{% endif %}
+                    </p>
+                    <label class="owner-toggle" for="ai-test-{{ item.test }}">
+                        <input type="checkbox" id="ai-test-{{ item.test }}" name="report_enabled[{{ item.test }}]" value="1" data-enables="ai-test-items-{{ item.test }}"{% if item.report_enabled %} checked{% endif %}>
+                        ИИ-разбор для этой методики
+                    </label>
+                    <label class="owner-toggle" for="ai-test-items-{{ item.test }}">
+                        <input type="checkbox" id="ai-test-items-{{ item.test }}" name="send_item_answers[{{ item.test }}]" value="1"{% if item.send_item_answers %} checked{% endif %}{% if not item.report_enabled %} disabled{% endif %}>
+                        Передавать модели ответы по пунктам
+                    </label>
+                    <p class="owner-help">Тогда модель получит ещё и ответ человека на каждый вопрос опросника — без имени и контактов. Без этой галочки уходят только итоговые баллы, уровни и подшкалы.</p>
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="owner-help">Если у методики ещё нет промптов, при включении появятся две заготовки — понятный разбор и профессиональное заключение. Они не опубликованы: клиенты увидят разбор только после того, как вы проверите текст и опубликуете его. Выключение останавливает только новые заказы — готовые разборы остаются.</p>
+            <button type="submit" class="btn btn-primary" data-busy-text="Сохраняем…">Сохранить методики</button>
+        </form>
+    </section>
+
     {% for group in groups %}
     <section class="owner-invites" aria-labelledby="owner-prompts-{{ group.test }}">
         <h2 id="owner-prompts-{{ group.test }}">{{ group.title }}</h2>
@@ -65,7 +100,11 @@
             {% for key in group.keys %}
             <li>
                 <p><strong><a href="{{ basePath }}/admin/prompts/{{ key.test }}/{{ key.mode }}/{{ key.kind }}">{{ key.kind_title|capitalize }}, {{ key.mode_title }}</a></strong></p>
-                <p>Опубликована версия {{ key.version }} — {{ key.source == 'owner' ? 'правка из кабинета' : 'файл в репозитории' }}{% if key.from_manifest %} — заводской текст{% endif %}.</p>
+                {% if key.version is null %}
+                <p>Ещё не опубликован — заготовка из универсального шаблона. Откройте, проверьте текст и опубликуйте.</p>
+                {% else %}
+                <p>Опубликована версия {{ key.version }} — {{ key.source == 'owner' ? 'правка из кабинета' : 'файл в репозитории' }}{% if key.from_manifest and key.has_factory_text %} — заводской текст{% endif %}.</p>
+                {% endif %}
                 {% if key.created_at %}<small>Сохранена {{ key.created_at|date("d.m.Y H:i") }}</small>{% endif %}
             </li>
             {% endfor %}
@@ -73,4 +112,8 @@
     </section>
     {% endfor %}
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ asset('js/owner-forms.js') }}"></script>
 {% endblock %}
