@@ -101,6 +101,13 @@ final class UniversalAiReportContractTest extends TestCase
         self::assertStringContainsString('ответ человека на каждый вопрос опросника', $bai);
         self::assertStringContainsString('промпт не опубликован', $bai);
         self::assertStringContainsString('Промптов пока нет. Включите ИИ-разбор выше', $hads);
+        // Длинные пояснения свёрнуты в «Что уходит модели»; галочки — над ним.
+        $fold = strpos($bai, 'Что уходит модели');
+        self::assertIsInt($fold);
+        self::assertLessThan($fold, (int) strpos($bai, 'name="send_item_answers"'));
+        self::assertGreaterThan($fold, (int) strpos($bai, 'ответ человека на каждый вопрос опросника'));
+        self::assertGreaterThan($fold, (int) strpos($bai, 'Имя, контакты и ваши заметки не уходят никогда'));
+        self::assertMatchesRegularExpression('/<details class="ai-report__details case-fold">\s*<summary class="ai-report__summary"><span class="ai-report__summary-title">Что уходит модели/', $bai);
 
         foreach ([$bai, $hads] as $html) {
             $visible = mb_strtolower(strip_tags($html));
@@ -114,7 +121,7 @@ final class UniversalAiReportContractTest extends TestCase
     {
         $draft = static fn (string $kind): array => [
             'exists' => true, 'state' => 'draft', 'published_version' => null, 'published_at' => null,
-            'published_source' => null, 'draft_version' => 1000, 'draft_at' => '2026-10-08 12:00:00', 'versions' => 1,
+            'published_source' => null, 'draft_version' => 1000, 'draft_at' => '2026-10-08 12:00:00', 'draft_is_stub' => true, 'versions' => 1,
             'path' => "/admin/tests/beck-anxiety/prompts/individual/{$kind}", 'kind_title' => $kind, 'mode_title' => 'индивидуальный',
         ];
         $item = $this->methodologyItem('beck-anxiety', 'Шкала тревоги Бека (BAI)', [
@@ -124,7 +131,10 @@ final class UniversalAiReportContractTest extends TestCase
 
         self::assertSame(2, substr_count($html, 'class="owner-case-ai-item report-card prompt-card"'));
         self::assertSame(2, substr_count($html, 'data-state="draft"'));
-        self::assertStringContainsString('Черновик версии 1000 от 08.10.2026', $html);
+        // Номер заготовки на карточке не показывается (решение владельца 08.10).
+        self::assertStringContainsString('Черновик (заготовка) от 08.10.2026', $html);
+        self::assertStringNotContainsString('1000', strip_tags($html));
+        self::assertStringContainsString('Профессиональным языком — для специалиста. Клиент его не видит.', $html);
         self::assertStringContainsString('href="/admin/tests/beck-anxiety/prompts/individual/clear#prompt-publish">Опубликовать…</a>', $html);
         // Сообщение о заготовках — в разделе «Промпты», а не в шапке.
         $prompts = substr($html, (int) strpos($html, 'id="prompts"'));
@@ -232,6 +242,7 @@ final class UniversalAiReportContractTest extends TestCase
                 ['kind' => 'professional', 'title' => 'профессиональное заключение', 'path' => '/admin/tests/beck-anxiety/prompts/individual/professional'],
             ],
             'mode_tabs' => [],
+            'stub_version' => 1,
             'published_version' => null, 'from_manifest' => true, 'manifest_version' => null,
             'has_factory_text' => false, 'test_report_enabled' => false,
             'selected' => $prompt, 'selected_version' => 1, 'note_max' => 255, 'variables' => [],
@@ -244,12 +255,18 @@ final class UniversalAiReportContractTest extends TestCase
         self::assertStringContainsString('Ни одна версия ещё не опубликована', $html);
         self::assertStringContainsString('ИИ-разбор этой методики выключен', $html);
         // Черновик есть, опубликованного нет — основная кнопка публикует его (07.K14).
-        self::assertStringContainsString('Опубликовать версию 1…</summary>', $html);
+        // Заготовка на экране — без номера; номер остаётся тихой пометкой в истории.
+        self::assertStringContainsString('Опубликовать заготовку…</summary>', $html);
+        self::assertStringContainsString('<h2 id="prompt-current-title">Черновик (заготовка)</h2>', $html);
+        self::assertStringContainsString('Понимаю, публикую заготовку', $html);
+        self::assertStringContainsString('<strong>Черновик (заготовка)</strong><span class="prompt-history__num">версия 1</span>', $html);
+        self::assertStringNotContainsString('Опубликовать версию 1', $html);
         self::assertStringContainsString('action="/admin/tests/beck-anxiety/prompts/individual/clear/publish"', $html);
         // Путь, «К методике» и вкладки видов.
         self::assertStringContainsString('<a href="/admin/tests">Методики</a>', $html);
-        self::assertStringContainsString('<a href="/admin/tests/beck-anxiety">BAI</a>', $html);
-        self::assertStringContainsString('class="crumbs__back" href="/admin/tests/beck-anxiety#prompts"', $html);
+        self::assertStringContainsString('<a href="/admin/tests/beck-anxiety#prompts">BAI</a>', $html);
+        // Отдельной ссылки «К методике» нет: путь её заменяет (решение владельца 08.10).
+        self::assertStringNotContainsString('К методике', $html);
         self::assertStringContainsString('href="/admin/tests/beck-anxiety/prompts/individual/clear" aria-current="page">Понятный разбор</a>', $html);
         self::assertStringContainsString('href="/admin/tests/beck-anxiety/prompts/individual/professional">Профессиональное заключение</a>', $html);
         foreach (['#prompt-current', '#prompt-edit', '#prompt-history'] as $anchor) {

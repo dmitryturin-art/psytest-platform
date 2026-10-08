@@ -82,7 +82,12 @@ final class MethodologySectionContractTest extends TestCase
         self::assertStringContainsString('class="cab-table tests-table"', $this->read('templates/owner-tests.twig'));
         // История версий свёрнута в тихий раскрывающийся блок.
         self::assertStringContainsString('disclosure-stack', $this->read('templates/owner-prompt-key.twig'));
-        self::assertStringContainsString('ui.icon(\'back\')', $this->read('templates/blocks/owner-crumbs.twig'));
+        // Путь без отдельной ссылки «Назад» (решение владельца 08.10).
+        foreach (['owner-test', 'owner-prompt-key', 'owner-ai-settings', 'blocks/owner-crumbs'] as $page) {
+            $template = $this->read("templates/{$page}.twig");
+            self::assertStringNotContainsString('К методик', $template, $page);
+            self::assertStringNotContainsString('crumbs__back', $template, $page);
+        }
     }
 
     public function testAutosaveSendsCsrfAndTheOneTimeKeyAndKeepsANoScriptButton(): void

@@ -1920,7 +1920,7 @@ final class OwnerController extends BaseController
     /**
      * Состояние одного промпта: опубликованная версия, черновик новее неё, даты.
      *
-     * @return array{exists: bool, state: string, published_version: int|null, published_at: string|null, published_source: string|null, draft_version: int|null, draft_at: string|null, versions: int, path: string, kind_title: string, mode_title: string}
+     * @return array{exists: bool, state: string, published_version: int|null, published_at: string|null, published_source: string|null, draft_version: int|null, draft_at: string|null, draft_is_stub: bool, versions: int, path: string, kind_title: string, mode_title: string}
      */
     private function promptState(PromptRegistry $registry, string $test, string $mode, string $kind): array
     {
@@ -1932,6 +1932,7 @@ final class OwnerController extends BaseController
             'published_source' => null,
             'draft_version' => null,
             'draft_at' => null,
+            'draft_is_stub' => false,
             'versions' => 0,
             'path' => $this->promptKeyPath($test, $mode, $kind),
             'kind_title' => self::kindTitle($kind),
@@ -1943,8 +1944,19 @@ final class OwnerController extends BaseController
 
         $catalog = $registry->versionCatalog($test, $mode, $kind);
         $published = $registry->published($test, $mode, $kind)?->version;
-        $latest = $catalog === [] ? null : max(array_column($catalog, 'version'));
-        $draft = $latest !== null && ($published === null || $latest > $published) ? $latest : null;
+        // Подсказка о черновике — только для правок из кабинета (и заготовок) новее
+        // опубликованной версии. Файловые черновики из поставки (СМИЛ v3, 07.G1)
+        // остаются в «Истории версий» страницы промпта и в списке не всплывают.
+        $ownerNewer = array_column(array_filter(
+            $catalog,
+            static fn (array $entry): bool => $entry['source'] === PromptRegistry::SOURCE_OWNER
+                && ($published === null || $entry['version'] > $published),
+        ), 'version');
+        $draft = $ownerNewer !== [] ? max($ownerNewer) : null;
+        if ($draft === null && $published === null && $catalog !== []) {
+            $draft = max(array_column($catalog, 'version'));
+        }
+        $stub = $this->stubVersion($registry, $test, $mode, $kind);
         $publishedEntry = $published === null ? null : self::findCatalogEntry($catalog, $published);
         $draftEntry = $draft === null ? null : self::findCatalogEntry($catalog, $draft);
 
@@ -1956,8 +1968,24 @@ final class OwnerController extends BaseController
             'published_source' => $publishedEntry['source'] ?? null,
             'draft_version' => $draft,
             'draft_at' => $draftEntry['created_at'] ?? null,
+            'draft_is_stub' => $draft !== null && $draft === $stub,
             'versions' => count($catalog),
         ] + $state;
+    }
+
+    /**
+     * Номер заготовки ключа (07.WP10), если ключ живёт только версиями из кабинета;
+     * на экране такая версия называется «Черновик (заготовка)», хранимый номер не меняется.
+     */
+    private function stubVersion(PromptRegistry $registry, string $test, string $mode, string $kind): ?int
+    {
+        if ($registry->hasFactoryText($test, $mode, $kind)) {
+            return null;
+        }
+
+        return in_array(PromptRegistry::STUB_FIRST_VERSION, $registry->availableVersions($test, $mode, $kind), true)
+            ? PromptRegistry::STUB_FIRST_VERSION
+            : null;
     }
 
     // ------------------------------------------------- старые адреса «Промптов»
@@ -2249,7 +2277,8 @@ final class OwnerController extends BaseController
             $this->promptFlashBack($test, $mode, $kind, false, 'Версия не опубликована: ' . $e->getMessage());
         }
 
-        $this->promptFlashBack($test, $mode, $kind, true, "Версия {$version} опубликована. Уже поставленные задания не изменились — у них свой снимок промпта.");
+        $label = $version === $this->stubVersion(PromptRegistry::default($this->db), $test, $mode, $kind) ? 'Заготовка' : "Версия {$version}";
+        $this->promptFlashBack($test, $mode, $kind, true, "{$label} опубликована. Уже поставленные задания не изменились — у них свой снимок промпта.");
     }
 
     /**
@@ -2409,6 +2438,8 @@ final class OwnerController extends BaseController
             'kind' => $kind,
             'methodology_path' => self::TESTS_PATH . '/' . rawurlencode($test),
             'state' => $this->promptState($registry, $test, $mode, $kind),
+            // Заготовка на экране — «Черновик (заготовка)», номер виден только в истории.
+            'stub_version' => $this->stubVersion($registry, $test, $mode, $kind),
             'kind_tabs' => $kindTabs,
             'mode_tabs' => count($modeTabs) > 1 ? $modeTabs : [],
             'versions_desc' => array_reverse($catalog),

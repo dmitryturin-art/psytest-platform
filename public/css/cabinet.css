@@ -1723,14 +1723,12 @@ a.cab-table__title:hover {
     color: var(--color-border-strong);
 }
 
-.crumbs a,
-.crumbs__back {
+.crumbs a {
     color: var(--color-text-light);
     text-decoration: none;
 }
 
-.crumbs a:hover,
-.crumbs__back:hover {
+.crumbs a:hover {
     color: var(--color-text);
     text-decoration: underline;
     text-underline-offset: 3px;
@@ -1738,17 +1736,6 @@ a.cab-table__title:hover {
 
 .crumbs [aria-current="page"] {
     color: var(--color-text);
-}
-
-.crumbs__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.125rem;
-}
-
-.crumbs__back .icon {
-    width: 16px;
-    height: 16px;
 }
 
 .ai-state {
@@ -2264,4 +2251,16 @@ a.cab-table__title:hover {
     max-width: var(--measure);
     margin: var(--spacing-md) 0 0;
     font-size: var(--font-size-sm);
+}
+
+/* Номер заготовки — только тихой пометкой в истории версий. */
+.prompt-history__num {
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+}
+
+/* «Что уходит модели» — свёрнутые пояснения под галочками ИИ-разбора. */
+.test-ai-more {
+    max-width: var(--measure-wide);
+    margin-top: var(--spacing-md);
 }

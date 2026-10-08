@@ -15,12 +15,18 @@
 {% set selected_entry = (versions|filter(v => v.version == selected_version)|first) ?: null %}
 {% set is_published = published_version is not null and selected_version == published_version %}
 {% set draft_version = state.draft_version ?? null %}
+{# Заготовка (07.WP10) на экране называется «заготовка»; её номер виден только в истории. #}
+{% set stub = stub_version ?? null %}
+{% set selected_is_stub = stub is not null and selected_version == stub %}
+{% set selected_name = selected_is_stub ? 'заготовка' : 'версия ' ~ selected_version %}
+{% set selected_gen = selected_is_stub ? 'заготовки' : 'версии ' ~ selected_version %}
+{% set published_is_stub = stub is not null and published_version == stub %}
 <section class="owner-panel case-workspace prompt-page" aria-labelledby="owner-prompt-title"{% if trial %} data-scroll-to="prompt-trial-result"{% elseif preview %} data-scroll-to="prompt-preview"{% endif %}>
     {% include 'blocks/owner-crumbs.twig' with {items: [
         {label: 'Методики', href: basePath ~ '/admin/tests'},
-        {label: test_title, href: basePath ~ methodology_path},
+        {label: test_title, href: basePath ~ methodology_path ~ (mode != 'individual' ? '?mode=' ~ mode : '') ~ '#prompts'},
         {label: kind_label ~ (mode_tabs ? ', ' ~ mode_label : '')},
-    ], back: {label: 'К методике', href: basePath ~ methodology_path ~ (mode != 'individual' ? '?mode=' ~ mode : '') ~ '#prompts'}} %}
+    ]} %}
 
     <header class="case-head prompt-head">
         <h1 id="owner-prompt-title">{{ kind_label }}</h1>
@@ -56,10 +62,10 @@
             <a class="view-tabs__tab" href="#prompt-history" data-case-nav-link>История</a>
         </div>
         <div class="case-nav__actions">
-            {% if published_version is not null %}<span class="status status--done">опубликована версия {{ published_version }}</span>
+            {% if published_version is not null %}<span class="status status--done">{{ published_is_stub ? 'опубликована заготовка' : 'опубликована версия ' ~ published_version }}</span>
             {% else %}<span class="status status--pending">не опубликован</span>{% endif %}
             {% if draft_version %}
-                {% include 'blocks/owner-publish-pop.twig' with {pop_id: 'prompt-publish', version: draft_version, label: 'Опубликовать версию ' ~ draft_version ~ '…', primary: true} %}
+                {% include 'blocks/owner-publish-pop.twig' with {pop_id: 'prompt-publish', version: draft_version, stub: draft_version == stub, label: (draft_version == stub ? 'Опубликовать заготовку…' : 'Опубликовать версию ' ~ draft_version ~ '…'), primary: true} %}
             {% endif %}
             <details class="action-pop action-pop--wide" id="prompt-trial" data-action-pop>
                 <summary class="btn btn-outline btn-sm">Пробный разбор</summary>
@@ -67,7 +73,7 @@
                     <form method="post" action="{{ key_path }}/trial" class="action-pop__form prompt-trial">
                         {{ csrf_field() }}
                         <input type="hidden" name="version" value="{{ selected_version }}">
-                        <h3 class="prompt-trial__title">Пробный разбор версии {{ selected_version }} на тестовых данных</h3>
+                        <h3 class="prompt-trial__title">Пробный разбор {{ selected_gen }} на тестовых данных</h3>
                         <p class="prompt-tools__hint">Промпт отправится модели на выдуманных ответах, и вы увидите, какой разбор получится. Запрос платный, как обычный разбор; результат нигде не сохраняется, клиенты не затрагиваются.</p>
                         <label class="prompt-trial__confirm">
                             <input type="checkbox" name="confirm_trial" value="1" required>
@@ -85,14 +91,14 @@
 
     {# ---------- Текущая (выбранная) версия ---------- #}
     <section id="prompt-current" class="case-section prompt-section" aria-labelledby="prompt-current-title" data-case-section>
-        <h2 id="prompt-current-title">{{ is_published ? 'Действующая версия' : 'Версия ' ~ selected_version }}</h2>
+        <h2 id="prompt-current-title">{{ is_published ? 'Действующая версия' : (selected_is_stub ? 'Черновик (заготовка)' : 'Версия ' ~ selected_version) }}</h2>
         <p class="prompt-section__lead">
             {% if published_version is null %}
             Ни одна версия ещё не опубликована: это заготовка, заказать разбор по ней нельзя. Прочитайте текст, при необходимости сохраните правку и опубликуйте нужную версию.
             {% elseif is_published %}
-            По версии {{ published_version }} идут новые заказы. Уже поставленные задания не меняются: у каждого свой снимок текста.
+            По {{ published_is_stub ? 'заготовке' : 'версии ' ~ published_version }} идут новые заказы. Уже поставленные задания не меняются: у каждого свой снимок текста.
             {% else %}
-            Эта версия не опубликована. Новые заказы идут по версии {{ published_version }} — <a href="{{ key_path }}#prompt-current">открыть её</a>.
+            Эта версия не опубликована. Новые заказы идут по {{ published_is_stub ? 'заготовке' : 'версии ' ~ published_version }} — <a href="{{ key_path }}#prompt-current">открыть её</a>.
             {% endif %}
         </p>
         <dl class="prompt-facts">
@@ -146,7 +152,7 @@
     {# ---------- Редактировать: новая версия ---------- #}
     <section id="prompt-edit" class="case-section prompt-section" aria-labelledby="owner-prompt-new-title" data-case-section>
         <h2 id="owner-prompt-new-title">Редактировать</h2>
-        <p class="prompt-section__lead">Основа — текст версии {{ selected_version }}. «Сохранить как новую версию» ничего не публикует: опубликовать её можно потом, отдельной кнопкой.</p>
+        <p class="prompt-section__lead">Основа — текст {{ selected_gen }}. «Сохранить как новую версию» ничего не публикует: опубликовать её можно потом, отдельной кнопкой.</p>
         <form method="post" action="{{ key_path }}/versions" class="owner-form" data-prompt-editor-form data-preview-url="{{ key_path }}/preview">
             {{ csrf_field() }}
             <div class="owner-field">
@@ -212,7 +218,7 @@
                     {% for item in versions_desc %}
                     <li class="prompt-history__item{% if item.version == selected_version %} is-selected{% endif %}">
                         <div class="prompt-history__head">
-                            <strong>Версия {{ item.version }}</strong>
+                            <strong>{{ item.version == stub ? 'Черновик (заготовка)' : 'Версия ' ~ item.version }}</strong>{% if item.version == stub %}<span class="prompt-history__num">версия {{ item.version }}</span>{% endif %}
                             {% if item.version == published_version %}<span class="status status--done">опубликована</span>{% endif %}
                             {% if item.version == selected_version %}<span class="prompt-history__open">открыта сейчас</span>{% endif %}
                         </div>
@@ -220,7 +226,7 @@
                         <div class="prompt-history__actions">
                             {% if item.version != selected_version %}<a class="btn btn-outline btn-sm" href="{{ key_path }}?version={{ item.version }}#prompt-current">Открыть</a>{% endif %}
                             {% if item.version != published_version %}
-                                {% include 'blocks/owner-publish-pop.twig' with {pop_id: 'publish-v' ~ item.version, version: item.version, label: 'Опубликовать эту…', primary: false} %}
+                                {% include 'blocks/owner-publish-pop.twig' with {pop_id: 'publish-v' ~ item.version, version: item.version, stub: item.version == stub, label: 'Опубликовать эту…', primary: false} %}
                             {% endif %}
                         </div>
                     </li>

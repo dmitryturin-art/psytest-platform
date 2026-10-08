@@ -139,7 +139,9 @@ final class MethodologySectionTest extends TestCase
         self::assertSame(['individual'], $rows['smil']['modes']);
         self::assertSame('published', $rows['smil']['prompts']['individual']['clear']['state']);
         self::assertSame(2, $rows['smil']['prompts']['individual']['clear']['published_version']);
-        self::assertSame(3, $rows['smil']['prompts']['individual']['clear']['draft_version'], 'Файловый черновик v3 новее опубликованной v2.');
+        // Файловый черновик v3 (07.G1) в списке и карточках не всплывает — только в истории версий.
+        self::assertNull($rows['smil']['prompts']['individual']['clear']['draft_version']);
+        self::assertContains(3, PromptRegistry::default($this->db)->availableVersions('smil', 'individual', Prompt::KIND_CLEAR));
         self::assertSame('/admin/tests/smil/prompts/individual/clear', $rows['smil']['prompts']['individual']['clear']['path']);
 
         self::assertSame(['individual', 'pair'], $rows['lazarus']['modes']);
@@ -149,6 +151,30 @@ final class MethodologySectionTest extends TestCase
         self::assertFalse($rows[self::TEST]['prompts']['individual']['clear']['exists']);
         self::assertSame('нет', $rows[self::TEST]['items_label']);
         self::assertSame('/admin/tests/beck-anxiety', $rows[self::TEST]['path']);
+    }
+
+    public function testOwnerDraftsAndStubsAreHintedButFileDraftsAreNot(): void
+    {
+        $registry = PromptRegistry::default($this->db);
+        $controller = $this->controller();
+        $state = new \ReflectionMethod($controller, 'promptState');
+
+        // Заготовка: черновик без опубликованной версии, помечен как заготовка.
+        \PsyTest\Core\Ai\PromptStubSeeder::default($registry)->ensureFor(self::TEST, 'BAI');
+        /** @var array<string, mixed> $stub */
+        $stub = $state->invoke($controller, PromptRegistry::default($this->db), self::TEST, 'individual', Prompt::KIND_CLEAR);
+        self::assertSame(PromptRegistry::STUB_FIRST_VERSION, $stub['draft_version']);
+        self::assertTrue($stub['draft_is_stub']);
+
+        // Правка из кабинета поверх опубликованной заготовки — обычный черновик с номером.
+        $fresh = PromptRegistry::default($this->db);
+        $fresh->publishVersion(self::TEST, 'individual', Prompt::KIND_CLEAR, PromptRegistry::STUB_FIRST_VERSION);
+        $next = $fresh->createOwnerVersion(self::TEST, 'individual', Prompt::KIND_CLEAR, 'Правка.', null, false);
+        /** @var array<string, mixed> $edited */
+        $edited = $state->invoke($controller, PromptRegistry::default($this->db), self::TEST, 'individual', Prompt::KIND_CLEAR);
+        self::assertSame(PromptRegistry::STUB_FIRST_VERSION, $edited['published_version']);
+        self::assertSame($next, $edited['draft_version']);
+        self::assertFalse($edited['draft_is_stub']);
     }
 
     private function issueKey(): string

@@ -14,7 +14,7 @@
 {% set previewKind = prompts.clear.exists ? 'clear' : (prompts.professional.exists ? 'professional' : null) %}
 {% set mode_names = {individual: 'один человек', pair: 'пара'} %}
 <section class="owner-panel case-workspace" aria-labelledby="owner-test-title">
-    {% include 'blocks/owner-crumbs.twig' with {items: [{label: 'Методики', href: basePath ~ '/admin/tests'}, {label: item.title}], back: {label: 'К методикам', href: basePath ~ '/admin/tests'}} %}
+    {% include 'blocks/owner-crumbs.twig' with {items: [{label: 'Методики', href: basePath ~ '/admin/tests'}, {label: item.title}]} %}
 
     <header class="case-head test-head">
         <div class="case-head__top">
@@ -60,7 +60,6 @@
                     <input type="checkbox" id="ai-test-{{ item.test }}" name="report_enabled" value="1"{% if not item.items_always %} data-enables="ai-test-items-{{ item.test }}"{% endif %}{% if item.report_enabled %} checked{% endif %}>
                     ИИ-разбор для этой методики
                 </label>
-                <p class="owner-help">Разбор предлагается клиентам, гостям по ссылке и в кабинете посетителя, когда эта галочка стоит и промпт опубликован. Модели уходят обезличенные результаты: баллы, уровни и подшкалы. Имя, контакты и ваши заметки не уходят никогда.</p>
             </div>
 
             <div class="test-ai-form__option">
@@ -77,7 +76,6 @@
                     <input type="checkbox" id="ai-test-items-{{ item.test }}" name="send_item_answers" value="1"{% if item.send_item_answers %} checked{% endif %}{% if not item.report_enabled %} disabled{% endif %}>
                     Передавать модели ответы по пунктам
                 </label>
-                <p class="owner-help">Тогда модель получит ещё и ответ человека на каждый вопрос опросника — без имени и контактов. Без этой галочки уходят только итоговые баллы, уровни и подшкалы.</p>
                 {% if item.clinical_signal %}
                 <p class="owner-help test-section__warn">У этой методики есть пункт о мыслях о смерти; при передаче ответов модель увидит его.</p>
                 {% endif %}
@@ -89,7 +87,18 @@
                 <span class="autosave-status" role="status" aria-live="polite" data-autosave-status>{% if flash and (flash.section ?? '') == 'ai' %}{{ flash.message }}{% endif %}</span>
             </div>
         </form>
-        <p class="owner-help test-section__note">Если у методики ещё нет промптов, при включении появятся две заготовки — понятный разбор и профессиональное заключение. Они не опубликованы: клиенты увидят разбор только после того, как вы прочитаете текст и опубликуете его. Выключение останавливает только новые заказы — готовые разборы остаются.</p>
+        {# Пояснения свёрнуты (замечание владельца 08.10): раздел короткий, галочки и
+           предупреждения BDI/Лазаруса видны сразу. #}
+        <div class="disclosure-stack test-ai-more">
+            <details class="ai-report__details case-fold">
+                <summary class="ai-report__summary"><span class="ai-report__summary-title">Что уходит модели</span></summary>
+                <div class="case-fold__body ai-report__body">
+                    <p>Разбор предлагается клиентам, гостям по ссылке и в кабинете посетителя, когда стоит галочка «ИИ-разбор для этой методики» и промпт опубликован. Модели уходят обезличенные результаты: баллы, уровни и подшкалы. Имя, контакты и ваши заметки не уходят никогда.</p>
+                    {% if not item.items_always %}<p>С галочкой «Передавать модели ответы по пунктам» модель получит ещё и ответ человека на каждый вопрос опросника — без имени и контактов. Без неё уходят только итоговые баллы, уровни и подшкалы.</p>{% endif %}
+                    <p>Если у методики ещё нет промптов, при включении появятся две заготовки — понятный разбор и профессиональное заключение. Они не опубликованы: клиенты увидят разбор только после того, как вы прочитаете текст и опубликуете его. Выключение останавливает только новые заказы — готовые разборы остаются.</p>
+                </div>
+            </details>
+        </div>
     </section>
 
     {# ---------- Промпты ---------- #}
@@ -119,15 +128,15 @@
                     {% elseif p.published_version is not null %}<span class="status status--done">опубликован</span>
                     {% else %}<span class="status status--pending">не опубликован</span>{% endif %}
                 </header>
-                <p class="report-card__for">{{ kind == 'clear' ? 'Простыми словами — для клиента.' : 'Профессиональным языком — для специалиста.' }}</p>
+                <p class="report-card__for">{{ kind == 'clear' ? 'Простыми словами — для клиента.' : 'Профессиональным языком — для специалиста. Клиент его не видит.' }}</p>
                 {% if not p.exists %}
                     <p class="report-card__meta">Промпта этого вида нет — разбор этого вида не заказывается.</p>
                 {% else %}
                     {% if p.published_version is not null %}
                     <p class="report-card__meta">Опубликована версия {{ p.published_version }}{% if p.published_at %} от {{ p.published_at|date("d.m.Y") }}{% endif %}.</p>
-                    {% if p.draft_version %}<p class="report-card__meta">Есть черновик версии {{ p.draft_version }}{% if p.draft_at %} от {{ p.draft_at|date("d.m.Y") }}{% endif %} — клиенты его не видят.</p>{% endif %}
+                    {% if p.draft_version %}<p class="report-card__meta">Есть {{ p.draft_is_stub ? 'черновик (заготовка)' : 'черновик версии ' ~ p.draft_version }}{% if p.draft_at %} от {{ p.draft_at|date("d.m.Y") }}{% endif %} — клиенты его не видят.</p>{% endif %}
                     {% else %}
-                    <p class="report-card__meta">Черновик версии {{ p.draft_version }}{% if p.draft_at %} от {{ p.draft_at|date("d.m.Y") }}{% endif %}. Пока он не опубликован, разбор этого вида не предлагается.</p>
+                    <p class="report-card__meta">{{ p.draft_is_stub ? 'Черновик (заготовка)' : 'Черновик версии ' ~ p.draft_version }}{% if p.draft_at %} от {{ p.draft_at|date("d.m.Y") }}{% endif %}. Пока он не опубликован, разбор этого вида не предлагается.</p>
                     {% endif %}
                     <div class="report-card__actions">
                         <a class="btn btn-outline btn-sm" href="{{ basePath }}{{ p.path }}">Открыть</a>
