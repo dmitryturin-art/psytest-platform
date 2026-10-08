@@ -1621,6 +1621,7 @@ final class OwnerController extends BaseController
 
     /** Заметка владельца к версии промпта. */
     public const PROMPT_NOTE_MAX_LENGTH = 255;
+    public const PROMPT_DRAFT_MAX_LENGTH = 60000;
 
     /**
      * Список методик с разбором и общие настройки ИИ.
@@ -1724,6 +1725,58 @@ final class OwnerController extends BaseController
     }
 
     /**
+     * Предпросмотр черновика: тот же запрос, что и в promptPreview, но по тексту,
+     * который владелец сейчас правит. Ничего не сохраняет и провайдера не вызывает.
+     * POST /admin/prompts/{test}/{mode}/{kind}/preview
+     */
+    public function promptDraftPreview(string $test, string $mode, string $kind): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!$this->promptKeyExists($test, $mode, $kind)) {
+            http_response_code(404);
+            echo json_encode(['error' => 'not found']);
+
+            return;
+        }
+
+        // Браузер отправляет переносы строк формы как CRLF; промпты хранятся с LF.
+        $text = $_POST['text'] ?? '';
+        $text = is_string($text) ? str_replace("\r\n", "\n", $text) : $text;
+        if (!is_string($text) || mb_strlen($text) > self::PROMPT_DRAFT_MAX_LENGTH) {
+            http_response_code(422);
+            echo json_encode(['error' => 'Черновик слишком длинный для предпросмотра.'], JSON_UNESCAPED_UNICODE);
+
+            return;
+        }
+
+        $draft = new Prompt(
+            test: $test,
+            mode: $mode,
+            kind: $kind,
+            version: 0,
+            status: Prompt::STATUS_DRAFT,
+            text: $text,
+            allowsOwnerContext: false,
+            source: 'draft',
+        );
+        $preview = $this->buildPreview($draft, $test, $mode);
+
+        echo json_encode([
+            'system' => $preview['system'],
+            'user' => $preview['user'],
+            'error' => $preview['error'],
+            'glossary_mode' => $preview['glossary_mode'],
+            'context_length' => $preview['length'],
+            'system_length' => mb_strlen($text),
+        ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    }
+
+    /**
      * Новая версия промпта из кабинета.
      * POST /admin/prompts/{test}/{mode}/{kind}/versions
      */
@@ -1739,6 +1792,7 @@ final class OwnerController extends BaseController
         }
 
         $text = $_POST['text'] ?? '';
+        $text = is_string($text) ? str_replace("\r\n", "\n", $text) : $text;
         $note = $_POST['note'] ?? '';
 
         if (!is_string($text) || trim($text) === '') {
@@ -1942,6 +1996,7 @@ final class OwnerController extends BaseController
             'selected' => $selected,
             'selected_version' => $selectedVersion,
             'note_max' => self::PROMPT_NOTE_MAX_LENGTH,
+            'variables' => $this->promptVariables($test, $mode),
             'ai_enabled' => (new AiSettings($this->db))->isAiEnabled(),
             'preview' => null,
             'trial' => null,
@@ -1983,6 +2038,28 @@ final class OwnerController extends BaseController
             'length' => mb_strlen((string) json_encode($context, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)),
             'error' => null,
         ];
+    }
+
+    /**
+     * Поля входных данных, на которые промпт может ссылаться по имени: верхний
+     * уровень контекста методики на синтетическом кейсе, а не список из кода.
+     *
+     * @return list<string>
+     */
+    private function promptVariables(string $test, string $mode): array
+    {
+        $module = $this->moduleLoader->getModule($test);
+        if ($module === null) {
+            return [];
+        }
+
+        try {
+            $context = PromptFixtureContext::build($module, $mode, new AiSettings($this->db));
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return array_values(array_map('strval', array_keys($context)));
     }
 
     private function promptKeyExists(string $test, string $mode, string $kind): bool

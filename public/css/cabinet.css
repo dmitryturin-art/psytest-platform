@@ -1546,3 +1546,52 @@ a.cab-table__title:hover {
 .owner-copy[hidden] {
     display: none;
 }
+
+/* ---------- Редактор промпта (07.WP9b) ---------- */
+
+.owner-prompt-editor .toastui-editor-tabs,
+.owner-prompt-editor .toastui-editor-md-tab-container,
+.owner-prompt-editor .toastui-editor-mode-switch {
+    display: none;
+}
+
+.owner-prompt-editor .toastui-editor-md-container .toastui-editor-contents,
+.owner-prompt-editor .ProseMirror {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+.owner-prompt-vars {
+    display: grid;
+    gap: var(--spacing-xs);
+    max-width: 28rem;
+}
+
+.owner-prompt-vars[hidden],
+.owner-prompt-preview[hidden],
+.owner-prompt-preview [hidden] {
+    display: none;
+}
+
+.owner-prompt-preview {
+    display: grid;
+    gap: var(--spacing-sm);
+    justify-items: start;
+}
+
+.owner-prompt-preview .owner-prompt-text,
+.owner-prompt-preview [data-prompt-preview-panel] {
+    width: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .owner-prompt-editor {
+        margin-inline: 0;
+    }
+
+    .owner-prompt-editor .toastui-editor-defaultUI-toolbar {
+        padding-inline: var(--spacing-xs);
+    }
+}

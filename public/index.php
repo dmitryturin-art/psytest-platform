@@ -130,6 +130,7 @@ $router->get('/admin/prompts', [OwnerController::class, 'prompts']);
 $router->post('/admin/prompts/settings', [OwnerController::class, 'savePromptSettings']);
 $router->get('/admin/prompts/{test}/{mode}/{kind}', [OwnerController::class, 'promptKey']);
 $router->get('/admin/prompts/{test}/{mode}/{kind}/preview', [OwnerController::class, 'promptPreview']);
+$router->post('/admin/prompts/{test}/{mode}/{kind}/preview', [OwnerController::class, 'promptDraftPreview']);
 $router->post('/admin/prompts/{test}/{mode}/{kind}/versions', [OwnerController::class, 'createPromptVersion']);
 $router->post('/admin/prompts/{test}/{mode}/{kind}/publish', [OwnerController::class, 'publishPromptVersion']);
 $router->post('/admin/prompts/{test}/{mode}/{kind}/reset', [OwnerController::class, 'resetPromptVersion']);
