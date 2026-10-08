@@ -19,7 +19,7 @@ final class PromptVariableLabelsTest extends TestCase
     {
         $loader = (new ModuleLoader(null, null))->discover();
         $checked = 0;
-        foreach (array_keys($loader->getActiveModules()) as $slug) {
+        foreach (array_keys($loader->getAllModules()) as $slug) {
             $module = $loader->getModule((string) $slug);
             self::assertNotNull($module);
             foreach (['individual', 'pair'] as $mode) {
