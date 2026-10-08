@@ -2264,3 +2264,18 @@ a.cab-table__title:hover {
     max-width: var(--measure-wide);
     margin-top: var(--spacing-md);
 }
+
+/* После сворачивания пояснений строка статуса автосохранения не должна оставлять дыру. */
+.test-ai-form--auto .test-ai-form__foot {
+    min-height: 1.25rem;
+    margin-top: calc(-1 * var(--spacing-md));
+}
+
+.test-ai-form + .test-ai-more {
+    margin-top: var(--spacing-sm);
+}
+
+.owner-help.prompt-history__reset {
+    max-width: var(--measure);
+    font-size: var(--font-size-sm);
+}

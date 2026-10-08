@@ -102,8 +102,8 @@
             {% endif %}
         </p>
         <dl class="prompt-facts">
-            <div><dt>Откуда</dt><dd>{{ (selected_entry.source ?? '') == 'owner' ? 'правка из кабинета' : 'текст, поставляемый с программой' }}{% if selected_entry.created_at ?? null %}, {{ selected_entry.created_at|date("d.m.Y H:i") }}{% endif %}</dd></div>
-            {% if selected_entry.note ?? null %}<div><dt>Заметка</dt><dd>{{ selected_entry.note }}</dd></div>{% endif %}
+            <div><dt>Откуда</dt><dd>{{ selected_is_stub ? 'заготовка из общего шаблона' : ((selected_entry.source ?? '') == 'owner' ? 'правка из кабинета' : 'текст, поставляемый с программой') }}{% if selected_entry.created_at ?? null %}, {{ selected_entry.created_at|date("d.m.Y H:i") }}{% endif %}</dd></div>
+            {% if (selected_entry.note ?? null) and not selected_is_stub %}<div><dt>Заметка</dt><dd>{{ selected_entry.note }}</dd></div>{% endif %}
             <div><dt>Ваш клинический контекст</dt><dd>{{ selected.allowsOwnerContext ? 'учитывается, если вы добавите его к заказу' : 'не учитывается' }}</dd></div>
         </dl>
         <pre class="owner-prompt-text">{{ selected.text }}</pre>
@@ -222,7 +222,7 @@
                             {% if item.version == published_version %}<span class="status status--done">опубликована</span>{% endif %}
                             {% if item.version == selected_version %}<span class="prompt-history__open">открыта сейчас</span>{% endif %}
                         </div>
-                        <p class="prompt-history__meta">{{ item.source == 'owner' ? 'Правка из кабинета' : 'Текст, поставляемый с программой' }}{% if item.created_at %}, {{ item.created_at|date("d.m.Y H:i") }}{% endif %}{% if item.note %}. {{ item.note }}{% endif %}</p>
+                        <p class="prompt-history__meta">{{ item.version == stub ? 'Заготовка из общего шаблона' : (item.source == 'owner' ? 'Правка из кабинета' : 'Текст, поставляемый с программой') }}{% if item.created_at %}, {{ item.created_at|date("d.m.Y H:i") }}{% endif %}{% if item.note and item.version != stub %}. {{ item.note }}{% endif %}</p>
                         <div class="prompt-history__actions">
                             {% if item.version != selected_version %}<a class="btn btn-outline btn-sm" href="{{ key_path }}?version={{ item.version }}#prompt-current">Открыть</a>{% endif %}
                             {% if item.version != published_version %}
