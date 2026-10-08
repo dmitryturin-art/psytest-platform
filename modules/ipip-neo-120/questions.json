@@ -205,8 +205,8 @@
       "facet_name": "Уступчивость",
       "keyed": "-",
       "text_en": "Love a good fight.",
-      "text": "Получаю удовольствие от хорошей стычки.",
-      "text_back": "I enjoy a good clash.",
+      "text": "Люблю хорошую перепалку.",
+      "text_back": "I love a good squabble.",
       "note": "Идиома love a good fight: удовольствие от конфликта, словесного или физического; «стычка» охватывает оба."
     },
     {
@@ -227,8 +227,8 @@
       "facet_name": "Неумеренность",
       "keyed": "+",
       "text_en": "Go on binges.",
-      "text": "Случается, что я срываюсь и ни в чём не знаю меры.",
-      "text_back": "Sometimes I lose control and know no limits in anything.",
+      "text": "Бывает, что я срываюсь и не знаю меры.",
+      "text_back": "Sometimes I lose control and know no limits.",
       "note": "Однословного русского эквивалента binge нет; передан смысл эпизода неумеренности (еда, алкоголь, покупки) без перечисления."
     },
     {
@@ -590,7 +590,7 @@
       "facet_name": "Скромность",
       "keyed": "-",
       "text_en": "Think highly of myself.",
-      "text": "Высоко себя ставлю.",
+      "text": "Высоко себя оцениваю.",
       "text_back": "I rate myself highly.",
       "note": "Разведено с п. 84 («высокого мнения о себе»): в оригинале пункты тоже близки."
     },
@@ -711,8 +711,8 @@
       "facet_name": "Самоэффективность",
       "keyed": "+",
       "text_en": "Handle tasks smoothly.",
-      "text": "Справляюсь с задачами гладко, без заминок.",
-      "text_back": "I handle tasks smoothly, without hitches.",
+      "text": "Справляюсь с задачами без заминок.",
+      "text_back": "I handle tasks without hitches.",
       "note": ""
     },
     {
@@ -997,8 +997,8 @@
       "facet_name": "Тревожность",
       "keyed": "+",
       "text_en": "Get stressed out easily.",
-      "text": "Легко впадаю в стресс.",
-      "text_back": "I get stressed easily.",
+      "text": "Легко поддаюсь стрессу.",
+      "text_back": "I give in to stress easily.",
       "note": ""
     },
     {

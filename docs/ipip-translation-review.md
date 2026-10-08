@@ -11,8 +11,9 @@
 - «Обратный перевод» — перевод русского текста назад на английский для сверки смысла; его делал тот же переводчик
   (не независимый третий человек), поэтому он проверяет только явные смысловые сдвиги.
 - Формулировки по возможности не зависят от пола: настоящее время глагола вместо «готов(а)», «занят(а)», «привязан(а)».
-- Варианты ответа: 1 «Совершенно неверно», 2 «Скорее неверно», 3 «Ни верно, ни неверно», 4 «Скорее верно», 5 «Совершенно верно»
-  (оригинал: Very Inaccurate … Very Accurate — насколько утверждение верно описывает человека).
+- Варианты ответа: 1 «Совершенно не согласен», 2 «Скорее не согласен», 3 «Нечто среднее», 4 «Скорее согласен», 5 «Полностью согласен»
+  (оригинал: Very Inaccurate … Very Accurate; по решению владельца 09.10.2026 шкала ответа дана как согласие,
+  как в русском BFI-2, а не как «верно/неверно»).
 
 ## Названия доменов и граней
 
@@ -88,9 +89,9 @@
 | 16 | N4 Застенчивость | + | Find it difficult to approach others. | Мне трудно идти на контакт с людьми. | I find it hard to make contact with people. | Без «первым/первой», чтобы формулировка не зависела от пола. |
 | 17 | E4 Активность | + | Am always busy. | Я всегда при деле. | I am always occupied. | «Всегда занят(а)» зависит от пола; выбрано нейтральное «при деле». |
 | 18 | O4 Склонность к новому | + | Prefer variety to routine. | Предпочитаю разнообразие рутине. | I prefer variety to routine. |  |
-| 19 | A4 Уступчивость | − | Love a good fight. | Получаю удовольствие от хорошей стычки. | I enjoy a good clash. | Идиома love a good fight: удовольствие от конфликта, словесного или физического; «стычка» охватывает оба. |
+| 19 | A4 Уступчивость | − | Love a good fight. | Люблю хорошую перепалку. | I love a good squabble. | Идиома love a good fight: удовольствие от конфликта, словесного или физического; «стычка» охватывает оба. |
 | 20 | C4 Стремление к достижениям | + | Work hard. | Усердно работаю. | I work diligently. |  |
-| 21 | N5 Неумеренность | + | Go on binges. | Случается, что я срываюсь и ни в чём не знаю меры. | Sometimes I lose control and know no limits in anything. | Однословного русского эквивалента binge нет; передан смысл эпизода неумеренности (еда, алкоголь, покупки) без перечисления. |
+| 21 | N5 Неумеренность | + | Go on binges. | Бывает, что я срываюсь и не знаю меры. | Sometimes I lose control and know no limits. | Однословного русского эквивалента binge нет; передан смысл эпизода неумеренности (еда, алкоголь, покупки) без перечисления. |
 | 22 | E5 Поиск впечатлений | + | Love excitement. | Люблю острые ощущения. | I love thrills. |  |
 | 23 | O5 Интеллектуальная любознательность | + | Love to read challenging material. | Люблю читать сложные тексты. | I love reading difficult texts. |  |
 | 24 | A5 Скромность | − | Believe that I am better than others. | Считаю, что я лучше других. | I believe that I am better than others. |  |
@@ -123,7 +124,7 @@
 | 51 | N5 Неумеренность | − | Rarely overindulge. | Редко позволяю себе лишнее. | I rarely allow myself too much. |  |
 | 52 | E5 Поиск впечатлений | + | Seek adventure. | Ищу приключений. | I seek adventure. |  |
 | 53 | O5 Интеллектуальная любознательность | − | Avoid philosophical discussions. | Избегаю философских разговоров. | I avoid philosophical conversations. |  |
-| 54 | A5 Скромность | − | Think highly of myself. | Высоко себя ставлю. | I rate myself highly. | Разведено с п. 84 («высокого мнения о себе»): в оригинале пункты тоже близки. |
+| 54 | A5 Скромность | − | Think highly of myself. | Высоко себя оцениваю. | I rate myself highly. | Разведено с п. 84 («высокого мнения о себе»): в оригинале пункты тоже близки. |
 | 55 | C5 Самодисциплина | + | Carry out my plans. | Осуществляю свои планы. | I carry out my plans. |  |
 | 56 | N6 Уязвимость | + | Become overwhelmed by events. | Меня захлёстывают события. | I get overwhelmed by events. |  |
 | 57 | E6 Жизнерадостность | + | Have a lot of fun. | Много веселюсь. | I have a lot of fun. |  |
@@ -134,7 +135,7 @@
 | 62 | E1 Дружелюбие | − | Avoid contacts with others. | Избегаю общения с другими. | I avoid contact with others. |  |
 | 63 | O1 Воображение | + | Love to daydream. | Люблю помечтать. | I love to daydream. |  |
 | 64 | A1 Доверие | + | Trust what people say. | Верю тому, что говорят люди. | I believe what people say. |  |
-| 65 | C1 Самоэффективность | + | Handle tasks smoothly. | Справляюсь с задачами гладко, без заминок. | I handle tasks smoothly, without hitches. |  |
+| 65 | C1 Самоэффективность | + | Handle tasks smoothly. | Справляюсь с задачами без заминок. | I handle tasks without hitches. |  |
 | 66 | N2 Гневливость | + | Lose my temper. | Выхожу из себя. | I lose my temper. |  |
 | 67 | E2 Общительность | − | Prefer to be alone. | Предпочитаю быть в одиночестве. | I prefer to be alone. |  |
 | 68 | O2 Интерес к искусству | − | Do not like poetry. | Не люблю стихи. | I don't like poetry. |  |
@@ -160,7 +161,7 @@
 | 88 | O6 Либерализм | − | Tend to vote for conservative political candidates. | Обычно голосую за консервативных кандидатов. | I usually vote for conservative candidates. | См. п. 28: политический словарь США. |
 | 89 | A6 Сочувствие | − | Am not interested in other people's problems. | Меня не интересуют чужие проблемы. | Other people's problems don't interest me. |  |
 | 90 | C6 Осмотрительность | − | Rush into things. | Бросаюсь в дела очертя голову. | I rush headlong into things. |  |
-| 91 | N1 Тревожность | + | Get stressed out easily. | Легко впадаю в стресс. | I get stressed easily. |  |
+| 91 | N1 Тревожность | + | Get stressed out easily. | Легко поддаюсь стрессу. | I give in to stress easily. |  |
 | 92 | E1 Дружелюбие | − | Keep others at a distance. | Держу людей на расстоянии. | I keep people at a distance. |  |
 | 93 | O1 Воображение | + | Like to get lost in thought. | Люблю погружаться в свои мысли. | I like to immerse myself in my thoughts. |  |
 | 94 | A1 Доверие | − | Distrust people. | Не доверяю людям. | I don't trust people. |  |

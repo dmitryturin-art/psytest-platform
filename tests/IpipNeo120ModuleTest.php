@@ -272,10 +272,10 @@ final class IpipNeo120ModuleTest extends TestCase
         self::assertCount(120, $context['items']);
         self::assertSame('Беспокоюсь о разных вещах.', $context['items'][0]['text']);
         self::assertSame(1, $context['items'][0]['value']);
-        self::assertSame('Совершенно неверно', $context['items'][0]['answer_label']);
+        self::assertSame('Совершенно не согласен', $context['items'][0]['answer_label']);
 
         $withItems = AiReportContextBuilder::withItems($this->module, ['test' => 'ipip-neo-120'], 'individual', ['1' => 5]);
-        self::assertSame('Совершенно верно', $withItems['items'][0]['answer_label']);
+        self::assertSame('Полностью согласен', $withItems['items'][0]['answer_label']);
         self::assertSame('Нет ответа', $withItems['items'][1]['answer_label']);
     }
 
