@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Core\Ai\AiReportContextBuilder;
 use PsyTest\Core\Ai\PromptFixtureContext;
 use PsyTest\Core\AnswerValidator;
+use PsyTest\Core\CaseExportDocx;
 use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Core\ResultSectionRenderer;
 use PsyTest\Core\TemplateFunctions;
@@ -231,6 +232,11 @@ final class IpipNeo120ModuleTest extends TestCase
         self::assertTrue($gate['gender']);
         self::assertTrue($gate['age']);
         self::assertSame(18, $gate['min_age']);
+
+        // Пять вариантов ответа — столбцом (не сеткой «Верно/Неверно»), в каталоге — «Личность».
+        $metadata = $this->module->getMetadata();
+        self::assertSame('options', $metadata['answer_type']);
+        self::assertSame('Личность', $metadata['catalog_category']);
     }
 
     public function testAiContextCarriesDomainsFacetsAndNormsButNothingPersonal(): void
@@ -326,6 +332,45 @@ final class IpipNeo120ModuleTest extends TestCase
         self::assertStringContainsString('Осмотрительность', $html);
         self::assertStringContainsString('на русской выборке не проверено', $html);
         self::assertSame(6, substr_count($html, '<table'), 'Сводка доменов и пять таблиц граней');
+    }
+
+    public function testCaseWordExportCarriesDomainsFacetsAndNormsLabel(): void
+    {
+        $twig = $this->twig();
+        $sections = (new InvitedCasePresenter())->resultSections($this->module, $this->results());
+        $docx = (new CaseExportDocx(
+            static fn (string $template, array $data): string => $twig->render($template . '.twig', $data),
+        ))->render([
+            'header' => [
+                'test_name' => 'IPIP-NEO-120',
+                'client_label' => 'Образец',
+                'completed_at' => '2026-10-08 12:30:00',
+                'prepared_by' => 'Подготовил: специалист',
+                'confidential' => 'Конфиденциально',
+            ],
+            'sections' => $sections,
+            'pair' => null,
+            'answers' => [],
+            'professional' => null,
+            'clear' => null,
+            'note' => null,
+            'generated_at' => '08.10.2026 10:00',
+            'disclaimer' => 'Результаты носят ознакомительный характер.',
+            'options' => ['include_professional' => false, 'include_clear' => false, 'include_answers' => false, 'include_note' => false],
+        ]);
+
+        $path = tempnam(sys_get_temp_dir(), 'ipip-docx');
+        self::assertIsString($path);
+        file_put_contents($path, $docx);
+        $zip = new \ZipArchive();
+        self::assertTrue($zip->open($path) === true);
+        $xml = (string) $zip->getFromName('word/document.xml');
+        $zip->close();
+        unlink($path);
+
+        foreach (['Нейротизм', 'Осмотрительность', 'Сырые баллы и перцентили', 'на русской выборке не проверено'] as $text) {
+            self::assertStringContainsString($text, $xml);
+        }
     }
 
     public function testTranslationReviewTableListsEveryItem(): void

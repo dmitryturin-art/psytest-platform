@@ -59,7 +59,7 @@
         <div class="editorial-test-grid">
             {% for test in tests %}
             <article class="editorial-test-card {% if test.slug == 'smil' %}editorial-test-card--featured{% endif %}">
-                <div class="editorial-card-topline"><span>{% if test.slug == 'smil' %}Личность{% elseif test.slug == 'lazarus' %}Отношения{% else %}Состояние{% endif %}</span><strong>Бесплатно</strong></div>
+                <div class="editorial-card-topline"><span>{% if test.catalog_category is defined and test.catalog_category %}{{ test.catalog_category }}{% elseif test.slug == 'smil' %}Личность{% elseif test.slug == 'lazarus' %}Отношения{% else %}Состояние{% endif %}</span><strong>Бесплатно</strong></div>
                 <h3>{{ test.name }}</h3>
                 <p>{{ test.description|slice(0, 170) }}{% if test.description|length > 170 %}…{% endif %}</p>
                 <div class="editorial-card-meta"><span>{{ test.question_count }} вопросов</span><span>≈ {{ test.estimated_time }} мин</span>{% if test.slug == 'lazarus' %}<span>есть парный режим</span>{% endif %}</div>

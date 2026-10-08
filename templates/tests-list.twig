@@ -20,7 +20,7 @@
         {% for test in tests %}
         <article class="editorial-test-card {% if test.slug == 'smil' %}editorial-test-card--featured{% endif %}">
             <div class="editorial-card-topline">
-                <span>{% if test.slug == 'smil' %}Личность{% elseif test.slug == 'lazarus' %}Отношения{% else %}Состояние{% endif %}</span>
+                <span>{% if test.catalog_category is defined and test.catalog_category %}{{ test.catalog_category }}{% elseif test.slug == 'smil' %}Личность{% elseif test.slug == 'lazarus' %}Отношения{% else %}Состояние{% endif %}</span>
                 <strong>Бесплатно</strong>
             </div>
             <h2>{{ test.name }}</h2>

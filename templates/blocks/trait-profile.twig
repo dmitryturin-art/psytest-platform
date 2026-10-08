@@ -14,6 +14,7 @@
 {% set low_max = band_low_max|default(30) %}
 {% set high_min = band_high_min|default(70) %}
 {% if _pdf|default(false) %}
+<p style="font-size:9pt;color:#555;">{{ norms_label }}{% if cell_label %} Группа сравнения: {{ cell_label }}, N = {{ cell_n|number_format(0, ',', ' ') }}.{% endif %} {{ facet_note }}</p>
 <table class="trait-profile-pdf">
     <thead>
         <tr><th>Черта</th><th>Балл</th><th>Перцентиль</th><th>Уровень</th></tr>
@@ -30,6 +31,7 @@
     </tbody>
 </table>
 {% for d in domains %}
+<div style="page-break-inside: avoid;">
 <h3>{{ d.name }}: {{ d.level_name|lower }}</h3>
 {% if d.description %}<p>{{ d.description }}</p>{% endif %}
 <table>
@@ -47,13 +49,13 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% endfor %}
-<p style="font-size:9pt;color:#555;">{{ norms_label }}{% if cell_label %} Группа сравнения: {{ cell_label }}, N = {{ cell_n|number_format(0, ',', ' ') }}.{% endif %} {{ facet_note }}</p>
 {% else %}
 <div class="trait-profile">
     <p class="trait-profile__norms">
         {{ norms_label }}
-        {% if cell_label %}<span class="trait-profile__group">Группа сравнения: {{ cell_label }}, N = {{ cell_n|number_format(0, ',', ' ') }}.</span>{% endif %}
+        {% if cell_label %}<span class="trait-profile__group">Группа сравнения: {{ cell_label }}, N = {{ cell_n|number_format(0, ',', ' ') }}.</span>{% endif %}
     </p>
 
     <ol class="trait-profile__list">
@@ -86,15 +88,14 @@
                         <div class="table-scroll table-scroll--scores" role="region" aria-label="Грани: {{ d.name }}" tabindex="0">
                         <table class="scores-table trait-facets">
                             <thead>
-                                <tr><th>Грань</th><th>Балл (4–20)</th><th>Перцентиль</th><th>Уровень</th></tr>
+                                <tr><th>Грань</th><th>Балл из 20</th><th>Перцентиль и уровень</th></tr>
                             </thead>
                             <tbody>
                                 {% for f in d.facets %}
                                 <tr>
                                     <td>{{ f.name }}</td>
                                     <td>{{ f.raw }}</td>
-                                    <td>{{ f.percentile ?? '—' }}</td>
-                                    <td><span class="trait-band trait-band--{{ f.level }}">{{ f.level_name }}</span></td>
+                                    <td><span class="trait-facets__pct">{{ f.percentile ?? '—' }}</span> <span class="trait-facets__band">{{ f.level_name|lower }}</span></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

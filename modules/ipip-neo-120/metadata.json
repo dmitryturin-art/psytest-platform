@@ -24,6 +24,8 @@
     {"code": "A", "name": "Доброжелательность", "description": "Стремление ладить с людьми, доверие, сочувствие, уступчивость. 24 пункта, 24–120 баллов."},
     {"code": "C", "name": "Добросовестность", "description": "Организованность, настойчивость, надёжность и самоконтроль. 24 пункта, 24–120 баллов."}
   ],
+  "answer_type": "options",
+  "catalog_category": "Личность",
   "age_specific_norms": true,
   "requires_demographics": {
     "gender": true,

@@ -3770,3 +3770,32 @@ input[type="radio"] {
     color: var(--color-text-light);
     font-size: var(--font-size-sm);
 }
+
+/* Таблица граней — во всю ширину раскрывающегося блока (UI_KIT «Принципы вёрстки», п. 2):
+   ограничение колонки чтения у .ai-report__body относится к абзацам, не к таблице. */
+.trait-row__facets .ai-report__body {
+    max-width: none;
+}
+
+.trait-row__facets .table-scroll--scores {
+    margin-bottom: 0;
+}
+
+.trait-facets__pct {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.trait-facets__band {
+    color: var(--color-text-light);
+}
+
+@media (max-width: 600px) {
+    .trait-row__facets .ai-report__details[open] > .ai-report__body {
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+
+    .trait-facets__band {
+        display: block;
+    }
+}
