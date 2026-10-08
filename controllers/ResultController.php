@@ -142,6 +142,7 @@ class ResultController extends BaseController
             $this->contextBuilder(),
             PromptRegistry::default($this->db),
             new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings),
+            AiReportAvailability::forDatabase($this->db),
         );
     }
 

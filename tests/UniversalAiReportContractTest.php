@@ -44,6 +44,8 @@ final class UniversalAiReportContractTest extends TestCase
                 ['test' => 'smil', 'title' => 'СМИЛ', 'report_enabled' => true, 'send_item_answers' => false, 'published' => true],
                 ['test' => 'beck-anxiety', 'title' => 'Шкала тревоги Бека (BAI)', 'report_enabled' => true, 'send_item_answers' => true, 'published' => false],
                 ['test' => 'hads', 'title' => 'HADS', 'report_enabled' => false, 'send_item_answers' => false, 'published' => false],
+                ['test' => 'bdi', 'title' => 'BDI', 'report_enabled' => true, 'send_item_answers' => false, 'published' => false, 'clinical_signal' => true],
+                ['test' => 'lazarus', 'title' => 'Лазарус', 'report_enabled' => true, 'send_item_answers' => false, 'published' => true, 'items_always' => true],
             ],
             'groups' => [[
                 'test' => 'beck-anxiety', 'title' => 'Шкала тревоги Бека (BAI)',
@@ -63,10 +65,11 @@ final class UniversalAiReportContractTest extends TestCase
 
         self::assertStringContainsString('action="/admin/prompts/tests"', $html);
         self::assertStringContainsString('name="form_key" value="tests-key"', $html);
-        self::assertSame(3, substr_count($html, 'name="report_enabled['));
-        self::assertSame(3, substr_count($html, 'name="send_item_answers['));
-        self::assertSame(3, substr_count($html, 'ИИ-разбор для этой методики'));
-        self::assertSame(3, substr_count($html, 'Передавать модели ответы по пунктам'));
+        self::assertSame(5, substr_count($html, 'name="report_enabled['));
+        // У Лазаруса вторая галочка заперта и в форму не уходит.
+        self::assertSame(4, substr_count($html, 'name="send_item_answers['));
+        self::assertSame(5, substr_count($html, 'ИИ-разбор для этой методики'));
+        self::assertSame(5, substr_count($html, 'Передавать модели ответы по пунктам'));
 
         // Вторая галочка недоступна, пока первая снята, и связана с ней.
         self::assertMatchesRegularExpression('/id="ai-test-items-hads" name="send_item_answers\[hads\]" value="1" disabled>/', $html);
@@ -86,6 +89,43 @@ final class UniversalAiReportContractTest extends TestCase
         foreach (self::JARGON as $word) {
             self::assertStringNotContainsString(mb_strtolower($word), $visible, "Служебное слово «{$word}» на странице владельца.");
         }
+    }
+
+    public function testLazarusItemCheckboxIsLockedOnAndBdiWarnsAboutTheSuicideItem(): void
+    {
+        $html = $this->promptsPage();
+
+        self::assertStringContainsString('<input type="checkbox" id="ai-test-items-lazarus" checked disabled>', $html);
+        self::assertStringNotContainsString('data-enables="ai-test-items-lazarus"', $html);
+        self::assertSame(1, substr_count($html, 'Эта методика всегда передаёт оценки по пунктам: так устроен её утверждённый разбор.'));
+        self::assertSame(1, substr_count($html, 'У этой методики есть пункт о мыслях о смерти; при передаче ответов модель увидит его.'));
+
+        // Флаг задаёт сам модуль: только у Лазаруса оценки по пунктам — часть
+        // утверждённого контекста.
+        $loader = (new \PsyTest\Core\ModuleLoader(null, null))->discover();
+        foreach (array_keys($loader->getAllModules()) as $slug) {
+            $module = $loader->getModule((string) $slug);
+            self::assertNotNull($module);
+            self::assertSame($slug === 'lazarus', $module->aiReportSendsItemsAlways(), (string) $slug);
+        }
+    }
+
+    public function testUniversalPromptsCarryTheSelfHarmRule(): void
+    {
+        foreach (['clear', 'professional'] as $kind) {
+            $text = (string) file_get_contents($this->root . "/prompts/_universal/individual.{$kind}.v1.md");
+            self::assertStringContainsString('мысли о смерти или самоповреждении, не преуменьшай', $text, $kind);
+            self::assertStringContainsString('явно адресуй специалисту', $text, $kind);
+        }
+    }
+
+    public function testCaseOrderFormWordingFollowsOfferedKinds(): void
+    {
+        $case = (string) file_get_contents($this->root . '/templates/owner-invited-case.twig');
+
+        self::assertStringContainsString("ai.offered_kinds ?? ['clear', 'professional']", $case);
+        self::assertStringContainsString('Сейчас заказывается один вид — понятный разбор для клиента', $case);
+        self::assertStringContainsString("'offered_kinds' => \$availability->offeredKinds(\$testSlug, \$mode)", (string) file_get_contents($this->root . '/controllers/OwnerController.php'));
     }
 
     public function testStubPromptPageHidesFactoryResetAndSaysWhy(): void

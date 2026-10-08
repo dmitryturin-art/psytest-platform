@@ -21,6 +21,7 @@ final class AiReportGenerator
         private readonly AiReportContextBuilder $contextBuilder,
         private readonly PromptRegistry $prompts,
         private readonly AiClient $client,
+        private readonly ?AiReportAvailability $availability = null,
     ) {
     }
 
@@ -32,7 +33,28 @@ final class AiReportGenerator
         $id = (string) $report['id'];
 
         try {
+            // Единое правило (07.WP10) действует и на уже поставленные задания:
+            // если владелец выключил методику после заказа, вход задания наружу
+            // не уходит. Причина — только состояние настроек, без данных клиента.
+            $refusal = $this->availability?->refusal(
+                (string) $report['test_slug'],
+                (string) $report['mode'],
+                (string) $report['report_kind'],
+            );
+            if ($refusal !== null) {
+                $this->reports->markFailed($id, $refusal);
+
+                return;
+            }
+
             [$prompt, $context] = $this->input($report);
+            // Галочку «ответы по пунктам» могли снять после заказа: снимок
+            // отправляется без них.
+            $context = $this->contextBuilder->enforceItemPolicy(
+                (string) $report['test_slug'],
+                (string) $report['mode'],
+                $context,
+            );
 
             $ownerContext = $report['owner_context'] ?? null;
             $completion = $this->client->complete($prompt, $context, is_string($ownerContext) ? $ownerContext : null);

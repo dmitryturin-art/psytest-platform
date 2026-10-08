@@ -473,7 +473,14 @@
             <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-form owner-action-form report-order" data-submit-once>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="form_key" value="{{ order_keys.all }}">
+                {% set offered = ai.offered_kinds ?? ['clear', 'professional'] %}
+                {% if offered|length > 1 %}
                 <p class="owner-help">Черновики заказываются один раз на оба вида: понятный разбор для клиента и профессиональное заключение для вас.</p>
+                {% elseif 'clear' in offered %}
+                <p class="owner-help">Сейчас заказывается один вид — понятный разбор для клиента: профессиональное заключение для этой методики не опубликовано.</p>
+                {% else %}
+                <p class="owner-help">Сейчас заказывается один вид — профессиональное заключение для вас: понятный разбор для этой методики не опубликован.</p>
+                {% endif %}
                 <label class="owner-field">
                     <span>Клинический контекст для модели (необязательно, до {{ ai.owner_context_max }} символов)</span>
                     <textarea name="owner_context" rows="5" maxlength="{{ ai.owner_context_max }}" placeholder="Запрос клиента, данные интервью, особенности — то, что вы обычно дописываете к промпту."></textarea>

@@ -77,14 +77,27 @@
                         {% else %}<span class="status status--muted">разбор выключен</span>{% endif %}
                     </p>
                     <label class="owner-toggle" for="ai-test-{{ item.test }}">
-                        <input type="checkbox" id="ai-test-{{ item.test }}" name="report_enabled[{{ item.test }}]" value="1" data-enables="ai-test-items-{{ item.test }}"{% if item.report_enabled %} checked{% endif %}>
+                        <input type="checkbox" id="ai-test-{{ item.test }}" name="report_enabled[{{ item.test }}]" value="1"{% if not (item.items_always ?? false) %} data-enables="ai-test-items-{{ item.test }}"{% endif %}{% if item.report_enabled %} checked{% endif %}>
                         ИИ-разбор для этой методики
                     </label>
+                    {% if item.items_always ?? false %}
+                    {# Оценки по пунктам — часть утверждённого разбора методики (Лазарус):
+                       галочка заперта включённой и в форму не отправляется. #}
+                    <label class="owner-toggle" for="ai-test-items-{{ item.test }}">
+                        <input type="checkbox" id="ai-test-items-{{ item.test }}" checked disabled>
+                        Передавать модели ответы по пунктам
+                    </label>
+                    <p class="owner-help">Эта методика всегда передаёт оценки по пунктам: так устроен её утверждённый разбор.</p>
+                    {% else %}
                     <label class="owner-toggle" for="ai-test-items-{{ item.test }}">
                         <input type="checkbox" id="ai-test-items-{{ item.test }}" name="send_item_answers[{{ item.test }}]" value="1"{% if item.send_item_answers %} checked{% endif %}{% if not item.report_enabled %} disabled{% endif %}>
                         Передавать модели ответы по пунктам
                     </label>
                     <p class="owner-help">Тогда модель получит ещё и ответ человека на каждый вопрос опросника — без имени и контактов. Без этой галочки уходят только итоговые баллы, уровни и подшкалы.</p>
+                    {% if item.clinical_signal ?? false %}
+                    <p class="owner-help">У этой методики есть пункт о мыслях о смерти; при передаче ответов модель увидит его.</p>
+                    {% endif %}
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>

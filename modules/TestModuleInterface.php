@@ -149,6 +149,14 @@ interface TestModuleInterface
     public function aiReportItems(array $answers): array;
 
     /**
+     * Whether answers to every item are part of this module's own approved AI
+     * context (07.WP10). Such a module sends them regardless of the owner's
+     * «Передавать модели ответы по пунктам» checkbox, and the cabinet shows
+     * that checkbox locked on instead of pretending it has an effect.
+     */
+    public function aiReportSendsItemsAlways(): bool;
+
+    /**
      * Respondent instruction shown before the first question (07.K13).
      *
      * Plain-text paragraphs from metadata.json `instruction`; no HTML.

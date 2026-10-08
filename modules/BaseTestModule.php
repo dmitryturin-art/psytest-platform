@@ -304,6 +304,14 @@ abstract class BaseTestModule implements TestModuleInterface
         return $items;
     }
 
+    /**
+     * Default: item answers leave the platform only by the owner's checkbox.
+     */
+    public function aiReportSendsItemsAlways(): bool
+    {
+        return false;
+    }
+
     /** @return array{title: string, score: mixed, max: mixed, level: ?string, level_name: ?string, interpretation: ?string} */
     private static function aiScoreFromBadge(ResultSection $section): array
     {

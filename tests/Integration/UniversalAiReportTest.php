@@ -11,6 +11,7 @@ use PsyTest\Core\Ai\AiClient;
 use PsyTest\Core\Ai\AiProviderSettings;
 use PsyTest\Core\Ai\AiReportAvailability;
 use PsyTest\Core\Ai\AiReportContextBuilder;
+use PsyTest\Core\Ai\AiReportGenerator;
 use PsyTest\Core\Ai\AiReportRepository;
 use PsyTest\Core\Ai\AiSettings;
 use PsyTest\Core\Ai\AiTestSettings;
@@ -176,9 +177,9 @@ final class UniversalAiReportTest extends TestCase
             self::assertNull($fresh->published(self::TEST, self::MODE, $kind), 'Заготовка — черновик.');
             self::assertNull($fresh->manifestVersion(self::TEST, self::MODE, $kind));
             self::assertFalse($fresh->hasFactoryText(self::TEST, self::MODE, $kind));
-            self::assertSame([1], $fresh->availableVersions(self::TEST, self::MODE, $kind));
+            self::assertSame([PromptRegistry::STUB_FIRST_VERSION], $fresh->availableVersions(self::TEST, self::MODE, $kind));
 
-            $draft = $fresh->version(self::TEST, self::MODE, $kind, 1);
+            $draft = $fresh->version(self::TEST, self::MODE, $kind, PromptRegistry::STUB_FIRST_VERSION);
             self::assertInstanceOf(Prompt::class, $draft);
             self::assertStringContainsString('«Шкала тревоги Бека (BAI)»', $draft->text);
             self::assertStringNotContainsString('{{test_name}}', $draft->text);
@@ -199,7 +200,7 @@ final class UniversalAiReportTest extends TestCase
 
         // Правка и публикация работают как у обычного ключа.
         $next = $fresh->createOwnerVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, 'Правленый текст.', null, false);
-        self::assertSame(2, $next);
+        self::assertSame(PromptRegistry::STUB_FIRST_VERSION + 1, $next);
         $fresh->publishVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, $next);
         self::assertSame('Правленый текст.', PromptRegistry::default($this->db)->published(self::TEST, self::MODE, Prompt::KIND_CLEAR)?->text);
     }
@@ -233,7 +234,7 @@ final class UniversalAiReportTest extends TestCase
         $this->assertOrderRefused($sessionId, AiReportAvailability::REASON_NO_PROMPT);
 
         // Понятный разбор опубликован — предлагается только он.
-        PromptRegistry::default($this->db)->publishVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, 1);
+        PromptRegistry::default($this->db)->publishVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, PromptRegistry::STUB_FIRST_VERSION);
         self::assertSame([true, [Prompt::KIND_CLEAR]], $state());
         self::assertSame([Prompt::KIND_CLEAR], AiReportAvailability::forDatabase($this->db)->offeredKinds(self::TEST, self::MODE));
 
@@ -265,7 +266,7 @@ final class UniversalAiReportTest extends TestCase
         (new AiTestSettings($this->db))->save(self::TEST, true, false);
         $registry = PromptRegistry::default($this->db);
         PromptStubSeeder::default($registry)->ensureFor(self::TEST, 'BAI');
-        $registry->publishVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, 1);
+        $registry->publishVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, PromptRegistry::STUB_FIRST_VERSION);
 
         $prompt = PromptRegistry::default($this->db)->published(self::TEST, self::MODE, Prompt::KIND_CLEAR);
         self::assertInstanceOf(Prompt::class, $prompt);
@@ -303,12 +304,113 @@ final class UniversalAiReportTest extends TestCase
         PromptStubSeeder::default($registry)->ensureFor(self::TEST, 'BAI');
         self::assertFalse($this->caseSection($sessionId)['can_order'], 'Черновик не открывает заказ.');
 
-        $registry->publishVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, 1);
-        $registry->publishVersion(self::TEST, self::MODE, Prompt::KIND_PROFESSIONAL, 1);
+        $registry->publishVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, PromptRegistry::STUB_FIRST_VERSION);
+        $registry->publishVersion(self::TEST, self::MODE, Prompt::KIND_PROFESSIONAL, PromptRegistry::STUB_FIRST_VERSION);
         $on = $this->caseSection($sessionId);
         self::assertTrue($on['available']);
         self::assertTrue($on['can_order']);
         self::assertSame([Prompt::KIND_CLEAR, Prompt::KIND_PROFESSIONAL], array_column($on['kinds'], 'kind'));
+    }
+
+    // ------------------------------------------- задания, поставленные раньше
+
+    public function testQueuedJobIsRefusedAfterTheTestIsSwitchedOff(): void
+    {
+        $sessionId = $this->completedSession(self::TEST);
+        $this->enableAndPublish(true);
+        $job = $this->queue($sessionId);
+
+        (new AiTestSettings($this->db))->save(self::TEST, false, false);
+
+        $transport = $this->recordingTransport();
+        $this->generator($transport)->process((array) (new AiReportRepository($this->db))->claimNext());
+
+        self::assertSame([], $transport->bodies, 'Вход задания не должен уйти наружу.');
+        $failed = (new AiReportRepository($this->db))->find((string) $job['id']);
+        self::assertSame(AiReportRepository::STATUS_FAILED, $failed['status'] ?? null);
+        self::assertSame(AiReportAvailability::REASON_TEST_OFF, $failed['failure_reason']);
+    }
+
+    public function testQueuedJobLosesItemAnswersWhenTheCheckboxIsClearedAfterOrdering(): void
+    {
+        $sessionId = $this->completedSession(self::TEST);
+        $this->enableAndPublish(true);
+        $job = $this->queue($sessionId);
+        self::assertStringContainsString('"items"', (string) $this->db->selectOne('SELECT context_snapshot FROM ai_reports WHERE id = ?', [$job['id']])['context_snapshot']);
+
+        (new AiTestSettings($this->db))->save(self::TEST, true, false);
+
+        $transport = $this->recordingTransport();
+        $this->generator($transport)->process((array) (new AiReportRepository($this->db))->claimNext());
+
+        self::assertCount(1, $transport->bodies);
+        $user = (string) ($transport->bodies[0]['messages'][1]['content'] ?? '');
+        self::assertStringContainsString('beck-anxiety', $user);
+        self::assertStringNotContainsString('"items"', $user, 'Снятая галочка действует и на уже поставленные задания.');
+        self::assertStringNotContainsString('answer_label', $user);
+        self::assertSame(AiReportRepository::STATUS_READY, (new AiReportRepository($this->db))->find((string) $job['id'])['status'] ?? null);
+    }
+
+    public function testLazarusItemsAreKeptBecauseTheyArePartOfItsApprovedContext(): void
+    {
+        $builder = $this->builder();
+        $context = ['test' => 'lazarus', 'items' => [['id' => 1, 'self' => 5]]];
+
+        self::assertSame($context, $builder->enforceItemPolicy('lazarus', 'individual', $context));
+        self::assertSame($context, $builder->enforceItemPolicy('lazarus', 'pair', $context));
+        self::assertArrayNotHasKey('items', $builder->enforceItemPolicy(self::TEST, 'individual', ['test' => self::TEST, 'items' => []]));
+    }
+
+    public function testStubVersionsLiveAboveAnyFileVersion(): void
+    {
+        $registry = PromptRegistry::default($this->db);
+        PromptStubSeeder::default($registry)->ensureFor(self::TEST, 'BAI');
+
+        // Файловые версии любого ключа манифеста — меньше номера заготовок,
+        // иначе правка кабинета молча заслонила бы файл с тем же номером.
+        $fileOnly = new PromptRegistry(dirname(__DIR__, 2) . '/prompts');
+        foreach ($fileOnly->keys() as $key) {
+            [$test, $mode, $kind] = array_map('trim', explode('|', $key));
+            foreach ($fileOnly->availableVersions($test, $mode, $kind) as $version) {
+                self::assertLessThan(PromptRegistry::STUB_FIRST_VERSION, $version, $key);
+            }
+        }
+        self::assertSame([PromptRegistry::STUB_FIRST_VERSION], PromptRegistry::default($this->db)->availableVersions(self::TEST, self::MODE, Prompt::KIND_CLEAR));
+    }
+
+    private function enableAndPublish(bool $items): void
+    {
+        (new AiTestSettings($this->db))->save(self::TEST, true, $items);
+        $registry = PromptRegistry::default($this->db);
+        PromptStubSeeder::default($registry)->ensureFor(self::TEST, 'BAI');
+        $registry->publishVersion(self::TEST, self::MODE, Prompt::KIND_CLEAR, PromptRegistry::STUB_FIRST_VERSION);
+    }
+
+    /** @return array<string, mixed> */
+    private function queue(string $sessionId): array
+    {
+        $prompt = PromptRegistry::default($this->db)->published(self::TEST, self::MODE, Prompt::KIND_CLEAR);
+        self::assertInstanceOf(Prompt::class, $prompt);
+
+        return (new AiReportRepository($this->db))->request(
+            $sessionId,
+            self::TEST,
+            self::MODE,
+            Prompt::KIND_CLEAR,
+            $prompt,
+            $this->builder()->build($sessionId, self::TEST, self::MODE),
+        );
+    }
+
+    private function generator(AiTransport $transport): AiReportGenerator
+    {
+        return new AiReportGenerator(
+            new AiReportRepository($this->db),
+            $this->builder(),
+            PromptRegistry::default($this->db),
+            new AiClient(new AiProviderSettings('https://provider.invalid/api/v1', 'fixture-key', 'fixture/model', 30), $transport),
+            AiReportAvailability::forDatabase($this->db),
+        );
     }
 
     // ------------------------------------------------------------ приватность

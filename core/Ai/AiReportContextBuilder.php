@@ -81,6 +81,38 @@ final class AiReportContextBuilder
     }
 
     /**
+     * Привести готовую нагрузку к текущей галочке «ответы по пунктам».
+     *
+     * Нужна заданиям, поставленным до того, как владелец снял галочку: их
+     * снимок заморожен с `items`, но наружу они уже уйти не должны. Модули,
+     * у которых ответы по пунктам — часть утверждённого контекста (Лазарус),
+     * не трогаются. Без настроек методик нагрузка не меняется.
+     *
+     * @param array<string, mixed> $context
+     *
+     * @return array<string, mixed>
+     */
+    public function enforceItemPolicy(string $testSlug, string $mode, array $context): array
+    {
+        if ($this->testSettings === null || !array_key_exists('items', $context)) {
+            return $context;
+        }
+
+        $module = $this->modules->getModule($testSlug);
+        if ($module !== null && $module->aiReportSendsItemsAlways()) {
+            return $context;
+        }
+
+        if ($mode === 'individual' && $this->testSettings->sendsItemAnswers($testSlug)) {
+            return $context;
+        }
+
+        unset($context['items']);
+
+        return $context;
+    }
+
+    /**
      * Добавить ответы по пунктам, если модуль сам их не отдаёт (07.WP10).
      *
      * Лазарус уже кладёт `items` в свой контекст — его нагрузка не меняется.

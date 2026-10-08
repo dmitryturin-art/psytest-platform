@@ -48,6 +48,7 @@ use PsyTest\Core\SessionLifecycleService;
 use PsyTest\Core\TestInviteService;
 use PsyTest\Core\TherapistCaseService;
 use PsyTest\Core\TherapistClientService;
+use PsyTest\Modules\ModuleCapability;
 use PsyTest\Modules\ResultSection;
 use PsyTest\Modules\TestModuleInterface;
 
@@ -909,6 +910,8 @@ final class OwnerController extends BaseController
             'has_jobs' => $anyJob,
             // Кнопка «Заказать разбор» в шапке и форма заказа (04.D3).
             'can_order' => $anyOrderable,
+            // Какие виды сейчас заказываются: подпись формы заказа (07.WP10).
+            'offered_kinds' => $availability->offeredKinds($testSlug, $mode),
             'kinds' => $kinds,
             'owner_context_max' => self::OWNER_CONTEXT_MAX_LENGTH,
             // Выключатель владельца (07.WP9): заказывать черновики, которые
@@ -1007,6 +1010,7 @@ final class OwnerController extends BaseController
             new AiReportContextBuilder($this->sessionManager, $this->moduleLoader, $aiSettings, new AiTestSettings($this->db)),
             PromptRegistry::default($this->db),
             new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings),
+            AiReportAvailability::forDatabase($this->db),
         );
     }
 
@@ -1780,7 +1784,7 @@ final class OwnerController extends BaseController
     /**
      * Строки методик для галочек ИИ-разбора.
      *
-     * @return list<array{test: string, title: string, report_enabled: bool, send_item_answers: bool, published: bool}>
+     * @return list<array{test: string, title: string, report_enabled: bool, send_item_answers: bool, published: bool, items_always: bool, clinical_signal: bool}>
      */
     private function promptMethodologies(): array
     {
@@ -1795,12 +1799,22 @@ final class OwnerController extends BaseController
                 $published = $published || $registry->published($slug, 'individual', $kind) !== null;
             }
 
+            $module = $this->moduleLoader->getModule($slug);
+
             $rows[] = [
                 'test' => $slug,
                 'title' => $this->testTitle($slug),
                 'report_enabled' => $settings->isReportEnabled($slug),
                 'send_item_answers' => $settings->sendsItemAnswers($slug),
                 'published' => $published,
+                // Лазарус отдаёт оценки по пунктам в своём утверждённом
+                // контексте всегда: галочка показывается запертой, а не
+                // делает вид, что на что-то влияет.
+                'items_always' => $module !== null && $module->aiReportSendsItemsAlways(),
+                // Методика с клиническим сигналом (BDI, пункт 9): владелец
+                // должен знать, что модель увидит этот ответ.
+                'clinical_signal' => $module !== null
+                    && in_array(ModuleCapability::CLINICAL_SIGNAL, $module->getCapabilities(), true),
             ];
         }
 

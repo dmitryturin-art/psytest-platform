@@ -35,6 +35,17 @@ final class PromptRegistry
     public const SOURCE_FILE = 'file';
     public const SOURCE_OWNER = 'owner';
 
+    /**
+     * Номер первой версии заготовки (07.WP10).
+     *
+     * Версия из кабинета перекрывает файловую с тем же номером. Если бы
+     * заготовка начиналась с 1, а позже в Git появился бы `v1.md` для того же
+     * ключа, файловый текст был бы молча заслонён правкой кабинета. Файловые
+     * версии нумеруются с 1 и до тысячи не дойдут, поэтому заготовки и всё,
+     * что владелец сохранит поверх них, живут с 1000 — коллизии нет.
+     */
+    public const STUB_FIRST_VERSION = 1000;
+
     /** @var array<string, mixed>|null */
     private ?array $manifest = null;
 
@@ -311,7 +322,8 @@ final class PromptRegistry
      * владелец её не проверит и не опубликует (PRODUCT_RULES §6). Повторный
      * вызов для уже существующего ключа ничего не делает.
      *
-     * @return int|null номер созданной версии или null, если ключ уже есть
+     * @return int|null номер созданной версии ({@see STUB_FIRST_VERSION}) или
+     *                  null, если ключ уже есть
      */
     public function seedOwnerDraft(
         string $test,
@@ -336,18 +348,23 @@ final class PromptRegistry
                 'test' => $test,
                 'mode' => $mode,
                 'kind' => $kind,
-                'version' => 1,
+                'version' => self::STUB_FIRST_VERSION,
                 'text' => trim($text),
                 'note' => mb_substr($note, 0, 255),
                 'allows_owner_context' => $allowsOwnerContext ? 1 : 0,
             ]);
-        } catch (\PDOException) {
+        } catch (\PDOException $e) {
             // Параллельный запрос успел создать ту же заготовку: уникальный
-            // индекс (ключ, версия) не даёт второй строке появиться.
-            return null;
+            // индекс (ключ, версия) не даёт второй строке появиться. Любая
+            // другая ошибка БД — не «уже есть», её глотать нельзя.
+            if ((string) $e->getCode() === '23000') {
+                return null;
+            }
+
+            throw $e;
         }
 
-        return 1;
+        return self::STUB_FIRST_VERSION;
     }
 
     /** Вернуться к версии из manifest.json (откат правок кабинета). */

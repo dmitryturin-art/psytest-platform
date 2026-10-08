@@ -80,6 +80,7 @@ $generator = new AiReportGenerator(
     $contextBuilder,
     PromptRegistry::default($db),
     new AiClient($settings, new CurlTransport(), ownerSettings: $aiSettings),
+    AiReportAvailability::forDatabase($db),
 );
 
 // Поставить задание по ссылке результата. Нужно, пока на странице нет кнопки:
