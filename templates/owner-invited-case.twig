@@ -60,7 +60,7 @@
 
 {% block title %}Кейс по приглашению — {{ appName }}{% endblock %}
 {% block body_class %}owner-dashboard-page{% endblock %}
-{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a><a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a><a class="nav-link" href="{{ basePath }}/admin/prompts">Промпты</a></nav>{% endblock %}
+{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">К приглашениям</a><a class="nav-link" href="{{ basePath }}/admin/clients">Клиенты</a><a class="nav-link" href="{{ basePath }}/admin/tests">Методики</a></nav>{% endblock %}
 
 {% block content %}
 {% set isTrashed = trashed ?? false %}
@@ -329,7 +329,7 @@
     {% if case.completed_at and not ai.available and not isTrashed %}
     <section class="case-section owner-case-ai" aria-labelledby="owner-case-ai-title">
         <h2 id="owner-case-ai-title">Разбор</h2>
-        <p class="owner-help">Разбор для этой методики сейчас не заказывается: он выключен или его промпт не опубликован. Включить разбор можно в разделе <a href="{{ basePath }}/admin/prompts">«Промпты»</a>.</p>
+        <p class="owner-help">Разбор для этой методики сейчас не заказывается: он выключен или его промпт не опубликован. Включить его можно на <a href="{{ basePath }}/admin/tests/{{ case.test_slug }}#ai">странице методики</a>.</p>
     </section>
     {% endif %}
 
@@ -343,7 +343,7 @@
             <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
         {% endif %}
         {% if ai.ai_disabled ?? false %}
-            <p class="owner-help case-ai-off">ИИ-разборы выключены в <a href="{{ basePath }}/admin/prompts">настройках промптов</a>: новый заказ сейчас не выполнится. Готовые тексты, правка и публикация работают.</p>
+            <p class="owner-help case-ai-off">ИИ-разборы выключены в <a href="{{ basePath }}/admin/tests/settings">настройках ИИ</a>: новый заказ сейчас не выполнится. Готовые тексты, правка и публикация работают.</p>
         {% endif %}
 
         {% set aiWaiting = ai.kinds|filter(item => item.status == 'pending' or item.status == 'running')|length > 0 %}
