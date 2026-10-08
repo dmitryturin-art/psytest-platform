@@ -1751,11 +1751,17 @@ a.cab-table__title:hover {
     color: var(--color-text-light);
 }
 
-/* Список методик. */
-.tests-table .cab-table__status { width: 12rem; }
-.tests-table__prompt { width: 13.5rem; }
-.tests-table__items { width: 7rem; }
-.tests-table__open { width: 6.5rem; text-align: right; }
+/* Список методик. Длинные заголовки переносятся на вторую строку, между
+   колонками остаётся поле. */
+.tests-table th { vertical-align: bottom; line-height: 1.25; white-space: normal; }
+.tests-table th,
+.tests-table td { padding-right: var(--spacing-md); }
+.tests-table .cab-table__status { width: 10rem; }
+.tests-table__prompt { width: 12rem; }
+.tests-table__items { width: 8rem; }
+.tests-table__open { width: 6.5rem; text-align: right; padding-right: 0; }
+.tests-table th.tests-table__items,
+.tests-table td.tests-table__items { text-align: left; }
 
 .tests-table tbody tr.is-linked {
     cursor: pointer;
@@ -2054,6 +2060,45 @@ a.cab-table__title:hover {
     border-radius: var(--radius-md);
     background: var(--color-bg-soft);
     scroll-margin-top: calc(var(--case-nav-top, var(--header-height)) + 4rem);
+}
+
+/* На телефоне панель вкладок над результатом выше: заголовок не должен прятаться под ней. */
+@media (max-width: 640px) {
+    .prompt-trial-result { scroll-margin-top: 17rem; }
+}
+
+.prompt-trial-result__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.prompt-trial-result__head h3 {
+    margin: 0;
+}
+
+.prompt-trial-result--pending [data-trial-waiting]::before {
+    content: "";
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    margin-right: 0.5em;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    vertical-align: -0.1em;
+    animation: trial-spin 1s linear infinite;
+}
+
+@keyframes trial-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .prompt-trial-result--pending [data-trial-waiting]::before { animation: none; }
 }
 
 .owner-dashboard-page .prompt-output h3 {
