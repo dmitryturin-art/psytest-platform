@@ -1565,7 +1565,31 @@ a.cab-table__title:hover {
 .owner-prompt-vars {
     display: grid;
     gap: var(--spacing-xs);
-    max-width: 28rem;
+    max-width: 40rem;
+}
+
+/* Список полей с пояснениями под выпадающим списком: что это за данные. */
+.owner-prompt-vars__list {
+    display: grid;
+    gap: var(--spacing-xs);
+    margin: var(--spacing-xs) 0 0;
+    font-size: var(--font-size-sm);
+}
+
+.owner-prompt-vars__list dt {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.owner-prompt-vars__list dt code {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    color: var(--color-text-light);
+}
+
+.owner-prompt-vars__list dd {
+    margin: 0;
+    color: var(--color-text-secondary);
 }
 
 .owner-prompt-vars[hidden],

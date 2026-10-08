@@ -17,6 +17,7 @@ use PsyTest\Core\Ai\CurlTransport;
 use PsyTest\Core\Ai\Prompt;
 use PsyTest\Core\Ai\PromptFixtureContext;
 use PsyTest\Core\Ai\PromptRegistry;
+use PsyTest\Core\Ai\PromptVariableLabels;
 use PsyTest\Core\Ai\SmilGlossaryCompactor;
 use PsyTest\Core\CaseExportDocx;
 use PsyTest\Core\CaseExportPresenter;
@@ -1868,7 +1869,7 @@ final class OwnerController extends BaseController
         }
 
         PromptRegistry::default($this->db)->resetToManifest($test, $mode, $kind);
-        $this->promptFlashBack($test, $mode, $kind, true, 'Ключ возвращён к версии из manifest.json.');
+        $this->promptFlashBack($test, $mode, $kind, true, 'Возвращён заводской текст промпта. Правки из кабинета сохранены в истории версий.');
     }
 
     /**
@@ -2044,7 +2045,7 @@ final class OwnerController extends BaseController
      * Поля входных данных, на которые промпт может ссылаться по имени: верхний
      * уровень контекста методики на синтетическом кейсе, а не список из кода.
      *
-     * @return list<string>
+     * @return list<array{key: string, label: string, hint: string}>
      */
     private function promptVariables(string $test, string $mode): array
     {
@@ -2059,7 +2060,10 @@ final class OwnerController extends BaseController
             return [];
         }
 
-        return array_values(array_map('strval', array_keys($context)));
+        return array_map(
+            static fn (string|int $key): array => PromptVariableLabels::describe((string) $key),
+            array_keys($context),
+        );
     }
 
     private function promptKeyExists(string $test, string $mode, string $kind): bool
