@@ -2258,3 +2258,10 @@ a.cab-table__title:hover {
         flex: 1 0 100%;
     }
 }
+
+/* Общий выключатель ИИ — состояние, а не ошибка: тихой строкой под вкладками. */
+.prompt-head__note {
+    max-width: var(--measure);
+    margin: var(--spacing-md) 0 0;
+    font-size: var(--font-size-sm);
+}

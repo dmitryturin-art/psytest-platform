@@ -23,7 +23,6 @@
     ], back: {label: 'К методике', href: basePath ~ methodology_path ~ (mode != 'individual' ? '?mode=' ~ mode : '') ~ '#prompts'}} %}
 
     <header class="case-head prompt-head">
-        <p class="owner-panel-eyebrow">{{ test_title }}</p>
         <h1 id="owner-prompt-title">{{ kind_label }}</h1>
         <div class="prompt-head__switch">
             {% if kind_tabs|length > 1 %}
@@ -42,7 +41,7 @@
             <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
         {% endif %}
         {% if not ai_enabled %}
-            <p class="owner-notice owner-notice--error" role="status">ИИ-разборы выключены в <a href="{{ basePath }}/admin/tests/settings">настройках ИИ</a>. Редактировать промпт можно, а пробный разбор запустить нельзя.</p>
+            <p class="owner-help prompt-head__note" role="status">ИИ-разборы выключены для всех методик в <a href="{{ basePath }}/admin/tests/settings">настройках ИИ</a>. Редактировать промпт можно, а пробный разбор запустить нельзя.</p>
         {% endif %}
         {% if not (test_report_enabled ?? true) %}
             <p class="owner-notice owner-notice--error" role="status">ИИ-разбор этой методики выключен на <a href="{{ basePath }}{{ methodology_path }}#ai">её странице</a>: даже опубликованная версия клиентам не предлагается.</p>
@@ -52,9 +51,9 @@
     <nav class="case-nav prompt-nav" aria-label="Разделы промпта" data-case-nav>
         <span class="case-nav__label" aria-hidden="true">{{ test_title }} · {{ kind_title }}</span>
         <div class="view-tabs case-nav__tabs">
-            <a class="view-tabs__tab" href="#prompt-current" data-case-nav-link>{{ is_published ? 'Действующая версия' : 'Версия ' ~ selected_version }}</a>
+            <a class="view-tabs__tab" href="#prompt-current" data-case-nav-link>Текст</a>
             <a class="view-tabs__tab" href="#prompt-edit" data-case-nav-link>Редактировать</a>
-            <a class="view-tabs__tab" href="#prompt-history" data-case-nav-link>История версий</a>
+            <a class="view-tabs__tab" href="#prompt-history" data-case-nav-link>История</a>
         </div>
         <div class="case-nav__actions">
             {% if published_version is not null %}<span class="status status--done">опубликована версия {{ published_version }}</span>
@@ -91,7 +90,7 @@
             {% if published_version is null %}
             Ни одна версия ещё не опубликована: это заготовка, заказать разбор по ней нельзя. Прочитайте текст, при необходимости сохраните правку и опубликуйте нужную версию.
             {% elseif is_published %}
-            По версии {{ published_version }} идут новые заказы{% if from_manifest and has_factory_text %} — это заводской текст, который поставляется вместе с программой{% endif %}. Уже поставленные задания не меняются: у каждого свой снимок текста.
+            По версии {{ published_version }} идут новые заказы. Уже поставленные задания не меняются: у каждого свой снимок текста.
             {% else %}
             Эта версия не опубликована. Новые заказы идут по версии {{ published_version }} — <a href="{{ key_path }}#prompt-current">открыть её</a>.
             {% endif %}
