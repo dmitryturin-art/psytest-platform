@@ -1,0 +1,37 @@
+{#
+    «Коротко о профиле» для респондента рядом с графиком СМИЛ (04.D5).
+    Данные — ResultSummaryPresenter::profileBrief(): достоверность и шкалы вне
+    нормы 30–70T словами, без кодов, T-баллов и клинических ярлыков.
+#}
+<aside class="result-brief" aria-labelledby="result-brief-title">
+    <h3 class="result-brief__title" id="result-brief-title">Коротко о профиле</h3>
+    {% if brief.validity %}
+    <div class="result-brief__group">
+        <p class="result-brief__status result-brief__status--{{ brief.validity.is_valid ? 'ok' : 'alert' }}">
+            {{ brief.validity.is_valid ? 'Ответы последовательны — результату можно доверять.' : 'Ответы противоречивы — результат может быть неточным.' }}
+        </p>
+        {% if not brief.validity.is_valid %}
+        <p class="result-brief__note">Его стоит обсудить со специалистом. Подробности — в «Контрольных шкалах».</p>
+        {% elseif brief.validity.has_notes %}
+        <p class="result-brief__note">Есть оговорка — она в «Контрольных шкалах».</p>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% for group in [{title: 'Выражено сильнее обычного', scales: brief.above}, {title: 'Выражено слабее обычного', scales: brief.below}] %}
+    {% if group.scales %}
+    <div class="result-brief__group">
+        <h4 class="result-brief__label">{{ group.title }}</h4>
+        <ul class="result-brief__scales">
+            {% for scale in group.scales %}
+            <li><span class="result-brief__name">{{ scale.name }}</span> <span class="result-brief__level">{{ scale.level_name|lower }}</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% if not brief.above and not brief.below %}
+    <div class="result-brief__group">
+        <p class="result-brief__note">Все основные шкалы — в пределах нормы.</p>
+    </div>
+    {% endif %}
+</aside>

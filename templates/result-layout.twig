@@ -55,14 +55,27 @@
         {% endif %}
     {% endif %}
 
-    <div class="results-content">
+    {# Две шкалы с баллом (HADS: тревога и депрессия) стоят рядом (04.D5). #}
+    {% set score_badges = sections|filter(s => s.type == 'score_badge')|length %}
+    {% set brief = profile_brief ?? null %}
+    <div class="results-content{% if score_badges == 2 %} results-content--paired-scores{% endif %}">
         {% for section in sections %}
         <div class="results-section results-section--{{ section.type }}">
             {% if section.title %}
             <h2 class="section-title">{{ section.title }}</h2>
             {% endif %}
             <div class="section-body">
+                {% if section.type == 'profile_chart' and brief %}
+                {# График СМИЛ — тот же блок без изменений; справа короткая сводка словами. #}
+                <div class="result-profile">
+                    <div class="result-profile__chart">
+                        {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
+                    </div>
+                    {{ include('blocks/result-brief.twig', {brief: brief}) }}
+                </div>
+                {% else %}
                 {{ include(section.block, section.data|merge({'_section_type': section.type}), ignore_missing = true) }}
+                {% endif %}
             </div>
         </div>
         {% endfor %}
