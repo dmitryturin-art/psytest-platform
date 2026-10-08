@@ -1,138 +1,153 @@
 {% extends "layout.twig" %}
-{# Кабинет владельца — отдельная сессия: навигация посетителя сюда не входит. #}
+{# Страница промпта в разделе «Методики» (07.K14): путь и вкладки соседних промптов,
+   полоса разделов с состоянием и действиями, затем «Текущая версия», «Редактировать»,
+   «История версий». Обработчики форм прежние (07.WP9/WP9b), сменились только адреса. #}
 {% set ownerArea = true %}
-{% set key_path = basePath ~ '/admin/prompts/' ~ test ~ '/' ~ mode ~ '/' ~ kind %}
+{% set key_path = basePath ~ methodology_path ~ '/prompts/' ~ mode ~ '/' ~ kind %}
+{% set kind_label = kind_title|capitalize %}
+{% set mode_label = mode == 'pair' ? 'пара' : 'один человек' %}
 
-{% block title %}{{ test_title }} — {{ kind_title }} — {{ appName }}{% endblock %}
+{% block title %}{{ kind_label }} — {{ test_title }} — {{ appName }}{% endblock %}
 {% block body_class %}owner-dashboard-page{% endblock %}
-{% block header_nav %}<nav class="owner-nav"><a class="nav-link" href="{{ basePath }}/admin">Приглашения</a><a class="nav-link" href="{{ basePath }}/admin/prompts">К списку промптов</a></nav>{% endblock %}
+{% block header_nav %}{% include 'blocks/owner-nav.twig' with {current: 'tests'} %}{% endblock %}
 
 {% block content %}
-<section class="owner-panel" aria-labelledby="owner-prompt-title">
-    <p class="owner-panel-eyebrow">{{ test_title }}</p>
-    <h1 id="owner-prompt-title">{{ kind_title|capitalize }}, {{ mode_title }}</h1>
-    <p class="owner-panel-intro">
-        {% if published_version is null %}
-        Ни одна версия ещё не опубликована: это заготовка из универсального шаблона, заказать разбор по ней нельзя.
-        Проверьте текст, при необходимости сохраните правку и опубликуйте нужную версию.
-        {% else %}
-        Сейчас новые заказы идут по версии {{ published_version }}{% if from_manifest and has_factory_text %} — это заводской текст, который поставляется вместе с программой{% endif %}.
-        Уже поставленные задания не меняются: у каждого свой снимок промпта.
-        {% endif %}
-    </p>
+{% set selected_entry = (versions|filter(v => v.version == selected_version)|first) ?: null %}
+{% set is_published = published_version is not null and selected_version == published_version %}
+{% set draft_version = state.draft_version ?? null %}
+<section class="owner-panel case-workspace prompt-page" aria-labelledby="owner-prompt-title"{% if trial %} data-scroll-to="prompt-trial-result"{% elseif preview %} data-scroll-to="prompt-preview"{% endif %}>
+    {% include 'blocks/owner-crumbs.twig' with {items: [
+        {label: 'Методики', href: basePath ~ '/admin/tests'},
+        {label: test_title, href: basePath ~ methodology_path},
+        {label: kind_label ~ (mode_tabs ? ', ' ~ mode_label : '')},
+    ], back: {label: 'К методике', href: basePath ~ methodology_path ~ (mode != 'individual' ? '?mode=' ~ mode : '') ~ '#prompts'}} %}
 
-    {% if flash %}
-        <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
-    {% endif %}
-    {% if not ai_enabled %}
-        <p class="owner-notice owner-notice--error" role="status">ИИ-разборы выключены в настройках. Редактировать промпты можно, а пробный разбор запустить нельзя.</p>
-    {% endif %}
-    {% if not (test_report_enabled ?? true) %}
-        <p class="owner-notice owner-notice--error" role="status">ИИ-разбор этой методики выключен в <a href="{{ basePath }}/admin/prompts#owner-ai-tests-title">списке промптов</a>: даже опубликованная версия клиентам не предлагается.</p>
-    {% endif %}
-
-    <section class="owner-invites" aria-labelledby="owner-prompt-versions-title">
-        <h2 id="owner-prompt-versions-title">Версии</h2>
-        <ul class="owner-invite-list">
-            {% for item in versions %}
-            <li>
-                <p>
-                    <strong><a href="{{ key_path }}?version={{ item.version }}">Версия {{ item.version }}</a></strong>
-                    — {{ item.source == 'owner' ? 'правка из кабинета' : 'файл в репозитории' }}{% if item.version == published_version %}, опубликована{% endif %}{% if item.version == selected_version %}, открыта сейчас{% endif %}.
-                </p>
-                {% if item.note %}<p>{{ item.note }}</p>{% endif %}
-                {% if item.created_at %}<small>Сохранена {{ item.created_at|date("d.m.Y H:i") }}</small>{% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-
-        <form method="post" action="{{ key_path }}/publish" class="owner-form">
-            {{ csrf_field() }}
-            <input type="hidden" name="version" value="{{ selected_version }}">
-            <label class="owner-toggle">
-                <input type="checkbox" name="confirm_publish" value="1" required>
-                Понимаю: новые заказы будут использовать версию {{ selected_version }}; уже поставленные задания не меняются — у них снимок.
-            </label>
-            <button type="submit" class="btn btn-primary">Опубликовать эту версию</button>
-        </form>
-
-        {% if has_factory_text ?? true %}
-        <form method="post" action="{{ key_path }}/reset" class="owner-action-form">
-            {{ csrf_field() }}
-            <button type="submit" class="btn btn-outline btn-sm" title="Отменить правки из кабинета и снова использовать текст, который поставляется вместе с программой">Вернуть заводской текст (версия {{ manifest_version }})</button>
-        </form>
-        {% else %}
-        <p class="owner-help">Вернуть заводской текст нельзя: заводского текста нет, это заготовка из универсального шаблона.</p>
-        {% endif %}
-    </section>
-
-    <section class="owner-invites" aria-labelledby="owner-prompt-text-title">
-        <h2 id="owner-prompt-text-title">Текст версии {{ selected_version }}</h2>
-        <p class="owner-help">Источник: {{ selected.source ?: 'не указан' }}. Клинический контекст специалиста {{ selected.allowsOwnerContext ? 'принимается' : 'не принимается' }}.</p>
-        <pre class="owner-prompt-text">{{ selected.text }}</pre>
-
-        <div class="prompt-tools">
-            <div class="prompt-tools__row">
-                <a class="btn btn-outline btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}">Показать запрос на тестовых данных</a>
-                <p class="prompt-tools__hint">Тестовые данные — выдуманный набор ответов на опросник. По нему видно, что именно уйдёт модели; реальные клиенты не затрагиваются.</p>
-            </div>
-
-            <form method="post" action="{{ key_path }}/trial" class="prompt-trial">
-                {{ csrf_field() }}
-                <input type="hidden" name="version" value="{{ selected_version }}">
-                <h3 class="prompt-trial__title">Пробный разбор на тестовых данных</h3>
-                <p class="prompt-tools__hint">Промпт отправится модели на выдуманных данных, и вы увидите, какой разбор получится. Запрос платный, как обычный разбор; результат нигде не сохраняется, клиенты не затрагиваются.</p>
-                <label class="prompt-trial__confirm">
-                    <input type="checkbox" name="confirm_trial" value="1" required>
-                    <span>Подтверждаю платный пробный запрос к модели</span>
-                </label>
-                <div class="prompt-trial__actions">
-                    <button type="submit" class="btn btn-outline btn-sm"{% if not ai_enabled %} disabled{% endif %}>Запустить пробный разбор</button>
-                    {% if not ai_enabled %}<span class="prompt-tools__hint">ИИ-разборы выключены в настройках.</span>{% endif %}
-                </div>
-            </form>
+    <header class="case-head prompt-head">
+        <p class="owner-panel-eyebrow">{{ test_title }}</p>
+        <h1 id="owner-prompt-title">{{ kind_label }}</h1>
+        <div class="prompt-head__switch">
+            {% if kind_tabs|length > 1 %}
+            <nav class="view-tabs" aria-label="Вид разбора">
+                {% for tab in kind_tabs %}<a class="view-tabs__tab" href="{{ basePath }}{{ tab.path }}"{% if tab.kind == kind %} aria-current="page"{% endif %}>{{ tab.title|capitalize }}</a>{% endfor %}
+            </nav>
+            {% endif %}
+            {% if mode_tabs %}
+            <nav class="view-tabs" aria-label="Режим прохождения">
+                {% for tab in mode_tabs %}<a class="view-tabs__tab" href="{{ basePath }}{{ tab.path }}"{% if tab.mode == mode %} aria-current="page"{% endif %}>{{ tab.title }}</a>{% endfor %}
+            </nav>
+            {% endif %}
         </div>
-    </section>
 
-    {% if preview %}
-    <section class="owner-invites" aria-labelledby="owner-prompt-preview-title">
-        <h2 id="owner-prompt-preview-title">Предпросмотр запроса</h2>
-        {% if preview.error %}
-            <p class="owner-notice owner-notice--error" role="alert">{{ preview.error }}</p>
-        {% else %}
-            <p class="owner-help">
-                Ровно то, что уйдёт модели. Ответы придуманы этой страницей по схеме методики — ни одной реальной сессии здесь нет.
-                Провайдер при предпросмотре не вызывается.
-            </p>
-            {% if preview.glossary_mode %}
-            <p class="owner-help">Глоссарий СМИЛ: {{ preview.glossary_mode == 'compact' ? 'компактный (краткое значение по шкалам 40–65T)' : 'полный' }}.</p>
+        {% if flash %}
+            <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
+        {% endif %}
+        {% if not ai_enabled %}
+            <p class="owner-notice owner-notice--error" role="status">ИИ-разборы выключены в <a href="{{ basePath }}/admin/tests/settings">настройках ИИ</a>. Редактировать промпт можно, а пробный разбор запустить нельзя.</p>
+        {% endif %}
+        {% if not (test_report_enabled ?? true) %}
+            <p class="owner-notice owner-notice--error" role="status">ИИ-разбор этой методики выключен на <a href="{{ basePath }}{{ methodology_path }}#ai">её странице</a>: даже опубликованная версия клиентам не предлагается.</p>
+        {% endif %}
+    </header>
+
+    <nav class="case-nav prompt-nav" aria-label="Разделы промпта" data-case-nav>
+        <span class="case-nav__label" aria-hidden="true">{{ test_title }} · {{ kind_title }}</span>
+        <div class="view-tabs case-nav__tabs">
+            <a class="view-tabs__tab" href="#prompt-current" data-case-nav-link>{{ is_published ? 'Действующая версия' : 'Версия ' ~ selected_version }}</a>
+            <a class="view-tabs__tab" href="#prompt-edit" data-case-nav-link>Редактировать</a>
+            <a class="view-tabs__tab" href="#prompt-history" data-case-nav-link>История версий</a>
+        </div>
+        <div class="case-nav__actions">
+            {% if published_version is not null %}<span class="status status--done">опубликована версия {{ published_version }}</span>
+            {% else %}<span class="status status--pending">не опубликован</span>{% endif %}
+            {% if draft_version %}
+                {% include 'blocks/owner-publish-pop.twig' with {pop_id: 'prompt-publish', version: draft_version, label: 'Опубликовать версию ' ~ draft_version ~ '…', primary: true} %}
             {% endif %}
-            {% if preview.length %}
-            <p class="owner-help">Длина контекста: {{ preview.length }} знаков.</p>
+            <details class="action-pop action-pop--wide" id="prompt-trial" data-action-pop>
+                <summary class="btn btn-outline btn-sm">Пробный разбор</summary>
+                <div class="action-pop__panel">
+                    <form method="post" action="{{ key_path }}/trial" class="action-pop__form prompt-trial">
+                        {{ csrf_field() }}
+                        <input type="hidden" name="version" value="{{ selected_version }}">
+                        <h3 class="prompt-trial__title">Пробный разбор версии {{ selected_version }} на тестовых данных</h3>
+                        <p class="prompt-tools__hint">Промпт отправится модели на выдуманных ответах, и вы увидите, какой разбор получится. Запрос платный, как обычный разбор; результат нигде не сохраняется, клиенты не затрагиваются.</p>
+                        <label class="prompt-trial__confirm">
+                            <input type="checkbox" name="confirm_trial" value="1" required>
+                            <span>Подтверждаю платный пробный запрос к модели</span>
+                        </label>
+                        <div class="prompt-trial__actions">
+                            <button type="submit" class="btn btn-outline btn-sm"{% if not ai_enabled %} disabled{% endif %}>Запустить пробный разбор</button>
+                            {% if not ai_enabled %}<span class="prompt-tools__hint">ИИ-разборы выключены в настройках.</span>{% endif %}
+                        </div>
+                    </form>
+                </div>
+            </details>
+        </div>
+    </nav>
+
+    {# ---------- Текущая (выбранная) версия ---------- #}
+    <section id="prompt-current" class="case-section prompt-section" aria-labelledby="prompt-current-title" data-case-section>
+        <h2 id="prompt-current-title">{{ is_published ? 'Действующая версия' : 'Версия ' ~ selected_version }}</h2>
+        <p class="prompt-section__lead">
+            {% if published_version is null %}
+            Ни одна версия ещё не опубликована: это заготовка, заказать разбор по ней нельзя. Прочитайте текст, при необходимости сохраните правку и опубликуйте нужную версию.
+            {% elseif is_published %}
+            По версии {{ published_version }} идут новые заказы{% if from_manifest and has_factory_text %} — это заводской текст, который поставляется вместе с программой{% endif %}. Уже поставленные задания не меняются: у каждого свой снимок текста.
+            {% else %}
+            Эта версия не опубликована. Новые заказы идут по версии {{ published_version }} — <a href="{{ key_path }}#prompt-current">открыть её</a>.
             {% endif %}
-            <h3>system</h3>
-            <pre class="owner-prompt-text">{{ preview.system }}</pre>
-            <h3>user</h3>
-            <pre class="owner-prompt-text">{{ preview.user }}</pre>
+        </p>
+        <dl class="prompt-facts">
+            <div><dt>Откуда</dt><dd>{{ (selected_entry.source ?? '') == 'owner' ? 'правка из кабинета' : 'текст, поставляемый с программой' }}{% if selected_entry.created_at ?? null %}, {{ selected_entry.created_at|date("d.m.Y H:i") }}{% endif %}</dd></div>
+            {% if selected_entry.note ?? null %}<div><dt>Заметка</dt><dd>{{ selected_entry.note }}</dd></div>{% endif %}
+            <div><dt>Ваш клинический контекст</dt><dd>{{ selected.allowsOwnerContext ? 'учитывается, если вы добавите его к заказу' : 'не учитывается' }}</dd></div>
+        </dl>
+        <pre class="owner-prompt-text">{{ selected.text }}</pre>
+        <div class="prompt-tools__row prompt-section__tools">
+            <a class="btn btn-ghost btn-sm" href="{{ key_path }}/preview?version={{ selected_version }}#prompt-preview">Показать запрос на тестовых данных</a>
+            <p class="prompt-tools__hint">Тестовые данные — выдуманный набор ответов на опросник. По ним видно, что именно уйдёт модели; реальные клиенты не затрагиваются.</p>
+        </div>
+
+        {% if preview %}
+        <div id="prompt-preview" class="prompt-output" aria-labelledby="owner-prompt-preview-title">
+            <h3 id="owner-prompt-preview-title">Запрос на тестовых данных</h3>
+            {% if preview.error %}
+                <p class="owner-notice owner-notice--error" role="alert">{{ preview.error }}</p>
+            {% else %}
+                <p class="owner-help">
+                    Ровно то, что уйдёт модели. Ответы придуманы этой страницей по схеме методики — ни одной реальной сессии здесь нет.
+                    Модель при показе запроса не вызывается.
+                </p>
+                {% if preview.glossary_mode %}
+                <p class="owner-help">Глоссарий СМИЛ: {{ preview.glossary_mode == 'compact' ? 'компактный (краткое значение по шкалам 40–65T)' : 'полный' }}.</p>
+                {% endif %}
+                {% if preview.length %}
+                <p class="owner-help">Длина входных данных: {{ preview.length }} знаков.</p>
+                {% endif %}
+                <h4>Инструкция модели (промпт)</h4>
+                <pre class="owner-prompt-text">{{ preview.system }}</pre>
+                <h4>Входные данные</h4>
+                <pre class="owner-prompt-text">{{ preview.user }}</pre>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if trial %}
+        <div id="prompt-trial-result" class="prompt-output" aria-labelledby="owner-prompt-trial-title">
+            <h3 id="owner-prompt-trial-title">Пробный разбор на тестовых данных</h3>
+            {% if trial.error %}
+                <p class="owner-notice owner-notice--error" role="alert">{{ trial.error }}</p>
+            {% else %}
+                <p class="owner-help">Ответ модели{% if trial.model %} ({{ trial.model }}){% endif %}. Он не сохранён и исчезнет при перезагрузке страницы.</p>
+                <div class="ai-report__body">{{ trial.text|raw }}</div>
+            {% endif %}
+        </div>
         {% endif %}
     </section>
-    {% endif %}
 
-    {% if trial %}
-    <section class="owner-invites" aria-labelledby="owner-prompt-trial-title">
-        <h2 id="owner-prompt-trial-title">Пробный разбор на тестовых данных</h2>
-        {% if trial.error %}
-            <p class="owner-notice owner-notice--error" role="alert">{{ trial.error }}</p>
-        {% else %}
-            <p class="owner-help">Ответ модели{% if trial.model %} ({{ trial.model }}){% endif %}. Он не сохранён и исчезнет при перезагрузке страницы.</p>
-            <div class="ai-report__body">{{ trial.text|raw }}</div>
-        {% endif %}
-    </section>
-    {% endif %}
-
-    <section class="owner-invites" aria-labelledby="owner-prompt-new-title">
-        <h2 id="owner-prompt-new-title">Новая версия</h2>
-        <p class="owner-help">Основа — текст версии {{ selected_version }}. Сохранение не публикует: опубликовать нужно отдельной кнопкой.</p>
+    {# ---------- Редактировать: новая версия ---------- #}
+    <section id="prompt-edit" class="case-section prompt-section" aria-labelledby="owner-prompt-new-title" data-case-section>
+        <h2 id="owner-prompt-new-title">Редактировать</h2>
+        <p class="prompt-section__lead">Основа — текст версии {{ selected_version }}. «Сохранить как новую версию» ничего не публикует: опубликовать её можно потом, отдельной кнопкой.</p>
         <form method="post" action="{{ key_path }}/versions" class="owner-form" data-prompt-editor-form data-preview-url="{{ key_path }}/preview">
             {{ csrf_field() }}
             <div class="owner-field">
@@ -144,7 +159,7 @@
 
             {% if variables %}
             <div class="owner-prompt-vars" data-prompt-vars hidden>
-                <label for="prompt-var-select">Вставить переменную</label>
+                <label for="prompt-var-select">Вставить название поля</label>
                 <select id="prompt-var-select" data-prompt-var-select>
                     <option value="">Поле входных данных…</option>
                     {% for variable in variables %}
@@ -152,11 +167,14 @@
                     {% endfor %}
                 </select>
                 <p class="owner-help" data-prompt-var-hint>Поля, которые модель получает во входных данных этой методики. Подстановки в тексте нет: промпт просто называет поле по имени.</p>
-                <dl class="owner-prompt-vars__list">
-                    {% for variable in variables %}
-                    <div><dt>{{ variable.label }} <code>{{ variable.key }}</code></dt><dd>{{ variable.hint }}</dd></div>
-                    {% endfor %}
-                </dl>
+                <details class="prompt-vars-more">
+                    <summary>Что означает каждое поле</summary>
+                    <dl class="owner-prompt-vars__list">
+                        {% for variable in variables %}
+                        <div><dt>{{ variable.label }} <code>{{ variable.key }}</code></dt><dd>{{ variable.hint }}</dd></div>
+                        {% endfor %}
+                    </dl>
+                </details>
             </div>
             {% endif %}
 
@@ -166,23 +184,61 @@
                 <div data-prompt-preview-panel hidden>
                     <p class="owner-notice owner-notice--error" role="alert" data-prompt-preview-error hidden></p>
                     <p class="owner-help" data-prompt-preview-meta></p>
-                    <h3>system</h3>
+                    <h4>Инструкция модели (промпт)</h4>
                     <pre class="owner-prompt-text" data-prompt-preview-system></pre>
-                    <h3>user</h3>
+                    <h4>Входные данные</h4>
                     <pre class="owner-prompt-text" data-prompt-preview-user></pre>
                 </div>
             </div>
 
             <label for="prompt-note">Заметка о правке</label>
-            <input type="text" id="prompt-note" name="note" maxlength="{{ note_max }}">
+            <input type="text" id="prompt-note" name="note" maxlength="{{ note_max }}" placeholder="Например: убрал повтор во вступлении">
 
             <label class="owner-toggle">
                 <input type="checkbox" name="allows_owner_context" value="1"{% if selected.allowsOwnerContext %} checked{% endif %}>
-                Принимает клинический контекст специалиста
+                Учитывать ваш клинический контекст, если вы добавите его к заказу
             </label>
 
-            <button type="submit" class="btn btn-primary">Сохранить как новую версию</button>
+            <button type="submit" class="btn btn-outline">Сохранить как новую версию</button>
         </form>
+    </section>
+
+    {# ---------- История версий ---------- #}
+    <section id="prompt-history" class="case-section prompt-section disclosure-stack" aria-labelledby="owner-prompt-versions-title" data-case-section>
+        <h2 id="owner-prompt-versions-title">История версий</h2>
+        <details class="ai-report__details case-fold" data-history>
+            <summary class="ai-report__summary"><span class="ai-report__summary-title">Все версии</span><span class="ai-report__summary-hint">{{ versions_desc|length }}</span></summary>
+            <div class="case-fold__body">
+                <ul class="prompt-history">
+                    {% for item in versions_desc %}
+                    <li class="prompt-history__item{% if item.version == selected_version %} is-selected{% endif %}">
+                        <div class="prompt-history__head">
+                            <strong>Версия {{ item.version }}</strong>
+                            {% if item.version == published_version %}<span class="status status--done">опубликована</span>{% endif %}
+                            {% if item.version == selected_version %}<span class="prompt-history__open">открыта сейчас</span>{% endif %}
+                        </div>
+                        <p class="prompt-history__meta">{{ item.source == 'owner' ? 'Правка из кабинета' : 'Текст, поставляемый с программой' }}{% if item.created_at %}, {{ item.created_at|date("d.m.Y H:i") }}{% endif %}{% if item.note %}. {{ item.note }}{% endif %}</p>
+                        <div class="prompt-history__actions">
+                            {% if item.version != selected_version %}<a class="btn btn-outline btn-sm" href="{{ key_path }}?version={{ item.version }}#prompt-current">Открыть</a>{% endif %}
+                            {% if item.version != published_version %}
+                                {% include 'blocks/owner-publish-pop.twig' with {pop_id: 'publish-v' ~ item.version, version: item.version, label: 'Опубликовать эту…', primary: false} %}
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                {% if has_factory_text ?? true %}
+                <form method="post" action="{{ key_path }}/reset" class="owner-action-form prompt-history__reset">
+                    {{ csrf_field() }}
+                    <button type="submit" class="btn btn-ghost btn-sm">Вернуть заводской текст (версия {{ manifest_version }})</button>
+                    <p class="owner-help">Новые заказы снова пойдут по тексту, который поставляется вместе с программой. Ваши правки останутся в истории.</p>
+                </form>
+                {% else %}
+                <p class="owner-help prompt-history__reset">Вернуть заводской текст нельзя: заводского текста нет, это заготовка из общего шаблона.</p>
+                {% endif %}
+            </div>
+        </details>
     </section>
 </section>
 {% endblock %}
@@ -196,4 +252,6 @@
 <script src="{{ asset('vendor/toastui-editor/toastui-editor-all.min.js') }}"></script>
 <script src="{{ asset('vendor/toastui-editor/i18n/ru-ru.min.js') }}"></script>
 <script src="{{ asset('js/owner-prompt-editor.js') }}"></script>
+<script src="{{ asset('js/owner-case-workspace.js') }}"></script>
+<script src="{{ asset('js/owner-tests.js') }}"></script>
 {% endblock %}
