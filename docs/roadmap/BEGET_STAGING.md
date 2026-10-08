@@ -198,4 +198,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 64. Выкладка `c295ee5` (09.10): опросник IPIP-NEO-120 (09.O1); миграция `20261008030000 AddIpipNeo120Test` после проверенного dump; одно SSH-подключение по рецепту, в том же сеансе включён ИИ-разбор IPIP и созданы заготовки (clear, professional; черновики). SHA-256 `4db0961275f0b325c17f2c656cf70b25eb9cdbdc16f9559c32e3ff9650d5b76b` совпал. Смоук: основные маршруты `200`, `/test/ipip-neo-120` `200`, `/test/smil` `404`. Rollback: `releases/2723913`.
 
+65. Выкладка `c1b1a59` (09.10): инструкция IPIP под шкалу согласия (09.O1b); миграций нет; одно SSH-подключение по рецепту. SHA-256 `a7a4d972f2b5443a695232bc49b8826192420baab16f23cf0cefc404d67f857c` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`. Rollback: `releases/c295ee5`.
+
 Rollback текущего релиза: атомарно направить `public_html` на `releases/e5a15b5/public` и `current` на `releases/e5a15b5`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
