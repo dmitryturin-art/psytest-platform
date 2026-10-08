@@ -36,12 +36,12 @@
 | 01 | Завершён | containment сломанного платного пути и P0-security | [Открыть](phases/01-containment-security.md) |
 | 02 | В работе | crisis flow, privacy, lifecycle и бесплатный пилот | [Открыть](phases/02-clinical-privacy-pilot.md) |
 | 03 | Завершён | единый модульный контракт для разных типов тестов | [Открыть](phases/03-module-api-v2.md) |
-| 04 | Завершён | современный UI/UX без повреждения SMIL-профиля | [Открыть](phases/04-ui-ux-redesign.md) |
+| 04 | Завершён (дизайн-линия D1–D5, T1: этапы 1–3 готовы, этап 2 закрыт владельцем 08.10) | современный UI/UX без повреждения SMIL-профиля | [Открыть](phases/04-ui-ux-redesign.md) |
 | 05 | В работе (S, D-048) | проверенные дополнительные шкалы и профессиональный SMIL | [Открыть](phases/05-smil-professional-parity.md) |
 | 06 | Не начат, после 07 (D-037) | заказы, 100%-ные купоны, YooKassa и чеки как переключатель доступа | [Открыть](phases/06-orders-coupons-yookassa.md) |
-| 07 | В работе (K, D-048) | AI reports, редакции и кабинет терапевта; сначала бесплатно | [Открыть](phases/07-ai-reports-therapist-office.md) |
+| 07 | В работе (K, D-048; K8–K14b, WP9b, WP10/10b выполнены 06–08.10) | AI reports, редакции и кабинет терапевта; сначала бесплатно | [Открыть](phases/07-ai-reports-therapist-office.md) |
 | 08 | В работе (staging) | Beget survey, staging, затем backup/monitoring/production | [Открыть](phases/08-production-deployment.md) |
-| 09 | Не начат | новые модули и контролируемый рост | [Открыть](phases/09-growth-new-modules.md) |
+| 09 | В работе (O1 — IPIP, 08.10) | новые модули и контролируемый рост | [Открыть](phases/09-growth-new-modules.md) |
 
 `ROADMAP.md` — управленческий индекс верхнего уровня; эта таблица — файловый индекс реализации. Фактический активный статус всегда сверяется с `STATUS.md`.
 
