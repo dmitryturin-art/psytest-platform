@@ -6,7 +6,8 @@
   301/308 со старых `/admin/prompts…`; шаблоны `owner-tests`, `owner-test`, `owner-ai-settings`, новый
   `owner-prompt-key`, блоки `owner-nav`, `owner-crumbs`, `owner-prompt-state`, `owner-publish-pop`; `owner-tests.js`;
   CSS-блок 07.K14 в `cabinet.css`; навигация; ARCHITECTURE/UI_KIT; тесты (контракт + `Integration/MethodologySectionTest`).
-- Осталось: снимки AFTER (план `plan-after.js`), design-critique и правки по нему, полный gate, отчёт.
+- Сделано также: снимки BEFORE/AFTER, design-critique и правки, полный gate (828 тестов OK).
+- Осталось ведущему: приёмка владельцем, затем WORKLOG/STATUS, удалить этот файл, PR.
 - Локальный сервер: `php -S 127.0.0.1:8114 -t public <scratchpad>/k14/router.php`; `.env` из основного checkout,
   `DB_NAME=psytest_wt_k14`, `AI_BASE_URL` на 127.0.0.1:9 (провайдер недоступен намеренно).
 - Пароль владельца — `<scratchpad>/k14/.owner-pass` (не печатать). Снимки: `node <scratchpad>/k14/shots.js <plan>`.
