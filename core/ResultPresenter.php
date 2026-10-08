@@ -268,11 +268,14 @@ final class ResultPresenter
         bool $accountView = false,
     ): array {
         $results = $this->results($session, $module);
+        $sections = $module->buildSections($results);
 
         return [
             'test' => $test,
             'session' => $session,
-            'sections' => $module->buildSections($results),
+            'sections' => $sections,
+            // «Коротко о профиле» рядом с графиком СМИЛ (04.D5); null без графика.
+            'profile_brief' => (new ResultSummaryPresenter())->profileBrief($sections),
             'results' => $results,
             'clinical_safety_notice' => ClinicalSafetyNotice::fromResults($results),
             'ai_report' => $this->reportViewData((string) $test['slug'], $session, $accountView),

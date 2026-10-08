@@ -1666,6 +1666,142 @@ input[type="radio"] {
     margin-left: var(--spacing-lg);
 }
 
+/* ---------- 04.D5: три точечные правки страницы результата ----------
+   1. Две шкалы с баллом (HADS) — рядом, каждая в прежнем центрированном виде;
+      на телефоне одна под другой. */
+@media (min-width: 601px) {
+    .results-content--paired-scores {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: var(--spacing-xl);
+    }
+
+    .results-content--paired-scores > .results-section {
+        grid-column: 1 / -1;
+    }
+
+    .results-content--paired-scores > .results-section--score_badge {
+        grid-column: auto;
+    }
+}
+
+/* 2. Пара Лазаруса: шкала совпадения — по центру под двумя рамками партнёров. */
+.results-page .pair-comparison__agreement {
+    margin-inline: auto;
+    text-align: center;
+}
+
+/* 3. СМИЛ: «Коротко о профиле» справа от графика; график — тот же блок в
+      прежней ширине. Где места на две колонки нет — сводка под графиком. */
+.result-profile__chart {
+    min-width: 0;
+}
+
+.result-brief {
+    margin-top: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-soft);
+}
+
+@media (min-width: 1000px) {
+    .result-profile {
+        display: grid;
+        grid-template-columns: minmax(35rem, 1fr) minmax(15rem, 20rem);
+        gap: var(--spacing-xl);
+        align-items: start;
+    }
+
+    .result-brief {
+        margin-top: var(--spacing-xl);
+    }
+}
+
+.result-brief__title {
+    margin: 0;
+    padding: var(--spacing-md) 1.125rem 0;
+    font-size: var(--font-size-lg);
+}
+
+.result-brief__group {
+    padding: var(--spacing-md) 1.125rem;
+}
+
+.result-brief__group + .result-brief__group {
+    border-top: 1px solid var(--color-border);
+}
+
+.result-brief__label {
+    margin: 0 0 var(--spacing-sm);
+    color: var(--color-text-light);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+/* Точка помогает глазу, смысл несёт фраза (UI_KIT «Статусы»). */
+.result-brief__status {
+    position: relative;
+    margin: 0;
+    padding-left: 1.125rem;
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.result-brief__status::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.45em;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--status-dot-done);
+}
+
+.result-brief__status--alert {
+    color: var(--color-danger-dark);
+}
+
+.result-brief__status--alert::before {
+    background: var(--status-dot-failed);
+}
+
+.result-brief__note {
+    margin: var(--spacing-xs) 0 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    line-height: 1.45;
+}
+
+.result-brief__group > .result-brief__note:first-child {
+    margin-top: 0;
+}
+
+.result-brief__scales {
+    display: grid;
+    gap: var(--spacing-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.result-brief__scales li {
+    font-size: var(--font-size-md);
+    line-height: 1.35;
+}
+
+.result-brief__name {
+    font-weight: 600;
+}
+
+.result-brief__level {
+    display: block;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
 /* Disclaimer */
 .results-disclaimer {
     padding: var(--spacing-md) 1.25rem;
