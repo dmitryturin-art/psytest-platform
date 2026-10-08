@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
+use PsyTest\Modules\IpipNeo120\IpipNeo120Module;
 use PsyTest\Modules\Lazarus\LazarusModule;
 use PsyTest\Modules\ModuleCapability;
 use PsyTest\Modules\Smil\SmilModule;
@@ -28,6 +29,7 @@ final class ModuleCapabilityContractTest extends TestCase
             'beck-anxiety' => [BeckAnxietyModule::class, [ModuleCapability::PDF]],
             'beck-depression' => [BeckDepressionModule::class, [ModuleCapability::CLINICAL_SIGNAL, ModuleCapability::PDF]],
             'hads' => [HadsModule::class, [ModuleCapability::PDF]],
+            'ipip-neo-120' => [IpipNeo120Module::class, [ModuleCapability::PDF]],
             'lazarus' => [LazarusModule::class, [ModuleCapability::PAIR, ModuleCapability::PDF]],
             'smil' => [SmilModule::class, [ModuleCapability::CHART, ModuleCapability::PDF]],
         ];

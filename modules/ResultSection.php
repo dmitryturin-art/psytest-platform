@@ -27,4 +27,6 @@ final class ResultSection
     public const TYPE_PAIR_CHART = 'pair_chart';
     public const TYPE_PAIR_COMPARISON = 'pair_comparison';
     public const TYPE_PAIR_INVITE = 'pair_invite';
+    /** Профиль черт по перцентилям: домены с полосой и свёрнутые грани (IPIP-NEO-120). */
+    public const TYPE_TRAIT_PROFILE = 'trait_profile';
 }

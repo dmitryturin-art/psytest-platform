@@ -3654,3 +3654,119 @@ input[type="radio"] {
         justify-content: flex-start;
     }
 }
+
+/* ---------- 09.O1: профиль черт по перцентилям (IPIP-NEO-120) ----------
+   blocks/trait-profile.twig. Пять доменов строками: название и полоса словами,
+   шкала перцентиля 0–100 со светлой зоной «как у большинства» (31–69) и точкой,
+   строка «перцентиль · балл», одна фраза описания, грани — тихий раскрывающийся
+   блок. Цвета нейтральные (акцент и тинт системы): черты — не симптомы,
+   «красного» и «зелёного» уровня здесь нет. */
+.trait-profile__norms {
+    margin: 0 0 var(--spacing-lg);
+    max-width: var(--measure);
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.trait-profile__group {
+    display: block;
+    margin-top: var(--spacing-xs);
+}
+
+.trait-profile__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.trait-row + .trait-row {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.trait-row__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-xs) var(--spacing-md);
+}
+
+.trait-row__name {
+    margin: 0;
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.trait-row__band {
+    color: var(--color-text);
+    font-size: var(--font-size-md);
+    font-weight: 500;
+}
+
+.trait-bar {
+    position: relative;
+    height: 8px;
+    margin-top: var(--spacing-sm);
+    border-radius: var(--radius-full);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+.trait-bar__zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--color-accent-mist);
+}
+
+.trait-bar__marker {
+    position: absolute;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-bg-white);
+    border-radius: 50%;
+    background: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary-dark);
+    transform: translate(-50%, -50%);
+}
+
+.trait-bar__axis {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+}
+
+.trait-row__meta {
+    margin: var(--spacing-xs) 0 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.trait-row__text {
+    margin: var(--spacing-sm) 0 0;
+    max-width: var(--measure);
+}
+
+.trait-row__facets .ai-report__details {
+    margin-top: var(--spacing-md);
+}
+
+.trait-facets {
+    width: 100%;
+}
+
+.trait-profile__hint {
+    margin: var(--spacing-sm) 0 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
