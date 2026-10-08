@@ -2231,3 +2231,19 @@ a.cab-table__title:hover {
         width: auto;
     }
 }
+
+/* Со скриптом «Сохранить» прячется атрибутом hidden: .btn задаёт display, поэтому явно. */
+.test-ai-form [data-autosave-submit][hidden] {
+    display: none;
+}
+
+@media (pointer: fine) {
+    .test-ai-form__option .owner-toggle {
+        min-height: 2rem;
+    }
+}
+
+/* На странице промпта в прилипшей полосе справа уже действия: название не нужно. */
+.prompt-nav.is-stuck .case-nav__label {
+    display: none;
+}
