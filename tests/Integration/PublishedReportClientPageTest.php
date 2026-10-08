@@ -96,6 +96,35 @@ final class PublishedReportClientPageTest extends TestCase
         self::assertStringNotContainsString('name="ai_consent"', $html);
     }
 
+    /**
+     * Снятие с публикации (04.D5): одобренный текст уходит со страницы клиента
+     * целиком, а черновик, профессиональное заключение и правка после
+     * публикации не появляются ни до, ни после.
+     */
+    public function testUnpublishingRemovesTheReportAndNothingUnapprovedTakesItsPlace(): void
+    {
+        $clearReport = $this->readyReport(Prompt::KIND_CLEAR, self::DRAFT);
+        $this->readyReport(Prompt::KIND_PROFESSIONAL, self::PROFESSIONAL);
+        $this->revisions->save($clearReport, self::APPROVED);
+        self::assertTrue($this->revisions->publish($clearReport, (string) $this->revisions->revisions($clearReport)[1]['id']));
+        $this->revisions->save($clearReport, self::UNPUBLISHED);
+
+        $html = $this->renderClientPage();
+        self::assertStringContainsString(self::APPROVED, $html);
+        foreach ([self::DRAFT, self::PROFESSIONAL, self::UNPUBLISHED] as $hidden) {
+            self::assertStringNotContainsString($hidden, $html);
+        }
+
+        self::assertTrue($this->revisions->unpublish($clearReport));
+        $html = $this->renderClientPage();
+
+        self::assertStringNotContainsString('Разбор специалиста', $html);
+        foreach ([self::APPROVED, self::DRAFT, self::PROFESSIONAL, self::UNPUBLISHED] as $hidden) {
+            self::assertStringNotContainsString($hidden, $html);
+        }
+        self::assertStringContainsString('расширенный разбор появится после проверки специалиста', mb_strtolower($html));
+    }
+
     public function testPublishedRevisionAlsoReachesThePrintableDocument(): void
     {
         $clearReport = $this->readyReport(Prompt::KIND_CLEAR, self::DRAFT);
