@@ -34,7 +34,8 @@ final class PromptEditorContractTest extends TestCase
         self::assertStringContainsString('data-prompt-var-select', $page);
         self::assertStringContainsString("asset('js/owner-prompt-editor.js')", $page);
         // Ключи FormOnce и защита форм не тронуты.
-        self::assertStringContainsString('name="confirm_publish" value="1" required', $page);
+        self::assertStringContainsString('name="confirm_publish" value="1" required', $this->read('templates/blocks/owner-publish-pop.twig'));
+        self::assertStringContainsString("{% include 'blocks/owner-publish-pop.twig'", $page);
         self::assertStringContainsString('name="confirm_trial" value="1" required', $page);
     }
 
@@ -81,7 +82,7 @@ final class PromptEditorContractTest extends TestCase
         $controller = $this->read('controllers/OwnerController.php');
 
         self::assertStringContainsString(
-            "\$router->post('/admin/prompts/{test}/{mode}/{kind}/preview', [OwnerController::class, 'promptDraftPreview'])",
+            "\$router->post('/admin/tests/{test}/prompts/{mode}/{kind}/preview', [OwnerController::class, 'promptDraftPreview'])",
             $routes,
         );
         // Глобальный CSRF-middleware закрывает POST, исключений для preview нет.
