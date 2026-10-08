@@ -329,7 +329,7 @@
     {% if case.completed_at and not ai.available and not isTrashed %}
     <section class="case-section owner-case-ai" aria-labelledby="owner-case-ai-title">
         <h2 id="owner-case-ai-title">Разбор</h2>
-        <p class="owner-help">Разбор для этой методики сейчас не заказывается: он выключен или его промпт не опубликован. Включить его можно на <a href="{{ basePath }}/admin/tests/{{ case.test_slug }}#ai">странице методики</a>.</p>
+        <p class="owner-help">Разбор для этой методики сейчас не заказывается: он выключен или его промпт не опубликован. Включить его можно на <a href="{{ basePath }}/admin/tests{% if case.test_slug ?? null %}/{{ case.test_slug }}#ai{% endif %}">странице методики</a>.</p>
     </section>
     {% endif %}
 
