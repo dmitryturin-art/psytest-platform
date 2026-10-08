@@ -24,11 +24,15 @@ final class AiReportContextBuilder
      * @param AiSettings|null $ownerSettings Настройки кабинета; сейчас из них
      *                                       берётся режим глоссария СМИЛ (07.G6).
      *                                       Без них режим — полный, как до пакета.
+     * @param AiTestSettings|null $testSettings Галочки методики (07.WP10): по
+     *                                          ним к контексту добавляются ответы
+     *                                          по пунктам. Без них — никогда.
      */
     public function __construct(
         private readonly SessionManager $sessions,
         private readonly ModuleLoader $modules,
         private readonly ?AiSettings $ownerSettings = null,
+        private readonly ?AiTestSettings $testSettings = null,
     ) {
     }
 
@@ -66,7 +70,36 @@ final class AiReportContextBuilder
 
         // Сжатие идёт поверх готовой нагрузки: модуль решает, что вообще
         // уходит наружу, а настройка владельца — сколько из этого пояснять.
-        return SmilGlossaryCompactor::fromSettings($this->ownerSettings)->apply($context);
+        $context = SmilGlossaryCompactor::fromSettings($this->ownerSettings)->apply($context);
+
+        // Ответы по пунктам — только по второй галочке владельца (07.WP10).
+        if ($this->testSettings !== null && $this->testSettings->sendsItemAnswers($testSlug)) {
+            $context = self::withItems($module, $context, $mode, (array) ($session['answers'] ?? []));
+        }
+
+        return $context;
+    }
+
+    /**
+     * Добавить ответы по пунктам, если модуль сам их не отдаёт (07.WP10).
+     *
+     * Лазарус уже кладёт `items` в свой контекст — его нагрузка не меняется.
+     * Для пары единой формы ответов нет: пары модули описывают сами.
+     *
+     * @param array<string, mixed> $context
+     * @param array<int|string, mixed> $answers
+     *
+     * @return array<string, mixed>
+     */
+    public static function withItems(TestModuleInterface $module, array $context, string $mode, array $answers): array
+    {
+        if ($mode !== 'individual' || array_key_exists('items', $context)) {
+            return $context;
+        }
+
+        $context['items'] = $module->aiReportItems($answers);
+
+        return $context;
     }
 
     /**

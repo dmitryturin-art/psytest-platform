@@ -199,14 +199,214 @@ abstract class BaseTestModule implements TestModuleInterface
     }
 
     /**
-     * Structured payload for an external AI report.
+     * Structured payload for an external AI report (07.WP10, D-056).
      *
-     * Default is null: a module sends nothing outside until it declares
-     * explicitly what may leave the platform (PRODUCT_RULES §6, §11).
+     * Universal default for every methodology: what the respondent already
+     * sees on the result page, in structured form — test, score with its
+     * maximum, level, subscales and the module's own interpretation text.
+     * Nothing about the person travels with it: no names, contacts, notes,
+     * tokens or ids (PRODUCT_RULES §6, §11). Item answers are not here: they
+     * are added by the context builder only when the owner allowed it
+     * ({@see aiReportItems()}).
+     *
+     * Whether this payload is sent at all is the owner's switch per
+     * methodology ({@see \PsyTest\Core\Ai\AiReportAvailability}). Modules
+     * with a richer context (SMIL, Lazarus) override this method.
+     *
+     * Pair mode has no universal shape: null unless a module overrides it.
      */
     public function aiReportContext(array $results, string $mode): ?array
     {
-        return null;
+        if ($mode !== 'individual' || $results === []) {
+            return null;
+        }
+
+        $metadata = $this->getMetadata();
+        $context = [
+            'test' => (string) $metadata['slug'],
+            'test_name' => (string) $metadata['name'],
+            'mode' => 'individual',
+        ];
+
+        $badges = [];
+        foreach ($this->buildSections($results) as $section) {
+            if ($section instanceof ResultSection && $section->type === ResultSection::TYPE_SCORE_BADGE) {
+                $badges[] = self::aiScoreFromBadge($section);
+            }
+        }
+
+        if (count($badges) === 1) {
+            // One score on the page: it is the total.
+            $badge = $badges[0];
+            $context['total'] = ['score' => $badge['score'], 'max' => $badge['max']];
+            $context += array_filter([
+                'level' => $badge['level'],
+                'level_name' => $badge['level_name'],
+                'interpretation' => $badge['interpretation'],
+            ], static fn (mixed $value): bool => $value !== null);
+        } elseif ($badges !== []) {
+            // Several scores (HADS): each is a subscale with its own level.
+            // A sum across subscales is not shown on the page and is not sent.
+            $context['subscales'] = $badges;
+        } else {
+            $context += self::aiScoreFromResults($results);
+        }
+
+        $ranges = self::aiScoreRanges($metadata['score_ranges'] ?? null);
+        if ($ranges !== []) {
+            $context['score_ranges'] = $ranges;
+        }
+
+        if (is_numeric($results['answered_count'] ?? null) && is_numeric($results['total_questions'] ?? null)) {
+            $context['completeness'] = [
+                'answered' => (int) $results['answered_count'],
+                'total' => (int) $results['total_questions'],
+            ];
+        }
+
+        return $context;
+    }
+
+    /**
+     * Respondent's answers to every item, for the AI context — only when the
+     * owner ticked «Передавать модели ответы по пунктам» (07.WP10).
+     *
+     * Question text is the one the respondent saw (gendered text when the
+     * module has it); the answer is the option label and its value. Free text
+     * typed by the respondent is never part of an answer schema here.
+     *
+     * @param array<int|string, mixed> $answers Raw session answers.
+     *
+     * @return list<array{number: int, text: string, answer_label: string, value: int|string|null}>
+     */
+    public function aiReportItems(array $answers): array
+    {
+        $gender = $answers['gender'] ?? null;
+        $items = [];
+
+        foreach (array_values($this->getQuestions()) as $index => $question) {
+            if (!is_array($question)) {
+                continue;
+            }
+
+            $id = (string) ($question['id'] ?? $index + 1);
+            $raw = $answers[$id] ?? $answers[(int) $id] ?? null;
+            $value = is_int($raw) || (is_string($raw) && $raw !== '') ? $raw : null;
+
+            $items[] = [
+                'number' => $index + 1,
+                'text' => self::aiQuestionText($question, $gender),
+                'answer_label' => self::aiAnswerLabel($question, $value),
+                'value' => is_string($value) && preg_match('/\A-?\d+\z/', $value) === 1 ? (int) $value : $value,
+            ];
+        }
+
+        return $items;
+    }
+
+    /** @return array{title: string, score: mixed, max: mixed, level: ?string, level_name: ?string, interpretation: ?string} */
+    private static function aiScoreFromBadge(ResultSection $section): array
+    {
+        $data = $section->data;
+
+        return [
+            'title' => $section->title,
+            'score' => is_numeric($data['score'] ?? null) ? $data['score'] + 0 : null,
+            'max' => is_numeric($data['max'] ?? null) ? $data['max'] + 0 : null,
+            'level' => is_string($data['level'] ?? null) ? $data['level'] : null,
+            'level_name' => is_string($data['level_label'] ?? null) && $data['level_label'] !== '' ? $data['level_label'] : null,
+            'interpretation' => is_string($data['description'] ?? null) && trim($data['description']) !== '' ? trim($data['description']) : null,
+        ];
+    }
+
+    /**
+     * Fallback for modules without a score badge on the result page.
+     *
+     * @param array<string, mixed> $results
+     *
+     * @return array<string, mixed>
+     */
+    private static function aiScoreFromResults(array $results): array
+    {
+        $context = [];
+        if (is_numeric($results['total_score'] ?? null)) {
+            $context['total'] = [
+                'score' => $results['total_score'] + 0,
+                'max' => is_numeric($results['max_score'] ?? null) ? $results['max_score'] + 0 : null,
+            ];
+        }
+        foreach (['level', 'level_name', 'interpretation'] as $key) {
+            if (is_string($results[$key] ?? null) && trim($results[$key]) !== '') {
+                $context[$key] = trim($results[$key]);
+            }
+        }
+
+        return $context;
+    }
+
+    /** @return list<array{level: string, level_name: string, min: int|float, max: int|float}> */
+    private static function aiScoreRanges(mixed $ranges): array
+    {
+        if (!is_array($ranges)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($ranges as $range) {
+            if (!is_array($range) || !isset($range['level'], $range['min'], $range['max'])) {
+                continue;
+            }
+            $out[] = [
+                'level' => (string) $range['level'],
+                'level_name' => (string) ($range['name'] ?? $range['level']),
+                'min' => $range['min'] + 0,
+                'max' => $range['max'] + 0,
+            ];
+        }
+
+        return $out;
+    }
+
+    /** @param array<string, mixed> $question */
+    private static function aiQuestionText(array $question, mixed $gender): string
+    {
+        if (is_string($question['text'] ?? null) && $question['text'] !== '') {
+            return $question['text'];
+        }
+        if ($gender === 'female' && is_string($question['text_female'] ?? null)) {
+            return $question['text_female'];
+        }
+        if ($gender === 'male' && is_string($question['text_male'] ?? null)) {
+            return $question['text_male'];
+        }
+
+        return (string) ($question['text_male'] ?? $question['text_female'] ?? '');
+    }
+
+    /** @param array<string, mixed> $question */
+    private static function aiAnswerLabel(array $question, int|string|null $value): string
+    {
+        if ($value === null) {
+            return 'Нет ответа';
+        }
+
+        if (is_array($question['options'] ?? null)) {
+            foreach ($question['options'] as $option) {
+                if (is_array($option) && (string) ($option['value'] ?? '') === (string) $value) {
+                    return (string) ($option['text'] ?? $value);
+                }
+            }
+
+            return 'Нет ответа';
+        }
+
+        // Ternary questionnaires (SMIL) carry no options: labels as on the form.
+        return match ((string) $value) {
+            '1' => 'Верно',
+            '0' => 'Неверно',
+            '2' => 'Не знаю',
+            default => (string) $value,
+        };
     }
 
     /**

@@ -66,7 +66,13 @@ final class AiReportContextContractTest extends TestCase
         return $keys;
     }
 
-    public function testModulesSendNothingOutsideUntilTheyDeclareIt(): void
+    /**
+     * D-056 (07.WP10): модуль без своего контекста отдаёт универсальный —
+     * только рассчитанные показатели, без полей сессии и без ответов по
+     * пунктам. Отдавать ли его вообще, решает галочка владельца
+     * (`AiReportAvailability`), а не модуль.
+     */
+    public function testModulesWithoutOwnContextSendOnlyTheUniversalAnonymisedContext(): void
     {
         $loader = (new ModuleLoader(null, null))->discover();
 
@@ -78,10 +84,17 @@ final class AiReportContextContractTest extends TestCase
                 continue;
             }
 
-            self::assertNull(
-                $module->aiReportContext(['total' => 1], 'individual'),
-                "Модуль {$slug} ещё не объявлял, что отдаёт ИИ — по умолчанию должен быть null.",
-            );
+            $answers = [];
+            foreach ($module->getQuestions() as $question) {
+                $answers[$question['id']] = 1;
+            }
+            $payload = $module->aiReportContext($module->calculateResults($answers), 'individual');
+
+            self::assertIsArray($payload, $slug);
+            self::assertSame($slug, $payload['test']);
+            self::assertArrayNotHasKey('items', $payload, "{$slug}: ответы по пунктам — только по галочке владельца.");
+            self::assertSame([], array_values(array_intersect(self::FORBIDDEN_KEYS, $this->collectKeys($payload))), $slug);
+            self::assertNull($module->aiReportContext($module->calculateResults($answers), 'pair'), $slug);
         }
     }
 
