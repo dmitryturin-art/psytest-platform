@@ -24,9 +24,14 @@ final class AdditionalScalesCalculator
     private const T_MIN = 20;
     private const T_MAX = 100;
 
-    /** T-баллы, с которых имеет смысл нейтральная подпись. */
-    private const T_HIGH = 65;
-    private const T_LOW = 35;
+    /**
+     * Полосы уровней — те же, что в правиле уровней глоссария дополнительных
+     * шкал, которое уходит модели (D-081, владелец 09.10.2026): страница и
+     * ИИ-разбор называют одно число одним словом.
+     */
+    private const T_EXPRESSED = 71;
+    private const T_ELEVATED = 56;
+    private const T_AVERAGE = 50;
 
     /** @var list<array<string, mixed>> */
     private array $scales;
@@ -199,25 +204,29 @@ final class AdditionalScalesCalculator
         return $value === self::ANSWER_YES || $value === self::ANSWER_NO ? $value : null;
     }
 
-    /** Нейтральный уровень без клинических формулировок. */
+    /** Нейтральный уровень без клинических формулировок (полосы глоссария). */
     private function level(float $t): string
     {
-        if ($t >= self::T_HIGH) {
-            return 'above';
+        if ($t >= self::T_EXPRESSED) {
+            return 'expressed';
         }
-        if ($t <= self::T_LOW) {
-            return 'below';
+        if ($t >= self::T_ELEVATED) {
+            return 'elevated';
+        }
+        if ($t >= self::T_AVERAGE) {
+            return 'average';
         }
 
-        return 'normal';
+        return 'reduced';
     }
 
     private function levelName(float $t): string
     {
         return match ($this->level($t)) {
-            'above' => 'выше нормы',
-            'below' => 'ниже нормы',
-            default => 'в пределах нормы',
+            'expressed' => 'выражено',
+            'elevated' => 'повышено',
+            'average' => 'средний уровень',
+            default => 'снижено',
         };
     }
 }

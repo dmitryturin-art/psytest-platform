@@ -3493,6 +3493,9 @@ input[type="radio"] {
     font-style: italic;
 }
 
+/* Дополнительные шкалы СМИЛ (D-081): подсвечивается только «выражено» (T ≥ 71),
+   «повышено» остаётся в нормативном разбросе; старые коды above/below — для совместимости. */
+.scores-table tbody tr.level--expressed > td,
 .scores-table tbody tr.level--above > td {
     background: var(--table-row-above);
 }
