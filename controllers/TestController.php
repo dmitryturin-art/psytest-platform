@@ -12,6 +12,7 @@ namespace PsyTest\Controllers;
 
 use PsyTest\Core\AnswerMerger;
 use PsyTest\Core\AnswerValidator;
+use PsyTest\Core\TestInstructionOverrides;
 use PsyTest\Core\TestInviteService;
 use PsyTest\Modules\TestModuleInterface;
 use Ramsey\Uuid\Uuid;
@@ -79,9 +80,19 @@ class TestController extends BaseController
             'saved_demographics' => $resumed ? $claimed['session']['demographics'] : [],
             'is_resume' => $resumed,
             // Инструкцию уже показала стартовая страница приглашения: здесь она свёрнута (07.K13).
-            'instruction' => $module->getInstruction(),
+            'instruction' => $this->instructionOf($module),
             'instruction_collapsed' => true,
         ]);
+    }
+
+    /**
+     * Инструкция для показа: правка владельца из кабинета, иначе текст методики (07.K15).
+     *
+     * @return list<string>
+     */
+    private function instructionOf(TestModuleInterface $module): array
+    {
+        return (new TestInstructionOverrides($this->db))->resolve($module);
     }
 
     /** @return list<string> */
@@ -89,7 +100,7 @@ class TestController extends BaseController
     {
         $module = $slug === '' ? null : $this->moduleLoader->getModule($slug);
 
-        return $module === null ? [] : $module->getInstruction();
+        return $module === null ? [] : $this->instructionOf($module);
     }
 
     private function totalQuestions(string $slug): int
@@ -134,7 +145,7 @@ class TestController extends BaseController
             'session' => $session,
             'questions' => $questions,
             'module' => $module, // Pass module for custom JS/demographics
-            'instruction' => $module->getInstruction(),
+            'instruction' => $this->instructionOf($module),
         ]);
     }
 
@@ -372,7 +383,7 @@ class TestController extends BaseController
             'questions' => $questions,
             'is_pair' => true,
             'partner_token' => $partnerToken,
-            'instruction' => $module->getInstruction(),
+            'instruction' => $this->instructionOf($module),
         ]);
     }
 
