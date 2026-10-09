@@ -10,7 +10,7 @@ final class CurlTransport implements AiTransport
     {
         $handle = curl_init($url);
         if ($handle === false) {
-            throw new AiProviderException('Не удалось инициализировать HTTP-запрос к провайдеру.');
+            throw new AiProviderException('Не удалось подготовить запрос к сервису ИИ.');
         }
 
         $formattedHeaders = [];
@@ -40,7 +40,7 @@ final class CurlTransport implements AiTransport
         if ($response === false) {
             // Текст ошибки curl не содержит тела запроса, поэтому клинические
             // данные не попадут ни в исключение, ни в лог выше по стеку.
-            throw new AiProviderException('Сетевая ошибка при обращении к провайдеру: ' . $error);
+            throw new AiProviderException('Сетевая ошибка при обращении к сервису ИИ: ' . $error);
         }
 
         return ['status' => $status, 'body' => (string) $response];
