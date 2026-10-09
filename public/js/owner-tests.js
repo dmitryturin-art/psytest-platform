@@ -135,6 +135,44 @@
         });
     });
 
+    // ---------- Инструкция респонденту (07.K15): поле на месте текста ----------
+    all('[data-instruction]').forEach(function (section) {
+        var view = section.querySelector('[data-instruction-view]');
+        var editor = section.querySelector('[data-instruction-editor]');
+        var edit = section.querySelector('[data-instruction-edit]');
+        var cancel = section.querySelector('[data-instruction-cancel]');
+        if (!view || !editor || !edit) {
+            return;
+        }
+        var open = function (isOpen) {
+            view.hidden = isOpen;
+            editor.hidden = !isOpen;
+            if (cancel) {
+                cancel.hidden = !isOpen;
+            }
+            if (isOpen) {
+                var field = editor.querySelector('textarea');
+                if (field) {
+                    field.focus();
+                }
+            } else {
+                edit.focus();
+            }
+        };
+        if (editor.hasAttribute('data-instruction-editor-closed')) {
+            editor.hidden = true;
+        } else if (cancel) {
+            cancel.hidden = false;
+        }
+        edit.addEventListener('click', function () { open(true); });
+        if (cancel) {
+            cancel.addEventListener('click', function () { open(false); });
+        }
+        if (window.location.hash === '#instruction-edit') {
+            open(true);
+        }
+    });
+
     // ---------- Панели «Опубликовать…» / «Пробный разбор» ----------
     var pops = all('details[data-action-pop]');
     var close = function (pop, returnFocus) {

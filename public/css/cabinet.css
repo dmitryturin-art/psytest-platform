@@ -1830,6 +1830,23 @@ a.cab-table__title:hover {
     margin: var(--spacing-lg) 0 0;
 }
 
+/* Редактор инструкции (07.K15) открывается на месте текста; форме задан display,
+   поэтому атрибут hidden ей нужно подтвердить явно. */
+[data-instruction-view][hidden],
+[data-instruction-editor][hidden],
+[data-instruction-cancel][hidden] {
+    display: none;
+}
+
+/* Ряд кнопок раздела методики (07.K15: «Изменить», «Вернуть исходную…»). */
+.test-section__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) 0 0;
+}
+
 /* Галочки ИИ-разбора. */
 .owner-dashboard-page .test-ai-form {
     margin-top: var(--spacing-md);

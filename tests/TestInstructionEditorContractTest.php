@@ -64,7 +64,12 @@ final class TestInstructionEditorContractTest extends TestCase
 
         self::assertStringContainsString('{{ testUrl }}/instruction"', $twig);
         self::assertStringContainsString('{{ testUrl }}/instruction/reset"', $twig);
-        self::assertSame(2, preg_match_all('~/instruction(?:/reset)?" class="owner-form">\s*\{\{ csrf_field\(\) \}\}~u', $twig), 'Both instruction forms carry the CSRF field.');
+        self::assertSame(2, preg_match_all('~/instruction(?:/reset)?" class="[^"]*"[^>]*>\s*\{\{ csrf_field\(\) \}\}~u', $twig), 'Both instruction forms carry the CSRF field.');
+        // 07.K15, решение владельца 09.10: без аккордеонов — текст виден сразу, редактор на его месте.
+        $section = substr($twig, (int) strpos($twig, 'id="instruction"'));
+        self::assertStringNotContainsString('case-fold', $section);
+        self::assertStringNotContainsString('<summary class="ai-report__summary"', $section);
+        self::assertStringContainsString('data-instruction-editor', $section);
         self::assertStringContainsString('name="form_key" value="{{ instruction_form_key }}"', $twig);
         self::assertStringContainsString('Изменена владельцем', $twig);
         self::assertStringContainsString('Из методики', $twig);

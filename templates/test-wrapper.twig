@@ -39,9 +39,11 @@
     <p class="test-invite-notice">Это персональное приглашение от специалиста на {{ test.name }}. После прохождения специалист увидит ваши ответы и результат. Не пересылайте ссылку другим людям.</p>
     {% endif %}
 
-    {# Инструкция (07.K13): открыта до начала теста; после старта, при продолжении и после
-       стартовой страницы приглашения — свёрнута в тихий блок «Инструкция» у строки прогресса. #}
-    {% include 'blocks/test-instruction.twig' with {instruction: instruction|default([]), mode: (is_resume|default(false) or instruction_collapsed|default(false)) ? 'collapsed' : 'open'} only %}
+    {# Инструкция (07.K13/K15): только до начала теста; после старта скрипт её прячет,
+       при продолжении и после стартовой страницы приглашения не показывается. #}
+    {% if not (is_resume|default(false) or instruction_collapsed|default(false)) %}
+    {% include 'blocks/test-instruction.twig' with {instruction: instruction|default([])} only %}
+    {% endif %}
 
     <!-- Test Form -->
     <form id="testForm" class="test-form" method="POST" action="{{ is_pair ? (basePath ~ '/test/' ~ test.slug ~ '/pair/submit') : (basePath ~ '/test/' ~ test.slug ~ '/submit') }}">

@@ -172,57 +172,55 @@
         {% endif %}
     </section>
 
-    {# ---------- Инструкция респонденту (07.K15) ---------- #}
-    <section id="instruction" class="case-section test-section disclosure-stack" aria-labelledby="test-instruction-title" data-case-section>
+    {# ---------- Инструкция респонденту (07.K15) ----------
+       Текст виден сразу, без сворачивания (решение владельца 09.10). «Изменить» открывает поле
+       на месте текста (без скрипта поле видно всегда); «Вернуть исходную» — панель с
+       подтверждением, как «Опубликовать…» у промпта. #}
+    <section id="instruction" class="case-section test-section" aria-labelledby="test-instruction-title" data-case-section data-instruction>
         <h2 id="test-instruction-title">Инструкция</h2>
-        <p class="owner-help test-section__note">{% if instruction_overridden %}Изменена владельцем · {{ instruction_updated }}{% else %}Из методики{% endif %}</p>
+        <p class="owner-help test-section__note">{% if instruction_overridden %}Изменена владельцем · {{ instruction_updated }}{% else %}Из методики{% endif %}. Человек видит её один раз, перед первым вопросом.</p>
         {% if flash and (flash.section ?? '') == 'instruction' %}
             <p class="owner-notice owner-notice--{{ flash.type }}" role="status">{{ flash.message }}</p>
         {% endif %}
 
-        {% if instruction %}
-        <details class="ai-report__details case-fold">
-            <summary class="ai-report__summary"><span class="ai-report__summary-title">Что видит человек перед началом</span><span class="ai-report__summary-hint">{{ instruction|length }} {{ instruction|length == 1 ? 'абзац' : (instruction|length < 5 ? 'абзаца' : 'абзацев') }}</span></summary>
-            <div class="case-fold__body ai-report__body">
+        <div data-instruction-view{% if instruction_draft %} hidden{% endif %}>
+            {% if instruction %}
+            <div class="test-instruction__body">
                 {% for paragraph in instruction %}<p>{{ paragraph }}</p>{% endfor %}
             </div>
-        </details>
-        {% else %}
-        <p class="owner-help test-section__empty">У этой методики нет инструкции: перед началом человек видит только вопросы.</p>
-        {% endif %}
-
-        <details class="ai-report__details case-fold" id="instruction-edit"{% if instruction_draft %} open{% endif %}>
-            <summary class="ai-report__summary"><span class="ai-report__summary-title">Изменить</span><span class="ai-report__summary-hint">текст для респондента</span></summary>
-            <div class="case-fold__body ai-report__body">
-                <form method="post" action="{{ testUrl }}/instruction" class="owner-form">
-                    {{ csrf_field() }}
-                    <input type="hidden" name="form_key" value="{{ instruction_form_key }}">
-                    <div class="owner-field">
-                        <label for="instruction-text">Текст инструкции</label>
-                        <textarea id="instruction-text" name="instruction" rows="12" required>{{ instruction_text }}</textarea>
-                        <p class="owner-help">Абзацы разделяйте пустой строкой. Только простой текст, не больше {{ instruction_limits.paragraphs }} абзацев по {{ instruction_limits.length }} знаков.</p>
+            {% else %}
+            <p class="owner-help test-section__empty">У этой методики нет инструкции: перед началом человек видит только вопросы.</p>
+            {% endif %}
+            <div class="test-section__actions">
+                <button type="button" class="btn btn-outline btn-sm" data-instruction-edit>Изменить</button>
+                {% if instruction_overridden %}
+                <details class="action-pop" id="instruction-reset" data-action-pop>
+                    <summary class="btn btn-ghost btn-sm">Вернуть исходную…</summary>
+                    <div class="action-pop__panel">
+                        <form method="post" action="{{ testUrl }}/instruction/reset" class="action-pop__form">
+                            {{ csrf_field() }}
+                            <p class="action-pop__text">Ваша правка будет удалена, человек снова увидит текст из методики.</p>
+                            <button type="submit" class="btn btn-outline btn-sm">Вернуть исходную</button>
+                        </form>
                     </div>
-                    <div class="test-section__action">
-                        <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
-                    </div>
-                </form>
+                </details>
+                {% endif %}
             </div>
-        </details>
+        </div>
 
-        {% if instruction_overridden %}
-        <details class="ai-report__details case-fold" id="instruction-reset">
-            <summary class="ai-report__summary"><span class="ai-report__summary-title">Вернуть исходную</span><span class="ai-report__summary-hint">текст из методики</span></summary>
-            <div class="case-fold__body ai-report__body">
-                <form method="post" action="{{ testUrl }}/instruction/reset" class="owner-form">
-                    {{ csrf_field() }}
-                    <p class="owner-help">Ваша правка будет удалена, а респонденты снова увидят исходный текст методики. Позже вы сможете записать свой текст заново.</p>
-                    <div class="test-section__action">
-                        <button type="submit" class="btn btn-outline btn-sm">Вернуть исходную</button>
-                    </div>
-                </form>
+        <form method="post" action="{{ testUrl }}/instruction" class="owner-form" id="instruction-edit" data-instruction-editor{% if not instruction_draft %} data-instruction-editor-closed{% endif %}>
+            {{ csrf_field() }}
+            <input type="hidden" name="form_key" value="{{ instruction_form_key }}">
+            <div class="owner-field">
+                <label for="instruction-text">Текст инструкции</label>
+                <textarea id="instruction-text" name="instruction" rows="10" required>{{ instruction_text }}</textarea>
+                <p class="owner-help">Абзацы разделяйте пустой строкой. Только простой текст, не больше {{ instruction_limits.paragraphs }} абзацев по {{ instruction_limits.length }} знаков.</p>
             </div>
-        </details>
-        {% endif %}
+            <div class="test-section__actions">
+                <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-instruction-cancel hidden>Отмена</button>
+            </div>
+        </form>
     </section>
 {% endblock %}
 
