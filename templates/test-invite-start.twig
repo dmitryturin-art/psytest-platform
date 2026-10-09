@@ -10,7 +10,7 @@
     {% if resume %}
     <p class="test-invite-notice test-invite-resume" data-invite-resume>{% if resume.answered > 0 %}Вы уже отвечали: <strong>{{ resume.answered }} из {{ resume.total }}</strong>. Продолжить?{% else %}Вы уже открывали этот тест, но ещё не отвечали. Продолжить?{% endif %} Ваши ответы сохранены.</p>
     {% endif %}
-    {% include 'blocks/test-instruction.twig' with {instruction: instruction|default([]), mode: resume ? 'collapsed' : 'block', summary: 'Напомнить инструкцию'} only %}
+    {% if not resume %}{% include 'blocks/test-instruction.twig' with {instruction: instruction|default([])} only %}{% endif %}
     <form method="post" action="{{ basePath }}/invite/{{ token }}/start" class="owner-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="btn btn-primary">{{ resume ? 'Продолжить' : 'Начать тест' }}</button>

@@ -1,20 +1,16 @@
 {#
-    Инструкция методики (07.K13). Абзацы — простой текст из metadata.json `instruction`,
+    Инструкция методики (07.K13, упрощено в 07.K15 по решению владельца 09.10.2026).
+    Абзацы — простой текст (metadata.json `instruction` или правка владельца из кабинета),
     выводятся с экранированием, без HTML.
 
-    Параметры:
-      instruction — list<string>;
-      mode        — 'block' (открытый блок с заголовком, стартовая страница приглашения),
-                    'open' (раскрывающийся блок, открыт до начала теста),
-                    'collapsed' (тот же блок свёрнут: продолжение или тест уже начат);
-      summary     — подпись свёрнутого блока (по умолчанию «Инструкция»).
+    Показывается только до начала ответов: на стартовой странице приглашения и над
+    первым вопросом. После старта скрипт прячет блок; при продолжении и после стартовой
+    страницы приглашения блок не выводится вовсе — человек её уже читал.
 
-    Вид — UI_KIT «Раскрывающийся блок», тихий вариант (.disclosure-stack); новых компонентов нет.
+    Параметры: instruction — list<string>.
 #}
 {% if instruction is defined and instruction is not empty %}
-{% set mode = mode|default('open') %}
-{% if mode == 'block' %}
-<section class="test-instruction" data-test-instruction="block" aria-labelledby="testInstructionTitle">
+<section class="test-instruction" id="testInstruction" data-test-instruction="block" aria-labelledby="testInstructionTitle">
     <h2 class="test-instruction__title" id="testInstructionTitle">Инструкция</h2>
     <div class="test-instruction__body">
         {% for paragraph in instruction %}
@@ -22,16 +18,4 @@
         {% endfor %}
     </div>
 </section>
-{% else %}
-<div class="disclosure-stack test-instruction" data-test-instruction="{{ mode }}">
-    <details class="ai-report__details" id="testInstruction"{% if mode != 'collapsed' %} open{% endif %}>
-        <summary class="ai-report__summary"><span class="ai-report__summary-title">{{ summary|default('Инструкция') }}</span></summary>
-        <div class="ai-report__body test-instruction__body">
-            {% for paragraph in instruction %}
-            <p>{{ paragraph }}</p>
-            {% endfor %}
-        </div>
-    </details>
-</div>
-{% endif %}
 {% endif %}

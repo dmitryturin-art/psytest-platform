@@ -133,6 +133,8 @@ $router->get('/admin/tests/settings', [OwnerController::class, 'aiSettings']);
 $router->post('/admin/tests/settings', [OwnerController::class, 'savePromptSettings']);
 $router->get('/admin/tests/{test}', [OwnerController::class, 'methodology']);
 $router->post('/admin/tests/{test}/ai', [OwnerController::class, 'saveMethodologyAi']);
+$router->post('/admin/tests/{test}/instruction', [OwnerController::class, 'saveInstruction']);
+$router->post('/admin/tests/{test}/instruction/reset', [OwnerController::class, 'resetInstruction']);
 $router->get('/admin/tests/{test}/prompts/{mode}/{kind}', [OwnerController::class, 'promptKey']);
 $router->get('/admin/tests/{test}/prompts/{mode}/{kind}/preview', [OwnerController::class, 'promptPreview']);
 $router->post('/admin/tests/{test}/prompts/{mode}/{kind}/preview', [OwnerController::class, 'promptDraftPreview']);

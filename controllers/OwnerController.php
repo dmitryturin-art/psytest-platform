@@ -47,6 +47,7 @@ use PsyTest\Core\ResultSectionRenderer;
 use PsyTest\Core\RetentionPolicy;
 use PsyTest\Core\Security;
 use PsyTest\Core\SessionLifecycleService;
+use PsyTest\Core\TestInstructionOverrides;
 use PsyTest\Core\TestInviteService;
 use PsyTest\Core\TherapistCaseService;
 use PsyTest\Core\TherapistClientService;
@@ -1724,7 +1725,14 @@ final class OwnerController extends BaseController
             ? $requestedMode
             : $row['modes'][0];
         $metadata = $module->getMetadata();
-        $instruction = $module->getInstruction();
+        $overrides = new TestInstructionOverrides($this->db);
+        $instruction = $overrides->resolve($module);
+        $updatedAt = $overrides->updatedAt($test);
+        $overridden = $overrides->get($test) !== null && $updatedAt !== null;
+        // Текст, который не прошёл проверку, возвращается в поле, чтобы правку не набирать заново.
+        $draft = $_SESSION[self::INSTRUCTION_DRAFT_KEY] ?? null;
+        unset($_SESSION[self::INSTRUCTION_DRAFT_KEY]);
+        $draft = is_string($draft) ? $draft : null;
 
         echo $this->view->render('owner-test', [
             'flash' => $this->takeFlash(),
@@ -1733,6 +1741,12 @@ final class OwnerController extends BaseController
             'description' => (string) ($metadata['description'] ?? ''),
             'question_label' => self::questionsLabel((int) ($metadata['question_count'] ?? count($module->getQuestions()))),
             'instruction' => array_values(array_filter(array_map('strval', $instruction), static fn (string $p): bool => trim($p) !== '')),
+            'instruction_overridden' => $overridden,
+            'instruction_updated' => $overridden ? date('d.m.Y H:i', (int) strtotime((string) $updatedAt)) : null,
+            'instruction_text' => $draft ?? implode("\n\n", $instruction),
+            'instruction_draft' => $draft !== null,
+            'instruction_limits' => ['paragraphs' => TestInstructionOverrides::MAX_PARAGRAPHS, 'length' => TestInstructionOverrides::MAX_LENGTH],
+            'instruction_form_key' => $this->formOnce()->issue(self::INSTRUCTION_FORM),
             'variables' => array_values(array_filter(
                 $this->promptVariables($test, $mode),
                 static fn (array $variable): bool => $variable['key'] !== 'items',
@@ -1740,6 +1754,65 @@ final class OwnerController extends BaseController
             'ai_form_key' => $this->formOnce()->issue(self::PROMPT_TESTS_FORM),
             'ai' => $this->globalAiSummary(),
         ]);
+    }
+
+    /**
+     * Сохранить инструкцию респонденту, изменённую владельцем (07.K15).
+     * POST /admin/tests/{test}/instruction
+     */
+    public function saveInstruction(string $test): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if ($this->moduleLoader->getModule($test) === null) {
+            $this->notFound();
+
+            return;
+        }
+
+        $text = is_string($_POST['instruction'] ?? null) ? (string) $_POST['instruction'] : '';
+        $outcome = $this->formOnce()->run(
+            self::INSTRUCTION_FORM,
+            $_POST['form_key'] ?? null,
+            function () use ($test, $text): array {
+                try {
+                    (new TestInstructionOverrides($this->db))->save($test, TestInstructionOverrides::paragraphsFromText($text));
+                } catch (\InvalidArgumentException $e) {
+                    return ['type' => 'error', 'message' => $e->getMessage()];
+                }
+
+                return ['type' => 'success', 'message' => 'Инструкция сохранена.'];
+            },
+            'Инструкция не сохранена: страница устарела. Обновите её и повторите.',
+            'Эта правка уже сохранена.',
+        );
+        $result = $outcome['result'];
+        if (($result['type'] ?? 'error') === 'error' && $outcome['claim'] === FormOnce::FRESH) {
+            $_SESSION[self::INSTRUCTION_DRAFT_KEY] = $text;
+        }
+        $this->setFlash(['type' => (string) $result['type'], 'message' => (string) $result['message'], 'section' => 'instruction']);
+        $this->redirect(self::TESTS_PATH . '/' . rawurlencode($test) . '#instruction');
+    }
+
+    /**
+     * Вернуть инструкцию из файла методики.
+     * POST /admin/tests/{test}/instruction/reset
+     */
+    public function resetInstruction(string $test): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+        if ($this->moduleLoader->getModule($test) === null) {
+            $this->notFound();
+
+            return;
+        }
+
+        (new TestInstructionOverrides($this->db))->reset($test);
+        $this->setFlash(['type' => 'success', 'message' => 'Исходная инструкция возвращена.', 'section' => 'instruction']);
+        $this->redirect(self::TESTS_PATH . '/' . rawurlencode($test) . '#instruction');
     }
 
     /**
@@ -2061,6 +2134,8 @@ final class OwnerController extends BaseController
     }
 
     public const PROMPT_TESTS_FORM = 'owner_prompt_tests';
+    public const INSTRUCTION_FORM = 'owner_test_instruction';
+    private const INSTRUCTION_DRAFT_KEY = 'psytest_owner_instruction_draft';
     public const PROMPT_TRIAL_FORM = 'owner_prompt_trial';
 
     /**

@@ -214,7 +214,7 @@
         if (form) {
             form.addEventListener('change', function (e) {
                 if (e.target.name && e.target.name.startsWith('answers[')) {
-                    collapseInstruction();
+                    hideInstruction();
                     saveAnswer(e.target);
                     scheduleAutoAdvance();
                 }
@@ -479,13 +479,13 @@
     }
 
     /**
-     * The instruction is open until the test starts; afterwards it stays one
-     * click away as the quiet «Инструкция» disclosure by the progress line (07.K13).
+     * The instruction is shown until the test starts; once the person answers
+     * it is hidden for good (07.K13, simplified in 07.K15 by the owner).
      */
-    function collapseInstruction() {
+    function hideInstruction() {
         const instruction = document.getElementById('testInstruction');
-        if (instruction && instruction.open) {
-            instruction.open = false;
+        if (instruction) {
+            instruction.hidden = true;
         }
     }
 
@@ -500,7 +500,7 @@
         if (demographicsSection) {
             demographicsSection.style.display = 'none';
         }
-        collapseInstruction();
+        hideInstruction();
 
         // Update question texts based on gender (if gender variants available)
         if (demographics.gender) {

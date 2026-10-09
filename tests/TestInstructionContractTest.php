@@ -161,15 +161,14 @@ final class TestInstructionContractTest extends TestCase
         self::assertLessThan(strpos($html, 'data-test-instruction'), strpos($html, 'Это персональное приглашение'));
     }
 
-    public function testInviteResumePageCollapsesTheInstruction(): void
+    public function testInviteResumePageDoesNotRepeatTheInstruction(): void
     {
         $html = $this->renderInvite(['answered' => 3, 'total' => 566]);
 
-        self::assertStringContainsString('data-test-instruction="collapsed"', $html);
-        self::assertStringContainsString('<details class="ai-report__details" id="testInstruction">', $html);
-        self::assertStringContainsString('Напомнить инструкцию', $html);
-        self::assertStringContainsString('disclosure-stack', $html);
-        self::assertStringNotContainsString('data-test-instruction="block"', $html);
+        // 07.K15: человек инструкцию уже читал — при продолжении она не показывается.
+        self::assertStringNotContainsString('data-test-instruction', $html);
+        self::assertStringNotContainsString('<details', $html);
+        self::assertStringContainsString('Продолжить', $html);
     }
 
     public function testInviteStartWithoutInstructionRendersNoBlock(): void
@@ -180,12 +179,13 @@ final class TestInstructionContractTest extends TestCase
         self::assertStringContainsString('Начать тест', $html);
     }
 
-    public function testGuestTestPageShowsTheInstructionOpenBeforeTheFirstQuestion(): void
+    public function testGuestTestPageShowsTheInstructionAsAPlainBlockBeforeTheFirstQuestion(): void
     {
         $html = $this->renderWrapper([]);
 
-        self::assertStringContainsString('data-test-instruction="open"', $html);
-        self::assertStringContainsString('<details class="ai-report__details" id="testInstruction" open>', $html);
+        self::assertStringContainsString('data-test-instruction="block"', $html);
+        self::assertStringContainsString('<section class="test-instruction" id="testInstruction"', $html);
+        self::assertStringNotContainsString('<details class="ai-report__details" id="testInstruction"', $html);
         self::assertLessThan(strpos($html, 'id="testForm"'), strpos($html, 'id="testInstruction"'));
         self::assertLessThan(strpos($html, 'id="testInstruction"'), strpos($html, 'id="progressContainer"'));
         // 04.T1 hint and K12 resume config stay in place.
@@ -193,30 +193,33 @@ final class TestInstructionContractTest extends TestCase
         self::assertStringContainsString('resume: false', $html);
     }
 
-    public function testResumedOrInvitedTestPageKeepsTheInstructionCollapsed(): void
+    public function testResumedOrInvitedTestPageShowsNoInstruction(): void
     {
         foreach ([['is_resume' => true], ['instruction_collapsed' => true]] as $context) {
             $html = $this->renderWrapper($context);
-            self::assertStringContainsString('data-test-instruction="collapsed"', $html);
-            self::assertStringContainsString('<details class="ai-report__details" id="testInstruction">', $html);
-            self::assertStringContainsString('<span class="ai-report__summary-title">Инструкция</span>', $html);
+            self::assertStringNotContainsString('data-test-instruction', $html);
+            self::assertStringNotContainsString('id="testInstruction"', $html);
+            self::assertStringContainsString('id="progressContainer"', $html);
         }
     }
 
-    public function testScriptCollapsesTheInstructionOnceTheTestStarts(): void
+    public function testScriptHidesTheInstructionOnceTheTestStarts(): void
     {
         $script = $this->read('public/js/test-taking.js');
 
         self::assertStringContainsString("document.getElementById('testInstruction')", $script);
-        self::assertStringContainsString("demographicsSection.style.display = 'none';\n        }\n        collapseInstruction();", $script);
-        self::assertStringContainsString("collapseInstruction();\n                    saveAnswer(e.target);", $script);
+        self::assertStringContainsString('instruction.hidden = true;', $script);
+        self::assertStringContainsString("demographicsSection.style.display = 'none';\n        }\n        hideInstruction();", $script);
+        self::assertStringContainsString("hideInstruction();\n                    saveAnswer(e.target);", $script);
+        self::assertStringNotContainsString('collapseInstruction', $script);
     }
 
     public function testControllerPassesTheInstructionToEveryStartPage(): void
     {
         $controller = $this->read('controllers/TestController.php');
 
-        self::assertSame(3, substr_count($controller, "'instruction' => \$module->getInstruction(),"));
+        // 07.K15: показ идёт через подмену владельца, а не напрямую из файла методики.
+        self::assertSame(3, substr_count($controller, "'instruction' => \$this->instructionOf(\$module),"));
         self::assertStringContainsString("'instruction' => \$this->instructionFor(", $controller);
         self::assertStringContainsString("'instruction_collapsed' => true,", $controller);
         self::assertStringContainsString('tests.slug AS test_slug', $this->read('core/TestInviteService.php'));
