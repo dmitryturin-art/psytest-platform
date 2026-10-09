@@ -393,7 +393,7 @@
                 {% if state == 'working' %}
                     <p class="report-card__meta" role="status">Задание в работе{% if item.requested_at ?? null %} с {{ item.requested_at|date("d.m.Y H:i") }}{% endif %}.</p>
                 {% elseif state == 'failed' %}
-                    <p class="owner-notice owner-notice--error" role="alert">Не получилось подготовить черновик{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}.</p>
+                    <p class="owner-notice owner-notice--error" role="alert">Не получилось подготовить черновик{% if item.failure_reason %}: {{ item.failure_reason|trim('.') }}{% endif %}.</p>
                     {% if item.can_order ?? true %}
                     <form method="post" action="{{ basePath }}/admin/invited-case/{{ case.id }}/reports/request" class="owner-action-form" data-submit-once>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
