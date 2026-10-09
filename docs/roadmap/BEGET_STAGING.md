@@ -200,4 +200,6 @@ bootstrap-адаптера. Приложение не встраивается �
 
 65. Выкладка `c1b1a59` (09.10): инструкция IPIP под шкалу согласия (09.O1b); миграций нет; одно SSH-подключение по рецепту. SHA-256 `a7a4d972f2b5443a695232bc49b8826192420baab16f23cf0cefc404d67f857c` совпал; dump проверен. Смоук: основные маршруты `200`, `/test/smil` `404`. Rollback: `releases/c295ee5`.
 
+66. Выкладка `22c8ad3` (09.10): инструкция респонденту из кабинета (07.K15); миграция `20261009010000 AddTestInstructionOverrides` после проверенного dump; одно SSH-подключение по рецепту. SHA-256 `5b8679adee2bf1005197333af5095704fa093d029291a97cd41f322080b2ee32` совпал. Смоук: основные маршруты `200`, `/test/smil` `404`. Rollback: `releases/c1b1a59`.
+
 Rollback текущего релиза: атомарно направить `public_html` на `releases/e5a15b5/public` и `current` на `releases/e5a15b5`; pre-deploy dump и прежние releases сохранены в `backups/` и `releases/`. Следующий шаг — K2 (клиенты/назначения) или короткий owner-pilot; production go-live отдельно.
