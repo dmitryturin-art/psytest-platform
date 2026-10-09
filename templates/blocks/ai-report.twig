@@ -42,7 +42,7 @@
             {% else %}
                 {% if item.status == 'failed' %}
                 <p class="ai-report__error" role="alert">
-                    Не получилось подготовить разбор{% if item.failure_reason %}: {{ item.failure_reason }}{% endif %}. Можно попробовать снова.
+                    Не получилось подготовить разбор{% if item.failure_reason %}: {{ item.failure_reason|trim('.') }}{% endif %}. Можно попробовать снова.
                 </p>
                 {% endif %}
                 {% if not (item.can_order ?? true) %}
