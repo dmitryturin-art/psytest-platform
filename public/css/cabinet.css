@@ -1749,9 +1749,9 @@ a.cab-table__title:hover {
 .tests-table th { vertical-align: bottom; line-height: 1.25; white-space: normal; }
 .tests-table th,
 .tests-table td { padding-right: var(--spacing-md); }
-.tests-table .cab-table__status { width: 11.5rem; }
-.tests-table__prompt { width: 12rem; }
-.tests-table__items { width: 7rem; }
+.tests-table .cab-table__status { width: 10rem; }
+.tests-table__prompt { width: 13.5rem; }
+.tests-table__items { width: 6rem; }
 .tests-table__open { width: 6.5rem; text-align: right; padding-right: 0; }
 .tests-table th.tests-table__items,
 .tests-table td.tests-table__items { text-align: left; }
@@ -2480,12 +2480,16 @@ a.cab-table__title:hover {
 
 /* Список методик: длинное состояние («промпт не опубликован») переносится внутри
    своей колонки, а не наезжает на соседнюю; точка — на первой строке. */
-.tests-table .cab-table__status .status {
+/* Подписи состояний в списке методик переносятся («опубликована версия 1001»
+   не помещается в столбец), точка остаётся у первой строки. */
+.tests-table .cab-table__status .status,
+.tests-table .prompt-state .status {
     align-items: baseline;
     white-space: normal;
 }
 
-.tests-table .cab-table__status .status::before {
+.tests-table .cab-table__status .status::before,
+.tests-table .prompt-state .status::before {
     flex: none;
     transform: translateY(-0.1em);
 }
