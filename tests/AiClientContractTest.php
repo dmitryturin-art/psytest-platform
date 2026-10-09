@@ -269,7 +269,7 @@ final class AiClientContractTest extends TestCase
             $client->complete($this->prompt(), ['test' => 'smil']);
             self::fail('Ожидалось исключение.');
         } catch (AiProviderException $e) {
-            self::assertStringContainsString('HTTP 400', $e->getMessage());
+            self::assertStringContainsString('кодом 400', $e->getMessage());
             self::assertStringNotContainsString('level', $e->getMessage());
             self::assertStringNotContainsString('items', $e->getMessage());
         }

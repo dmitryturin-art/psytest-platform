@@ -75,7 +75,7 @@ final class AiClient
 
         $text = $response['choices'][0]['message']['content'] ?? null;
         if (!is_string($text) || trim($text) === '') {
-            throw new AiProviderException('Провайдер вернул пустой ответ.');
+            throw new AiProviderException('Сервис ИИ вернул пустой ответ.');
         }
 
         return new AiCompletion(
@@ -120,7 +120,7 @@ final class AiClient
     private function requireConfigured(): void
     {
         if (!$this->settings->isConfigured()) {
-            throw new AiProviderException('Провайдер ИИ не настроен: нет ключа или адреса. Ключ задаётся только в environment.');
+            throw new AiProviderException('Сервис ИИ не настроен: нет ключа или адреса. Ключ задаётся только в настройках окружения на сервере.');
         }
     }
 
@@ -152,7 +152,7 @@ final class AiClient
             if ($status >= 200 && $status < 300) {
                 $decoded = json_decode($result['body'], true);
                 if (!is_array($decoded)) {
-                    throw new AiProviderException('Провайдер вернул нечитаемый ответ.');
+                    throw new AiProviderException('Сервис ИИ вернул нечитаемый ответ.');
                 }
 
                 return $decoded;
@@ -168,7 +168,7 @@ final class AiClient
             // Тело ошибки провайдера не пересказывается: в нём может оказаться
             // эхо запроса, то есть клинические данные. Называется только категория.
             throw new AiProviderException(sprintf(
-                'Провайдер ответил HTTP %d (%s); попыток: %d.',
+                'Сервис ИИ ответил кодом %d (%s); попыток: %d.',
                 $status,
                 self::describeStatus($status),
                 $attempt,
@@ -196,10 +196,10 @@ final class AiClient
             // 403 не обязательно про ключ: OpenRouter отвечает так на запросы
             // с адреса нашего хостинга ещё до проверки ключа (проверено 27.08).
             $status === 403 => 'доступ запрещён — ключ либо адрес отправителя',
-            $status === 402 => 'недостаточно средств на счёте провайдера',
+            $status === 402 => 'недостаточно средств на счёте сервиса ИИ',
             $status === 404 => 'модель недоступна по текущей политике данных аккаунта',
             $status === 429 => 'модель перегружена или превышен лимит запросов',
-            $status >= 500 => 'сбой на стороне провайдера',
+            $status >= 500 => 'сбой на стороне сервиса ИИ',
             default => 'запрос отклонён',
         };
     }

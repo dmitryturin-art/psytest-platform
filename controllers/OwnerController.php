@@ -2401,7 +2401,7 @@ final class OwnerController extends BaseController
         $back = fn (bool $ok, string $message): never => $this->promptTrialBack($test, $mode, $kind, $ok, $message);
 
         if (($_POST['confirm_trial'] ?? null) !== '1') {
-            $back(false, 'Пробный разбор не запущен: нужно подтвердить обращение к провайдеру.');
+            $back(false, 'Пробный разбор не запущен: поставьте галочку подтверждения платного запроса.');
         }
 
         $aiSettings = new AiSettings($this->db);
