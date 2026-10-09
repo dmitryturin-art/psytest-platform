@@ -216,7 +216,8 @@ final class TestInstructionContractTest extends TestCase
     {
         $controller = $this->read('controllers/TestController.php');
 
-        self::assertSame(3, substr_count($controller, "'instruction' => \$module->getInstruction(),"));
+        // 07.K15: показ идёт через подмену владельца, а не напрямую из файла методики.
+        self::assertSame(3, substr_count($controller, "'instruction' => \$this->instructionOf(\$module),"));
         self::assertStringContainsString("'instruction' => \$this->instructionFor(", $controller);
         self::assertStringContainsString("'instruction_collapsed' => true,", $controller);
         self::assertStringContainsString('tests.slug AS test_slug', $this->read('core/TestInviteService.php'));

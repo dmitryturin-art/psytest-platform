@@ -200,7 +200,7 @@
                     <div class="owner-field">
                         <label for="instruction-text">Текст инструкции</label>
                         <textarea id="instruction-text" name="instruction" rows="12" required>{{ instruction_text }}</textarea>
-                        <p class="owner-help">Абзацы разделяйте пустой строкой. Только простой текст, не больше {{ instruction_limits.paragraphs }} абзацев по {{ instruction_limits.length }} знаков. Менять инструкцию можно в любой момент: у тех, кто уже начал тест, она не пропадёт.</p>
+                        <p class="owner-help">Абзацы разделяйте пустой строкой. Только простой текст, не больше {{ instruction_limits.paragraphs }} абзацев по {{ instruction_limits.length }} знаков.</p>
                     </div>
                     <div class="test-section__action">
                         <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
@@ -215,7 +215,7 @@
             <div class="case-fold__body ai-report__body">
                 <form method="post" action="{{ testUrl }}/instruction/reset" class="owner-form">
                     {{ csrf_field() }}
-                    <p class="owner-help">Ваша правка будет удалена, а респонденты снова увидят исходный текст методики. Отменить это нельзя, но вы можете записать свой текст заново.</p>
+                    <p class="owner-help">Ваша правка будет удалена, а респонденты снова увидят исходный текст методики. Позже вы сможете записать свой текст заново.</p>
                     <div class="test-section__action">
                         <button type="submit" class="btn btn-outline btn-sm">Вернуть исходную</button>
                     </div>
