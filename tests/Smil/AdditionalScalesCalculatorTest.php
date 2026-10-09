@@ -289,10 +289,10 @@ final class AdditionalScalesCalculatorTest extends TestCase
         $results = $this->calc->calculate($this->uniformAnswers(1), 'male');
 
         foreach ($results as $code => $scale) {
-            self::assertContains($scale['level'], ['above', 'normal', 'below'], "{$code}: уровень");
+            self::assertContains($scale['level'], ['expressed', 'elevated', 'average', 'reduced'], "{$code}: уровень");
             self::assertContains(
                 $scale['level_name'],
-                ['выше нормы', 'в пределах нормы', 'ниже нормы'],
+                ['выражено', 'повышено', 'средний уровень', 'снижено'],
                 "{$code}: подпись уровня"
             );
         }
