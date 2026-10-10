@@ -167,7 +167,7 @@ composer baseline:check
 - Database: migration up/down, transaction, idempotency/concurrency.
 - Payment: sandbox/provider fixtures; production network запрещён до gate этапа 06.
 - AI: schema, grounding, missing data, timeout/retry, cross-report consistency, evaluation fixtures.
-- UI: keyboard, mobile 390×844, desktop, empty/error/loading/success states.
+- UI: keyboard, браузер на 1440 и 375 px, empty/error/loading/success states.
 - PDF/email: content snapshot, Unicode/fonts, page breaks, exact revision delivery.
 - Deployment: smoke, health, backup/restore, rollback rehearsal.
 
