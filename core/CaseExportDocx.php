@@ -270,7 +270,7 @@ final class CaseExportDocx
                 $this->profileChart($section, $result);
             } elseif ($result->block !== null && $result->block !== '') {
                 $template = str_ends_with($result->block, '.twig') ? substr($result->block, 0, -5) : $result->block;
-                $writer->append($section, ($this->blockRenderer)($template, $result->data + ['_pdf' => true]));
+                $writer->append($section, ($this->blockRenderer)($template, $result->data + ['_pdf' => true, '_docx' => true]));
             } elseif ($result->type === ResultSection::TYPE_RAW_HTML) {
                 $writer->append($section, (string) ($result->data['html'] ?? ''));
             }

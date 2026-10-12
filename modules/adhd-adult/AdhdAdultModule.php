@@ -270,11 +270,14 @@ class AdhdAdultModule extends BaseTestModule
             new ResultSection(
                 type: ResultSection::TYPE_INDICES,
                 title: 'Число признаков',
-                data: ['pdf_heading' => 'Число признаков', 'indices' => [
+                data: ['pdf_heading' => 'Число признаков', 'scales' => [
+                    ['name' => 'Невнимательность', 'score' => (int) ($results['inattention_count'] ?? 0), 'max' => self::GROUP_MAX, 'threshold' => self::GROUP_THRESHOLD],
+                    ['name' => 'Гиперактивность и импульсивность', 'score' => (int) ($results['hyperactivity_count'] ?? 0), 'max' => self::GROUP_MAX, 'threshold' => self::GROUP_THRESHOLD],
+                ], 'indices' => [
                     ['name' => 'Невнимательность', 'value' => sprintf('%d из %d', (int) ($results['inattention_count'] ?? 0), self::GROUP_MAX), 'description' => ''],
                     ['name' => 'Гиперактивность и импульсивность', 'value' => sprintf('%d из %d', (int) ($results['hyperactivity_count'] ?? 0), self::GROUP_MAX), 'description' => ''],
                 ]],
-                block: 'blocks/indices.twig',
+                block: 'blocks/count-scale.twig',
                 order: 20,
             ),
             new ResultSection(

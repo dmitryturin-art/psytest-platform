@@ -3802,3 +3802,65 @@ input[type="radio"] {
         display: block;
     }
 }
+
+/* ---------- 04.D6: шкала «N из M» делениями с отметкой порога (тест на СДВГ) ----------
+   blocks/count-scale.twig. Равные деления (grid), закрашенные — основной цвет, остальные —
+   нейтральная линия; отметка порога — тонкая черта цветом текста на границе делений
+   (порог − 1)-го и порога-го. Положение считается из --count-n / --count-t и зазора. */
+.count-scale + .count-scale {
+    margin-top: var(--spacing-lg);
+}
+
+.count-scale__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-xs) var(--spacing-md);
+}
+
+.count-scale__name {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.count-scale__value {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.count-scale__bar {
+    --count-gap: var(--spacing-xs);
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--count-n), minmax(0, 1fr));
+    gap: var(--count-gap);
+    margin-top: var(--spacing-sm);
+}
+
+.count-scale__step {
+    height: var(--spacing-md);
+    border-radius: 2px;
+    background: var(--color-border);
+}
+
+.count-scale__step--on {
+    background: var(--color-primary);
+}
+
+.count-scale__mark {
+    position: absolute;
+    top: calc(-1 * var(--spacing-xs));
+    bottom: calc(-1 * var(--spacing-xs));
+    left: calc((100% - (var(--count-n) - 1) * var(--count-gap)) * (var(--count-t) - 1) / var(--count-n) + (var(--count-t) - 2) * var(--count-gap) + var(--count-gap) / 2);
+    width: 2px;
+    margin-left: -1px;
+    background: var(--color-text);
+}
+
+.count-scale__hint {
+    margin: var(--spacing-xs) 0 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}

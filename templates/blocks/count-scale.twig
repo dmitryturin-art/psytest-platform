@@ -1,0 +1,68 @@
+{#
+    Шкала «N из M» делениями с отметкой порога (04.D6, тест на СДВГ).
+
+    Данные: scales[] {name, score, max, threshold}; pdf_heading — заголовок только для PDF.
+    Число закрашенных делений обрезается до 0…max, поэтому значение вне диапазона
+    вёрстку не ломает. Название и «N из M» выводятся текстом рядом с полосой, а сама
+    полоса — role="img" с подписью: смысл не зависит от цвета, деления для экранных
+    читалок одна картинка, а не девять пустых элементов.
+
+    PDF (_pdf): DomPDF не раскладывает grid/flex, поэтому та же шкала — таблица из делений
+    с фоном; цвета литералами (CSS-переменных в DomPDF нет), значения — как в main.css.
+    Word (_docx): фон ячеек не передаётся — остаются строки «Название: N из M» текстом.
+#}
+{% macro whole(v, fallback) %}{% if (v ~ '') matches '/^-?\\d+(\\.\\d+)?$/' %}{{ (v + 0)|round(0, 'floor') }}{% else %}{{ fallback }}{% endif %}{% endmacro %}
+{% import _self as c %}
+{% if pdf_heading is defined and pdf_heading and _pdf|default(false) %}<h2>{{ pdf_heading }}</h2>{% endif %}
+{% if _docx|default(false) %}
+{% for s in scales %}
+{% set s_max = c.whole(s.max, 1)|striptags|trim + 0 %}{% set s_max = s_max < 1 ? 1 : s_max %}
+{% set s_threshold = c.whole(s.threshold, 1)|striptags|trim + 0 %}
+{% set s_score = c.whole(s.score, 0)|striptags|trim + 0 %}
+{% set s_score = s_score < 0 ? 0 : (s_score > s_max ? s_max : s_score) %}
+<p><strong>{{ s.name }}</strong>: {{ s_score }} из {{ s_max }}. {{ s_score >= s_threshold ? 'Набрано ' ~ s_threshold ~ ' и больше — число признаков значимо' : 'Ниже порога (' ~ s_threshold ~ ')' }}.</p>
+{% endfor %}
+{% elseif _pdf|default(false) %}
+{% for s in scales %}
+{% set s_max = c.whole(s.max, 1)|striptags|trim + 0 %}{% set s_max = s_max < 1 ? 1 : s_max %}
+{% set s_threshold = c.whole(s.threshold, 1)|striptags|trim + 0 %}
+{% set s_score = c.whole(s.score, 0)|striptags|trim + 0 %}
+{% set s_score = s_score < 0 ? 0 : (s_score > s_max ? s_max : s_score) %}
+<div style="margin:0 0 14px;page-break-inside:avoid;">
+<table style="width:100%;border-collapse:collapse;border:none;margin:0;">
+    <tr>
+        <td style="border:none;padding:0 0 4px;font-weight:bold;">{{ s.name }}</td>
+        <td style="border:none;padding:0 0 4px;text-align:right;">{{ s_score }} из {{ s_max }}</td>
+    </tr>
+</table>
+<table style="width:100%;border-collapse:separate;border-spacing:3px 0;table-layout:fixed;border:none;margin:0 0 0 -3px;width:101%;">
+    <tr>
+        {% for i in 1..s_max %}
+        <td style="border:none;border-left:{{ i == s_threshold and i > 1 ? '2px solid #2A2622' : 'none' }};padding:0;height:10px;font-size:1px;line-height:10px;background-color:{{ i <= s_score ? '#2F6B5E' : '#E4DDD3' }};">&nbsp;</td>
+        {% endfor %}
+    </tr>
+</table>
+<div style="font-size:9pt;color:#5E574F;margin-top:3px;">{{ s_score >= s_threshold ? 'Набрано ' ~ s_threshold ~ ' и больше — число признаков значимо' : 'Ниже порога (' ~ s_threshold ~ ')' }}</div>
+</div>
+{% endfor %}
+{% else %}
+<div class="count-scales">
+    {% for s in scales %}
+    {% set s_max = c.whole(s.max, 1)|striptags|trim + 0 %}{% set s_max = s_max < 1 ? 1 : s_max %}
+    {% set s_threshold = c.whole(s.threshold, 1)|striptags|trim + 0 %}
+    {% set s_score = c.whole(s.score, 0)|striptags|trim + 0 %}
+    {% set s_score = s_score < 0 ? 0 : (s_score > s_max ? s_max : s_score) %}
+    <div class="count-scale">
+        <div class="count-scale__head">
+            <span class="count-scale__name">{{ s.name }}</span>
+            <span class="count-scale__value">{{ s_score }} из {{ s_max }}</span>
+        </div>
+        <div class="count-scale__bar" role="img" aria-label="{{ s.name }}: {{ s_score }} из {{ s_max }}, порог {{ s_threshold }}" style="--count-n: {{ s_max }}; --count-t: {{ s_threshold }};">
+            {% for i in 1..s_max %}<span class="count-scale__step{{ i <= s_score ? ' count-scale__step--on' : '' }}"></span>{% endfor %}
+            {% if s_threshold > 1 and s_threshold <= s_max %}<span class="count-scale__mark"></span>{% endif %}
+        </div>
+        <p class="count-scale__hint owner-help">{{ s_score >= s_threshold ? 'Набрано ' ~ s_threshold ~ ' и больше — число признаков значимо' : 'Ниже порога (' ~ s_threshold ~ ')' }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
