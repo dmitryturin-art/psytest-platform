@@ -196,6 +196,40 @@
         "paid_interpretation": "blocked",
         "public_new_content": "blocked"
       }
+    },
+    {
+      "slug": "adhd-adult",
+      "display_name": "Тест на СДВГ у взрослых",
+      "implementation": {
+        "metadata": "modules/adhd-adult/metadata.json",
+        "questions": "modules/adhd-adult/questions.json",
+        "question_count": 25
+      },
+      "provenance": {
+        "status": "partial",
+        "evidence": [
+          "authored for PsyTest (package 09.A1, 2026-10-12): item wording, counting rule (symptom = 'часто'/'очень часто', group significant at 5 of 9, three clarifications) and result texts approved by the owner",
+          "no third-party questionnaire text is used or cited as a source"
+        ],
+        "missing": [
+          "psychometric validation: no sample, no reliability or validity data, thresholds are expert-set",
+          "independent clinical review of the item wording and thresholds"
+        ]
+      },
+      "rights": {
+        "status": "verified",
+        "required_evidence": [
+          "own authorship of all text",
+          "no third-party questionnaire text"
+        ],
+        "review_evidence": [
+          "texts written for PsyTest and approved by the owner on 2026-10-12; ASRS, DSM and other published instruments are not used as a text source"
+        ]
+      },
+      "release_gate": {
+        "paid_interpretation": "blocked",
+        "public_new_content": "allowed"
+      }
     }
   ]
 }
