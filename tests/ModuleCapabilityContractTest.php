@@ -6,6 +6,7 @@ namespace PsyTest\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use PsyTest\Modules\AdhdAdult\AdhdAdultModule;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
@@ -26,6 +27,7 @@ final class ModuleCapabilityContractTest extends TestCase
     public static function moduleProvider(): array
     {
         return [
+            'adhd-adult' => [AdhdAdultModule::class, [ModuleCapability::PDF]],
             'beck-anxiety' => [BeckAnxietyModule::class, [ModuleCapability::PDF]],
             'beck-depression' => [BeckDepressionModule::class, [ModuleCapability::CLINICAL_SIGNAL, ModuleCapability::PDF]],
             'hads' => [HadsModule::class, [ModuleCapability::PDF]],
