@@ -1,3 +1,5 @@
+{# pdf_heading — заголовок секции только для PDF: в вебе его выводит страница результата. #}
+{% if pdf_heading is defined and pdf_heading and _pdf|default(false) %}<h2>{{ pdf_heading }}</h2>{% endif %}
 <div class="indices-block">
     <dl class="indices-list">
         {% for idx in indices %}

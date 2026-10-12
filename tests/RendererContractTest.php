@@ -7,6 +7,7 @@ namespace PsyTest\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\TemplateFunctions;
+use PsyTest\Modules\AdhdAdult\AdhdAdultModule;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
@@ -42,6 +43,7 @@ final class RendererContractTest extends TestCase
         return [
             'beck-anxiety' => [BeckAnxietyModule::class],
             'beck-depression' => [BeckDepressionModule::class],
+            'adhd-adult' => [AdhdAdultModule::class],
             'hads' => [HadsModule::class],
             'ipip-neo-120' => [IpipNeo120Module::class],
             'lazarus' => [LazarusModule::class],
@@ -141,6 +143,7 @@ final class RendererContractTest extends TestCase
         return [
             'beck-anxiety' => [BeckAnxietyModule::class],
             'beck-depression' => [BeckDepressionModule::class],
+            'adhd-adult' => [AdhdAdultModule::class],
             'hads' => [HadsModule::class],
             'ipip-neo-120' => [IpipNeo120Module::class],
             'smil' => [SmilModule::class],
@@ -310,6 +313,7 @@ final class RendererContractTest extends TestCase
                 BeckAnxietyModule::class => 'bai',
                 BeckDepressionModule::class => 'bdi',
                 HadsModule::class => 'hads',
+                AdhdAdultModule::class => 'adhd-adult',
             };
             $results = $this->loadGolden($slug . '-results')['results'];
         }

@@ -7,6 +7,7 @@ namespace PsyTest\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use PsyTest\Core\AnswerValidator;
+use PsyTest\Modules\AdhdAdult\AdhdAdultModule;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
@@ -27,6 +28,7 @@ final class AnswerSchemaContractTest extends TestCase
             'lazarus' => [LazarusModule::class],
             'beck-anxiety' => [BeckAnxietyModule::class],
             'beck-depression' => [BeckDepressionModule::class],
+            'adhd-adult' => [AdhdAdultModule::class],
             'hads' => [HadsModule::class],
             'ipip-neo-120' => [IpipNeo120Module::class],
         ];
@@ -113,7 +115,7 @@ final class AnswerSchemaContractTest extends TestCase
     }
 
     /**
-     * @return array<int|string, int|string>
+     * @return array<int|string, int|string|list<string>>
      */
     private static function sampleValidAnswers(TestModuleInterface $module): array
     {
@@ -129,7 +131,9 @@ final class AnswerSchemaContractTest extends TestCase
             } else {
                 // Значения берутся из самих вариантов ответа (BAI/BDI/HADS 0–3, IPIP 1–5).
                 $values = array_column($q['options'] ?? [], 'value');
-                $answers[$id] = (string) ($values === [] ? $i % 4 : $values[$i % count($values)]);
+                $value = (string) ($values === [] ? $i % 4 : $values[$i % count($values)]);
+                // Вопрос «несколько вариантов» принимает список значений.
+                $answers[$id] = ($q['type'] ?? null) === 'multi' ? [$value] : $value;
             }
         }
         if (($schema['requires_gender'] ?? false) || $schema['answer_type'] === 'scale10') {

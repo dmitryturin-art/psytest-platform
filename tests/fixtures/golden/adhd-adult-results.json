@@ -1,0 +1,31 @@
+{
+    "results": {
+        "inattention_count": 5,
+        "hyperactivity_count": 2,
+        "group_max": 9,
+        "group_threshold": 5,
+        "inattention_significant": true,
+        "hyperactivity_significant": false,
+        "childhood": 1,
+        "spheres": [
+            "work",
+            "home"
+        ],
+        "spheres_count": 2,
+        "interference": 2,
+        "conditions": {
+            "childhood": true,
+            "spheres": true,
+            "interference": true
+        },
+        "conclusion": "expressed",
+        "answered_count": 21,
+        "total_questions": 21
+    },
+    "interpretation": {
+        "summary": "Признаки выражены. Невнимательность: 5 из 9. Гиперактивность и импульсивность: 2 из 9.",
+        "interpretation_text": "По вашим ответам набирается число признаков, при котором стоит обратиться к психиатру для очной оценки. Признаки были в детстве, проявляются в нескольких сферах и заметно мешают — это те условия, на которые смотрит врач.",
+        "recommendations": [],
+        "disclaimer": "Авторский опросник PsyTest, составлен по диагностическим признакам СДВГ у взрослых; на выборке пока не проверен. Результат — не диагноз и не заменяет консультацию врача."
+    }
+}

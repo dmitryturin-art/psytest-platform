@@ -6,6 +6,7 @@ namespace PsyTest\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use PsyTest\Modules\AdhdAdult\AdhdAdultModule;
 use PsyTest\Modules\BeckAnxiety\BeckAnxietyModule;
 use PsyTest\Modules\BeckDepression\BeckDepressionModule;
 use PsyTest\Modules\Hads\HadsModule;
@@ -28,6 +29,7 @@ final class GoldenModuleOutputsTest extends TestCase
     public static function moduleProvider(): array
     {
         return [
+            'adhd-adult' => [AdhdAdultModule::class, 'adhd-adult'],
             'beck-anxiety' => [BeckAnxietyModule::class, 'bai'],
             'beck-depression' => [BeckDepressionModule::class, 'bdi'],
             'hads' => [HadsModule::class, 'hads'],
