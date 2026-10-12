@@ -1,0 +1,16 @@
+{
+  "slug": "demo-multi-choice",
+  "name": "Демонстрационный опросник с несколькими вариантами",
+  "description": "Модуль-образец вопроса типа multi (несколько вариантов); не регистрируется в каталоге.",
+  "question_count": 3,
+  "estimated_time": 1,
+  "scales": [],
+  "requires_demographics": {
+    "gender": false,
+    "age": false
+  },
+  "version": "1.0",
+  "author": "PsyTest Platform",
+  "source": "Внутренний демонстрационный пример",
+  "language": "ru"
+}
