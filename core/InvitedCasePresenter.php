@@ -241,6 +241,10 @@ final class InvitedCasePresenter
             if (($question['dual'] ?? false) === true) {
                 $row['self_answer'] = $this->rating($this->answer($answers, $id . '_self'));
                 $row['partner_answer'] = $this->rating($this->answer($answers, $id . '_partner'));
+            } elseif (AnswerNormalizer::isMulti($question)) {
+                // Несколько вариантов: подписи выбранных в порядке вариантов вопроса, без балла.
+                $row['answer'] = $this->multiAnswer($question, $this->answer($answers, $id));
+                $row['score'] = null;
             } else {
                 $answer = $this->answer($answers, $id);
                 $option = $this->option($question, $answer);
@@ -300,6 +304,22 @@ final class InvitedCasePresenter
         }
 
         return null;
+    }
+
+    /** @param array<string, mixed> $question */
+    private function multiAnswer(array $question, mixed $answer): string
+    {
+        $labels = [];
+        if (is_array($answer) && is_array($question['options'] ?? null)) {
+            $chosen = array_map('strval', array_filter($answer, 'is_scalar'));
+            foreach ($question['options'] as $option) {
+                if (is_array($option) && in_array((string) ($option['value'] ?? ''), $chosen, true)) {
+                    $labels[] = (string) ($option['text'] ?? $option['value']);
+                }
+            }
+        }
+
+        return $labels === [] ? 'Нет ответа' : implode(', ', $labels);
     }
 
     private function ternaryAnswer(mixed $answer): string

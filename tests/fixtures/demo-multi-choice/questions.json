@@ -1,0 +1,31 @@
+[
+  {
+    "id": 1,
+    "text": "Как часто вы устаёте к вечеру?",
+    "options": [
+      {"value": 0, "text": "Редко"},
+      {"value": 1, "text": "Иногда"},
+      {"value": 2, "text": "Часто"}
+    ]
+  },
+  {
+    "id": 2,
+    "type": "multi",
+    "text": "Где усталость заметна сильнее всего?",
+    "options": [
+      {"value": "work", "text": "На работе"},
+      {"value": "home", "text": "Дома"},
+      {"value": "leisure", "text": "На отдыхе"},
+      {"value": "none", "text": "Нигде", "exclusive": true}
+    ]
+  },
+  {
+    "id": 3,
+    "text": "Насколько это вам мешает?",
+    "options": [
+      {"value": 0, "text": "Не мешает"},
+      {"value": 1, "text": "Немного"},
+      {"value": 2, "text": "Заметно"}
+    ]
+  }
+]

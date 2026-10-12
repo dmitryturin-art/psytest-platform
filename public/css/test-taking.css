@@ -68,3 +68,46 @@
         display: none !important;
     }
 }
+
+/* Вопрос «несколько вариантов»: нативные флажки, подпись-кнопка на всю ширину.
+   Выбор виден по галочке, рамке и жирности подписи — не только по цвету. */
+.question-multi {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.question-multi > legend.question-text {
+    width: 100%;
+    padding: 0;
+    margin-bottom: var(--spacing-xs);
+}
+
+.question-hint {
+    margin: 0 0 var(--spacing-md);
+}
+
+.answer-option--check {
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-bg-white);
+}
+
+.answer-option--check input[type="checkbox"] {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
+.answer-option--check:has(input:checked) {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.answer-option--check input:checked + .option-text {
+    font-weight: 600;
+    color: var(--color-primary-dark);
+}
