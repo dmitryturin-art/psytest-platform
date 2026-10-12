@@ -90,12 +90,30 @@
         <!-- Questions Container (hidden until demographics completed) -->
         <div class="questions-container" id="questionsContainer" style="display: none;">
             {% for question in questions %}
-            <div class="question-card{% if question.dual|default(false) %} question-card--dual{% endif %}" data-question-id="{{ question.id }}"
+            {% set is_multi = question.type|default('') == 'multi' %}
+            <div class="question-card{% if question.dual|default(false) %} question-card--dual{% endif %}{% if is_multi %} question-card--multi{% endif %}" data-question-id="{{ question.id }}"
                  {% if question.text_male is defined %}data-text-male="{{ question.text_male }}"{% endif %}
                  {% if question.text_female is defined %}data-text-female="{{ question.text_female }}"{% endif %}>
+                {% if is_multi %}
+                {# Несколько вариантов: нативные флажки в fieldset; переход — кнопкой «Далее». #}
+                <fieldset class="question-multi">
+                    <legend class="question-text">{{ question.id }}. {{ question.text }}</legend>
+                    <p class="question-hint account-note">Можно выбрать несколько</p>
+                    <div class="answer-options">
+                        {% for option in question.options %}
+                        <label class="answer-option answer-option--check">
+                            <input type="checkbox" name="answers[{{ question.id }}][]" value="{{ option.value }}"{% if option.exclusive|default(false) %} data-exclusive{% endif %}>
+                            <span class="option-text">{{ option.text }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+                {% else %}
                 <p class="question-text">{{ question.id }}. {{ question.text ?? question.text_male ?? question.text_female }}</p>
+                {% endif %}
 
-                {% if question.dual|default(false) %}
+                {% if is_multi %}
+                {% elseif question.dual|default(false) %}
                 {# Двойная оценка: «Я» + «Партнёр», шкала 1-10 #}
                 <div class="dual-scale">
                     <div class="dual-scale__legend">
@@ -169,6 +187,9 @@
         <div class="test-navigation" id="testNavigation" style="display: none;">
             <button type="button" class="btn btn-outline" id="prevBtn" style="visibility: hidden">
                 ← Предыдущий вопрос
+            </button>
+            <button type="button" class="btn btn-primary" id="nextBtn" style="display: none">
+                Далее →
             </button>
             <button type="submit" class="btn btn-primary" id="submitBtn" style="display: none">
                 Завершить тестирование

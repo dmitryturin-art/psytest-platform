@@ -35,12 +35,30 @@ final class AnswerValidator
         [, $answerKeys] = self::keySets($schema, $questions);
         $allowedByKey = self::allowedValues($schema, $questions);
         $isDual = $schema['key_template'] === 'dual';
+        $multi = $isDual ? [] : self::multiQuestions($questions);
 
         foreach ($answers as $key => $value) {
             if (in_array((string) $key, $schema['extra_keys'], true)) {
                 continue;
             }
             if (!isset($answerKeys[(string) $key])) {
+                $errors[] = 'invalid_answer';
+                break;
+            }
+            if (isset($multi[(string) $key])) {
+                // Несколько вариантов: список значений, а не скаляр.
+                $error = self::multiError($multi[(string) $key], $value, $complete);
+                if ($error === 'invalid_answer') {
+                    $errors[] = $error;
+                    break;
+                }
+                if ($error !== null) {
+                    $errors[] = $error;
+                }
+                continue;
+            }
+            if (!is_scalar($value)) {
+                // Массив на обычный вопрос — отказ, а не приведение к строке.
                 $errors[] = 'invalid_answer';
                 break;
             }
@@ -115,6 +133,64 @@ final class AnswerValidator
         $range = $schema['age_range'];
 
         return (int) $age >= $range['min'] && (int) $age <= $range['max'];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $questions
+     *
+     * @return array<string, array<string, mixed>> id вопроса => вопрос типа multi
+     */
+    private static function multiQuestions(array $questions): array
+    {
+        $multi = [];
+        foreach ($questions as $question) {
+            if (AnswerNormalizer::isMulti($question)) {
+                $multi[(string) $question['id']] = $question;
+            }
+        }
+
+        return $multi;
+    }
+
+    /**
+     * Проверка ответа на вопрос «несколько вариантов».
+     *
+     * Допустим только плоский список значений из вариантов вопроса. Повторы
+     * не считаются ошибкой (хранимый вид без повторов даёт AnswerNormalizer),
+     * но исключающий вариант («ничего из перечисленного») не сочетается с
+     * другими. Пустой список допустим только в промежуточном сохранении: там
+     * он означает «выбор снят».
+     *
+     * @param array<string, mixed> $question
+     */
+    private static function multiError(array $question, mixed $value, bool $complete): ?string
+    {
+        if (!is_array($value) || !array_is_list($value) || count($value) > AnswerNormalizer::MAX_MULTI_ITEMS) {
+            return 'invalid_answer';
+        }
+
+        $exclusiveByValue = [];
+        foreach ((array) ($question['options'] ?? []) as $option) {
+            $exclusiveByValue[(string) $option['value']] = ($option['exclusive'] ?? false) === true;
+        }
+
+        $chosen = [];
+        foreach ($value as $item) {
+            if ((!is_int($item) && !is_string($item)) || !isset($exclusiveByValue[(string) $item])) {
+                return 'invalid_answer';
+            }
+            $chosen[(string) $item] = true;
+        }
+
+        if (count($chosen) > 1) {
+            foreach (array_keys($chosen) as $item) {
+                if ($exclusiveByValue[(string) $item]) {
+                    return 'invalid_answer';
+                }
+            }
+        }
+
+        return $chosen === [] && $complete ? 'incomplete_answers' : null;
     }
 
     /**

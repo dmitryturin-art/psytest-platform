@@ -69,7 +69,7 @@ final class PromptFixtureContext
     /**
      * Детерминированные ответы по схеме модуля.
      *
-     * @return array<string, int|string>
+     * @return array<string, int|string|list<int|string>>
      */
     private static function answers(TestModuleInterface $module, int $shift): array
     {
@@ -88,7 +88,8 @@ final class PromptFixtureContext
                 continue;
             }
 
-            $answers[$id] = $value;
+            // Вопрос «несколько вариантов» хранит список значений.
+            $answers[$id] = ($question['type'] ?? null) === 'multi' ? [$value] : $value;
         }
 
         foreach ((array) $schema['extra_keys'] as $extra) {

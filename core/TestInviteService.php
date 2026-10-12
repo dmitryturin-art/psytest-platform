@@ -232,8 +232,9 @@ final class TestInviteService
     public static function answeredCount(array $answers): int
     {
         $ids = [];
-        foreach (array_keys($answers) as $key) {
-            if (preg_match('/\A(\d+)/', (string) $key, $m) === 1) {
+        foreach ($answers as $key => $value) {
+            // Пустой список — снятый выбор в вопросе «несколько вариантов», не ответ.
+            if ($value !== [] && preg_match('/\A(\d+)/', (string) $key, $m) === 1) {
                 $ids[$m[1]] = true;
             }
         }

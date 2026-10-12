@@ -10,6 +10,10 @@
  *   ArrowRight / Enter -> next question, only if the current one is answered
  *                         (Enter on the last answered question submits)
  * Dual (Lazarus) cards: a digit fills the first unanswered row (Я, then Партнёр).
+ * Multi-choice cards (.question-card--multi, native checkboxes): digits do nothing,
+ * there is no auto-advance; «Далее» (or Enter / ArrowRight) moves on and is disabled
+ * while nothing is checked. An option marked data-exclusive unchecks the others and
+ * is unchecked by them. The answer is an array of the checked values.
  *
  * Resume (07.K12): TEST_CONFIG.answers / .demographics carry what the server already
  * saved. The page restores the checked options, skips the demographics gate when it
@@ -42,6 +46,7 @@
     const MIN_SAMPLES = 3;
     const SAVE_DELAY_MS = 250;
     let saveDirty = false;
+    let submitting = false;
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', function () {
@@ -105,7 +110,25 @@
         }
     }
 
+    function isMultiCard(card) {
+        return !!card && card.classList.contains('question-card--multi');
+    }
+
+    function multiValues(card) {
+        return Array.from(card.querySelectorAll('input[type="checkbox"]:checked')).map(function (box) {
+            return box.value;
+        });
+    }
+
+    /** Keys of `answers` that hold an answer (an emptied multi-choice list is not one). */
+    function answeredKeys() {
+        return Object.keys(answers).filter(function (key) {
+            return !(Array.isArray(answers[key]) && answers[key].length === 0);
+        });
+    }
+
     function isCardAnswered(card) {
+        if (isMultiCard(card)) return multiValues(card).length > 0;
         const names = new Set();
         card.querySelectorAll('input[type="radio"]').forEach(function (r) { names.add(r.name); });
         if (names.size === 0) return false;
@@ -126,6 +149,18 @@
             return 0;
         }
         Object.keys(TEST_CONFIG.answers).forEach(function (key) {
+            if (Array.isArray(TEST_CONFIG.answers[key])) {
+                // Multi-choice question: check every saved option.
+                const saved = TEST_CONFIG.answers[key].map(String);
+                const boxes = document.querySelectorAll('input[type="checkbox"][name="answers[' + key + '][]"]');
+                const restored = [];
+                boxes.forEach(function (box) {
+                    box.checked = saved.indexOf(box.value) !== -1;
+                    if (box.checked) restored.push(box.value);
+                });
+                if (restored.length > 0) answers[key] = restored;
+                return;
+            }
             const value = String(TEST_CONFIG.answers[key]);
             const radios = document.querySelectorAll('input[type="radio"][name="answers[' + key + ']"]');
             let matched = false;
@@ -193,9 +228,13 @@
         // Setup navigation buttons
         const prevBtn = document.getElementById('prevBtn');
         const submitBtn = document.getElementById('submitBtn');
+        const nextBtn = document.getElementById('nextBtn');
 
         if (prevBtn) {
             prevBtn.addEventListener('click', goToPreviousQuestion);
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', goToNextQuestion);
         }
 
         // Submit button starts hidden (shown on last question)
@@ -254,6 +293,7 @@
     function isCurrentQuestionAnswered() {
         const card = questions[currentQuestionIndex];
         if (!card) return false;
+        if (isMultiCard(card)) return multiValues(card).length > 0;
         const names = new Set();
         card.querySelectorAll('input[type="radio"]').forEach(function (r) { names.add(r.name); });
         if (names.size === 0) return false;
@@ -343,7 +383,7 @@
     /** Quiet key badges «1», «2»… on single-choice options (aria-hidden, hidden on touch via CSS). */
     function decorateOptionKeys() {
         questions.forEach(function (card) {
-            if (card.classList.contains('question-card--dual')) return;
+            if (card.classList.contains('question-card--dual') || isMultiCard(card)) return;
             card.querySelectorAll('.answer-option').forEach(function (label, i) {
                 if (i > 9 || label.querySelector('.answer-option__key')) return;
                 const badge = document.createElement('span');
@@ -417,7 +457,7 @@
         if (!el || typeof TEST_CONFIG === 'undefined') return;
 
         const total = TEST_CONFIG.totalQuestions;
-        const answered = new Set(Object.keys(answers).map(function (k) { return k.replace(/_.*$/, ''); })).size;
+        const answered = new Set(answeredKeys().map(function (k) { return k.replace(/_.*$/, ''); })).size;
         const remaining = total - answered;
         if (remaining <= 0 || total <= 0) {
             el.hidden = true;
@@ -591,9 +631,9 @@
         if (!currentCard) return;
 
         const questionId = currentCard.getAttribute('data-question-id');
-        const selectedAnswer = document.querySelector(
-            `input[name="answers[${questionId}]"]:checked`
-        );
+        const selectedAnswer = isMultiCard(currentCard)
+            ? currentCard.querySelector('input[type="checkbox"]:checked')
+            : document.querySelector(`input[name="answers[${questionId}]"]:checked`);
 
         if (!selectedAnswer) {
             // Highlight that an answer is required
@@ -616,10 +656,20 @@
 
         const prevBtn = document.getElementById('prevBtn');
         const submitBtn = document.getElementById('submitBtn');
+        const nextBtn = document.getElementById('nextBtn');
         const testNavigation = document.getElementById('testNavigation');
         const hasPreviousAction = currentQuestionIndex > 0;
         const hasSubmitAction = currentQuestionIndex >= questions.length - 1;
-        const hasVisibleAction = hasPreviousAction || hasSubmitAction;
+        // «Далее» exists only on multi-choice questions: the others advance by themselves.
+        const onMulti = isMultiCard(questions[currentQuestionIndex]);
+        const hasNextAction = onMulti && !hasSubmitAction;
+        const hasVisibleAction = hasPreviousAction || hasSubmitAction || hasNextAction;
+        const multiEmpty = onMulti && !isCurrentQuestionAnswered();
+
+        if (nextBtn) {
+            nextBtn.style.display = hasNextAction ? 'inline-flex' : 'none';
+            nextBtn.disabled = multiEmpty;
+        }
 
         if (prevBtn) {
             prevBtn.style.visibility = hasPreviousAction ? 'visible' : 'hidden';
@@ -628,6 +678,8 @@
         // Submit button only visible on the last question
         if (submitBtn) {
             submitBtn.style.display = hasSubmitAction ? 'inline-flex' : 'none';
+            // A multi-choice last question cannot be submitted empty.
+            if (!submitting) submitBtn.disabled = hasSubmitAction && multiEmpty;
         }
 
         if (testNavigation) {
@@ -648,7 +700,7 @@
         // like "1_self"/"1_partner" — collapse to the numeric question id so
         // a fully-answered dual question counts as 1, not 2.
         const answeredIds = new Set();
-        Object.keys(answers).forEach(function (key) {
+        answeredKeys().forEach(function (key) {
             const m = key.match(/^(\d+)/);
             if (m) answeredIds.add(m[1]);
         });
@@ -664,6 +716,10 @@
      * Save an answer
      */
     function saveAnswer(input) {
+        if (input.type === 'checkbox') {
+            saveMultiAnswer(input);
+            return;
+        }
         // Supports both "answers[1]" (single) and "answers[1_self]" / "answers[1_partner]" (dual)
         const questionId = input.name.match(/answers\[([^\]]+)\]/);
         if (!questionId) return;
@@ -689,11 +745,46 @@
     }
 
     /**
+     * Save a multi-choice answer: the array of checked values of the card.
+     * An exclusive option («ничего из перечисленного») and the others cancel each other.
+     * An emptied choice is sent as [] so the server forgets the earlier one.
+     */
+    function saveMultiAnswer(input) {
+        const card = input.closest('.question-card');
+        const questionId = card ? card.getAttribute('data-question-id') : null;
+        if (!card || !questionId) return;
+
+        if (input.checked) {
+            const exclusive = input.hasAttribute('data-exclusive');
+            card.querySelectorAll('input[type="checkbox"]').forEach(function (box) {
+                if (box !== input && (exclusive || box.hasAttribute('data-exclusive'))) {
+                    box.checked = false;
+                }
+            });
+        }
+
+        const values = multiValues(card);
+        const isFirstAnswer = !Object.prototype.hasOwnProperty.call(answers, questionId);
+        answers[questionId] = values;
+        if (isFirstAnswer && shownAt > 0) {
+            answerDurations.push(Math.min(Date.now() - shownAt, MAX_SAMPLE_MS));
+            if (answerDurations.length > SAMPLE_WINDOW) answerDurations.shift();
+        }
+        card.classList.toggle('answered', values.length > 0);
+        updateProgress();
+        updateEstimate();
+        updateNavigation();
+        scheduleSave();
+    }
+
+    /**
      * Auto-advance to next question after a short delay.
      * On the last question, show the Submit button instead.
      */
     function scheduleAutoAdvance() {
         if (!questions || questions.length === 0) return;
+        // Multi-choice: no auto-advance, the person moves on with «Далее».
+        if (isMultiCard(questions[currentQuestionIndex])) return;
 
         // For dual-scale questions (two radio groups: _self + _partner),
         // only advance once ALL required radios in the card are answered.
@@ -835,6 +926,21 @@
         e.preventDefault();
 
         if (!questions || questions.length === 0) return;
+
+        // A multi-choice question has no native `required`: never submit it empty.
+        const emptyMulti = questions.findIndex(function (card) {
+            return isMultiCard(card) && multiValues(card).length === 0;
+        });
+        if (emptyMulti !== -1) {
+            clearAdvanceTimer();
+            currentQuestionIndex = emptyMulti;
+            showQuestion(currentQuestionIndex);
+            const card = questions[emptyMulti];
+            card.classList.add('error');
+            setTimeout(() => card.classList.remove('error'), 2000);
+            return;
+        }
+        submitting = true;
 
         // Show loading state
         const submitBtn = document.getElementById('submitBtn');

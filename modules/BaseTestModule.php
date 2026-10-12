@@ -291,6 +291,20 @@ abstract class BaseTestModule implements TestModuleInterface
 
             $id = (string) ($question['id'] ?? $index + 1);
             $raw = $answers[$id] ?? $answers[(int) $id] ?? null;
+
+            if (($question['type'] ?? null) === 'multi') {
+                // Несколько вариантов: подписи и значения выбранных через запятую,
+                // в порядке вариантов вопроса.
+                $chosen = self::aiMultiChoice($question, $raw);
+                $items[] = [
+                    'number' => $index + 1,
+                    'text' => self::aiQuestionText($question, $gender),
+                    'answer_label' => $chosen === [] ? 'Нет ответа' : implode(', ', array_column($chosen, 'text')),
+                    'value' => $chosen === [] ? null : implode(',', array_column($chosen, 'value')),
+                ];
+                continue;
+            }
+
             $value = is_int($raw) || (is_string($raw) && $raw !== '') ? $raw : null;
 
             $items[] = [
@@ -389,6 +403,31 @@ abstract class BaseTestModule implements TestModuleInterface
         }
 
         return (string) ($question['text_male'] ?? $question['text_female'] ?? '');
+    }
+
+    /**
+     * @param array<string, mixed> $question
+     *
+     * @return list<array{value: string, text: string}>
+     */
+    private static function aiMultiChoice(array $question, mixed $raw): array
+    {
+        if (!is_array($raw) || !is_array($question['options'] ?? null)) {
+            return [];
+        }
+
+        $picked = array_map('strval', array_filter($raw, 'is_scalar'));
+        $chosen = [];
+        foreach ($question['options'] as $option) {
+            if (is_array($option) && in_array((string) ($option['value'] ?? ''), $picked, true)) {
+                $chosen[] = [
+                    'value' => (string) $option['value'],
+                    'text' => (string) ($option['text'] ?? $option['value']),
+                ];
+            }
+        }
+
+        return $chosen;
     }
 
     /** @param array<string, mixed> $question */
