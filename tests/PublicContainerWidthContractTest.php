@@ -7,9 +7,9 @@ namespace PsyTest\Tests;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Ширина контейнеров и колонка чтения (04.D8): контейнеры результата тянутся на всю
- * колонку карточки, текст внутри — одна колонка чтения --measure-wide на публичных
- * страницах и в кабинете. Продолжение AiReportLayoutContractTest (04.D7).
+ * Ширина контейнеров и текста (04.D8, 04.D9): контейнеры результата тянутся на всю
+ * колонку карточки, текст внутри заполняет блок от края до края (без --measure и
+ * --measure-wide) на публичных страницах и в кабинете. Продолжение AiReportLayoutContractTest.
  */
 final class PublicContainerWidthContractTest extends TestCase
 {
@@ -53,9 +53,10 @@ final class PublicContainerWidthContractTest extends TestCase
         }
     }
 
-    public function testReadingColumnIsOneWidthForParagraphs(): void
+    public function testResultAndReportTextIsNotCapped(): void
     {
-        $capped = $this->capped($this->css('main.css'), 'measure-wide');
+        $main = $this->css('main.css');
+        $capped = array_merge($this->capped($main, 'measure'), $this->capped($main, 'measure-wide'));
 
         foreach ([
             '.recommendations-list__item',
@@ -64,12 +65,23 @@ final class PublicContainerWidthContractTest extends TestCase
             '.interpretation-item__text',
             '.results-disclaimer p',
             '.interpretation-text',
-            '.account-wrapper p',
+            '.ai-report__intro',
             '.trait-profile__norms',
             '.trait-row__text',
         ] as $paragraph) {
-            self::assertContains($paragraph, $capped, $paragraph . ' держит колонку чтения --measure-wide');
+            self::assertNotContains($paragraph, $capped, $paragraph . ' заполняет блок: без колонки чтения');
         }
+        foreach ($capped as $selector) {
+            self::assertStringNotContainsString('.ai-report', $selector);
+        }
+    }
+
+    public function testReadingColumnRemainsOnlyOutsideResultCard(): void
+    {
+        $capped = $this->capped($this->css('main.css'), 'measure-wide');
+
+        // Инструкция перед тестом и узкая карточка кабинета посетителя — не карточка результата.
+        self::assertSame(['.test-instruction__body', '.account-wrapper p'], $capped);
     }
 
     public function testNarrowMeasureIsNotUsedForPublicText(): void

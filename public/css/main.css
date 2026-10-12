@@ -320,21 +320,39 @@ input[type="radio"] {
    Подсказки и вводный текст кабинета (.owner-help, .owner-panel-intro) здесь не
    ограничиваются: в кабинете колонка чтения ставится только абзацам (cabinet.css,
    07.K14b), а не контейнерам. Текст ИИ-разбора (.ai-report__body) здесь тоже не
-   перечислен: его колонка чтения задана абзацам ниже, в блоке «Расширенный ИИ-разбор»
-   (04.D7), одна для публичных страниц и кабинета. */
+   перечислен: его текст идёт на всю ширину блока (04.D7, 04.D9, блок «Расширенный ИИ-разбор»
+   ниже), одно правило для публичных страниц и кабинета. */
 .owner-answer-list {
     max-width: var(--measure);
 }
 
-/* Колонка чтения текста одна — для публичных страниц и кабинета (04.D8): 80 знаков.
-   Контейнеры (.recommendations-list, .validity-warnings, .results-disclaimer, .owner-notice) тянутся на
-   всю колонку карточки, ширину держат только абзацы и пункты внутри. */
-.profile-type-description,
-.interpretation-item__text,
-.recommendations-list__item,
-.results-disclaimer p,
-.validity-warnings .warning {
-    max-width: var(--measure-wide);
+/* Текст внутри блоков результата и разбора (04.D9): блок тянется на всю колонку карточки,
+   текст заполняет блок от края до края — колонки чтения здесь нет ни у плашек, ни у
+   абзацев разбора. Колонку чтения (--measure-wide) держат только подсказки и вводные
+   тексты форм кабинета (cabinet.css). Длинный текст на десктопе выровнен по ширине
+   (ниже, «Выравнивание по ширине»). */
+
+/* Выравнивание по ширине (04.D9) — единственное правило, публичные страницы и кабинет.
+   Только абзацы и пункты списков в блоках результата и разбора; заголовки, подписи,
+   ячейки таблиц, короткие строки «название — значение» не затрагиваются. Только от 601 px:
+   в узкой колонке выключка по ширине даёт дыры между словами. Переносы — по lang="ru". */
+@media (min-width: 601px) {
+    .profile-type-description,
+    .interpretation-item__text,
+    .recommendations-list__item,
+    .results-disclaimer p,
+    .validity-warnings .warning,
+    p.interpretation-text,
+    .interpretation-text p,
+    .interpretation-text li,
+    .ai-report__intro,
+    .ai-report__body :is(p, li),
+    .trait-profile__norms,
+    .trait-row__text {
+        text-align: justify;
+        hyphens: auto;
+        -webkit-hyphens: auto;
+    }
 }
 /* ============================================
    Кнопки (04.D2, одобрено владельцем 06.10): прямоугольник со скруглением 8 px,
@@ -1678,7 +1696,6 @@ input[type="radio"] {
 }
 
 .interpretation-text {
-    max-width: var(--measure-wide);
     line-height: var(--line-height);
     color: var(--color-text);
 }
@@ -2840,7 +2857,6 @@ input[type="radio"] {
 }
 
 .ai-report__intro {
-    max-width: var(--measure-wide);
     margin: 0 0 var(--spacing-lg);
     color: var(--color-text-light);
     font-size: var(--font-size-sm);
@@ -2948,17 +2964,11 @@ input[type="radio"] {
 .ai-report__body > *:first-child { margin-top: 0; }
 .ai-report__body > *:last-child { margin-bottom: 0; }
 
-/* Единое правило ширины (04.D7), общее для публичной страницы результата,
-   кабинета посетителя и кабинета специалиста: сам блок разбора и его таблицы
-   занимают всю колонку карточки, колонку чтения (--measure-wide) держат только
-   абзацы, списки, цитаты и заголовки внутри. Ограничение на .ai-report__body
-   ставить нельзя — оно сузило бы и таблицы. */
+/* Ширина (04.D7, 04.D9): блок разбора, его таблицы и текст заполняют всю колонку
+   карточки; колонки чтения внутри разбора нет. Одно правило для публичных страниц
+   и кабинетов. */
 .ai-report__body {
     max-width: none;
-}
-
-.ai-report__body > :is(p, ul, ol, blockquote, h2, h3, h4, h5) {
-    max-width: var(--measure-wide);
 }
 
 .ai-report__body h2,
@@ -3685,7 +3695,6 @@ input[type="radio"] {
    «красного» и «зелёного» уровня здесь нет. */
 .trait-profile__norms {
     margin: 0 0 var(--spacing-lg);
-    max-width: var(--measure-wide);
     color: var(--color-text-light);
     font-size: var(--font-size-sm);
     line-height: 1.5;
@@ -3776,7 +3785,6 @@ input[type="radio"] {
 
 .trait-row__text {
     margin: var(--spacing-sm) 0 0;
-    max-width: var(--measure-wide);
 }
 
 .trait-row__facets .ai-report__details {
