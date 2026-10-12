@@ -50,6 +50,16 @@
 заголовкам внутри. Ставить `max-width` на сам `.ai-report__body` нельзя, в `cabinet.css` это правило
 не дублируется (защищает `AiReportLayoutContractTest`).
 
+Правило «контейнер — во всю колонку, `--measure-wide` (80 знаков) — только у текста» действует на
+публичных страницах и в кабинете одинаково (04.D8, `main.css`, защищает `PublicContainerWidthContractTest`).
+Контейнеры без `max-width`: `.recommendations-list`, `.validity-warnings`, `.results-disclaimer`,
+`.owner-notice`; колонку чтения держат пункты и абзацы внутри (`.recommendations-list__item`,
+`.validity-warnings .warning`, `.results-disclaimer p`, `.profile-type-description`,
+`.interpretation-item__text`, `.interpretation-text`, `.account-wrapper p`, `.trait-profile__norms`,
+`.trait-row__text`). Колонки 68 знаков (`--measure`) больше нет, кроме центрированной вводной шапки
+теста (`.test-description`) и списка ответов кабинета (`.owner-answer-list`). Секция результата без
+пунктов (например, «Рекомендации» без текста) не выводится: `ResultSection::visible()`.
+
 1. **Колонка** — внутренняя ширина `.owner-panel` (1100 px карточка, 986 px содержимого на
    десктопе, 321 px на 375). `max-width` у контейнеров внутри нет: `.owner-form`, `.test-ai-form`,
    `.ai-settings-form`, `dl.prompt-facts`, `dl.model-input`, `.prompt-output`, `.case-reader`,

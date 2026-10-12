@@ -322,13 +322,19 @@ input[type="radio"] {
    07.K14b), а не контейнерам. Текст ИИ-разбора (.ai-report__body) здесь тоже не
    перечислен: его колонка чтения задана абзацам ниже, в блоке «Расширенный ИИ-разбор»
    (04.D7), одна для публичных страниц и кабинета. */
-.profile-type-description,
-.interpretation-item__text,
-.recommendations-list,
-.results-disclaimer,
-.validity-warnings,
 .owner-answer-list {
     max-width: var(--measure);
+}
+
+/* Колонка чтения текста одна — для публичных страниц и кабинета (04.D8): 80 знаков.
+   Контейнеры (.recommendations-list, .validity-warnings, .results-disclaimer, .owner-notice) тянутся на
+   всю колонку карточки, ширину держат только абзацы и пункты внутри. */
+.profile-type-description,
+.interpretation-item__text,
+.recommendations-list__item,
+.results-disclaimer p,
+.validity-warnings .warning {
+    max-width: var(--measure-wide);
 }
 /* ============================================
    Кнопки (04.D2, одобрено владельцем 06.10): прямоугольник со скруглением 8 px,
@@ -612,7 +618,6 @@ input[type="radio"] {
 }
 
 .owner-notice {
-    max-width: var(--measure);
     margin: var(--spacing-md) 0;
     padding: 0.75rem var(--spacing-md);
     border-left: 3px solid currentColor;
@@ -1673,7 +1678,7 @@ input[type="radio"] {
 }
 
 .interpretation-text {
-    max-width: var(--measure);
+    max-width: var(--measure-wide);
     line-height: var(--line-height);
     color: var(--color-text);
 }
@@ -3177,7 +3182,7 @@ input[type="radio"] {
 }
 
 .account-wrapper p {
-    max-width: var(--measure);
+    max-width: var(--measure-wide);
 }
 
 @media (max-width: 600px) {
@@ -3680,7 +3685,7 @@ input[type="radio"] {
    «красного» и «зелёного» уровня здесь нет. */
 .trait-profile__norms {
     margin: 0 0 var(--spacing-lg);
-    max-width: var(--measure);
+    max-width: var(--measure-wide);
     color: var(--color-text-light);
     font-size: var(--font-size-sm);
     line-height: 1.5;
@@ -3771,7 +3776,7 @@ input[type="radio"] {
 
 .trait-row__text {
     margin: var(--spacing-sm) 0 0;
-    max-width: var(--measure);
+    max-width: var(--measure-wide);
 }
 
 .trait-row__facets .ai-report__details {
