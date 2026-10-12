@@ -34,6 +34,34 @@ final class InvitedCasePresenterTest extends TestCase
         self::assertSame('Я всё время напряжён, мне не по себе', $hads[0]['answer']);
     }
 
+    public function testItHidesTheScoreOnlyForQuestionsMarkedWithoutScore(): void
+    {
+        $adhd = $this->presenter->answers($this->module('adhd-adult'), ['1' => 3, '19' => 2, '21' => 1]);
+        self::assertSame('Часто', $adhd[0]['answer']);
+        self::assertNull($adhd[0]['score']);
+        self::assertSame('Не помню', $adhd[18]['answer']);
+        self::assertNull($adhd[18]['score']);
+        self::assertSame('Немного', $adhd[20]['answer']);
+        self::assertNull($adhd[20]['score']);
+
+        $hads = $this->presenter->answers($this->module('hads'), ['1' => 3]);
+        self::assertSame('3', $hads[0]['score']);
+        $bai = $this->presenter->answers($this->module('beck-anxiety'), ['1' => 2]);
+        self::assertSame('2', $bai[0]['score']);
+    }
+
+    public function testOnlyTheAdhdModuleSwitchesScoreDisplayOff(): void
+    {
+        foreach (array_keys($this->modules->getAllModules()) as $slug) {
+            foreach ($this->module((string) $slug)->getQuestions() as $question) {
+                if ($slug === 'adhd-adult') {
+                    continue;
+                }
+                self::assertArrayNotHasKey('show_score', $question, $slug . ' #' . ($question['id'] ?? '?'));
+            }
+        }
+    }
+
     public function testItRendersLazarusDualAnswersAndSmilTernaryAnswers(): void
     {
         $lazarus = $this->presenter->answers($this->module('lazarus'), ['1_self' => 7, '1_partner' => 4]);

@@ -50,6 +50,11 @@ final class TemplateFunctions
             'status_tone',
             static fn (?string $value): string => OwnerLabels::tone($value),
         ));
+        // Склонение после числа: `{{ n }} {{ n|ru_plural('вопрос', 'вопроса', 'вопросов') }}`.
+        $twig->addFilter(new TwigFilter(
+            'ru_plural',
+            static fn (mixed $number, string $one, string $few, string $many): string => RussianPlural::choose((int) $number, $one, $few, $many),
+        ));
         $twig->addFilter(new TwigFilter(
             'retention_label',
             static fn (?string $value): string => OwnerLabels::retention($value),

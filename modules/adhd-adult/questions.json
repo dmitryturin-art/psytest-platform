@@ -3,6 +3,7 @@
     "id": 1,
     "text": "Я допускаю ошибки по невнимательности там, где знаю, как сделать правильно.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -30,6 +31,7 @@
     "id": 2,
     "text": "Мне трудно долго удерживать внимание на одном деле: чтении, совещании, длинном разговоре.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -57,6 +59,7 @@
     "id": 3,
     "text": "Когда со мной говорят, сказанное от меня ускользает, хотя ничто не отвлекает.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -84,6 +87,7 @@
     "id": 4,
     "text": "Я начинаю дела и не довожу их до конца.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -111,6 +115,7 @@
     "id": 5,
     "text": "Мне трудно организовать дела: выстроить порядок, уложиться в срок, держать вещи и бумаги в порядке.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -138,6 +143,7 @@
     "id": 6,
     "text": "Я откладываю или избегаю дел, которые требуют долгого умственного усилия.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -165,6 +171,7 @@
     "id": 7,
     "text": "Я теряю или подолгу ищу нужные вещи: ключи, телефон, документы.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -192,6 +199,7 @@
     "id": 8,
     "text": "Меня легко отвлекают посторонние звуки, события или собственные мысли.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -219,6 +227,7 @@
     "id": 9,
     "text": "Я забываю о повседневных делах: перезвонить, оплатить, прийти на встречу.",
     "scale": "inattention",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -246,6 +255,7 @@
     "id": 10,
     "text": "Когда приходится сидеть, я ёрзаю, двигаю руками или ногами, верчу что-то в руках.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -273,6 +283,7 @@
     "id": 11,
     "text": "Мне трудно оставаться на месте, когда это положено: я встаю и ухожу.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -300,6 +311,7 @@
     "id": 12,
     "text": "Я чувствую внутреннее беспокойство, будто не могу усидеть.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -327,6 +339,7 @@
     "id": 13,
     "text": "Мне трудно спокойно отдыхать или заниматься чем-то тихим.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -354,6 +367,7 @@
     "id": 14,
     "text": "Мне нужно всё время двигаться или быть чем-то занятым; другим трудно выдерживать мой темп.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -381,6 +395,7 @@
     "id": 15,
     "text": "Я говорю слишком много.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -408,6 +423,7 @@
     "id": 16,
     "text": "Я отвечаю раньше, чем собеседник договорил, или заканчиваю за него фразы.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -435,6 +451,7 @@
     "id": 17,
     "text": "Мне трудно ждать своей очереди.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -462,6 +479,7 @@
     "id": 18,
     "text": "Я перебиваю других или вмешиваюсь в чужие разговоры и дела.",
     "scale": "hyperactivity",
+    "show_score": false,
     "options": [
       {
         "value": 0,
@@ -489,6 +507,7 @@
     "id": 19,
     "text": "Были ли у вас похожие трудности в детстве, до 12 лет?",
     "scale": "childhood",
+    "show_score": false,
     "options": [
       {
         "value": 1,
@@ -509,6 +528,7 @@
     "type": "multi",
     "text": "Где эти трудности проявляются сейчас?",
     "scale": "sphere",
+    "show_score": false,
     "options": [
       {
         "value": "work",
@@ -541,6 +561,7 @@
     "id": 21,
     "text": "Насколько эти трудности мешают вам жить?",
     "scale": "interference",
+    "show_score": false,
     "options": [
       {
         "value": 0,

@@ -16,11 +16,11 @@
         <div class="test-meta">
             <span class="meta-item">
                 <span class="meta-icon">📝</span>
-                {{ test.question_count }} вопросов
+                {{ test.question_count }} {{ test.question_count|ru_plural('вопрос', 'вопроса', 'вопросов') }}
             </span>
             <span class="meta-item">
                 <span class="meta-icon">⏱️</span>
-                ~{{ test.estimated_time }} минут
+                ~{{ test.estimated_time }} {{ test.estimated_time|ru_plural('минута', 'минуты', 'минут') }}
             </span>
         </div>
     </div>

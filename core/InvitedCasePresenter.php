@@ -249,7 +249,10 @@ final class InvitedCasePresenter
                 $answer = $this->answer($answers, $id);
                 $option = $this->option($question, $answer);
                 $row['answer'] = $option['text'] ?? $this->ternaryAnswer($answer);
-                $row['score'] = isset($option['value']) ? (string) $option['value'] : null;
+                // `"show_score": false` у вопроса: число в `value` — код варианта, а не балл методики.
+                $row['score'] = isset($option['value']) && ($question['show_score'] ?? true) !== false
+                    ? (string) $option['value']
+                    : null;
             }
 
             $rows[] = $row;
