@@ -33,17 +33,37 @@ final class AiReportLayoutContractTest extends TestCase
         }
     }
 
-    public function testParagraphMeasureIsDefinedOnceInMainCss(): void
+    public function testReportTextFillsTheBlockWithoutReadingColumn(): void
     {
-        $main = $this->css('main.css');
-        $cabinet = $this->css('cabinet.css');
+        $main = (string) preg_replace('~/\*.*?\*/~s', '', $this->css('main.css'));
+        $cabinet = (string) preg_replace('~/\*.*?\*/~s', '', $this->css('cabinet.css'));
 
-        self::assertSame(
-            1,
-            preg_match_all('/\.ai-report__body\s*>\s*:is\(p, ul, ol, blockquote, h2, h3, h4, h5\)\s*\{\s*max-width:\s*var\(--measure-wide\);/', $main),
-        );
-        self::assertSame(0, preg_match_all('/\.ai-report__body\s*>\s*:is\(/', $cabinet), 'Кабинет не дублирует общее правило');
-        self::assertMatchesRegularExpression('/\.ai-report__intro\s*\{\s*max-width:\s*var\(--measure-wide\);/', $main);
+        // 04.D9: у текста разбора нет колонки чтения ни на публичных страницах, ни в кабинете.
+        self::assertDoesNotMatchRegularExpression('/\.ai-report__body\s*>\s*:is\(/', $main);
+        self::assertDoesNotMatchRegularExpression('/\.ai-report__intro\s*\{[^}]*max-width/', $main);
+        self::assertDoesNotMatchRegularExpression('/\.ai-report[^{]*\{[^}]*max-width:\s*var\(--measure/', $main);
+        self::assertDoesNotMatchRegularExpression('/\.ai-report[^{]*\{[^}]*max-width:\s*var\(--measure/', $cabinet);
+    }
+
+    public function testJustifyRuleIsDefinedOnceAndOnlyOnDesktop(): void
+    {
+        $main = (string) preg_replace('~/\*.*?\*/~s', '', $this->css('main.css'));
+        $cabinet = (string) preg_replace('~/\*.*?\*/~s', '', $this->css('cabinet.css'));
+
+        self::assertSame(1, substr_count($main, 'text-align: justify'));
+        self::assertSame(0, substr_count($cabinet, 'text-align: justify'));
+        self::assertSame(1, preg_match('/@media \(min-width: 601px\)\s*\{([^@]*?text-align: justify[^@]*?)\}\s*\}/s', $main, $m), 'justify только от 601 px');
+        self::assertStringContainsString('.ai-report__body :is(p, li)', $m[1]);
+        self::assertStringContainsString('hyphens: auto', $m[1]);
+        // Заголовки, ячейки таблиц и подписи не выравниваются по ширине.
+        self::assertDoesNotMatchRegularExpression('/\b(h[1-6]|td|th|caption|figcaption)\b/', $m[1]);
+    }
+
+    public function testHtmlLanguageIsRussianForHyphenation(): void
+    {
+        $layout = (string) file_get_contents(dirname(__DIR__) . '/templates/layout.twig');
+
+        self::assertStringContainsString('<html lang="ru">', $layout);
     }
 
     public function testMainCssIsLoadedOnEveryPage(): void
