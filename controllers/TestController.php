@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace PsyTest\Controllers;
 
 use PsyTest\Core\AnswerMerger;
+use PsyTest\Core\AnswerNormalizer;
 use PsyTest\Core\AnswerValidator;
 use PsyTest\Core\TestInstructionOverrides;
 use PsyTest\Core\TestInviteService;
@@ -198,7 +199,10 @@ class TestController extends BaseController
         // Save answers
         $answers = $input['answers'] ?? [];
         if (is_array($answers)) {
-            $answers = AnswerValidator::withoutExtraKeys($this->getModuleOrFail($slug), $answers);
+            $answers = AnswerNormalizer::fromJson(
+                $this->getModuleOrFail($slug),
+                AnswerValidator::withoutExtraKeys($this->getModuleOrFail($slug), $answers),
+            );
         }
         if (!is_array($answers) || AnswerValidator::validatePartial($this->getModuleOrFail($slug), $answers) !== []) {
             http_response_code(422);
@@ -268,18 +272,9 @@ class TestController extends BaseController
         }
 
         // Collect all answers from POST
-        $answers = $_POST['answers'] ?? [];
-
         // Normalize answers - convert string values to proper types
-        $normalizedAnswers = [];
-        foreach ($answers as $questionId => $answer) {
-            // Convert to integer if it's a numeric string (for BAI: 0,1,2,3)
-            if (is_numeric($answer)) {
-                $normalizedAnswers[$questionId] = (int) $answer;
-            } else {
-                $normalizedAnswers[$questionId] = $answer === 'true' || $answer === true;
-            }
-        }
+        // (numeric strings to int; multi-choice questions to a list of option values).
+        $normalizedAnswers = AnswerNormalizer::fromForm($module, $_POST['answers'] ?? []);
 
         // Merge with previously saved answers
         $allAnswers = AnswerMerger::overlay($session['answers'], $normalizedAnswers);
@@ -426,15 +421,7 @@ class TestController extends BaseController
         }
 
         // Collect & normalize answers (same logic as submit()).
-        $answers = $_POST['answers'] ?? [];
-        $normalizedAnswers = [];
-        foreach ($answers as $questionId => $answer) {
-            if (is_numeric($answer)) {
-                $normalizedAnswers[$questionId] = (int) $answer;
-            } else {
-                $normalizedAnswers[$questionId] = $answer === 'true' || $answer === true;
-            }
-        }
+        $normalizedAnswers = AnswerNormalizer::fromForm($module, $_POST['answers'] ?? []);
 
         $allAnswers = AnswerMerger::overlay($session['answers'], $normalizedAnswers);
         $formDemographics = $_POST['demographics'] ?? [];
