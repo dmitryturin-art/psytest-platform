@@ -319,12 +319,12 @@ input[type="radio"] {
 /* Длинный текст — колонка ~68 знаков; таблицы и графики занимают всю ширину.
    Подсказки и вводный текст кабинета (.owner-help, .owner-panel-intro) здесь не
    ограничиваются: в кабинете колонка чтения ставится только абзацам (cabinet.css,
-   07.K14b), а не контейнерам. */
+   07.K14b), а не контейнерам. Текст ИИ-разбора (.ai-report__body) здесь тоже не
+   перечислен: его колонка чтения задана абзацам ниже, в блоке «Расширенный ИИ-разбор»
+   (04.D7), одна для публичных страниц и кабинета. */
 .profile-type-description,
 .interpretation-item__text,
 .recommendations-list,
-.ai-report__body,
-.ai-report__intro,
 .results-disclaimer,
 .validity-warnings,
 .owner-answer-list {
@@ -2835,6 +2835,7 @@ input[type="radio"] {
 }
 
 .ai-report__intro {
+    max-width: var(--measure-wide);
     margin: 0 0 var(--spacing-lg);
     color: var(--color-text-light);
     font-size: var(--font-size-sm);
@@ -2941,6 +2942,19 @@ input[type="radio"] {
 
 .ai-report__body > *:first-child { margin-top: 0; }
 .ai-report__body > *:last-child { margin-bottom: 0; }
+
+/* Единое правило ширины (04.D7), общее для публичной страницы результата,
+   кабинета посетителя и кабинета специалиста: сам блок разбора и его таблицы
+   занимают всю колонку карточки, колонку чтения (--measure-wide) держат только
+   абзацы, списки, цитаты и заголовки внутри. Ограничение на .ai-report__body
+   ставить нельзя — оно сузило бы и таблицы. */
+.ai-report__body {
+    max-width: none;
+}
+
+.ai-report__body > :is(p, ul, ol, blockquote, h2, h3, h4, h5) {
+    max-width: var(--measure-wide);
+}
 
 .ai-report__body h2,
 .ai-report__body h3,
@@ -3775,11 +3789,7 @@ input[type="radio"] {
 }
 
 /* Таблица граней — во всю ширину раскрывающегося блока (UI_KIT «Принципы вёрстки», п. 2):
-   ограничение колонки чтения у .ai-report__body относится к абзацам, не к таблице. */
-.trait-row__facets .ai-report__body {
-    max-width: none;
-}
-
+   колонка чтения у .ai-report__body относится к абзацам, не к таблице (общее правило 04.D7). */
 .trait-row__facets .table-scroll--scores {
     margin-bottom: 0;
 }

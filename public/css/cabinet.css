@@ -1300,9 +1300,9 @@ a.cab-table__title:hover {
 }
 
 /* Открытый разбор — на всю колонку, как карточки над ним (07.K14b); колонку
-   чтения держат абзацы внутри. Таблицы внутри прокручиваются. */
+   чтения держат абзацы внутри (общее правило main.css, 04.D7). Таблицы внутри
+   прокручиваются. */
 .owner-dashboard-page .case-reader > .ai-report__body {
-    max-width: none;
     overflow-x: auto;
 }
 
@@ -2330,14 +2330,8 @@ a.cab-table__title:hover {
     max-width: none;
 }
 
-/* Текст разбора: блок на всю колонку, абзацы и списки — колонкой чтения. */
-.owner-dashboard-page .ai-report__body {
-    max-width: none;
-}
-
-.owner-dashboard-page .ai-report__body > :is(p, ul, ol, blockquote, h2, h3, h4, h5) {
-    max-width: var(--measure-wide);
-}
+/* Текст разбора (блок на всю колонку, абзацы — колонкой чтения) — общее правило
+   main.css «Расширенный ИИ-разбор» (04.D7): здесь не дублируется. */
 
 /* Разделы: 40 px до черты, 32 px после; первый раздел под полосой — без черты. */
 .owner-dashboard-page :is(.test-section, .prompt-section, .case-section, .owner-invites, .owner-case) {
