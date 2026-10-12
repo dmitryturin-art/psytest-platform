@@ -53,4 +53,18 @@ final class AiReportLayoutContractTest extends TestCase
         self::assertStringContainsString("<link rel=\"stylesheet\" href=\"{{ asset('css/main.css') }}\">", $layout);
         self::assertStringNotContainsString('main.css', preg_replace('/<link[^>]*main\.css[^>]*>/', '', $layout) ?? '');
     }
+
+    public function testHeadingNamesTheModelOnlyWhenTheModelWrote(): void
+    {
+        $twig = (string) file_get_contents(dirname(__DIR__) . '/templates/blocks/ai-report.twig');
+
+        self::assertSame(1, substr_count($twig, 'Расширенный разбор с нейросетью'));
+        self::assertStringContainsString('Подготовлен языковой моделью по рассчитанным показателям.', $twig);
+        self::assertStringNotContainsString('Подробный разбор результата', $twig);
+        // Ветка специалиста (restricted) идёт первой и называется нейтрально.
+        self::assertLessThan(
+            strpos($twig, 'Расширенный разбор с нейросетью'),
+            strpos($twig, '<h2 class="ai-report__title">Расширенный разбор</h2>'),
+        );
+    }
 }
