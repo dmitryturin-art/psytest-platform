@@ -10,14 +10,13 @@ use PsyTest\Core\Database;
 use PsyTest\Core\ModuleLoader;
 
 /**
- * 09.A1: the adult ADHD screening is registered hidden from the catalogue.
- * It stays active, so the owner can hand it out by a personal invite; the
- * owner decides when it becomes public.
+ * 09.A1: the adult ADHD screening is registered public — the owner opened
+ * it in the catalogue right away (D-083).
  */
 #[Group('database')]
 final class AdhdAdultCatalogVisibilityTest extends TestCase
 {
-    public function testTheTestIsActiveButInviteOnly(): void
+    public function testTheTestIsActiveAndPublic(): void
     {
         $row = Database::getInstance()->selectOne(
             'SELECT is_active, visibility, description FROM tests WHERE slug = ?',
@@ -26,15 +25,15 @@ final class AdhdAdultCatalogVisibilityTest extends TestCase
 
         self::assertNotNull($row, 'The registration migration must be applied.');
         self::assertSame(1, (int) $row['is_active']);
-        self::assertSame('invite', $row['visibility']);
+        self::assertSame('public', $row['visibility']);
         self::assertStringContainsString('21 вопрос, около 5 минут', (string) $row['description']);
     }
 
-    public function testThePublicCatalogueDoesNotListItButInvitesCan(): void
+    public function testThePublicCatalogueListsIt(): void
     {
         $loader = (new ModuleLoader())->discover();
 
-        self::assertArrayNotHasKey('adhd-adult', $loader->getPublicModules());
+        self::assertArrayHasKey('adhd-adult', $loader->getPublicModules());
         self::assertArrayHasKey('adhd-adult', $loader->getActiveModules());
     }
 }
