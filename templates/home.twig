@@ -62,7 +62,7 @@
                 <div class="editorial-card-topline"><span>{% if test.catalog_category is defined and test.catalog_category %}{{ test.catalog_category }}{% elseif test.slug == 'smil' %}Личность{% elseif test.slug == 'lazarus' %}Отношения{% else %}Состояние{% endif %}</span><strong>Бесплатно</strong></div>
                 <h3>{{ test.name }}</h3>
                 <p>{{ test.description|slice(0, 170) }}{% if test.description|length > 170 %}…{% endif %}</p>
-                <div class="editorial-card-meta"><span>{{ test.question_count }} вопросов</span><span>≈ {{ test.estimated_time }} мин</span>{% if test.slug == 'lazarus' %}<span>есть парный режим</span>{% endif %}</div>
+                <div class="editorial-card-meta"><span>{{ test.question_count }} {{ test.question_count|ru_plural('вопрос', 'вопроса', 'вопросов') }}</span><span>≈ {{ test.estimated_time }} мин</span>{% if test.slug == 'lazarus' %}<span>есть парный режим</span>{% endif %}</div>
                 <a href="{{ basePath }}/test/{{ test.slug }}" class="editorial-card-link">Открыть тест <span aria-hidden="true">→</span></a>
             </article>
             {% endfor %}

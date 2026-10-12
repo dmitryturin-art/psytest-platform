@@ -26,7 +26,7 @@
             <h2>{{ test.name }}</h2>
             <p>{{ test.description|slice(0, 170) }}{% if test.description|length > 170 %}…{% endif %}</p>
             <div class="editorial-card-meta">
-                <span>{{ test.question_count }} вопросов</span>
+                <span>{{ test.question_count }} {{ test.question_count|ru_plural('вопрос', 'вопроса', 'вопросов') }}</span>
                 <span>≈ {{ test.estimated_time }} мин</span>
                 {% if test.slug == 'lazarus' %}<span>есть парный режим</span>{% endif %}
             </div>

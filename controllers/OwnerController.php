@@ -45,6 +45,7 @@ use PsyTest\Core\ResponseFinisher;
 use PsyTest\Core\ResultPresenter;
 use PsyTest\Core\ResultSectionRenderer;
 use PsyTest\Core\RetentionPolicy;
+use PsyTest\Core\RussianPlural;
 use PsyTest\Core\Security;
 use PsyTest\Core\SessionLifecycleService;
 use PsyTest\Core\TestInstructionOverrides;
@@ -2778,14 +2779,7 @@ final class OwnerController extends BaseController
     /** «21 вопрос», «566 вопросов»: число со словом в нужной форме. */
     private static function questionsLabel(int $count): string
     {
-        $mod100 = $count % 100;
-        $mod10 = $count % 10;
-        $word = match (true) {
-            $mod100 >= 11 && $mod100 <= 14 => 'вопросов',
-            $mod10 === 1 => 'вопрос',
-            $mod10 >= 2 && $mod10 <= 4 => 'вопроса',
-            default => 'вопросов',
-        };
+        $word = RussianPlural::choose($count, 'вопрос', 'вопроса', 'вопросов');
 
         return $count . ' ' . $word;
     }
