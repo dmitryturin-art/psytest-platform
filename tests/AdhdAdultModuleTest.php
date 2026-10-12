@@ -286,7 +286,23 @@ final class AdhdAdultModuleTest extends TestCase
         self::assertSame(5, $context['subscales'][0]['score']);
         self::assertSame(9, $context['subscales'][0]['max']);
         self::assertSame('expressed', $context['level']);
-        self::assertSame(['работа или учёба', 'дом и быт'], $context['clarifications']['spheres']);
+        self::assertSame(
+            ['childhood_onset' => true, 'several_spheres' => true, 'noticeable_interference' => true],
+            $context['clarifications'],
+        );
+        // Сами ответы на уточняющие вопросы без галочки «ответы по пунктам» наружу не уходят.
+        $encoded = json_encode($context, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        foreach (['работа или учёба', 'дом и быт', 'Не помню', '"spheres"', '"childhood"', '"interference"'] as $answerLabel) {
+            self::assertStringNotContainsStringIgnoringCase($answerLabel, $encoded);
+        }
         self::assertNull($module->aiReportContext($results, 'pair'));
+    }
+
+    public function testJsonTrueCountsAsValueOneLikeTheValidator(): void
+    {
+        $module = new AdhdAdultModule();
+        $results = $module->calculateResults(self::answers([19 => true]));
+
+        self::assertTrue($results['conditions']['childhood']);
     }
 }

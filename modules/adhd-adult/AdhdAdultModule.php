@@ -193,6 +193,11 @@ class AdhdAdultModule extends BaseTestModule
     {
         $raw = $answers[$id] ?? $answers[(string) $id] ?? null;
 
+        // AnswerValidator пропускает JSON-true как «1» — считаем так же, а не «нет ответа».
+        if ($raw === true) {
+            return 1;
+        }
+
         return is_int($raw) || (is_string($raw) && preg_match('/\A\d+\z/', $raw) === 1) ? (int) $raw : null;
     }
 
@@ -324,8 +329,7 @@ class AdhdAdultModule extends BaseTestModule
                 'level_name' => $significant ? 'Число признаков значимо (от ' . self::GROUP_THRESHOLD . ')' : 'Ниже порога (' . self::GROUP_THRESHOLD . ')',
             ];
         }
-        $childhood = $results['childhood'] ?? null;
-        $interference = $results['interference'] ?? null;
+        $conditions = (array) ($results['conditions'] ?? []);
 
         return [
             'test' => (string) $metadata['slug'],
@@ -335,14 +339,13 @@ class AdhdAdultModule extends BaseTestModule
             'level' => $conclusion,
             'level_name' => self::CONCLUSION_TITLES[$conclusion],
             'interpretation' => self::CONCLUSION_TEXTS[$conclusion],
+            // Только рассчитанные условия (да/нет). Сами ответы на вопросы 19–21
+            // уходят наружу лишь вместе с ответами по пунктам — по галочке
+            // методики (PRODUCT_RULES §6, AiTestSettings::sendsItemAnswers).
             'clarifications' => [
-                'childhood' => is_int($childhood) ? (self::CHILDHOOD_LABELS[$childhood] ?? null) : null,
-                'spheres' => array_values(array_map(
-                    static fn (string $sphere): string => self::SPHERE_LABELS[$sphere],
-                    array_filter((array) ($results['spheres'] ?? []), static fn (mixed $sphere): bool => is_string($sphere) && isset(self::SPHERE_LABELS[$sphere])),
-                )),
-                'interference' => is_int($interference) ? (self::INTERFERENCE_LABELS[$interference] ?? null) : null,
-                'conditions_met' => (array) ($results['conditions'] ?? []),
+                'childhood_onset' => (bool) ($conditions['childhood'] ?? false),
+                'several_spheres' => (bool) ($conditions['spheres'] ?? false),
+                'noticeable_interference' => (bool) ($conditions['interference'] ?? false),
             ],
             'completeness' => [
                 'answered' => (int) ($results['answered_count'] ?? 0),
