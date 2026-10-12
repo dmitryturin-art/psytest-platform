@@ -285,7 +285,7 @@ final class ResultPresenter
         bool $accountView = false,
     ): array {
         $results = $this->results($session, $module);
-        $sections = $module->buildSections($results);
+        $sections = ResultSection::visible($module->buildSections($results));
 
         return [
             'test' => $test,
@@ -317,7 +317,7 @@ final class ResultPresenter
         $results['is_pdf'] = true;
 
         return [
-            'sections' => $module->buildSections($results),
+            'sections' => ResultSection::visible($module->buildSections($results)),
             'includes_pair_comparison' => $includesPairComparison,
             'published_report_html' => $this->publishedReportPdfHtml($session),
         ];

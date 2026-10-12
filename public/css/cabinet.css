@@ -1284,12 +1284,6 @@ a.cab-table__title:hover {
     max-width: none;
 }
 
-.owner-dashboard-page .case-fold__body .profile-type-description,
-.owner-dashboard-page .case-fold__body .interpretation-item__text,
-.owner-dashboard-page .case-fold__body .recommendations-list,
-.owner-dashboard-page .case-fold__body .interpretation-text,
-.owner-dashboard-page .case-fold__body .results-disclaimer,
-.owner-dashboard-page .case-fold__body .validity-warnings,
 .owner-dashboard-page .case-section > .owner-help,
 .owner-dashboard-page .case-section > .owner-panel-intro {
     max-width: var(--measure-wide);
@@ -2323,11 +2317,6 @@ a.cab-table__title:hover {
 .owner-dashboard-page p.owner-help,
 .owner-dashboard-page p.owner-panel-intro {
     max-width: var(--measure-wide);
-}
-
-/* Итог действия — блок колонки, а не узкая плашка. */
-.owner-dashboard-page .owner-notice {
-    max-width: none;
 }
 
 /* Текст разбора (блок на всю колонку, абзацы — колонкой чтения) — общее правило
