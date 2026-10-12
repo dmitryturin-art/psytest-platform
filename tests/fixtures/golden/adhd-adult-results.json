@@ -8,8 +8,8 @@
         "hyperactivity_significant": false,
         "childhood": 1,
         "spheres": [
-            20,
-            21
+            "work",
+            "home"
         ],
         "spheres_count": 2,
         "interference": 2,
@@ -19,8 +19,8 @@
             "interference": true
         },
         "conclusion": "expressed",
-        "answered_count": 25,
-        "total_questions": 25
+        "answered_count": 21,
+        "total_questions": 21
     },
     "interpretation": {
         "summary": "Признаки выражены. Невнимательность: 5 из 9. Гиперактивность и импульсивность: 2 из 9.",

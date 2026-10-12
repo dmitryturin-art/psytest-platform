@@ -6,7 +6,9 @@ namespace PsyTest\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use PsyTest\Core\AnswerNormalizer;
 use PsyTest\Core\AnswerValidator;
+use PsyTest\Core\InvitedCasePresenter;
 use PsyTest\Modules\AdhdAdult\AdhdAdultModule;
 use PsyTest\Modules\ResultSection;
 
@@ -16,13 +18,13 @@ final class AdhdAdultModuleTest extends TestCase
      * Базовый набор: все признаки «иногда» (2), детство «да», две сферы,
      * «заметно» мешают. Сам по себе даёт «признаков нет» (счёт 0 и 0).
      *
-     * @param array<int, int> $override
+     * @param array<int, int|list<string>> $override
      *
-     * @return array<int, int>
+     * @return array<int, int|list<string>>
      */
     private static function answers(array $override = []): array
     {
-        $answers = array_fill(1, 18, 2) + [19 => 1, 20 => 1, 21 => 1, 22 => 0, 23 => 0, 24 => 0, 25 => 2];
+        $answers = array_fill(1, 18, 2) + [19 => 1, 20 => ['work', 'home'], 21 => 2];
 
         return array_replace($answers, $override);
     }
@@ -45,9 +47,10 @@ final class AdhdAdultModuleTest extends TestCase
 
         self::assertSame('adhd-adult', $metadata['slug']);
         self::assertSame('Тест на СДВГ у взрослых', $metadata['name']);
-        self::assertSame(25, $metadata['question_count']);
+        self::assertSame(21, $metadata['question_count']);
         self::assertSame(5, $metadata['estimated_time']);
-        self::assertCount(25, $module->getQuestions());
+        self::assertCount(21, $module->getQuestions());
+        self::assertStringContainsString('21 вопрос, около 5 минут', $metadata['description']);
         self::assertSame(['gender' => false, 'age' => false], array_intersect_key($module->getDemographicsRequirements(), ['gender' => 1, 'age' => 1]));
         self::assertStringNotContainsString('ASRS', $metadata['author'] . $metadata['description']);
     }
@@ -55,9 +58,37 @@ final class AdhdAdultModuleTest extends TestCase
     public function testSampleAnswersPassValidation(): void
     {
         $module = new AdhdAdultModule();
-        self::assertSame([], AnswerValidator::validate($module, array_map('strval', self::answers()), true));
+        self::assertSame([], AnswerValidator::validate($module, self::answers(), true));
+        self::assertSame([], AnswerValidator::validate($module, self::answers([20 => ['none']]), true));
         self::assertSame(['invalid_answer'], AnswerValidator::validate($module, [1 => '5'], false));
-        self::assertSame(['invalid_answer'], AnswerValidator::validate($module, [25 => '4'], false));
+        self::assertSame(['invalid_answer'], AnswerValidator::validate($module, [21 => '4'], false));
+    }
+
+    public function testLifeAreasAreOneMultiChoiceQuestionWithAnExclusiveNowhere(): void
+    {
+        $module = new AdhdAdultModule();
+        $question = $module->getQuestions()[19];
+
+        self::assertSame(20, $question['id']);
+        self::assertSame('multi', $question['type']);
+        self::assertSame('Где эти трудности проявляются сейчас?', $question['text']);
+        self::assertSame(
+            ['Работа или учёба', 'Дом и быт', 'Отношения с людьми', 'Деньги и документы', 'Другое', 'Нигде не проявляются'],
+            array_column($question['options'], 'text'),
+        );
+        self::assertSame(['work', 'home', 'relations', 'money', 'other', 'none'], array_column($question['options'], 'value'));
+        self::assertSame([5 => true], array_filter(array_map(static fn (array $o): bool => $o['exclusive'] ?? false, $question['options'])));
+        self::assertSame('Насколько эти трудности мешают вам жить?', $module->getQuestions()[20]['text']);
+
+        // Сервер отклоняет то, чего экран не допускает.
+        self::assertSame(['invalid_answer'], AnswerValidator::validate($module, self::answers([20 => ['work', 'none']]), true));
+        self::assertSame(['invalid_answer'], AnswerValidator::validate($module, self::answers([20 => ['garden']]), true));
+        self::assertSame(['invalid_answer'], AnswerValidator::validate($module, self::answers([20 => 1]), true));
+        self::assertSame(['incomplete_answers'], AnswerValidator::validate($module, self::answers([20 => []]), true));
+        self::assertSame(
+            [20 => ['work', 'other']],
+            AnswerNormalizer::fromForm($module, ['20' => ['other', 'work', 'other']]),
+        );
     }
 
     #[DataProvider('boundaryProvider')]
@@ -101,7 +132,8 @@ final class AdhdAdultModuleTest extends TestCase
 
     public function testNoneIgnoresClarifications(): void
     {
-        self::assertSame('none', $this->conclusion([19 => 0, 20 => 0, 21 => 0, 25 => 0]));
+        self::assertSame('none', $this->conclusion([19 => 0, 20 => ['none'], 21 => 0]));
+        self::assertSame('none', $this->conclusion([19 => 1, 20 => ['work', 'home', 'relations', 'money', 'other'], 21 => 3]));
     }
 
     #[DataProvider('failedClarificationProvider')]
@@ -110,50 +142,103 @@ final class AdhdAdultModuleTest extends TestCase
         self::assertSame('partial', $this->conclusion(self::often(1, 5) + $override));
     }
 
-    /** @return array<string, array{array<int, int>}> */
+    /** @return array<string, array{array<int, int|list<string>>}> */
     public static function failedClarificationProvider(): array
     {
         return [
             'childhood no' => [[19 => 0]],
             'childhood do not remember' => [[19 => 2]],
-            'one sphere only' => [[21 => 0]],
-            'no spheres' => [[20 => 0, 21 => 0]],
-            'interference small' => [[25 => 1]],
-            'interference none' => [[25 => 0]],
+            'one sphere only' => [[20 => ['work']]],
+            'only other' => [[20 => ['other']]],
+            'nowhere' => [[20 => ['none']]],
+            'interference small' => [[21 => 1]],
+            'interference none' => [[21 => 0]],
         ];
     }
 
     public function testBoundaryInterferenceValuesAreEnough(): void
     {
-        self::assertSame('expressed', $this->conclusion(self::often(1, 5) + [25 => 2]));
-        self::assertSame('expressed', $this->conclusion(self::often(1, 5) + [25 => 3]));
+        self::assertSame('expressed', $this->conclusion(self::often(1, 5) + [21 => 2]));
+        self::assertSame('expressed', $this->conclusion(self::often(1, 5) + [21 => 3]));
     }
 
     public function testOtherCountsAsASphere(): void
     {
-        $results = (new AdhdAdultModule())->calculateResults(self::answers(self::often(1, 5) + [20 => 0, 21 => 0, 22 => 1, 23 => 0, 24 => 1]));
+        $results = (new AdhdAdultModule())->calculateResults(self::answers(self::often(1, 5) + [20 => ['relations', 'other']]));
 
         self::assertSame(2, $results['spheres_count']);
-        self::assertSame([22, 24], $results['spheres']);
+        self::assertSame(['relations', 'other'], $results['spheres']);
         self::assertSame('expressed', $results['conclusion']);
+    }
+
+    public function testSpheresBoundaryIsTwo(): void
+    {
+        $module = new AdhdAdultModule();
+        $one = $module->calculateResults(self::answers(self::often(1, 5) + [20 => ['money']]));
+        $two = $module->calculateResults(self::answers(self::often(1, 5) + [20 => ['money', 'other']]));
+        $all = $module->calculateResults(self::answers(self::often(1, 5) + [20 => ['work', 'home', 'relations', 'money', 'other']]));
+
+        self::assertSame([1, false, 'partial'], [$one['spheres_count'], $one['conditions']['spheres'], $one['conclusion']]);
+        self::assertSame([2, true, 'expressed'], [$two['spheres_count'], $two['conditions']['spheres'], $two['conclusion']]);
+        self::assertSame([5, true, 'expressed'], [$all['spheres_count'], $all['conditions']['spheres'], $all['conclusion']]);
+    }
+
+    public function testSpheresAreReportedInQuestionOrderWhateverTheStoredOrder(): void
+    {
+        $results = (new AdhdAdultModule())->calculateResults(self::answers([20 => ['other', 'work', 'work']]));
+
+        self::assertSame(['work', 'other'], $results['spheres']);
+        self::assertSame(2, $results['spheres_count']);
     }
 
     public function testNowhereIsNotASphere(): void
     {
-        // «Нигде не проявляются» = ни одной из пяти сфер: счёт сфер нулевой.
-        $results = (new AdhdAdultModule())->calculateResults(self::answers(self::often(1, 5) + [20 => 0, 21 => 0, 22 => 0, 23 => 0, 24 => 0]));
+        // «Нигде не проявляются» — исключающий вариант, сферой не считается.
+        $module = new AdhdAdultModule();
+        $results = $module->calculateResults(self::answers(self::often(1, 5) + [20 => ['none']]));
 
         self::assertSame(0, $results['spheres_count']);
+        self::assertSame([], $results['spheres']);
         self::assertSame('partial', $results['conclusion']);
+        self::assertSame(21, $results['answered_count'], 'Выбор «нигде» — это ответ на вопрос.');
+        self::assertSame('Нигде не проявляются', $module->buildSections($results)[2]->data['indices'][1]['value']);
+    }
+
+    public function testChosenSpheresAreShownOnTheResultPage(): void
+    {
+        $module = new AdhdAdultModule();
+        $results = $module->calculateResults(self::answers([20 => ['home', 'money', 'other']]));
+
+        self::assertSame('Дом и быт, деньги и документы, другое', $module->buildSections($results)[2]->data['indices'][1]['value']);
+    }
+
+    public function testCaseQuestionnaireAndAiItemsShowChosenSpheresAsLabels(): void
+    {
+        $module = new AdhdAdultModule();
+        $answers = self::answers([20 => ['work', 'relations']]);
+
+        $rows = (new InvitedCasePresenter())->answers($module, $answers);
+        self::assertCount(21, $rows);
+        self::assertSame('Где эти трудности проявляются сейчас?', $rows[19]['question']);
+        self::assertSame('Работа или учёба, Отношения с людьми', $rows[19]['answer']);
+        self::assertNull($rows[19]['score']);
+        self::assertSame('Заметно', $rows[20]['answer']);
+
+        $items = $module->aiReportItems($answers);
+        self::assertSame('Работа или учёба, Отношения с людьми', $items[19]['answer_label']);
+        self::assertSame('work,relations', $items[19]['value']);
     }
 
     public function testUnansweredItemsAreNotCountedAndNothingCrashes(): void
     {
-        $results = (new AdhdAdultModule())->calculateResults([]);
+        $module = new AdhdAdultModule();
+        $results = $module->calculateResults([]);
 
         self::assertSame(0, $results['inattention_count']);
         self::assertSame('none', $results['conclusion']);
         self::assertSame(0, $results['answered_count']);
+        self::assertSame(21, $results['total_questions']);
+        self::assertSame(21, $module->calculateResults(self::answers())['answered_count']);
     }
 
     public function testStringAnswersFromSessionAreAccepted(): void
@@ -180,7 +265,7 @@ final class AdhdAdultModuleTest extends TestCase
         self::assertMatchesRegularExpression('/^\d из 9$/', $sections[1]->data['indices'][1]['value']);
     }
 
-    /** @return array<string, array{array<int, int>, string, string}> */
+    /** @return array<string, array{array<int, int|list<string>>, string, string}> */
     public static function conclusionTextProvider(): array
     {
         return [

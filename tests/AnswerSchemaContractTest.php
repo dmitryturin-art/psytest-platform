@@ -115,7 +115,7 @@ final class AnswerSchemaContractTest extends TestCase
     }
 
     /**
-     * @return array<int|string, int|string>
+     * @return array<int|string, int|string|list<string>>
      */
     private static function sampleValidAnswers(TestModuleInterface $module): array
     {
@@ -131,7 +131,9 @@ final class AnswerSchemaContractTest extends TestCase
             } else {
                 // Значения берутся из самих вариантов ответа (BAI/BDI/HADS 0–3, IPIP 1–5).
                 $values = array_column($q['options'] ?? [], 'value');
-                $answers[$id] = (string) ($values === [] ? $i % 4 : $values[$i % count($values)]);
+                $value = (string) ($values === [] ? $i % 4 : $values[$i % count($values)]);
+                // Вопрос «несколько вариантов» принимает список значений.
+                $answers[$id] = ($q['type'] ?? null) === 'multi' ? [$value] : $value;
             }
         }
         if (($schema['requires_gender'] ?? false) || $schema['answer_type'] === 'scale10') {
