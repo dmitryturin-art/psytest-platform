@@ -28,8 +28,9 @@ class AdhdAdultModule extends BaseTestModule
     public const GROUP_THRESHOLD = 5;
 
     public const CHILDHOOD_ITEM = 19;
-    public const SPHERE_ITEMS = [20, 21, 22, 23, 24];
-    public const INTERFERENCE_ITEM = 25;
+    /** Вопрос «несколько вариантов»: ответ — список значений выбранных сфер. */
+    public const SPHERES_ITEM = 20;
+    public const INTERFERENCE_ITEM = 21;
 
     public const CHILDHOOD_YES = 1;
     /** «Заметно» и «сильно». */
@@ -56,12 +57,16 @@ class AdhdAdultModule extends BaseTestModule
 
     protected const CHILDHOOD_LABELS = [1 => 'Да', 0 => 'Нет', 2 => 'Не помню'];
 
+    /**
+     * Сферы в порядке вариантов вопроса 20. «Другое» — сфера; исключающий
+     * вариант «нигде не проявляются» (`none`) сферой не считается.
+     */
     protected const SPHERE_LABELS = [
-        20 => 'работа или учёба',
-        21 => 'дом и быт',
-        22 => 'отношения с людьми',
-        23 => 'деньги и документы',
-        24 => 'другое',
+        'work' => 'работа или учёба',
+        'home' => 'дом и быт',
+        'relations' => 'отношения с людьми',
+        'money' => 'деньги и документы',
+        'other' => 'другое',
     ];
 
     protected const INTERFERENCE_LABELS = [0 => 'Не мешают', 1 => 'Немного', 2 => 'Заметно', 3 => 'Сильно'];
@@ -107,12 +112,11 @@ class AdhdAdultModule extends BaseTestModule
         $hyperactivity = self::countSymptoms($answers, self::HYPERACTIVITY_ITEMS);
 
         $childhood = self::answerValue($answers, self::CHILDHOOD_ITEM);
-        $spheres = [];
-        foreach (self::SPHERE_ITEMS as $id) {
-            if (self::answerValue($answers, $id) === 1) {
-                $spheres[] = $id;
-            }
-        }
+        $chosen = self::chosenOptions($answers, self::SPHERES_ITEM);
+        $spheres = array_values(array_filter(
+            array_keys(self::SPHERE_LABELS),
+            static fn (string $sphere): bool => in_array($sphere, $chosen, true),
+        ));
         $interference = self::answerValue($answers, self::INTERFERENCE_ITEM);
 
         $conditions = [
@@ -123,7 +127,9 @@ class AdhdAdultModule extends BaseTestModule
 
         $answered = 0;
         foreach ($this->getQuestions() as $question) {
-            if (self::answerValue($answers, (int) $question['id']) !== null) {
+            $id = (int) $question['id'];
+            $isAnswered = $id === self::SPHERES_ITEM ? $chosen !== [] : self::answerValue($answers, $id) !== null;
+            if ($isAnswered) {
                 $answered++;
             }
         }
@@ -191,6 +197,23 @@ class AdhdAdultModule extends BaseTestModule
     }
 
     /**
+     * Выбранные варианты вопроса «несколько вариантов» (строки, без повторов).
+     *
+     * @param array<int|string, mixed> $answers
+     *
+     * @return list<string>
+     */
+    private static function chosenOptions(array $answers, int $id): array
+    {
+        $raw = $answers[$id] ?? $answers[(string) $id] ?? null;
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter($raw, 'is_string')));
+    }
+
+    /**
      * @param array<string, mixed> $scores
      *
      * @return array<string, mixed>
@@ -225,8 +248,8 @@ class AdhdAdultModule extends BaseTestModule
         }
 
         $spheres = array_map(
-            static fn (int $id): string => self::SPHERE_LABELS[$id],
-            array_values(array_filter((array) ($results['spheres'] ?? []), static fn (mixed $id): bool => isset(self::SPHERE_LABELS[$id]))),
+            static fn (string $sphere): string => self::SPHERE_LABELS[$sphere],
+            array_values(array_filter((array) ($results['spheres'] ?? []), static fn (mixed $sphere): bool => is_string($sphere) && isset(self::SPHERE_LABELS[$sphere]))),
         );
         $childhood = $results['childhood'] ?? null;
         $interference = $results['interference'] ?? null;
@@ -315,8 +338,8 @@ class AdhdAdultModule extends BaseTestModule
             'clarifications' => [
                 'childhood' => is_int($childhood) ? (self::CHILDHOOD_LABELS[$childhood] ?? null) : null,
                 'spheres' => array_values(array_map(
-                    static fn (int $id): string => self::SPHERE_LABELS[$id],
-                    array_filter((array) ($results['spheres'] ?? []), static fn (mixed $id): bool => isset(self::SPHERE_LABELS[$id])),
+                    static fn (string $sphere): string => self::SPHERE_LABELS[$sphere],
+                    array_filter((array) ($results['spheres'] ?? []), static fn (mixed $sphere): bool => is_string($sphere) && isset(self::SPHERE_LABELS[$sphere])),
                 )),
                 'interference' => is_int($interference) ? (self::INTERFERENCE_LABELS[$interference] ?? null) : null,
                 'conditions_met' => (array) ($results['conditions'] ?? []),

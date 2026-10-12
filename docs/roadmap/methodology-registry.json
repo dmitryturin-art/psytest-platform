@@ -203,7 +203,7 @@
       "implementation": {
         "metadata": "modules/adhd-adult/metadata.json",
         "questions": "modules/adhd-adult/questions.json",
-        "question_count": 25
+        "question_count": 21
       },
       "provenance": {
         "status": "partial",
