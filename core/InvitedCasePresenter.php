@@ -42,7 +42,7 @@ final class InvitedCasePresenter
         // кейса то, что респонденту не показывается (IPIP — таблица сырых
         // баллов). Тот же приём, что `is_pdf` для печати.
         return array_values(array_filter(
-            $module->buildSections($results + ['is_specialist_view' => true]),
+            ResultSection::visible($module->buildSections($results + ['is_specialist_view' => true])),
             static fn (ResultSection $section): bool => $section->type !== ResultSection::TYPE_PAIR_INVITE,
         ));
     }
