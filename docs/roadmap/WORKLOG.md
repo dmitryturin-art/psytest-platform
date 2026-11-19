@@ -20,14 +20,15 @@
 
 ## 2026-11-19
 
-### 07.PW1 — смена пароля кабинета владельца из кабинета (в работе, не выложено)
+### 07.PW1 — смена пароля кабинета владельца из кабинета
 
-- Этап / ветка / commit: этап 07, ветка `codex/07-owner-password-ui`; коммита нет — работа остановлена по просьбе владельца («закрываю крышку макбука»).
+- Этап / ветка / commit: этап 07, ветка `codex/07-owner-password-ui`, коммит `113a203`.
 - Цель: владелец меняет пароль кабинета на странице `/admin/password`, а не через SSH; серверный скрипт остаётся аварийным путём.
 - Сделано: `core/OwnerPasswordStore.php` — Argon2id-хэш пишется в `.env` атомарно (временный файл рядом + `rename`), права `600`, остальные строки не меняются, открытый пароль не логируется; маршруты `GET/POST /admin/password`; `OwnerController::passwordForm()/changePassword()` (требуют текущий пароль и тот же счётчик попыток, что вход); шаблон `templates/owner-password.twig`; ссылка «Пароль» в навигации кабинета; тесты `tests/OwnerPasswordStoreTest.php` и контракт в `OwnerDashboardContractTest`; решения D-083, маршруты в `ARCHITECTURE.md`, раздел в `DEVELOPMENT.md`.
-- Проверки и evidence: `composer validate --strict` — OK; `php bin/check-architecture.php` — OK; PHPUnit `--exclude-group database` — 636 tests / 131 447 assertions, OK; PHPStan level 6 — OK; PHP-CS-Fixer dry-run — 0 из 240 файлов.
-- Не сделано: выкладка на staging, проверка страницы в браузере на 1440 и 375, запись в `CHANGELOG.md` и `STATUS.md`, обновление этой записи по факту выкладки.
-- Следующий шаг: собрать релиз из ветки, выложить по рецепту `BEGET_STAGING.md`, проверить смену пароля в браузере, затем CHANGELOG/STATUS/WORKLOG.
+- Проверки и evidence: `composer validate --strict` — OK; `php bin/check-architecture.php` — OK; PHPUnit `--exclude-group database` — 636 tests / 131 447 assertions, OK; PHPStan level 6 — OK; PHP-CS-Fixer dry-run — 0 из 240 файлов. Выкладка `113a203`: SHA-256 артефакта `ca601178fa04e6fc7776ba5971e8c04420aee67d5093fd19a987d6df8aafd1e5` совпал после загрузки, миграций нет, `.env` скопирован из `d84eda9`, строка `php_value session.save_path` возвращена в `.htaccess` нового релиза. Смоук: `/api/health`, `/`, `/tests`, `/admin/login`, `/admin` — `200`, `/admin/password` без входа — `303`. Сценарий вживую: неверный текущий пароль и несовпадающий повтор дают понятные ошибки; успешная смена показывает подтверждение, новый пароль пускает (`303 /admin`), старый — `422`. Браузер 1440 и 375: форма без горизонтальной прокрутки, поля и подписи на месте, «Пароль» помечен как текущий раздел.
+- Изменённые файлы: `core/OwnerPasswordStore.php`, `controllers/OwnerController.php`, `public/index.php`, `templates/owner-password.twig`, `templates/owner-dashboard.twig`, `templates/blocks/owner-nav.twig`, `tests/OwnerPasswordStoreTest.php`, `tests/OwnerDashboardContractTest.php`, `ARCHITECTURE.md`, `DEVELOPMENT.md`, `docs/roadmap/DECISIONS.md`, `CHANGELOG.md`, `docs/roadmap/STATUS.md`.
+- Не сделано / риски: тикет в Бегет на `/tmp/php_sess/sites/1047` не отправлен; до него строка в `.htaccess` живёт только в выложенном релизе и теряется при следующей выкладке. Ветка не слита в `main`.
+- Следующий шаг: PR и слияние `codex/07-owner-password-ui`; при следующей выкладке — вернуть строку сессий и проверить вход.
 
 ### Ops — восстановление staging после атаки на Бегет (19.11)
 
