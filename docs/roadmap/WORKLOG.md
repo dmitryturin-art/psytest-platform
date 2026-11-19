@@ -18,6 +18,26 @@
 ```
 
 
+## 2026-11-19
+
+### 07.PW1 — смена пароля кабинета владельца из кабинета (в работе, не выложено)
+
+- Этап / ветка / commit: этап 07, ветка `codex/07-owner-password-ui`; коммита нет — работа остановлена по просьбе владельца («закрываю крышку макбука»).
+- Цель: владелец меняет пароль кабинета на странице `/admin/password`, а не через SSH; серверный скрипт остаётся аварийным путём.
+- Сделано: `core/OwnerPasswordStore.php` — Argon2id-хэш пишется в `.env` атомарно (временный файл рядом + `rename`), права `600`, остальные строки не меняются, открытый пароль не логируется; маршруты `GET/POST /admin/password`; `OwnerController::passwordForm()/changePassword()` (требуют текущий пароль и тот же счётчик попыток, что вход); шаблон `templates/owner-password.twig`; ссылка «Пароль» в навигации кабинета; тесты `tests/OwnerPasswordStoreTest.php` и контракт в `OwnerDashboardContractTest`; решения D-083, маршруты в `ARCHITECTURE.md`, раздел в `DEVELOPMENT.md`.
+- Проверки и evidence: `composer validate --strict` — OK; `php bin/check-architecture.php` — OK; PHPUnit `--exclude-group database` — 636 tests / 131 447 assertions, OK; PHPStan level 6 — OK; PHP-CS-Fixer dry-run — 0 из 240 файлов.
+- Не сделано: выкладка на staging, проверка страницы в браузере на 1440 и 375, запись в `CHANGELOG.md` и `STATUS.md`, обновление этой записи по факту выкладки.
+- Следующий шаг: собрать релиз из ветки, выложить по рецепту `BEGET_STAGING.md`, проверить смену пароля в браузере, затем CHANGELOG/STATUS/WORKLOG.
+
+### Ops — восстановление staging после атаки на Бегет (19.11)
+
+- Симптом: `test.23time.ru` отдавал `500`, статика — `200`; `x-powered-by: PHP/5.6.40`. Владелец переключил сайт на 8.3, после чего проявилась вторая причина.
+- Вторая причина: персональный каталог сессий `/tmp/php_sess/sites/1047` после восстановления не создан; `session_start()` падал, каждый ответ выставлял несколько `PHPSESSID`, CSRF-токен не переживал запрос → `Invalid CSRF token` на всех POST-формах. Директива `session.save_path` из панели сохраняется, но перебивается настройкой vhost; `php_admin_value` в `.htaccess` запрещён (`500`).
+- Обход (вне репозитория): каталог `~/var/sessions` (`qdesign:newcustomers`, `770`) и строка `php_value session.save_path /home/q/qdesign/test.23time.ru/var/sessions` в `public_html/.htaccess` релиза `d84eda9`. Бэкап `.htaccess` — `~/backups/.htaccess.bak-20261119-105358`. **Следующая выкладка перезапишет `.htaccess`; до фикса Бегетом строку нужно повторно добавлять и проверять сессии.**
+- Пароль владельца восстановлен: хэш в `current/.env`, бэкап `~/backups/env-before-owner-password-<timestamp>.bak`; аварийный скрипт `~/bin/owner-password-set` (вне Git и web root).
+- Проверки: все основные маршруты `200`; CSRF-токен стабилен между запросами; POST с валидным токеном — `200`, с поддельным — `403`.
+- Открыто: тикет в Бегет на пересоздание `/tmp/php_sess/sites/1047`; сеть до узла нестабильна (TCP connect 0–35 с, у главного домена так же) — сторона хостинга.
+
 ## 2026-10-11
 
 ### Checkpoint 11.10.2026 (по команде владельца)

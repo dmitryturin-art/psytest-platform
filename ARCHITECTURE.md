@@ -81,6 +81,8 @@ HTTP request
 | GET | `/admin/login` | `OwnerController::login` | owner login; выключен без Argon2id hash в server env |
 | POST | `/admin/login` | `OwnerController::authenticate` | проверка owner credentials |
 | POST | `/admin/logout` | `OwnerController::logout` | завершение owner session |
+| GET | `/admin/password` | `OwnerController::passwordForm` | форма смены пароля кабинета; только вошедшему владельцу |
+| POST | `/admin/password` | `OwnerController::changePassword` | смена пароля: проверка текущего, Argon2id-хэш в серверный `.env` |
 | GET | `/admin` | `OwnerController::dashboard` | защищённый минимальный owner dashboard |
 | POST | `/admin/case/lookup` | `OwnerController::lookupCase` | поиск завершённого кейса по result token |
 | POST | `/admin/case/assign` | `OwnerController::assignCase` | явное назначение therapist case |
