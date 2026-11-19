@@ -70,6 +70,30 @@ final class OwnerDashboardContractTest extends TestCase
         self::assertStringContainsString('Cache-Control: no-store, private', $controller);
     }
 
+    public function testPasswordChangeIsAnOwnerOnlyPostFormThatRequiresTheCurrentPassword(): void
+    {
+        $routes = (string) file_get_contents($this->projectRoot . '/public/index.php');
+        $controller = (string) file_get_contents($this->projectRoot . '/controllers/OwnerController.php');
+        $template = (string) file_get_contents($this->projectRoot . '/templates/owner-password.twig');
+
+        self::assertStringContainsString("\$router->get('/admin/password'", $routes);
+        self::assertStringContainsString("\$router->post('/admin/password'", $routes);
+        self::assertStringContainsString('function passwordForm(', $controller);
+        self::assertStringContainsString('function changePassword(', $controller);
+        // Смена требует текущий пароль и идёт через тот же счётчик попыток, что и вход.
+        self::assertStringContainsString('$this->authenticator->authenticate($current)', $controller);
+        self::assertStringContainsString('new OwnerPasswordStore(', $controller);
+        self::assertStringContainsString('requireOwner()', $controller);
+        // Форма не перерисовывает введённые значения и просит браузер не запоминать новый пароль как текущий.
+        self::assertStringContainsString('name="current_password"', $template);
+        self::assertStringContainsString('name="new_password"', $template);
+        self::assertStringContainsString('name="repeat_password"', $template);
+        self::assertStringContainsString('autocomplete="new-password"', $template);
+        self::assertStringContainsString('minlength="8"', $template);
+        self::assertStringNotContainsString('id="owner-new-password" name="new_password" type="password" value=', $template);
+        self::assertStringContainsString("/admin/password", (string) file_get_contents($this->projectRoot . '/templates/owner-dashboard.twig'));
+    }
+
     public function testDashboardNeverRendersTheClientTokenAndRequiresDeleteConfirmation(): void
     {
         $template = (string) file_get_contents($this->projectRoot . '/templates/owner-dashboard.twig');

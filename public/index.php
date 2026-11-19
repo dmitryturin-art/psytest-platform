@@ -96,6 +96,8 @@ $router->post('/account/delete', [AccountController::class, 'delete']);
 $router->get('/admin/login', [OwnerController::class, 'login']);
 $router->post('/admin/login', [OwnerController::class, 'authenticate']);
 $router->post('/admin/logout', [OwnerController::class, 'logout']);
+$router->get('/admin/password', [OwnerController::class, 'passwordForm']);
+$router->post('/admin/password', [OwnerController::class, 'changePassword']);
 $router->get('/admin', [OwnerController::class, 'dashboard']);
 $router->post('/admin/case/lookup', [OwnerController::class, 'lookupCase']);
 $router->post('/admin/case/assign', [OwnerController::class, 'assignCase']);

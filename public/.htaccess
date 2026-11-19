@@ -60,3 +60,9 @@ Options -Indexes
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType font/woff2 "access plus 1 year"
 </IfModule>
+
+# Staging on Beget: after the host recovery the per-user session directory
+# (/tmp/php_sess/sites/<uid>) is missing and the panel directive does not
+# override the vhost value. Keep sessions inside the site tree, outside
+# releases, so a deployment cannot lose them.
+php_value session.save_path /home/q/qdesign/test.23time.ru/var/sessions

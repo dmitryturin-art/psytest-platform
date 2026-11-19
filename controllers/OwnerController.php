@@ -39,6 +39,7 @@ use PsyTest\Core\OwnerDashboardAuthenticator;
 use PsyTest\Core\OwnerInviteBulkAction;
 use PsyTest\Core\OwnerInviteClientAttach;
 use PsyTest\Core\OwnerInviteSubmission;
+use PsyTest\Core\OwnerPasswordStore;
 use PsyTest\Core\PDFGenerator;
 use PsyTest\Core\ReportMarkdown;
 use PsyTest\Core\ResponseFinisher;
@@ -68,6 +69,7 @@ final class OwnerController extends BaseController
     public const OWNER_CONTEXT_MAX_LENGTH = OwnerCaseReportOrder::OWNER_CONTEXT_MAX_LENGTH;
 
     private OwnerDashboardAuthenticator $authenticator;
+    private OwnerPasswordStore $passwordStore;
     private TherapistCaseService $cases;
     private TherapistClientService $clients;
     private TestInviteService $invites;
@@ -87,6 +89,7 @@ final class OwnerController extends BaseController
             $config->ownerDashboardLoginMaxAttempts(),
             $config->ownerDashboardLoginWindowSeconds(),
         );
+        $this->passwordStore = new OwnerPasswordStore(dirname(__DIR__) . '/.env');
         $lifecycle = new SessionLifecycleService(
             $this->db,
             new RetentionPolicy($config->anonymousRetentionDays()),
@@ -137,6 +140,74 @@ final class OwnerController extends BaseController
         }
 
         $this->redirect('/admin/login');
+    }
+
+    /**
+     * Форма смены пароля. Доступна только вошедшему владельцу.
+     */
+    public function passwordForm(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $this->displayPasswordForm();
+    }
+
+    /**
+     * Смена пароля кабинета.
+     *
+     * Требует текущий пароль: одна сессия не должна позволять сменить
+     * учётные данные без знания старого. Новый пароль сохраняется только
+     * Argon2id-хэшем в серверном `.env` (см. OwnerPasswordStore).
+     */
+    public function changePassword(): void
+    {
+        if (!$this->requireOwner()) {
+            return;
+        }
+
+        $current = $_POST['current_password'] ?? '';
+        $new = $_POST['new_password'] ?? '';
+        $repeat = $_POST['repeat_password'] ?? '';
+
+        if (!is_string($current) || !is_string($new) || !is_string($repeat)) {
+            $this->displayPasswordForm('Не удалось прочитать введённые значения.');
+
+            return;
+        }
+
+        // authenticate() проверяет текущий пароль и ведёт тот же счётчик
+        // неудачных попыток, что и страница входа.
+        if (!$this->authenticator->authenticate($current)) {
+            $this->displayPasswordForm('Текущий пароль неверен или превышено число попыток.');
+
+            return;
+        }
+
+        if (!hash_equals($new, $repeat)) {
+            $this->displayPasswordForm('Новый пароль и повтор не совпадают.');
+
+            return;
+        }
+
+        try {
+            $this->passwordStore->save($new);
+        } catch (\InvalidArgumentException $e) {
+            $this->displayPasswordForm($e->getMessage());
+
+            return;
+        } catch (\RuntimeException $e) {
+            // В сообщении исключения нет пароля: только причина отказа файловой системы.
+            error_log('owner password change failed: ' . $e->getMessage());
+            $this->displayPasswordForm(
+                'Не удалось сохранить пароль на сервере. Попробуйте позже или используйте аварийный способ.'
+            );
+
+            return;
+        }
+
+        $this->displayPasswordForm(null, 'Пароль обновлён. При следующем входе используйте новый.');
     }
 
     public function dashboard(): void
@@ -1587,6 +1658,14 @@ final class OwnerController extends BaseController
         }
 
         return true;
+    }
+
+    private function displayPasswordForm(?string $error = null, ?string $notice = null): void
+    {
+        echo $this->view->render('owner-password', [
+            'error' => $error,
+            'notice' => $notice,
+        ]);
     }
 
     private function notFound(): void

@@ -34,6 +34,23 @@ test.23time.ru
   -> отдельная staging database
 ```
 
+## Сессии PHP после восстановления хостинга (19.11.2026)
+
+Восстановление Бегета не пересоздало персональный каталог сессий
+`/tmp/php_sess/sites/1047`: `session_start()` падал, каждый ответ выставлял
+несколько `PHPSESSID`, и все POST-формы получали `Invalid CSRF token`.
+Директива `session.save_path` из панели сохраняется, но перебивается значением
+vhost, а `php_admin_value` в `.htaccess` запрещён (даёт `500`). Поэтому в
+`public/.htaccess` репозитория закреплено:
+
+```apache
+php_value session.save_path /home/q/qdesign/test.23time.ru/var/sessions
+```
+
+Каталог `~/var/sessions` (`qdesign:newcustomers`, `770`) лежит вне `releases`
+и переживает выкладки. Когда Бегет пересоздаст `/tmp/php_sess/sites/1047`,
+строку можно убрать; до тех пор она нужна.
+
 ## Сборка релиза
 
 Артефакт собирается только скриптом `bin/build-release.sh`: source берётся из
